@@ -1,0 +1,5 @@
+google-generativeai
+requests
+absl-py
+bleach
+Pillow
