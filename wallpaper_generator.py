@@ -341,18 +341,18 @@ The final prompt should create a clear mental image of a physically accurate, vi
         return None
 
 def generate_prompt_random(tags):
-    """Generate a random prompt from the given tags."""
+    """Generate a random prompt from the given tags with enhanced details."""
     num_tags = random.randint(2, 4)  # Generate 2 to 4 tags
     selected_tags = random.sample(tags, num_tags)
-    
-    # Combine tags with more descriptive words
+
+    # Enhanced combinations with more descriptive words and technical details
     combinations = [
-        f"A stunning {selected_tags[0]} with {selected_tags[1]}",
-        f"The beauty of {selected_tags[0]} meeting the serenity of {selected_tags[1]}",
-        f"An artistic representation of {selected_tags[0]}, blended with {selected_tags[1]} and {selected_tags[2] if num_tags > 2 else ''}",
-        f"A photorealistic wallpaper of {selected_tags[0]}, {selected_tags[1]}, and {selected_tags[2] if num_tags > 2 else ''}, with a touch of {selected_tags[3] if num_tags > 3 else ''}"
+        f"A stunning {selected_tags[0]} with {selected_tags[1]}, captured with a 35mm lens at f/1.8, during golden hour, with soft, diffused light, and a warm color palette.",
+        f"The beauty of {selected_tags[0]} meeting the serenity of {selected_tags[1]}, shot with a wide-angle lens at f/8, during blue hour, with cool tones and a shallow depth of field.",
+        f"An artistic representation of {selected_tags[0]}, blended with {selected_tags[1]} and {selected_tags[2] if num_tags > 2 else ''}, using a 50mm lens at f/2.8, with harsh, direct light, and a vibrant color scheme.",
+        f"A photorealistic wallpaper of {selected_tags[0]}, {selected_tags[1]}, and {selected_tags[2] if num_tags > 2 else ''}, with a touch of {selected_tags[3] if num_tags > 3 else ''}, shot with a 85mm lens at f/4, during sunset, with warm, diffused light, and a rich color palette."
     ]
-    
+
     prompt = random.choice(combinations)
     logging.info(f"Generated random prompt: {prompt}")
     return prompt
@@ -437,41 +437,64 @@ def enhance_custom_prompt(custom_prompt):
     prompt_instructions = f"""
 You are an expert prompt engineer for the Imagen 3 image generation model. Your task is to transform the given custom prompt into a highly detailed and photorealistic masterpiece. Focus on adding specific technical details related to photography and cinematography to maximize the visual impact and realism of the generated image.
 
-Here's how to enhance the prompt:
+To achieve the best results with Imagen 3, consider the following enhancements:
 
-1.  Camera and Lens Specifications:
-    *   Specify the camera model: e.g., "shot on Hasselblad," "Canon EOS R5," or "ARRI Alexa."
+1.  **Camera and Lens Specifications:**
+    *   Specify the camera model: e.g., "Shot on Hasselblad," "Canon EOS R5," or "ARRI Alexa."
     *   Define the lens type and focal length: e.g., "35mm lens," "85mm portrait lens," "wide-angle 16mm."
     *   Set the aperture: e.g., "f/1.8" for shallow depth of field, "f/8" for landscape sharpness.
-    *   Mention any special lenses: e.g., "tilt-shift lens," "macro lens," "anamorphic lens."
+    *   Mention any special lenses: e.g., "Tilt-shift lens," "Macro lens," "Anamorphic lens."
+    *   Example: "Shot on ARRI Alexa with a 50mm lens at f/2.8"
 
-2.  Lighting Conditions:
-    *   Describe the time of day: e.g., "golden hour," "blue hour," "midday sun."
-    *   Specify the lighting style: e.g., "Rembrandt lighting," "studio lighting," "natural lighting."
-    *   Add details about light quality: e.g., "soft, diffused light," "harsh, direct light."
-    *   Include any artificial light sources: e.g., "neon lights," "street lamps," "candlelight."
+2.  **Lighting Conditions:**
+    *   Describe the time of day: e.g., "Golden hour," "Blue hour," "Midday sun."
+    *   Specify the lighting style: e.g., "Rembrandt lighting," "Studio lighting," "Natural lighting."
+    *   Add details about light quality: e.g., "Soft, diffused light," "Harsh, direct light."
+    *   Include any artificial light sources: e.g., "Neon lights," "Street lamps," "Candlelight."
+    *   Example: "Golden hour with soft, diffused light"
 
-3.  Composition and Framing:
-    *   Use photography composition techniques: e.g., "rule of thirds," "golden ratio," "leading lines."
-    *   Define the camera angle: e.g., "high angle," "low angle," "eye-level."
-    *   Describe the perspective: e.g., "wide shot," "close-up," "aerial view."
+3.  **Composition and Framing:**
+    *   Use photography composition techniques: e.g., "Rule of thirds," "Golden ratio," "Leading lines."
+    *   Define the camera angle: e.g., "High angle," "Low angle," "Eye-level."
+    *   Describe the perspective: e.g., "Wide shot," "Close-up," "Aerial view."
+     *   Example: "Rule of thirds, eye-level"
 
-4.  Environment and Context:
-    *   Set the scene with environmental details: e.g., "foggy morning," "urban cityscape," "tropical beach."
-    *   Include weather conditions: e.g., "rainy day," "snowy landscape," "sunny afternoon."
+4.  **Environment and Context:**
+    *   Set the scene with environmental details: e.g., "Foggy morning," "Urban cityscape," "Tropical beach."
+    *   Include weather conditions: e.g., "Rainy day," "Snowy landscape," "Sunny afternoon."
+    *   Example: "Foggy morning in an urban cityscape"
 
-5.  Artistic Style and Post-Processing:
-    *   Define the overall style: e.g., "photorealistic," "cinematic," "vintage," "modern."
-    *   Mention post-processing effects: e.g., "color graded," "film grain," "high dynamic range (HDR)."
+5.  **Artistic Style and Post-Processing:**
+    *   Define the overall style: e.g., "Photorealistic," "Cinematic," "Vintage," "Modern."
+    *   Mention post-processing effects: e.g., "Color graded," "Film grain," "High dynamic range (HDR)."
+    *   Example: "Photorealistic, color graded"
 
-6.  Detail Enhancement:
-    *   Add specific details to the subject: e.g., "intricate details," "realistic textures," "fine details."
-    *   Include elements that enhance realism: e.g., "subsurface scattering," "volumetric lighting."
+6.  **Detail Enhancement:**
+    *   Add specific details to the subject: e.g., "Intricate details," "Realistic textures," "Fine details."
+    *   Include elements that enhance realism: e.g., "Subsurface scattering," "Volumetric lighting."
+    *   Example: "Intricate details with subsurface scattering"
 
-7.  Color Palette:
-    *   Specify the color scheme: e.g., "warm colors," "cool colors," "monochromatic."
+7.  **Color Palette:**
+    *   Specify the color scheme: e.g., "Warm colors," "Cool colors," "Monochromatic."
+    *   Example: "Warm colors with a monochromatic tone"
 
-Example Prompts:
+**Advanced Prompt Engineering Techniques:**
+
+*   **Chain-of-Thought (CoT) Prompting:** Guide the model by providing intermediate reasoning steps. For example, instead of directly asking for a "3D photorealistic rendering of a car," break it down into steps: "First, imagine a detailed 3D model of a car. Then, add realistic textures and lighting. Finally, render the image in a photorealistic style."
+*   **Photography Descriptors:** Use specific photography terms to control the image style. Examples include "Long exposure," "Shallow depth of field," "Macro photography," "Tilt-shift lens," and "HDR."
+*   **Shapes and Materials:** Specify the shapes and materials of the objects in the scene. For example, "Geometric shapes," "Organic forms," "Metallic surfaces," "Glass reflections," and "Subsurface scattering."
+*   **Historical Art Movements:** Reference historical art movements to influence the image style. Examples include "Impressionism," "Surrealism," "Pop Art," and "Art Deco."
+*   **Image Quality Modifiers:** Use terms to control the image quality, such as "8K," "High resolution," "Photorealistic," "Defect-free," and "Superb quality."
+*   **Negative Prompts:** Use negative prompts to exclude unwanted elements or improve image quality (e.g., "No artifacts," "No blur," "No distortions," "No AI art buzzwords").
+
+**Specific Styles Guidelines:**
+
+*   **3D Illustration:** Use terms like "3D illustration," "High detail," "Intricate design," "Digital art," "Vibrant colors," "Geometric composition," and "Studio lighting."
+*   **3D Cartoon:** Incorporate "3D cartoon," "Animated," "Character design," "Stylized," "Smooth shading," "Soft lighting," "Exaggerated features," and "Whimsical style."
+*   **3D Photorealistic Rendering (Pixar Style):** Include "3D photorealistic rendering," "Pixar style," "Realistic textures," "Subsurface scattering," "Global illumination," "High-resolution," "Defect-free," reference specific Pixar films or characters for inspiration (e.g., "In the style of Toy Story"), and use techniques like "Ray tracing" and "Ambient occlusion."
+
+**Example Prompts:**
+
 *   Original: "A lone tree on a hill."
 *   Enhanced: "Shot on Hasselblad, a lone tree on a hill during golden hour, with soft, diffused light, captured with a 35mm lens at f/8, using the rule of thirds for composition, photorealistic style, color graded with warm colors."
 
@@ -479,21 +502,6 @@ Example Prompts:
 *   Enhanced: "ARRI Alexa captures a futuristic cityscape at blue hour, with neon lights and volumetric lighting, using a wide-angle 16mm lens, high dynamic range (HDR), cinematic style, and leading lines for composition."
 
 Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with the technical details mentioned above. Focus on creating a vivid and realistic image in the mind of the viewer.
-
-Additionally, consider these advanced prompt engineering techniques:
-
-*   Chain-of-Thought (CoT) Prompting: Guide the model by providing intermediate reasoning steps. For example, instead of directly asking for a "3D photorealistic rendering of a car," break it down into steps: "First, imagine a detailed 3D model of a car. Then, add realistic textures and lighting. Finally, render the image in a photorealistic style."
-*   Photography Descriptors: Use specific photography terms to control the image style. Examples include "long exposure," "shallow depth of field," "macro photography," "tilt-shift lens," and "HDR."
-*   Shapes and Materials: Specify the shapes and materials of the objects in the scene. For example, "geometric shapes," "organic forms," "metallic surfaces," "glass reflections," and "subsurface scattering."
-*   Historical Art Movements: Reference historical art movements to influence the image style. Examples include "Impressionism," "Surrealism," "Pop Art," and "Art Deco."
-*   Image Quality Modifiers: Use terms to control the image quality, such as "8K," "high resolution," "photorealistic," "defect-free," and "superb quality."
-*   Negative Prompts: Use negative prompts to exclude unwanted elements or improve image quality (e.g., "no artifacts," "no blur," "no distortions," "no AI art buzzwords").
-
-Consider these guidelines for specific styles:
-
-*   3D Illustration: Use terms like "3D illustration," "high detail," "intricate design," "digital art," "vibrant colors," "geometric composition," and "studio lighting."
-*   3D Cartoon: Incorporate "3D cartoon," "animated," "character design," "stylized," "smooth shading," "soft lighting," "exaggerated features," and "whimsical style."
-*   3D Photorealistic Rendering (Pixar Style): Include "3D photorealistic rendering," "Pixar style," "realistic textures," "subsurface scattering," "global illumination," "high-resolution," "defect-free," reference specific Pixar films or characters for inspiration (e.g., "in the style of Toy Story"), and use techniques like "ray tracing" and "ambient occlusion."
 """
 
     try:
