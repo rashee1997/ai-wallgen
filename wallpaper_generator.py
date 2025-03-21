@@ -1101,13 +1101,22 @@ def generate_wallpaper(source_type, prompt_type=None, custom_prompt=None, mood=N
             gemini_prompt = generate_prompt_random(all_tags)
             enhanced_prompt = enhance_custom_prompt(gemini_prompt)
         else:  # gemini
-            print_info("Generating AI prompt with Gemini...")
+            print_section("Generating AI Prompt")
+            print_info("Using Google's Gemini AI to create a unique wallpaper prompt...")
             all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
+            
+            show_spinner("Analyzing your preferences and generating ideas...", 1)
             gemini_prompt = generate_prompt_gemini(all_tags, mood=mood, style=style)
+            
             if not gemini_prompt:
-                print_warning("Failed to generate prompt with Gemini, using random tags instead.")
+                print_warning("Gemini encountered an issue. Generating a random prompt instead...")
                 gemini_prompt = generate_prompt_random(all_tags)
+                print_info("Here's your random prompt:")
+            else:
+                print_success("AI prompt generated successfully!")
+                
             enhanced_prompt = gemini_prompt
+            print_info("Review your prompt below:")
     elif source_type == "provider":
         print_info("Generating prompt for image provider...")
         all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags
@@ -1317,23 +1326,43 @@ def generate_wallpaper(source_type, prompt_type=None, custom_prompt=None, mood=N
     
     # Step 4: Set the wallpaper
     try:
-        print_info("Setting wallpaper...")
-        show_spinner("Setting wallpaper...", 1)
-        set_wallpaper(cache_path)
-        print_success("Wallpaper set successfully!")
-        return True
+        print_section("Setting Wallpaper")
+        print_info("Applying your new wallpaper...")
+        show_spinner("Configuring desktop settings...", 1)
+        
+        result = set_wallpaper(cache_path)
+        if result:
+            print_success("Wallpaper successfully applied!")
+            print_info("Your desktop should now display the new wallpaper.")
+            return True
+        else:
+            print_warning("Wallpaper may not have been set correctly.")
+            print_info("Please check your desktop settings manually.")
+            return False
+            
     except subprocess.CalledProcessError as e:
-        print_error(f"Error setting wallpaper: {e}")
+        print_error("Failed to set wallpaper due to a system command error")
+        print_info(f"Command: {e.cmd}")
         if e.stdout:
-            print_info(f"Output: {e.stdout}")
+            print_info(f"Command output: {e.stdout}")
         if e.stderr:
-            print_error(f"Error: {e.stderr}")
+            print_error(f"Command error: {e.stderr}")
+        print_info("Please ensure your system supports automatic wallpaper changes.")
+        
     except OSError as e:
-        print_error(f"OS error setting wallpaper: {e}")
+        print_error("Operating system error while setting wallpaper")
+        print_info(f"Error details: {e}")
+        print_info("Please check file permissions and system settings.")
+        
     except ValueError as e:
-        print_error(f"Value error setting wallpaper: {e}")
+        print_error("Invalid configuration while setting wallpaper")
+        print_info(f"Error details: {e}")
+        print_info("Please verify your system's wallpaper settings.")
+        
     except Exception as e:
-        print_error(f"Unexpected error setting wallpaper: {e}")
+        print_error("Unexpected error while setting wallpaper")
+        print_info(f"Error details: {e}")
+        print_info("Please check your system's compatibility with automatic wallpaper changes.")
     
     return False
 
@@ -1347,10 +1376,10 @@ def main():
     
     while True:
         print_section("Main Menu")
-        print_option("1", "Generate AI Wallpaper (Imagen 3)")
-        print_option("2", "Fetch Wallpaper from Provider (Unsplash/Pexels)")
-        print_option("3", "Manage Preferences")
-        print_option("4", "Exit")
+        print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
+        print_option("2", "Fetch Wallpaper - Get wallpapers from Unsplash/Pexels")
+        print_option("3", "Manage Preferences - Customize wallpaper settings")
+        print_option("4", "Exit - Save and exit")
         
         choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
         
