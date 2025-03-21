@@ -2,9 +2,8 @@
 """AI Wallpaper Generator - Create stunning AI-generated desktop wallpapers
 
 This script generates high-quality desktop wallpapers using Google's Imagen 3 model
-via the Gemini API, or fetches images from providers like Unsplash and Pexels.
-It offers various customization options and prompt engineering techniques to create
-visually appealing wallpapers tailored to your preferences.
+via the Gemini API. It offers various customization options and prompt engineering 
+techniques to create visually appealing wallpapers tailored to your preferences.
 """
 import json
 from typing import Optional, Dict, List, Any, Tuple
@@ -19,7 +18,6 @@ import time
 from urllib.parse import quote
 import hashlib
 import google.generativeai as genai
-import requests
 import bleach
 import ctypes
 import html
@@ -402,11 +400,6 @@ def generate_prompt(custom_prompt=None):
     logging.info(f"Generated prompt: {prompt}")
     return prompt
 
-def get_provider_cache_path(prompt):
-    """Get the cache path for the provider image."""
-    hash_object = hashlib.sha256(prompt.encode())
-    return f"cache/{hash_object.hexdigest()}.png"
-
 def get_generated_image_path(prompt):
     """Get the cache path for the generated image."""
     hash_object = hashlib.sha256(prompt.encode())
@@ -623,8 +616,6 @@ def sanitize_log_content(content):
     """Sanitize log content by masking sensitive information."""
     if isinstance(content, str):
         content = content.replace(os.environ.get("GEMINI_API_KEY", ""), "<GEMINI_API_KEY>")
-        content = content.replace(os.environ.get("UNSPLASH_ACCESS_KEY", ""), "<UNSPLASH_ACCESS_KEY>")
-        content = content.replace(os.environ.get("PEXELS_API_KEY", ""), "<PEXELS_API_KEY>")
     return content
 
 def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"):
@@ -704,31 +695,26 @@ def manage_imagen_settings():
             configure_interactive_settings()
         elif choice == "2":
             print_section("Current Settings")
-            print_info(f"Quality: {user_prefs.imagen_settings['quality']}")
-            print_info(f"Safety Filter: {user_prefs.imagen_settings['safety_filter']}")
-            print_info(f"Style Preset: {user_prefs.imagen_settings['style_preset']}")
             print_info(f"Number of Images: {user_prefs.imagen_settings['number_of_images']}")
+            print_info(f"Seed: {user_prefs.imagen_settings['seed'] or 'Random'}")
+            print_info(f"Negative Prompt: {user_prefs.imagen_settings['negative_prompt'] or 'None'}")
         elif choice == "3":
             print_section("Reset to Defaults")
             user_prefs.imagen_settings = {
                 "number_of_images": 1,
                 "seed": None,
                 "aspect_ratio": "16:9",
-                "negative_prompt": "",
-                "guidance_scale": 7.5,
-                "num_inference_steps": 50,
-                "safety_filter": "balanced",
+                "negative_prompt": ""
             }
             user_prefs.save_preferences()
             print_success("Settings reset to defaults")
         elif choice == "4":
             break
 
-def generate_wallpaper(source_type, prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
+def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
     """Generate a wallpaper based on the specified parameters.
     
     Args:
-        source_type: Type of source ("generate" or "provider")
         prompt_type: Type of prompt ("custom", "random", or "gemini")
         custom_prompt: Custom prompt text if prompt_type is "custom"
         mood: Optional mood for the wallpaper
@@ -741,53 +727,47 @@ def generate_wallpaper(source_type, prompt_type=None, custom_prompt=None, mood=N
     gemini_prompt = None
     
     # Step 1: Generate or get the prompt
-    if source_type == "generate":
-        if prompt_type == "custom" and custom_prompt:
-            print_info("Processing custom prompt...")
-            sanitized_prompt = sanitize_prompt(custom_prompt)
-            gemini_prompt = sanitized_prompt
-            enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
-        elif prompt_type == "random":
-            print_info("Generating random prompt...")
-            all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
-            gemini_prompt = generate_prompt_random(all_tags)
-            enhanced_prompt = enhance_custom_prompt(gemini_prompt)
-        else:  # gemini
-            print_section("Generating AI Prompt")
-            print_info("Using Google's Gemini AI to create a unique wallpaper prompt...")
-            all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
-            
-            show_spinner("Analyzing your preferences and generating ideas...", 1)
-            gemini_prompt = generate_prompt_gemini(all_tags, mood=mood, style=style)
-            
-            if not gemini_prompt:
-                print_warning("Gemini encountered an issue. Generating a random prompt instead...")
-                gemini_prompt = generate_prompt_random(all_tags)
-                print_info("Here's your random prompt:")
-            else:
-                print_success("AI prompt generated successfully!")
-                
-            enhanced_prompt = gemini_prompt
-            print_info("Review your prompt below:")
-            
-            # Enhance prompt with additional parameters if provided
-            if resolution or color_scheme or lighting:
-                print_info("Enhancing prompt with additional parameters...")
-                additional_params = []
-                if resolution:
-                    additional_params.append(f"resolution: {resolution}")
-                if color_scheme:
-                    additional_params.append(f"color scheme: {color_scheme}")
-                if lighting:
-                    additional_params.append(f"lighting: {lighting}")
-                
-                enhanced_prompt = f"{enhanced_prompt}, with {', '.join(additional_params)}"
-                print_info("Enhanced prompt with additional parameters:")
-    elif source_type == "provider":
-        print_info("Generating prompt for image provider...")
-        all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags
+    if prompt_type == "custom" and custom_prompt:
+        print_info("Processing custom prompt...")
+        sanitized_prompt = sanitize_prompt(custom_prompt)
+        gemini_prompt = sanitized_prompt
+        enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
+    elif prompt_type == "random":
+        print_info("Generating random prompt...")
+        all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
         gemini_prompt = generate_prompt_random(all_tags)
+        enhanced_prompt = enhance_custom_prompt(gemini_prompt)
+    else:  # gemini
+        print_section("Generating AI Prompt")
+        print_info("Using Google's Gemini AI to create a unique wallpaper prompt...")
+        all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
+        
+        show_spinner("Analyzing your preferences and generating ideas...", 1)
+        gemini_prompt = generate_prompt_gemini(all_tags, mood=mood, style=style)
+        
+        if not gemini_prompt:
+            print_warning("Gemini encountered an issue. Generating a random prompt instead...")
+            gemini_prompt = generate_prompt_random(all_tags)
+            print_info("Here's your random prompt:")
+        else:
+            print_success("AI prompt generated successfully!")
+            
         enhanced_prompt = gemini_prompt
+        print_info("Review your prompt below:")
+        
+        # Enhance prompt with additional parameters if provided
+        if resolution or color_scheme or lighting:
+            print_info("Enhancing prompt with additional parameters...")
+            additional_params = []
+            if resolution:
+                additional_params.append(f"resolution: {resolution}")
+            if color_scheme:
+                additional_params.append(f"color scheme: {color_scheme}")
+            if lighting:
+                additional_params.append(f"lighting: {lighting}")
+            
+            enhanced_prompt = f"{enhanced_prompt}, with {', '.join(additional_params)}"
+            print_info("Enhanced prompt with additional parameters:")
     
     # Step 2: Display the prompt and get confirmation
     if enhanced_prompt:
@@ -823,183 +803,81 @@ def generate_wallpaper(source_type, prompt_type=None, custom_prompt=None, mood=N
             print_warning("Limit reached. Stopping the process.")
             return False
     
-    # Step 3: Generate or fetch the image
-    if source_type == "generate":
-        if not GEMINI_API_KEY:
-            print_error("No Gemini API key configured - please check your environment variables")
-            return False
-        
-        try:
-            from google import genai
-            from google.genai import types
-            try:
-                from PIL import Image
-                PIL_AVAILABLE = True
-            except ImportError:
-                PIL_AVAILABLE = False
-                print_warning("PIL not installed. Some image processing features may be limited.")
-                print_info("To install PIL: pip install pillow")
-            from io import BytesIO
-
-            print_info("Generating image with Imagen 3...")
-            show_spinner("Generating image...", 2)
-            
-            client = genai.Client(api_key=GEMINI_API_KEY)
-            
-            cache_path = get_generated_image_path(enhanced_prompt)
-            if os.path.exists(cache_path):
-                print_info("Using cached image")
-                image_path = cache_path
-            else:
-                print_info("Requesting new image from Imagen 3...")
-                
-                # Validate aspect ratio format
-                aspect_ratio = user_prefs.aspect_ratio
-                valid_ratios = ["16:9", "21:9", "4:3", "1:1", "9:16"]
-                if aspect_ratio not in valid_ratios:
-                    print_warning(f"Invalid aspect ratio: {aspect_ratio}. Using default 16:9.")
-                    aspect_ratio = "16:9"
-                
-                try:
-                    # Create generation config with supported parameters
-                    config = types.GenerateImagesConfig(
-                        number_of_images=user_prefs.imagen_settings["number_of_images"],
-                        aspect_ratio=aspect_ratio
-                    )
-                    
-                    # Add seed if specified
-                    if user_prefs.imagen_settings["seed"] is not None:
-                        config.seed = user_prefs.imagen_settings["seed"]
-                    
-                    # Add negative prompt if specified
-                    if user_prefs.imagen_settings["negative_prompt"]:
-                        config.negative_prompt = user_prefs.imagen_settings["negative_prompt"]
-                    
-                    response = client.models.generate_images(
-                        model='imagen-3.0-generate-002',
-                        prompt=enhanced_prompt,
-                        config=config
-                    )
-                    
-                    if response.generated_images is not None:
-                        for i, generated_image in enumerate(response.generated_images):
-                            image_path = f"generated_image_{i}.png"
-                            with open(image_path, "wb") as f:
-                                f.write(generated_image.image.image_bytes)
-                        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                        os.rename(image_path, cache_path)
-                        print_success("Image generated successfully!")
-                    else:
-                        print_error("Failed to generate image - no images returned")
-                        return False
-                except AttributeError as e:
-                    print_error(f"Error with Gemini client: {e}")
-                    print_info("This might be due to an API version mismatch. Check your google-generativeai package version.")
-                    return False
-        except Exception as e:
-            print_error(f"Error generating image: {e}")
-            return False
+    # Step 3: Generate the image
+    if not GEMINI_API_KEY:
+        print_error("No Gemini API key configured - please check your environment variables")
+        return False
     
-    elif source_type == "provider":
+    try:
+        from google import genai
+        from google.genai import types
         try:
-            with requests.Session() as session:
-                unsplash_access_key = os.environ.get("UNSPLASH_ACCESS_KEY")
-                pexels_api_key = os.environ.get("PEXELS_API_KEY")
+            from PIL import Image
+            PIL_AVAILABLE = True
+        except ImportError:
+            PIL_AVAILABLE = False
+            print_warning("PIL not installed. Some image processing features may be limited.")
+            print_info("To install PIL: pip install pillow")
+        from io import BytesIO
 
-                providers = []
-                if unsplash_access_key and len(unsplash_access_key.strip()) > 0:
-                    providers.append("unsplash")
-                if pexels_api_key and len(pexels_api_key.strip()) > 0:
-                    providers.append("pexels")
-
-                if not providers:
-                    print_error("No valid API keys configured for image providers")
-                    return False
-
-                selected_provider = random.choice(providers)
-                print_info(f"Fetching image from {selected_provider.capitalize()}...")
-                show_spinner(f"Fetching image from {selected_provider.capitalize()}...", 2)
-
-                if selected_provider == "unsplash":
-                    url = "https://api.unsplash.com/photos/random"
-                    params = {
-                        "query": gemini_prompt.strip(),
-                        "client_id": unsplash_access_key
-                    }
-                    try:
-                        response = session.get(url, params=params, timeout=10)
-                        if response.status_code >= 400:
-                            if response.status_code in (400, 401, 403):
-                                print_error("Unsplash API authentication failed")
-                            else:
-                                print_error(f"Unsplash API request failed with HTTP {response.status_code}")
-                            return False
-                    except requests.exceptions.RequestException as e:
-                        print_error(f"Request error: {e}")
-                        return False
-
-                    try:
-                        data = response.json()
-                    except json.JSONDecodeError as e:
-                        print_error(f"JSONDecodeError: {e}")
-                        return False
-                    
-                    if isinstance(data, dict) and data.get('urls') and data['urls'].get('full'):
-                        image_url = data['urls']['full']
-                    else:
-                        print_error(f"No images found for '{gemini_prompt}' using {selected_provider}")
-                        return False
-
-                elif selected_provider == "pexels":
-                    url = "https://api.pexels.com/v1/search"
-                    params = {
-                        "query": gemini_prompt.strip(),
-                        "per_page": 1
-                    }
-                    headers = {"Authorization": pexels_api_key}
-                    try:
-                        response = session.get(url, params=params, headers=headers, timeout=10)
-                        if response.status_code >= 400:
-                            if response.status_code in (400, 401, 403):
-                                print_error("Pexels API authentication failed")
-                            else:
-                                print_error(f"Pexels API request failed with HTTP {response.status_code}")
-                            return False
-                    except requests.exceptions.RequestException as e:
-                        print_error(f"Request error: {e}")
-                        return False
-
-                    data = response.json()
-                    if 'photos' in data and data['photos']:
-                        image_url = data['photos'][0]['src']['original']
-                    else:
-                        print_error(f"No images found for '{gemini_prompt}' using {selected_provider}")
-                        return False
-
-                cache_path = get_provider_cache_path(gemini_prompt)
-                if os.path.exists(cache_path):
-                    print_info("Using cached image")
-                    image_path = cache_path
-                else:
-                    print_info(f"Downloading image from {selected_provider}...")
-                    response = requests.get(image_url, stream=True)
-                    response.raise_for_status()
-                    image_path = "provider_image.jpg"
-                    with open(image_path, "wb") as file:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            file.write(chunk)
+        print_info("Generating image with Imagen 3...")
+        show_spinner("Generating image...", 2)
+        
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        
+        cache_path = get_generated_image_path(enhanced_prompt)
+        if os.path.exists(cache_path):
+            print_info("Using cached image")
+            image_path = cache_path
+        else:
+            print_info("Requesting new image from Imagen 3...")
+            
+            # Validate aspect ratio format
+            aspect_ratio = user_prefs.aspect_ratio
+            valid_ratios = ["16:9", "21:9", "4:3", "1:1", "9:16"]
+            if aspect_ratio not in valid_ratios:
+                print_warning(f"Invalid aspect ratio: {aspect_ratio}. Using default 16:9.")
+                aspect_ratio = "16:9"
+            
+            try:
+                # Create generation config with supported parameters
+                config = types.GenerateImagesConfig(
+                    number_of_images=user_prefs.imagen_settings["number_of_images"],
+                    aspect_ratio=aspect_ratio
+                )
+                
+                # Add seed if specified
+                if user_prefs.imagen_settings["seed"] is not None:
+                    config.seed = user_prefs.imagen_settings["seed"]
+                
+                # Add negative prompt if specified
+                if user_prefs.imagen_settings["negative_prompt"]:
+                    config.negative_prompt = user_prefs.imagen_settings["negative_prompt"]
+                
+                response = client.models.generate_images(
+                    model='imagen-3.0-generate-002',
+                    prompt=enhanced_prompt,
+                    config=config
+                )
+                
+                if response.generated_images is not None:
+                    for i, generated_image in enumerate(response.generated_images):
+                        image_path = f"generated_image_{i}.png"
+                        with open(image_path, "wb") as f:
+                            f.write(generated_image.image.image_bytes)
                     os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                    os.replace(image_path, cache_path)
-                    print_success("Image downloaded successfully!")
-        except requests.exceptions.RequestException as e:
-            print_error(f"Request error: {e}")
-            return False
-        except (ValueError, KeyError, TypeError, json.JSONDecodeError) as e:
-            print_error(f"JSON error: {e}")
-            return False
-        except Exception as e:
-            print_error(f"Unexpected error: {e}")
-            return False
+                    os.rename(image_path, cache_path)
+                    print_success("Image generated successfully!")
+                else:
+                    print_error("Failed to generate image - no images returned")
+                    return False
+            except AttributeError as e:
+                print_error(f"Error with Gemini client: {e}")
+                print_info("This might be due to an API version mismatch. Check your google-generativeai package version.")
+                return False
+    except Exception as e:
+        print_error(f"Error generating image: {e}")
+        return False
     
     # Step 4: Set the wallpaper
     try:
@@ -1351,12 +1229,11 @@ def main():
     while True:
         print_section("Main Menu")
         print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
-        print_option("2", "Fetch Wallpaper - Get wallpapers from Unsplash/Pexels")
-        print_option("3", "Manage Preferences - Customize wallpaper settings")
-        print_option("4", "Manage Imagen 3 Settings - Fine-tune AI generation")
-        print_option("5", "Exit - Save and exit")
+        print_option("2", "Manage Preferences - Customize wallpaper settings")
+        print_option("3", "Manage Imagen 3 Settings - Fine-tune AI generation")
+        print_option("4", "Exit - Save and exit")
         
-        choice = get_validated_input("Select an option (1-5)", ["1", "2", "3", "4", "5"])
+        choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
         
         if choice == "1":
             print_section("Generate AI Wallpaper")
@@ -1401,16 +1278,16 @@ def main():
                     color_scheme = input("Color scheme (e.g., warm, cool, monochromatic): ").strip()
                     lighting = input("Lighting (e.g., soft, harsh, volumetric): ").strip()
                     # Add these parameters to the generation
-                    generate_wallpaper("generate", "gemini", mood=mood, style=style,
+                    generate_wallpaper("gemini", mood=mood, style=style,
                                      resolution=resolution, color_scheme=color_scheme, lighting=lighting)
                 else:
-                    generate_wallpaper("generate", "gemini", mood=mood, style=style)
+                    generate_wallpaper("gemini", mood=mood, style=style)
                     
             elif prompt_choice == "2":
-                generate_wallpaper("generate", "random")
+                generate_wallpaper("random")
             elif prompt_choice == "3":
                 custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
-                generate_wallpaper("generate", "custom", custom_prompt=custom_prompt)
+                generate_wallpaper("custom", custom_prompt=custom_prompt)
             elif prompt_choice == "4":
                 print_section("Advanced Options")
                 print_info("Fine-tune the generation parameters:")
@@ -1455,19 +1332,12 @@ def main():
                     print_success(f"Lighting style set to {lighting_style}")
         
         elif choice == "2":
-            if not (os.environ.get("UNSPLASH_ACCESS_KEY") or os.environ.get("PEXELS_API_KEY")):
-                print_error("No API keys configured for image providers. Please set UNSPLASH_ACCESS_KEY or PEXELS_API_KEY environment variables.")
-                continue
-            
-            generate_wallpaper("provider")
-        
-        elif choice == "3":
             manage_preferences()
         
-        elif choice == "4":
+        elif choice == "3":
             manage_imagen_settings()
         
-        elif choice == "5":
+        elif choice == "4":
             print_header("Thank you for using AI Wallpaper Generator!")
             break
 
