@@ -1,0 +1,9 @@
+{
+  "preferred_genres": [],
+  "preferred_styles": [],
+  "preferred_moods": [
+    "moody evening"
+  ],
+  "aspect_ratio": "16:9",
+  "negative_prompts": []
+}

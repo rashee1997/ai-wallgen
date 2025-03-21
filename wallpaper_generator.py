@@ -951,7 +951,6 @@ def sanitize_log_content(content):
         content = content.replace(os.environ.get("UNSPLASH_ACCESS_KEY", ""), "<UNSPLASH_ACCESS_KEY>")
         content = content.replace(os.environ.get("PEXELS_API_KEY", ""), "<PEXELS_API_KEY>")
     return content
-
 def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"):
     """Save the prompts to a JSON file."""
     try:
@@ -959,6 +958,7 @@ def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"
             json.dump({"gemini_prompt": gemini_prompt, "enhanced_prompt": enhanced_prompt}, f)
             f.write("\n")
     except Exception as e:
+        logging.error(f"Error saving prompts to JSON: {e}")
         logging.error(f"Error saving prompts to JSON: {e}")
 
 def manage_preferences():
@@ -1388,9 +1388,10 @@ def main():
             print_option("1", "Use Gemini AI to generate a prompt")
             print_option("2", "Use a random prompt")
             print_option("3", "Enter your own custom prompt")
-            print_option("4", "Return to Main Menu")
+            print_option("4", "Advanced Options - Fine-tune generation parameters")
+            print_option("5", "Return to Main Menu")
             
-            prompt_choice = get_validated_input("Select prompt type (1-4)", ["1", "2", "3", "4"])
+            prompt_choice = get_validated_input("Select prompt type (1-5)", ["1", "2", "3", "4", "5"])
             
             if prompt_choice == "1":
                 # Get mood and style preferences for this generation
@@ -1412,14 +1413,71 @@ def main():
                 if style and style not in style_options:
                     print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
                 
-                generate_wallpaper("generate", "gemini", mood=mood, style=style)
+                # Add more customization options
+                print_section("Advanced Settings")
+                print_info("You can specify additional parameters for the generation:")
+                print_option("1", "Use default settings")
+                print_option("2", "Customize settings")
+                
+                settings_choice = get_validated_input("Select settings option (1-2)", ["1", "2"])
+                if settings_choice == "2":
+                    print_info("Enter values for the following parameters (leave blank for default):")
+                    resolution = input("Resolution (e.g., 1920x1080): ").strip()
+                    color_scheme = input("Color scheme (e.g., warm, cool, monochromatic): ").strip()
+                    lighting = input("Lighting (e.g., soft, harsh, volumetric): ").strip()
+                    # Add these parameters to the generation
+                    generate_wallpaper("generate", "gemini", mood=mood, style=style,
+                                     resolution=resolution, color_scheme=color_scheme, lighting=lighting)
+                else:
+                    generate_wallpaper("generate", "gemini", mood=mood, style=style)
+                    
             elif prompt_choice == "2":
                 generate_wallpaper("generate", "random")
             elif prompt_choice == "3":
                 custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
                 generate_wallpaper("generate", "custom", custom_prompt=custom_prompt)
             elif prompt_choice == "4":
-                continue
+                print_section("Advanced Options")
+                print_info("Fine-tune the generation parameters:")
+                print_option("1", "Set aspect ratio")
+                print_option("2", "Choose color palette")
+                print_option("3", "Select lighting style")
+                print_option("4", "Return to previous menu")
+                
+                advanced_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+                if advanced_choice == "1":
+                    print_section("Aspect Ratio")
+                    print_option("1", "16:9 (Widescreen)")
+                    print_option("2", "21:9 (Ultrawide)")
+                    print_option("3", "4:3 (Standard)")
+                    print_option("4", "1:1 (Square)")
+                    print_option("5", "9:16 (Portrait)")
+                    ratio_choice = get_validated_input("Select aspect ratio (1-5)", ["1", "2", "3", "4", "5"])
+                    aspect_ratio = ["16:9", "21:9", "4:3", "1:1", "9:16"][int(ratio_choice) - 1]
+                    user_prefs.aspect_ratio = aspect_ratio
+                    print_success(f"Aspect ratio set to {aspect_ratio}")
+                elif advanced_choice == "2":
+                    print_section("Color Palette")
+                    print_option("1", "Warm colors")
+                    print_option("2", "Cool colors")
+                    print_option("3", "Monochromatic")
+                    print_option("4", "Vibrant colors")
+                    print_option("5", "Pastel colors")
+                    palette_choice = get_validated_input("Select color palette (1-5)", ["1", "2", "3", "4", "5"])
+                    color_palette = ["warm", "cool", "monochromatic", "vibrant", "pastel"][int(palette_choice) - 1]
+                    user_prefs.preferred_styles = [color_palette]
+                    print_success(f"Color palette set to {color_palette}")
+                elif advanced_choice == "3":
+                    print_section("Lighting Style")
+                    print_option("1", "Soft lighting")
+                    print_option("2", "Harsh lighting")
+                    print_option("3", "Volumetric lighting")
+                    print_option("4", "Natural lighting")
+                    print_option("5", "Studio lighting")
+                    lighting_choice = get_validated_input("Select lighting style (1-5)", ["1", "2", "3", "4", "5"])
+                    lighting_style = ["soft", "harsh", "volumetric", "natural", "studio"][int(lighting_choice) - 1]
+                    user_prefs.preferred_styles = [lighting_style]
+                    print_success(f"Lighting style set to {lighting_style}")
         
         elif choice == "2":
             if not (os.environ.get("UNSPLASH_ACCESS_KEY") or os.environ.get("PEXELS_API_KEY")):

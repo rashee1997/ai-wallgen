@@ -1,5 +1,7 @@
-google-generativeai
-requests
-absl-py
-bleach
-Pillow
+google-generativeai>=0.3.0
+requests>=2.31.0
+bleach>=6.1.0
+colorama>=0.4.6
+pillow>=10.0.0
+absl-py>=2.0.0
+PyQt6>=6.4.0
