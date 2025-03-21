@@ -1,6 +1,6 @@
 # AI Wallpaper Generator 🎨
 
-A powerful command-line tool that generates and sets beautiful wallpapers using AI generation (via Google's Imagen 3) and popular image providers like Unsplash and Pexels.
+A powerful Python script that generates stunning desktop wallpapers using Google's Imagen 3 model via the Gemini API, or fetches high-quality images from Unsplash and Pexels.
 
 ## ✨ Features
 
@@ -13,23 +13,49 @@ A powerful command-line tool that generates and sets beautiful wallpapers using 
 - 🔄 Cross-platform wallpaper setting (Windows, macOS, Linux)
 - 🎯 User preference management
 - 🔒 Secure API key handling
+- 🎨 Style Support:
+  - photograph
+  - digital_art
+  - landscape
+  - sketch
+  - watercolor
+  - cyberpunk
+  - pop_art
+- 🎨 Mood Selection:
+  - peaceful
+  - dramatic
+  - mysterious
+  - energetic
+  - melancholic
+  - joyful
+  - romantic
+  - eerie
+  - nostalgic
+  - contemplative
+- 🎨 Advanced Customization:
+  - Aspect ratio selection (16:9, 21:9, 4:3, 1:1, 9:16)
+  - Color palette options
+  - Lighting style selection
+  - Negative prompts
+  - Random seed for reproducibility
 
 ## 🚀 Prerequisites
 
-- Python 3.8 or higher
-- Required packages:
-  - `google-generativeai>=0.3.0`
-  - `requests>=2.31.0`
-  - `bleach>=6.1.0`
-  - `colorama>=0.4.6`
-  - `pillow>=10.0.0`
-  - `absl-py>=2.0.0`
+- Python 3.7+
+- Google Cloud API key for Gemini
+- Optional: Unsplash and Pexels API keys for additional image sources
+- Required Python packages:
+  - google-generativeai
+  - requests
+  - pillow
+  - colorama (optional, for colored terminal output)
+  - bleach (optional, for prompt sanitization)
 
 ## 📦 Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/wallgen.git
+git clone https://github.com/rashee1997/wallgen.git
 cd wallgen
 ```
 
@@ -40,9 +66,9 @@ pip install -r requirements.txt
 
 3. Set up environment variables for API keys:
 ```bash
-export GEMINI_API_KEY="your_gemini_api_key"
-export UNSPLASH_ACCESS_KEY="your_unsplash_key"  # Optional
-export PEXELS_API_KEY="your_pexels_key"        # Optional
+export GEMINI_API_KEY="your-gemini-api-key"
+export UNSPLASH_ACCESS_KEY="your-unsplash-access-key"  # Optional
+export PEXELS_API_KEY="your-pexels-api-key"        # Optional
 ```
 
 ## 🎮 Usage
@@ -54,20 +80,26 @@ python wallpaper_generator.py
 
 ### Main Menu Options:
 
-1. **Generate Wallpaper**: Create a new wallpaper using AI or fetch from providers
+1. **Generate AI Wallpaper**: Create a new wallpaper using AI or fetch from providers
    - Choose source (AI Generation/Unsplash/Pexels)
    - Select prompt type (Gemini AI/Random/Custom)
    - Customize mood and style
    - Set aspect ratio
 
-2. **Manage Preferences**: Configure your preferences
+2. **Fetch Wallpaper**: Get wallpapers from Unsplash/Pexels
+
+3. **Manage Preferences**: Configure your preferences
    - Set preferred genres
    - Define preferred styles
    - Specify preferred moods
    - Add negative prompts
    - Choose default aspect ratio
+   - Set cache duration
+   - Configure multi-monitor settings
 
-3. **Exit**: Close the application
+4. **Manage Imagen 3 Settings**: Configure number of images
+
+5. **Exit**: Close the application
 
 ## 🎨 Advanced Features
 
@@ -75,6 +107,10 @@ python wallpaper_generator.py
 - **Gemini AI**: Smart context-aware prompts
 - **Random**: Generated from predefined tags
 - **Custom**: Your own creative prompts
+- **AI-enhanced custom prompts**:
+  - Style-specific generation
+  - Mood-based generation
+  - Negative prompt support
 
 ### Image Sources
 - **AI Generation**: Using Google's Imagen 3
@@ -95,6 +131,7 @@ python wallpaper_generator.py
 - MATE
 - Cinnamon
 - i3
+- Sway
 - and more...
 
 ## ⚙️ Configuration
@@ -105,6 +142,8 @@ User preferences are stored in `~/.config/wallgen/preferences.json` and include:
 - Preferred moods
 - Negative prompts
 - Default aspect ratio
+- Cache duration
+- Multi-monitor settings
 
 ## 🔒 Security
 
@@ -157,4 +196,16 @@ For support, please open an issue in the GitHub repository or contact the mainta
 - [ ] Image editing features
 - [ ] Theme-based generation
 - [ ] Schedule-based wallpaper changes
-- [ ] Community prompt sharing 
+- [ ] Community prompt sharing
+
+## 🎨 Wallpaper Settings
+
+- **Auto-set wallpaper option**: Automatically set the wallpaper on the desktop
+- **Multiple fit modes**:
+  - Fill
+  - Fit
+  - Center
+  - Tile
+- **Background color customization**: Customize the background color of the wallpaper
+- **Multi-monitor support**: Apply the wallpaper to multiple monitors
+- **Configurable refresh rates**: Set the refresh rate for the wallpaper 

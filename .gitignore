@@ -66,3 +66,11 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+prompt_cache/
+
+# Project specific
+*.log
+user_preferences.json
+prompt_cache/
+image_cache/
+last_genre.txt
