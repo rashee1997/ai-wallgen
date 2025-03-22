@@ -110,6 +110,32 @@ git checkout public  # For public version
 
    > ⚠️ **Important:** Never commit your API key to version control. Keep it secure and private.
 
+### About Google AI Studio and Imagen 3
+
+1. **Free Trial:**
+   - Google AI Studio offers a free trial for Imagen 3
+   - Includes 100 free generations per month
+   - No credit card required for trial
+   - Trial period: 30 days
+
+2. **Subscription Options:**
+   - **Pay-as-you-go:** Pay only for what you use
+   - **Enterprise:** Custom pricing for large-scale usage
+   - **Student:** Special pricing for educational use
+
+3. **Usage Limits:**
+   - Free tier: 100 generations/month
+   - Standard tier: Up to 1000 generations/month
+   - Enterprise: Custom limits based on needs
+
+4. **Getting Started:**
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign up for a free account
+   - Start with the free trial
+   - Upgrade anytime based on your needs
+
+> 💡 **Tip:** The free trial is perfect for testing and personal use. Monitor your usage in the Google AI Studio dashboard.
+
 ### Quick Start
 
 1. **Clone the repository:**
