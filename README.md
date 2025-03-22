@@ -1,8 +1,22 @@
 # AI Wallpaper Generator 🎨
 
+<div align="center">
+
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
+
+</div>
+
 ## ✨ Features
+
+<div align="center">
+  <img src="docs/features.png" alt="AI Wallpaper Generator Features" width="800">
+</div>
 
 * **🤖 AI Generation:**
     * Powered by Google's Imagen 3 model via Gemini API
@@ -53,69 +67,245 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
     * Fit modes: Fill, Fit, Center, Tile
     * Background color options, Refresh rate settings: Daily, Weekly, Monthly, Never
 
-## 📋 Menu Structure
-
-* **Main Menu:**
-    * Generate AI Wallpaper
-    * Manage Preferences
-    * Manage Imagen 3 Settings
-    * Exit
-* **Generate AI Wallpaper:**
-    * Use Gemini AI
-    * Use Random Prompt
-    * Custom Prompt
-    * Advanced Options
-* **Manage Preferences:**
-    * Manage Genres
-    * Manage Styles
-    * Manage Moods
-    * Manage Wallpaper Settings
-    * View Current Preferences
-    * Reset to Defaults
-* **Manage Imagen 3 Settings:**
-    * Style & Artistic Settings
-    * Camera & Technical Settings
-    * Lighting & Atmosphere
-    * Composition & Environment
-    * Color & Detail Settings
-    * Show Current Settings
-    * Customize All Parameters
-
 ## 🚀 Installation
 
-1.  **Clone the repository:**
+### Prerequisites
+
+* Python 3.8 or higher
+* UV package manager (recommended) or pip
+* Git
+
+### Quick Start
+
+1. **Clone the repository:**
 
     ```bash
-    git clone [https://github.com/rashee1997/wallgen.git](https://github.com/rashee1997/wallgen.git)
+    git clone https://github.com/rashee1997/wallgen.git
     cd wallgen
     ```
 
-2.  **Install dependencies:**
+2. **Set up UV package manager (recommended):**
 
     ```bash
+    # Install UV
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Create and activate virtual environment
+    uv venv
+    source .venv/bin/activate  # On Unix/macOS
+    # or
+    .venv\Scripts\activate  # On Windows
+    ```
+
+3. **Install dependencies:**
+
+    ```bash
+    # Using UV (recommended)
+    uv pip install -r requirements.txt
+
+    # Or using pip
     pip install -r requirements.txt
     ```
 
-3.  **Set up API key:**
+4. **Set up API key:**
 
     ```bash
+    # On Unix/macOS
     export GEMINI_API_KEY='your-api-key-here'
+
+    # On Windows (PowerShell)
+    $env:GEMINI_API_KEY='your-api-key-here'
     ```
+
+### Alternative Installation Methods
+
+#### Using pip with venv
+
+```bash
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+#### Using Poetry
+
+```bash
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install dependencies
+poetry install
+
+# Activate virtual environment
+poetry shell
+```
 
 ## 💻 Usage
 
-1.  **Run the script:**
+1. **Run the script:**
 
     ```bash
     python wallpaper_generator.py
     ```
 
-2.  **Main Menu Options:**
+2. **Main Menu Options:**
 
-    * Generate AI Wallpaper
-    * Manage Preferences
-    * Manage Imagen 3 Settings
+    * Generate Wallpaper
+    * Settings & Preferences
+    * Wallpaper Management
+    * Help & Information
     * Exit
+
+## 📋 Menu Structure
+
+<details>
+<summary>Click to expand menu structure</summary>
+
+### Main Menu
+1. **Generate AI Wallpaper**
+   - Use Gemini AI to generate a prompt
+   - Use a random prompt
+   - Enter your own custom prompt
+   - Advanced Options - Fine-tune generation parameters
+   - Return to Main Menu
+
+2. **Manage Preferences**
+   - Manage Genres
+   - Manage Styles
+   - Manage Moods
+   - Manage Wallpaper Settings
+     - Auto-set wallpaper
+     - Cache duration
+     - Fit mode (Fill, Fit, Center, Tile)
+     - Background color
+     - Multi-monitor mode (Mirror, Extend, Individual)
+     - Refresh rate (Daily, Weekly, Monthly, Never)
+   - View Current Preferences
+   - Reset to Defaults
+   - Return to Main Menu
+
+3. **Exit**
+   - Save and exit
+
+### Advanced Options Menu
+1. **Style & Artistic Settings**
+   - Style Selection
+     - Photorealistic
+     - Digital Art
+     - Sketch
+     - Watercolor
+     - Cyberpunk
+     - Pop Art
+     - Oil Painting
+     - Pixel Art
+     - Anime
+     - 3D Render
+     - Custom Style
+   - Art Movement
+     - Abstract Expressionism
+     - Impressionism
+     - Surrealism
+     - Minimalism
+     - Cubism
+     - Custom
+   - Post-processing Effects
+
+2. **Camera & Technical Settings**
+   - Camera Model
+   - Lens Options
+   - Aperture Settings
+   - Depth of Field
+   - Resolution
+
+3. **Lighting & Atmosphere**
+   - Time of Day
+   - Lighting Style
+   - Light Quality
+   - Weather Conditions
+   - Atmospheric Effects
+
+4. **Composition & Environment**
+   - Composition Technique
+     - Rule of Thirds
+     - Leading Lines
+     - Framing
+     - Symmetry
+     - Asymmetry
+     - Custom
+   - Camera Angle
+   - Perspective
+   - Weather
+     - Clear
+     - Cloudy
+     - Rainy
+     - Snowy
+     - Foggy
+     - Custom
+   - Season
+     - Spring
+     - Summer
+     - Autumn
+     - Winter
+     - Custom
+   - Atmospheric Effects
+
+5. **Color & Detail Settings**
+   - Color Scheme
+     - Natural
+     - Warm
+     - Cool
+     - Monochromatic
+     - Vibrant
+     - Pastel
+     - Custom
+   - Color Palette
+     - Analogous
+     - Complementary
+     - Triadic
+     - Split Complementary
+     - Custom
+   - Color Temperature
+   - Texture Quality
+   - Special Effects
+
+6. **Show Current Settings**
+7. **Customize All Parameters**
+8. **Return to previous menu**
+
+### Optional Parameters for Generation
+- Mood Options:
+  - Peaceful
+  - Dramatic
+  - Mysterious
+  - Energetic
+  - Melancholic
+  - Joyful
+  - Romantic
+  - Eerie
+  - Nostalgic
+  - Contemplative
+
+- Style Options:
+  - Photograph
+  - Digital Art
+  - Landscape
+  - Sketch
+  - Watercolor
+  - Cyberpunk
+  - Pop Art
+
+- Additional Parameters:
+  - Resolution
+  - Color Scheme
+  - Lighting
+</details>
 
 ## ⚙️ Configuration
 
@@ -188,16 +378,11 @@ Preferences are stored in `user_preferences.json`:
     "last_refresh": null
   }
 }
-### Cache Management
+```
 
-* Generated images in `genimage` directory
-* Configurable cache duration (1-365 days)
-* Automatic cache cleanup
-* Prompt caching for efficiency
+## 🔧 Troubleshooting
 
-##   🔧 Troubleshooting
-
-###   Common Issues
+### Common Issues
 
 * **API Key Missing:**
     * Check environment variables
@@ -215,28 +400,28 @@ Preferences are stored in `user_preferences.json`:
     * Verify permissions
     * Test fit modes
 
-###   Desktop Environment Support
+### Desktop Environment Support
 
 * **Windows:** Windows Desktop API
 * **macOS:** AppleScript
 * **Linux:** Environment-specific commands
 
-##   🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-##   📄 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-##   🙏 Acknowledgments
+## 🙏 Acknowledgments
 
 * Google Gemini API and Imagen 3 model
 * The open-source community for wallpaper setting methods
 
-##   🔄 Changelog
+## 🔄 Changelog
 
-###   Version 1.0.0
+### Version 1.0.0
 
 * Initial release
 * AI wallpaper generation with Imagen 3
@@ -247,7 +432,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 * Enhanced prompt generation
 * Detailed technical settings
 
-##   💬 Support
+## 💬 Support
 
 For support, please:
 
@@ -257,4 +442,6 @@ For support, please:
 
 ---
 
+<div align="center">
 Made with ❤️ by [rasheedh]
+</div>

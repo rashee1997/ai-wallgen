@@ -2584,11 +2584,10 @@ def main():
             print_section("Main Menu")
             print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
             print_option("2", "Manage Preferences - Customize wallpaper settings")
-            print_option("3", "Manage Imagen 3 Settings - Fine-tune AI generation")
-            print_option("4", "Exit - Save and exit")
+            print_option("3", "Exit - Save and exit")
             
             try:
-                choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
+                choice = get_validated_input("Select an option (1-3)", ["1", "2", "3"])
             except KeyboardInterrupt:
                 print_info("\nSaving preferences before exit...")
                 user_prefs.save_preferences()
@@ -2604,12 +2603,15 @@ def main():
                 print_option("5", "Return to Main Menu")
                 
                 try:
-                    prompt_choice = get_validated_input("Select prompt type (1-5)", ["1", "2", "3", "4", "5"])
+                    prompt_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
                 except KeyboardInterrupt:
                     print_info("\nSaving preferences before exit...")
                     user_prefs.save_preferences()
                     print_success("Goodbye!")
                     sys.exit(0)
+                
+                if prompt_choice == "5":
+                    continue
                 
                 if prompt_choice == "1":
                     # Get mood and style preferences for this generation
@@ -2694,9 +2696,6 @@ def main():
                 manage_preferences()
             
             elif choice == "3":
-                manage_imagen_settings()
-            
-            elif choice == "4":
                 print_header("Thank you for using AI Wallpaper Generator!")
                 break
                 

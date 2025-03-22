@@ -61,7 +61,7 @@
   },
   "wallpaper_settings": {
     "auto_set": true,
-    "cache_duration": 30,
+    "cache_duration": 60,
     "fit_mode": "fill",
     "background_color": "#000000",
     "multi_monitor": "mirror",
