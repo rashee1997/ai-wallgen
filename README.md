@@ -22,12 +22,12 @@ Here are some examples of wallpapers generated using this tool:
 <div align="center">
   <table>
     <tr>
-      <td align="center"><img src="asset/samples/nature_sunset.png" alt="Nature Sunset" width="400"/><br><em>Nature Sunset</em></td>
-      <td align="center"><img src="asset/samples/abstract_art.png" alt="Abstract Art" width="400"/><br><em>Abstract Art</em></td>
+      <td align="center"><img src="asset/samples/palace_corridor.png" alt="Palace Corridor" width="400"/><br><em>Ancient Palace Corridor</em></td>
+      <td align="center"><img src="asset/samples/mosque_street.png" alt="Mosque Street" width="400"/><br><em>Middle Eastern Street View</em></td>
     </tr>
     <tr>
-      <td align="center"><img src="asset/samples/space_nebula.png" alt="Space Nebula" width="400"/><br><em>Space Nebula</em></td>
-      <td align="center"><img src="asset/samples/urban_night.png" alt="Urban Night" width="400"/><br><em>Urban Night</em></td>
+      <td align="center"><img src="asset/samples/garden_art.png" alt="Garden Art" width="400"/><br><em>Topiary Garden Art</em></td>
+      <td align="center"><img src="asset/samples/taj_mahal.png" alt="Taj Mahal" width="400"/><br><em>Taj Mahal at Sunset</em></td>
     </tr>
   </table>
 </div>
