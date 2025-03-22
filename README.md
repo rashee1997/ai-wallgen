@@ -13,7 +13,7 @@
 [![Wallpaper](https://img.shields.io/badge/Wallpaper-Generator-brightgreen.svg)](#features)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](#installation)
 
-<img src="asset/logo/gemini.svg" alt="Gemini Logo" width="48" height="48">
+<img src="asset/logo/gemini.svg" alt="Gemini Logo" width="128" height="128">
 
 A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
