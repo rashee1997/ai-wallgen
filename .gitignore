@@ -84,3 +84,6 @@ image_cache/
 last_genre.txt
 prompt
 .cursor/
+
+# Local development
+docs/git-commit-guide.md
