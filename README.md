@@ -7,7 +7,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Gemini API](https://img.shields.io/badge/Gemini%20API-Enabled-blue)](https://ai.google.dev/)
 
-<img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_24x24_color_2x.png" alt="Gemini Logo" width="48" height="48">
+<img src="assets/logo/gemini.svg" alt="Gemini Logo" width="48" height="48">
 
 A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
