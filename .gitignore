@@ -21,20 +21,28 @@ wheels/
 *.egg
 
 # Virtual Environment
-venv/
-env/
-ENV/
 .env
 .venv
+env/
+venv/
+ENV/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.project
-.pydevproject
-.settings/
+
+# Project specific
+cache/*
+!cache/.gitkeep
+prompt_cache/*
+!prompt_cache/.gitkeep
+*.log
+user_preferences.json
+last_genre.json
+genimage/*
+!genimage/.gitkeep
 
 # Wallpaper Generator specific
 cache/

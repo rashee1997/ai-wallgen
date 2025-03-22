@@ -13,6 +13,27 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
 
 </div>
 
+## 📝 Note About Versions
+
+This repository contains two versions of the AI Wallpaper Generator:
+
+1. **Private Version** (main branch)
+   - Contains all features including pre-generated images
+   - Requires private access
+   - Includes complete image cache
+
+2. **Public Version** (public branch)
+   - Core functionality only
+   - Open source and freely available
+   - No pre-generated images included
+   - Clean installation ready
+
+To switch between versions, use:
+```bash
+git checkout main    # For private version
+git checkout public  # For public version
+```
+
 ## ✨ Features
 
 ### 🤖 AI Generation
@@ -129,11 +150,35 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
    ```
 
 2. **Main Menu Options:**
-   - Generate Wallpaper
-   - Settings & Preferences
-   - Wallpaper Management
-   - Help & Information
-   - Exit
+   - Generate AI Wallpaper - Create custom wallpapers using AI
+   - Manage Preferences - Customize wallpaper settings
+   - Exit - Save and exit
+
+3. **Generate AI Wallpaper Options:**
+   - Use Gemini AI to generate a prompt
+   - Use a random prompt
+   - Enter your own custom prompt
+   - Advanced Options - Fine-tune generation parameters
+   - Return to Main Menu
+
+4. **Optional Parameters for AI Generation:**
+   - **Mood Options:**
+     - peaceful, dramatic, mysterious, energetic, melancholic
+     - joyful, romantic, eerie, nostalgic, contemplative
+   - **Style Options:**
+     - photograph, digital_art, landscape, sketch
+     - watercolor, cyberpunk, pop_art
+
+5. **Advanced Settings:**
+   - Resolution (e.g., 1920x1080)
+   - Color scheme (e.g., warm, cool, monochromatic)
+   - Lighting (e.g., soft, harsh, volumetric)
+
+6. **Preferences Management:**
+   - Customize default settings
+   - Save user preferences
+   - Manage wallpaper settings
+   - Configure advanced options
 
 ## 📁 Project Structure
 
@@ -167,11 +212,10 @@ wallgen/
 - Technical preferences
 
 ### Caching System
-- Intelligent image caching
-- Prompt generation caching
-- Cache management tools
-- Automatic cache cleanup
-- Cache statistics
+- Basic prompt caching for Gemini AI generation
+- Image caching with configurable duration
+- Simple cache directory management
+- Cache duration settings in user preferences
 
 ### Error Handling
 - Comprehensive logging
