@@ -1,19 +1,16 @@
 {
   "preferred_genres": [],
-  "preferred_styles": [],
-  "preferred_moods": [
-    "moody evening"
+  "preferred_styles": [
+    "photograph"
   ],
+  "preferred_moods": [],
   "aspect_ratio": "16:9",
   "negative_prompts": [],
   "imagen_settings": {
     "number_of_images": 1,
     "seed": null,
     "aspect_ratio": "16:9",
-    "negative_prompt": "",
-    "quality": "standard",
-    "safety_filter": "balanced",
-    "style_preset": "natural"
+    "negative_prompt": ""
   },
   "wallpaper_settings": {
     "auto_set": true,
