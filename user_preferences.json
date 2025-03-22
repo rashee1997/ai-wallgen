@@ -1,10 +1,10 @@
 {
   "preferred_genres": [],
   "preferred_styles": [
-    "oil_painting"
+    "mix of digital and oilpastel style"
   ],
   "preferred_moods": [
-    "peaceful"
+    "romantic"
   ],
   "aspect_ratio": "16:9",
   "negative_prompts": [],
@@ -14,25 +14,28 @@
     "aspect_ratio": "16:9",
     "negative_prompt": "",
     "camera_settings": {
-      "camera_model": "ARRI Alexa",
+      "camera_model": "Sony Venice",
       "lens_type": "50mm",
       "aperture": "f/1.8",
       "special_lens": null,
-      "depth_of_field": "deep"
+      "depth_of_field": "shallow"
     },
     "lighting_settings": {
-      "time_of_day": "midday",
+      "time_of_day": "golden_hour",
       "lighting_style": "natural",
-      "light_quality": "diffused",
-      "artificial_sources": []
+      "light_quality": "soft",
+      "artificial_sources": [],
+      "light_effects": [
+        "bokeh"
+      ]
     },
     "composition_settings": {
       "technique": "framing",
       "camera_angle": "eye_level",
-      "perspective": "wide"
+      "perspective": "telephoto"
     },
     "environment_settings": {
-      "weather": "rainy",
+      "weather": "clear",
       "season": "summer",
       "atmospheric_effects": [
         "fog"
@@ -47,10 +50,8 @@
     },
     "detail_settings": {
       "detail_level": "ultra_detailed",
-      "texture_quality": "low",
-      "special_effects": [
-        "motion_blur"
-      ]
+      "texture_quality": "high",
+      "special_effects": []
     },
     "color_settings": {
       "color_scheme": "natural",
@@ -58,7 +59,7 @@
       "color_temperature": "neutral"
     },
     "quality_settings": {
-      "resolution": "8k",
+      "resolution": "2560x1440",
       "detail_level": "high_detail",
       "rendering_quality": "high_quality"
     }
