@@ -6,11 +6,139 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 
-A powerful tool that generates stunning desktop wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, personalized wallpapers with advanced customization options and AI-powered prompt generation.
+A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
 [Installation](#installation) • [Usage](#usage) • [Features](#features) • [Documentation](#documentation)
 
 </div>
+
+## Features
+
+### AI Generation
+- Powered by Google's Imagen 3 model via Gemini API
+- Multiple prompt generation methods:
+  - AI-powered prompts (Gemini)
+  - Random tag combinations
+  - Custom prompt input
+  - Enhanced prompts with user preferences
+
+### Generation Modes
+- AI Generation with Gemini
+- Random Tag Generation
+- Custom Prompt Generation
+- Advanced Options for fine-tuning
+
+### Style Settings
+- Multiple artistic styles:
+  - Photorealistic
+  - Digital Art
+  - Sketch
+  - Watercolor
+  - Cyberpunk
+  - Pop Art
+  - Oil Painting
+  - Pixel Art
+  - Anime
+  - 3D Render
+- Art movements:
+  - Abstract Expressionism
+  - Impressionism
+  - Surrealism
+  - Minimalism
+  - Cubism
+- Post-processing effects
+- Custom style options
+
+### Camera & Technical Settings
+- Camera models:
+  - ARRI Alexa
+  - RED Digital Cinema
+  - Sony Venice
+  - Custom options
+- Lens options:
+  - 50mm
+  - 85mm
+  - 24mm
+  - Special lenses (tilt-shift, fisheye, macro)
+- Aperture settings
+- Depth of field control
+- Resolution options (up to 8K)
+
+### Lighting & Atmosphere
+- Time of day settings
+- Lighting styles:
+  - Natural
+  - Studio
+  - Dramatic
+  - Soft
+  - Harsh
+  - Volumetric
+- Light quality options
+- Artificial light sources
+- Weather conditions
+- Seasonal effects
+- Atmospheric effects
+
+### Composition & Environment
+- Composition techniques:
+  - Rule of thirds
+  - Leading lines
+  - Framing
+  - Symmetry
+  - Asymmetry
+- Camera angles
+- Perspective options
+- Weather conditions
+- Seasonal settings
+- Atmospheric effects
+
+### Color & Detail Settings
+- Color schemes:
+  - Natural
+  - Warm
+  - Cool
+  - Monochromatic
+  - Vibrant
+  - Pastel
+- Palette types:
+  - Analogous
+  - Complementary
+  - Triadic
+  - Split Complementary
+- Color temperature
+- Texture quality
+- Special effects
+- Detail levels
+
+### Quality Settings
+- Resolution options:
+  - 1920x1080 (Full HD)
+  - 2560x1440 (2K)
+  - 3840x2160 (4K)
+  - 5120x2880 (5K)
+  - 7680x4320 (8K)
+- Detail levels
+- Rendering quality
+- Texture quality
+
+### Wallpaper Management
+- Auto-setting wallpaper
+- Cache management
+- Multi-monitor support:
+  - Mirror mode
+  - Extend mode
+  - Individual mode
+- Fit modes:
+  - Fill
+  - Fit
+  - Center
+  - Tile
+- Background color options
+- Refresh rate settings:
+  - Daily
+  - Weekly
+  - Monthly
+  - Never
 
 ## 📋 Menu Structure
 
@@ -20,125 +148,27 @@ graph TD
     A --> C[Manage Preferences]
     A --> D[Manage Imagen 3 Settings]
     A --> E[Exit]
-
-    B --> B1[AI-Powered Prompt]
-    B --> B2[Random Tag Combination]
-    B --> B3[Custom Prompt Input]
-
-    C --> C1[Manage Genres]
-    C --> C2[Manage Styles]
-    C --> C3[Manage Moods]
-    C --> C4[Return]
-
-    D --> D1[Style & Artistic Settings]
-    D --> D2[Camera & Technical Settings]
-    D --> D3[Lighting & Atmosphere]
-    D --> D4[Composition & Environment]
-    D --> D5[Color & Detail Settings]
-    D --> D6[Show Current Settings]
-    D --> D7[Customize All Parameters]
-    D --> D8[Return]
-
-    D1 --> D1a[Style Selection]
-    D1 --> D1b[Art Movement]
-    D1 --> D1c[Post-processing Effects]
-
-    D2 --> D2a[Camera Model]
-    D2 --> D2b[Lens Settings]
-    D2 --> D2c[Aperture]
-    D2 --> D2d[Special Lens]
-
-    D3 --> D3a[Time of Day]
-    D3 --> D3b[Lighting Style]
-    D3 --> D3c[Light Quality]
-    D3 --> D3d[Artificial Sources]
-
-    D4 --> D4a[Composition Technique]
-    D4 --> D4b[Camera Angle]
-    D4 --> D4c[Perspective]
-    D4 --> D4d[Weather & Season]
-
-    D5 --> D5a[Color Scheme]
-    D5 --> D5b[Palette Type]
-    D5 --> D5c[Color Temperature]
-    D5 --> D5d[Detail Level]
+    
+    B --> F[Use Gemini AI]
+    B --> G[Use Random Prompt]
+    B --> H[Custom Prompt]
+    B --> I[Advanced Options]
+    
+    C --> J[Manage Genres]
+    C --> K[Manage Styles]
+    C --> L[Manage Moods]
+    C --> M[Manage Wallpaper Settings]
+    C --> N[View Current Preferences]
+    C --> O[Reset to Defaults]
+    
+    D --> P[Style & Artistic Settings]
+    D --> Q[Camera & Technical Settings]
+    D --> R[Lighting & Atmosphere]
+    D --> S[Composition & Environment]
+    D --> T[Color & Detail Settings]
+    D --> U[Show Current Settings]
+    D --> V[Customize All Parameters]
 ```
-
-## ✨ Features
-
-<div align="center">
-
-| Category | Features |
-|----------|----------|
-| 🤖 **AI Generation** | • Imagen 3 model integration<br>• Gemini API powered<br>• High-quality output<br>• Advanced prompt engineering |
-| 🎲 **Generation Modes** | • AI-powered prompts<br>• Random tag combinations<br>• Custom prompt input<br>• Prompt enhancement |
-| 🎨 **Style Settings** | • Multiple artistic styles<br>• Art movements<br>• Post-processing effects<br>• Custom style support |
-| 📸 **Camera Settings** | • Professional camera models<br>• Lens configurations<br>• Aperture control<br>• Special lens effects |
-| 💡 **Lighting & Atmosphere** | • Time of day control<br>• Lighting styles<br>• Light quality<br>• Artificial sources |
-| 🖼️ **Composition** | • Rule of thirds<br>• Camera angles<br>• Perspectives<br>• Environmental context |
-| 🎯 **Technical Settings** | • Resolution control<br>• Aspect ratio selection<br>• Quality parameters<br>• Detail levels |
-| 🌈 **Color & Detail** | • Color schemes<br>• Palette types<br>• Temperature control<br>• Special effects |
-| 🌐 **Platforms** | • Windows<br>• macOS<br>• Linux |
-| 🔧 **Smart Features** | • Prompt caching<br>• Style preservation<br>• Technical optimization<br>• Error handling |
-
-</div>
-
-### 🎨 Available Styles
-- **Photorealistic** - Ultra-realistic photography
-- **Digital Art** - Modern digital artwork
-- **Sketch** - Hand-drawn illustrations
-- **Watercolor** - Artistic watercolor effects
-- **Cyberpunk** - Futuristic tech aesthetics
-- **Pop Art** - Bold, vibrant designs
-- **Oil Painting** - Classic oil painting style
-- **Pixel Art** - Retro pixel graphics
-- **Anime** - Japanese animation style
-- **3D Render** - Computer-generated 3D
-
-### 🎭 Available Art Movements
-- **Abstract Expressionism** - Bold, emotional expression
-- **Impressionism** - Light and color emphasis
-- **Surrealism** - Dreamlike and fantastical
-- **Minimalism** - Simple and essential
-- **Cubism** - Geometric abstraction
-- **Realism** - True-to-life representation
-- **Custom** - User-defined movement
-
-### 🌟 Available Moods
-- **Peaceful** - Calm and serene
-- **Dramatic** - Bold and impactful
-- **Mysterious** - Enigmatic and intriguing
-- **Energetic** - Dynamic and vibrant
-- **Melancholic** - Thoughtful and reflective
-- **Joyful** - Bright and cheerful
-- **Romantic** - Dreamy and romantic
-- **Eerie** - Haunting and atmospheric
-- **Nostalgic** - Retro and nostalgic
-- **Futuristic** - Sci-fi and modern
-
-### 📸 Camera & Technical Options
-- **Camera Models**: ARRI Alexa, RED Digital Cinema, Sony Venice
-- **Lens Types**: 50mm, 85mm, 24mm, Custom
-- **Aperture Settings**: f/1.8, f/2.8, f/4, f/8
-- **Special Lenses**: Tilt-shift, Fisheye, Macro
-- **Resolutions**: 8K, 4K, 2K, 1920x1080
-- **Aspect Ratios**: 16:9, 21:9, 4:3, 1:1, 9:16
-
-### 💡 Lighting & Atmosphere Options
-- **Time of Day**: Golden hour, Blue hour, Twilight
-- **Lighting Styles**: Natural, Studio, Dramatic, Ambient
-- **Light Quality**: Soft, Hard, Diffused, Directional
-- **Artificial Sources**: LED, Neon, Tungsten
-- **Weather**: Clear, Cloudy, Rainy, Foggy
-- **Seasons**: Spring, Summer, Autumn, Winter
-
-### 🎨 Color & Detail Options
-- **Color Schemes**: Monochromatic, Complementary, Analogous
-- **Palette Types**: Warm, Cool, Neutral, Vibrant
-- **Color Temperature**: Warm, Cool, Neutral
-- **Detail Levels**: Ultra-detailed, High-detail, Medium-detail
-- **Texture Quality**: High, Medium, Low
-- **Special Effects**: Bloom, Glow, Motion blur, Depth of field
 
 ## 🚀 Installation
 
@@ -159,8 +189,6 @@ graph TD
    ```
 
 ## 💻 Usage
-
-### Basic Usage
 
 1. **Run the script**
    ```bash
