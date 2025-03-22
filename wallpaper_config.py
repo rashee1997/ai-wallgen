@@ -104,53 +104,72 @@ available_genres = [
 ]
 
 # Prompt generation instructions
-PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model. Your task is to craft clear, focused, and highly detailed prompts that maximize Imagen 3's capabilities in generating both photorealistic and artistic images.
+PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model, specializing in creating detailed prompts for both photorealistic and artistic images, with particular expertise in claymation and stop-motion styles.
 
 To achieve the best results, your prompts should be specific, detailed, and carefully consider the following elements:
 
 1. **Style & Artistic Settings:**
-   - Overall style (e.g., photorealistic, digital art, oil painting)
+   - Overall style (e.g., claymation, photorealistic, digital art, oil painting)
    - Art movement (e.g., Abstract Expressionism, Impressionism, Realism)
    - Post-processing effects (e.g., vintage, HDR, film grain, color grading)
    - Style-specific elements and characteristics
    - Appropriate style-specific terminology
    - Artistic coherence and consistency
+   - For claymation:
+     * Handcrafted, tactile feel
+     * Visible clay textures and imperfections
+     * Stop-motion animation aesthetic
+     * Character and set design details
+     * Lighting that enhances clay's material properties
 
 2. **Camera & Technical Settings:**
-   - Camera model (e.g., ARRI Alexa, RED Digital Cinema, Sony Venice)
+   - Camera model (e.g., RED Digital Cinema, ARRI Alexa, Sony Venice)
    - Lens type and focal length (e.g., 50mm, 85mm, 24mm)
    - Aperture settings (e.g., f/1.8, f/2.8, f/4, f/8)
    - Special lens effects (e.g., tilt-shift, fisheye, macro)
+   - Depth of field settings
    - Resolution and quality settings
    - Detail level and rendering quality
    - Technical specifications for the chosen style
 
 3. **Lighting & Atmosphere:**
-   - Time of day (e.g., golden hour, blue hour, twilight)
+   - Time of day (e.g., midday, golden hour, blue hour, twilight)
    - Lighting style (e.g., natural, studio, dramatic, ambient)
    - Light quality (e.g., soft, hard, diffused, directional)
    - Artificial light sources (e.g., LED, neon, tungsten)
    - Light direction and intensity
    - Shadow characteristics
    - Atmospheric conditions
+   - For claymation:
+     * Lighting that emphasizes clay's material properties
+     * Soft, diffused lighting to avoid harsh shadows
+     * Natural light simulation for outdoor scenes
 
 4. **Composition & Environment:**
-   - Composition technique (e.g., rule of thirds, leading lines, golden ratio)
+   - Composition technique (e.g., framing, rule of thirds, leading lines)
    - Camera angle (e.g., eye-level, low angle, high angle, dutch angle)
    - Perspective (e.g., wide, telephoto, aerial, ground-level)
    - Weather conditions (e.g., clear, cloudy, rainy, foggy)
-   - Season (e.g., spring, summer, autumn, winter)
+   - Season (e.g., summer, spring, autumn, winter)
    - Atmospheric effects (e.g., fog, mist, rain, snow)
    - Environmental context and setting
+   - For claymation:
+     * Set design and environment details
+     * Scale and proportion considerations
+     * Background and foreground elements
 
 5. **Color & Detail Settings:**
-   - Color scheme (e.g., monochromatic, complementary, analogous)
+   - Color scheme (e.g., natural, monochromatic, complementary, analogous)
    - Palette type (e.g., warm, cool, neutral, vibrant)
    - Color temperature (e.g., warm, cool, neutral)
    - Detail level (e.g., ultra-detailed, high-detail, medium-detail)
    - Texture quality (e.g., high, medium, low)
-   - Special effects (e.g., bloom, glow, motion blur, depth of field)
+   - Special effects (e.g., bloom, glow, motion blur)
    - Material properties and surface characteristics
+   - For claymation:
+     * Clay material colors and textures
+     * Color harmony in the scene
+     * Surface finish and reflectivity
 
 6. **Quality Settings:**
    - Resolution (e.g., 8K, 4K, 2K, 1920x1080)
@@ -159,6 +178,10 @@ To achieve the best results, your prompts should be specific, detailed, and care
    - Overall image quality and sharpness
    - Noise reduction and clarity
    - Dynamic range and contrast
+   - For claymation:
+     * High detail in clay textures
+     * Clear focus on main subjects
+     * Balanced exposure
 
 7. **Mood & Atmosphere:**
    - Overall mood (e.g., peaceful, dramatic, mysterious, energetic)
@@ -167,6 +190,10 @@ To achieve the best results, your prompts should be specific, detailed, and care
    - Cultural and contextual elements
    - Time period and historical accuracy
    - Environmental mood and ambiance
+   - For claymation:
+     * Whimsical or serious tone
+     * Character expressions and poses
+     * Scene atmosphere and mood
 
 Critical Requirements:
 - Focus on a single, clear style and vision
@@ -179,6 +206,12 @@ Critical Requirements:
 - Balance technical accuracy with artistic expression
 - Ensure all settings complement each other
 - Maintain consistency across all elements
+- For claymation:
+  * Emphasize handcrafted qualities
+  * Maintain consistent scale
+  * Consider stop-motion aesthetics
+  * Focus on material properties
+  * Balance detail with style
 
 Output Format:
 Generate a single, detailed sentence that incorporates:
@@ -197,10 +230,18 @@ The final prompt should read like a professional artist's or photographer's desc
 CUSTOM_PROMPT_INSTRUCTIONS = """Enhance the following prompt for generating a high-quality wallpaper image. Consider the following specifications:
 
 Style & Artistic Settings:
-- Style: {style}
+- Overall Style: {style}
 - Mood: {mood}
 - Art Movement: {art_movement}
 - Post-processing: {post_processing}
+- For 3D Render Pixar Style:
+  * Clean, polished 3D rendering
+  * Smooth, appealing surfaces
+  * Characteristic Pixar lighting
+  * Whimsical, family-friendly aesthetic
+  * Attention to material properties
+  * Balanced composition
+  * Emotional storytelling elements
 
 Camera & Technical Settings:
 - Camera Model: {camera_model}
@@ -208,12 +249,24 @@ Camera & Technical Settings:
 - Aperture: {aperture}
 - Special Lens: {special_lens}
 - Depth of Field: {depth_of_field}
+- For 3D Render:
+  * Cinematic camera angles
+  * Professional depth of field
+  * Clear focus on main subjects
+  * Balanced exposure
+  * Dynamic framing
 
 Lighting & Atmosphere:
 - Time of Day: {time_of_day}
 - Lighting Style: {lighting}
 - Light Quality: {light_quality}
 - Artificial Sources: {artificial_sources}
+- For 3D Render:
+  * Global illumination
+  * Soft, natural lighting
+  * Subtle shadows
+  * Ambient occlusion
+  * Light bounces and reflections
 
 Composition & Environment:
 - Technique: {composition}
@@ -222,6 +275,12 @@ Composition & Environment:
 - Weather: {weather}
 - Season: {season}
 - Atmospheric Effects: {atmospheric_effects}
+- For 3D Render:
+  * Rule of thirds
+  * Leading lines
+  * Depth layers
+  * Environmental storytelling
+  * Balanced negative space
 
 Color & Detail Settings:
 - Color Scheme: {color_scheme}
@@ -230,11 +289,49 @@ Color & Detail Settings:
 - Detail Level: {detail_level}
 - Texture Quality: {texture_quality}
 - Special Effects: {special_effects}
+- For 3D Render:
+  * Vibrant, appealing colors
+  * Consistent color harmony
+  * Material-based textures
+  * Surface imperfections
+  * Subsurface scattering
 
 Quality Settings:
 - Resolution: {resolution}
 - Aspect Ratio: {aspect_ratio}
 - Rendering Quality: {rendering_quality}
+- For 3D Render:
+  * High polygon count
+  * Anti-aliasing
+  * Motion blur
+  * Depth of field
+  * Global illumination
+
+Critical Requirements:
+1. Maintain the core concept of the original prompt
+2. Incorporate all specified settings naturally
+3. Ensure technical accuracy
+4. Maintain artistic coherence
+5. Balance detail with style
+6. For 3D Render:
+   - Keep the Pixar-style aesthetic
+   - Maintain family-friendly appeal
+   - Ensure smooth, polished look
+   - Include emotional elements
+   - Balance realism with stylization
+
+Output Format:
+Generate a single, detailed sentence that incorporates:
+1. Main subject and action/state
+2. Style and artistic direction
+3. Camera and technical specifications
+4. Lighting and atmospheric conditions
+5. Composition and environmental context
+6. Color treatment and special effects
+7. Quality and detail specifications
+8. Mood and emotional impact
+
+The final prompt should read like a professional 3D artist's description, emphasizing the Pixar-style while maintaining clarity and focus. Ensure all technical specifications are accurate and appropriate for the chosen style. The prompt should be detailed but concise, focusing on the most important elements that will contribute to the final image quality.
 
 Please enhance the following prompt while maintaining its core concept and incorporating these specifications:
 

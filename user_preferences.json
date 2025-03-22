@@ -1,7 +1,7 @@
 {
   "preferred_genres": [],
   "preferred_styles": [
-    "Claymation"
+    "oil_painting"
   ],
   "preferred_moods": [
     "peaceful"
@@ -14,16 +14,16 @@
     "aspect_ratio": "16:9",
     "negative_prompt": "",
     "camera_settings": {
-      "camera_model": "RED Digital Cinema",
+      "camera_model": "ARRI Alexa",
       "lens_type": "50mm",
-      "aperture": "f/2.8",
+      "aperture": "f/1.8",
       "special_lens": null,
-      "depth_of_field": "shallow"
+      "depth_of_field": "deep"
     },
     "lighting_settings": {
       "time_of_day": "midday",
       "lighting_style": "natural",
-      "light_quality": "soft",
+      "light_quality": "diffused",
       "artificial_sources": []
     },
     "composition_settings": {
@@ -32,9 +32,11 @@
       "perspective": "wide"
     },
     "environment_settings": {
-      "weather": "clear",
+      "weather": "rainy",
       "season": "summer",
-      "atmospheric_effects": []
+      "atmospheric_effects": [
+        "fog"
+      ]
     },
     "style_settings": {
       "overall_style": "vintage",
@@ -45,18 +47,20 @@
     },
     "detail_settings": {
       "detail_level": "ultra_detailed",
-      "texture_quality": "medium",
-      "special_effects": []
+      "texture_quality": "low",
+      "special_effects": [
+        "motion_blur"
+      ]
     },
     "color_settings": {
       "color_scheme": "natural",
-      "palette_type": "analogous",
+      "palette_type": "triadic",
       "color_temperature": "neutral"
     },
     "quality_settings": {
       "resolution": "8k",
-      "detail_level": "ultra_detailed",
-      "rendering_quality": "photorealistic"
+      "detail_level": "high_detail",
+      "rendering_quality": "high_quality"
     }
   },
   "wallpaper_settings": {

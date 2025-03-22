@@ -366,17 +366,115 @@ def generate_prompt_gemini(tags, use_cache=True, mood=None, style=None):
     # Add specific style if provided
     if style:
         prompt_parts.append(f"Specific style: {style}")
-        # Add style-specific instructions
-        if style == "digital_art":
-            prompt_parts.append("Style instructions: Create a digital art piece with stylized rendering, artistic effects, and creative composition. Focus on artistic elements rather than photorealism.")
-        elif style == "sketch":
-            prompt_parts.append("Style instructions: Create a sketch-like artwork with hand-drawn qualities, line work, and artistic shading. Emphasize the sketchy, artistic nature.")
-        elif style == "watercolor":
-            prompt_parts.append("Style instructions: Create a watercolor painting effect with color blending, transparency, and artistic texture. Focus on watercolor characteristics.")
-        elif style == "cyberpunk":
-            prompt_parts.append("Style instructions: Create a cyberpunk-style artwork with futuristic elements, neon lighting, and technological details. Focus on high-tech and dystopian elements.")
-        elif style == "pop_art":
-            prompt_parts.append("Style instructions: Create a pop art piece with bold colors, graphic elements, and cultural references. Focus on vibrant, graphic style.")
+    
+    # Add all imagen_settings preferences
+    settings = user_prefs.imagen_settings
+    
+    # Camera Settings
+    camera_settings = settings.get("camera_settings", {})
+    if camera_settings:
+        camera_parts = []
+        if camera_settings.get("camera_model"):
+            camera_parts.append(f"camera model: {camera_settings['camera_model']}")
+        if camera_settings.get("lens_type"):
+            camera_parts.append(f"lens: {camera_settings['lens_type']}")
+        if camera_settings.get("aperture"):
+            camera_parts.append(f"aperture: {camera_settings['aperture']}")
+        if camera_settings.get("depth_of_field"):
+            camera_parts.append(f"depth of field: {camera_settings['depth_of_field']}")
+        if camera_parts:
+            prompt_parts.append(f"Camera settings: {', '.join(camera_parts)}")
+    
+    # Lighting Settings
+    lighting_settings = settings.get("lighting_settings", {})
+    if lighting_settings:
+        lighting_parts = []
+        if lighting_settings.get("time_of_day"):
+            lighting_parts.append(f"time of day: {lighting_settings['time_of_day']}")
+        if lighting_settings.get("lighting_style"):
+            lighting_parts.append(f"lighting style: {lighting_settings['lighting_style']}")
+        if lighting_settings.get("light_quality"):
+            lighting_parts.append(f"light quality: {lighting_settings['light_quality']}")
+        if lighting_settings.get("artificial_sources"):
+            lighting_parts.append(f"artificial sources: {', '.join(lighting_settings['artificial_sources'])}")
+        if lighting_parts:
+            prompt_parts.append(f"Lighting settings: {', '.join(lighting_parts)}")
+    
+    # Composition Settings
+    composition_settings = settings.get("composition_settings", {})
+    if composition_settings:
+        composition_parts = []
+        if composition_settings.get("technique"):
+            composition_parts.append(f"technique: {composition_settings['technique']}")
+        if composition_settings.get("camera_angle"):
+            composition_parts.append(f"camera angle: {composition_settings['camera_angle']}")
+        if composition_settings.get("perspective"):
+            composition_parts.append(f"perspective: {composition_settings['perspective']}")
+        if composition_parts:
+            prompt_parts.append(f"Composition settings: {', '.join(composition_parts)}")
+    
+    # Environment Settings
+    environment_settings = settings.get("environment_settings", {})
+    if environment_settings:
+        environment_parts = []
+        if environment_settings.get("weather"):
+            environment_parts.append(f"weather: {environment_settings['weather']}")
+        if environment_settings.get("season"):
+            environment_parts.append(f"season: {environment_settings['season']}")
+        if environment_settings.get("atmospheric_effects"):
+            environment_parts.append(f"atmospheric effects: {', '.join(environment_settings['atmospheric_effects'])}")
+        if environment_parts:
+            prompt_parts.append(f"Environment settings: {', '.join(environment_parts)}")
+    
+    # Style Settings
+    style_settings = settings.get("style_settings", {})
+    if style_settings:
+        style_parts = []
+        if style_settings.get("overall_style"):
+            style_parts.append(f"overall style: {style_settings['overall_style']}")
+        if style_settings.get("art_movement"):
+            style_parts.append(f"art movement: {style_settings['art_movement']}")
+        if style_settings.get("post_processing"):
+            style_parts.append(f"post-processing: {', '.join(style_settings['post_processing'])}")
+        if style_parts:
+            prompt_parts.append(f"Style settings: {', '.join(style_parts)}")
+    
+    # Detail Settings
+    detail_settings = settings.get("detail_settings", {})
+    if detail_settings:
+        detail_parts = []
+        if detail_settings.get("detail_level"):
+            detail_parts.append(f"detail level: {detail_settings['detail_level']}")
+        if detail_settings.get("texture_quality"):
+            detail_parts.append(f"texture quality: {detail_settings['texture_quality']}")
+        if detail_settings.get("special_effects"):
+            detail_parts.append(f"special effects: {', '.join(detail_settings['special_effects'])}")
+        if detail_parts:
+            prompt_parts.append(f"Detail settings: {', '.join(detail_parts)}")
+    
+    # Color Settings
+    color_settings = settings.get("color_settings", {})
+    if color_settings:
+        color_parts = []
+        if color_settings.get("color_scheme"):
+            color_parts.append(f"color scheme: {color_settings['color_scheme']}")
+        if color_settings.get("palette_type"):
+            color_parts.append(f"palette type: {color_settings['palette_type']}")
+        if color_settings.get("color_temperature"):
+            color_parts.append(f"color temperature: {color_settings['color_temperature']}")
+        if color_parts:
+            prompt_parts.append(f"Color settings: {', '.join(color_parts)}")
+    
+    # Quality Settings
+    quality_settings = settings.get("quality_settings", {})
+    if quality_settings:
+        quality_parts = []
+        if quality_settings.get("resolution"):
+            quality_parts.append(f"resolution: {quality_settings['resolution']}")
+        if quality_settings.get("rendering_quality"):
+            quality_parts.append(f"rendering quality: {quality_settings['rendering_quality']}")
+        if quality_parts:
+            prompt_parts.append(f"Quality settings: {', '.join(quality_parts)}")
     
     # Add aspect ratio preference
     prompt_parts.append(f"Aspect ratio: {user_prefs.aspect_ratio}")
@@ -801,41 +899,42 @@ def enhance_custom_prompt(custom_prompt):
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "photorealistic"
         mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else "neutral"
         
-        # Get all settings from imagen_settings with default values
+        # Get all settings from imagen_settings
         settings = user_prefs.imagen_settings
         
-        # Camera & Technical Settings
+        # Camera Settings
         camera_settings = settings.get("camera_settings", {})
-        camera_model = camera_settings.get("camera_model", "ARRI Alexa")
+        camera_model = camera_settings.get("camera_model", "RED Digital Cinema")
         lens_type = camera_settings.get("lens_type", "50mm")
         aperture = camera_settings.get("aperture", "f/2.8")
         special_lens = camera_settings.get("special_lens", "standard")
-        depth_of_field = camera_settings.get("depth_of_field", "medium")  # Added depth of field
+        depth_of_field = camera_settings.get("depth_of_field", "medium")
         
-        # Lighting & Atmosphere
+        # Lighting Settings
         lighting_settings = settings.get("lighting_settings", {})
-        time_of_day = lighting_settings.get("time_of_day", "golden_hour")
+        time_of_day = lighting_settings.get("time_of_day", "midday")
         lighting_style = lighting_settings.get("lighting_style", "natural")
         light_quality = lighting_settings.get("light_quality", "soft")
         artificial_sources = lighting_settings.get("artificial_sources", [])
         
-        # Composition & Environment
+        # Composition Settings
         composition_settings = settings.get("composition_settings", {})
-        technique = composition_settings.get("technique", "rule_of_thirds")
+        technique = composition_settings.get("technique", "framing")
         camera_angle = composition_settings.get("camera_angle", "eye_level")
         perspective = composition_settings.get("perspective", "wide")
         
+        # Environment Settings
         environment_settings = settings.get("environment_settings", {})
         weather = environment_settings.get("weather", "clear")
         season = environment_settings.get("season", "summer")
         atmospheric_effects = environment_settings.get("atmospheric_effects", [])
         
-        # Style & Artistic Settings
+        # Style Settings
         style_settings = settings.get("style_settings", {})
-        art_movement = style_settings.get("art_movement", "Realism")
+        art_movement = style_settings.get("art_movement", "Abstract Expressionism")
         post_processing = style_settings.get("post_processing", [])
         
-        # Detail & Quality Settings
+        # Detail Settings
         detail_settings = settings.get("detail_settings", {})
         detail_level = detail_settings.get("detail_level", "ultra_detailed")
         texture_quality = detail_settings.get("texture_quality", "high")
@@ -849,7 +948,7 @@ def enhance_custom_prompt(custom_prompt):
         
         # Quality Settings
         quality_settings = settings.get("quality_settings", {})
-        resolution = quality_settings.get("resolution", "1920x1080")
+        resolution = quality_settings.get("resolution", "8k")
         rendering_quality = quality_settings.get("rendering_quality", "photorealistic")
         
         # Format the custom prompt instructions with all settings
@@ -865,7 +964,7 @@ def enhance_custom_prompt(custom_prompt):
             lens_type=lens_type,
             aperture=aperture,
             special_lens=special_lens,
-            depth_of_field=depth_of_field,  # Added depth of field
+            depth_of_field=depth_of_field,
             time_of_day=time_of_day,
             light_quality=light_quality,
             artificial_sources=", ".join(artificial_sources) if artificial_sources else "none",
@@ -911,11 +1010,8 @@ def enhance_custom_prompt(custom_prompt):
             if "Option" in enhanced_prompt:
                 enhanced_prompt = enhanced_prompt.split("Option")[0].strip()
             
-            logging.info(f"Original prompt: {sanitize_log_content(custom_prompt)}")
-            logging.info(f"Enhanced prompt: {sanitize_log_content(enhanced_prompt)}")
             return enhanced_prompt
         else:
-            logging.warning("Gemini model returned empty response, using original prompt")
             return custom_prompt
 
     except Exception as e:
