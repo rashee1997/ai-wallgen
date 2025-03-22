@@ -323,6 +323,17 @@ def generate_prompt_gemini(tags, use_cache=True, mood=None, style=None):
     # Add specific style if provided
     if style:
         prompt_parts.append(f"Specific style: {style}")
+        # Add style-specific instructions
+        if style == "digital_art":
+            prompt_parts.append("Style instructions: Create a digital art piece with stylized rendering, artistic effects, and creative composition. Focus on artistic elements rather than photorealism.")
+        elif style == "sketch":
+            prompt_parts.append("Style instructions: Create a sketch-like artwork with hand-drawn qualities, line work, and artistic shading. Emphasize the sketchy, artistic nature.")
+        elif style == "watercolor":
+            prompt_parts.append("Style instructions: Create a watercolor painting effect with color blending, transparency, and artistic texture. Focus on watercolor characteristics.")
+        elif style == "cyberpunk":
+            prompt_parts.append("Style instructions: Create a cyberpunk-style artwork with futuristic elements, neon lighting, and technological details. Focus on high-tech and dystopian elements.")
+        elif style == "pop_art":
+            prompt_parts.append("Style instructions: Create a pop art piece with bold colors, graphic elements, and cultural references. Focus on vibrant, graphic style.")
     
     # Add aspect ratio preference
     prompt_parts.append(f"Aspect ratio: {user_prefs.aspect_ratio}")
@@ -594,13 +605,57 @@ def set_wallpaper(image_path):
         return False
 
 def enhance_custom_prompt(custom_prompt):
-    """Enhance the custom prompt using the Gemini model."""
+    """Enhance the custom prompt using the Gemini model based on user preferences."""
     try:
+        # Get user preferences
+        style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "photorealistic"
+        mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else "neutral"
+        resolution = user_prefs.imagen_settings.get("resolution", "1920x1080")
+        aspect_ratio = user_prefs.aspect_ratio
+        color_scheme = user_prefs.imagen_settings.get("color_scheme", "natural")
+        lighting = user_prefs.imagen_settings.get("lighting", "natural")
+        composition = user_prefs.imagen_settings.get("composition", "rule_of_thirds")
+        depth_of_field = user_prefs.imagen_settings.get("depth_of_field", "medium")
+        
+        # Format the custom prompt instructions with user preferences
+        enhancement_instructions = CUSTOM_PROMPT_INSTRUCTIONS.format(
+            style=style,
+            mood=mood,
+            resolution=resolution,
+            aspect_ratio=aspect_ratio,
+            color_scheme=color_scheme,
+            lighting=lighting,
+            composition=composition,
+            depth_of_field=depth_of_field
+        )
+        
+        # Generate enhanced prompt using Gemini
         model = genai.GenerativeModel('gemini-2.0-flash')
-        response = model.generate_content(CUSTOM_PROMPT_INSTRUCTIONS + custom_prompt)
+        response = model.generate_content(enhancement_instructions + "\n\nPrompt to enhance: " + custom_prompt)
 
         if response.parts:
             enhanced_prompt = response.parts[0].text.strip()
+            
+            # Clean up the prompt format
+            # Remove any markdown formatting
+            enhanced_prompt = enhanced_prompt.replace("**", "")
+            
+            # Remove any explanatory text after the prompt
+            if "Explanation" in enhanced_prompt:
+                enhanced_prompt = enhanced_prompt.split("Explanation")[0].strip()
+            
+            # Remove any "Prompt:" or similar headers
+            if "Prompt:" in enhanced_prompt:
+                enhanced_prompt = enhanced_prompt.split("Prompt:")[1].strip()
+            
+            # Remove any quotes around the prompt
+            if enhanced_prompt.startswith('"') and enhanced_prompt.endswith('"'):
+                enhanced_prompt = enhanced_prompt[1:-1]
+            
+            # Remove any numbered options
+            if "Option" in enhanced_prompt:
+                enhanced_prompt = enhanced_prompt.split("Option")[0].strip()
+            
             logging.info(f"Original prompt: {sanitize_log_content(custom_prompt)}")
             logging.info(f"Enhanced prompt: {sanitize_log_content(enhanced_prompt)}")
             return enhanced_prompt
@@ -626,57 +681,6 @@ def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"
             f.write("\n")
     except Exception as e:
         logging.error(f"Error saving prompts to JSON: {e}")
-        logging.error(f"Error saving prompts to JSON: {e}")
-
-def configure_interactive_settings():
-    """Configure Imagen 3 settings interactively with detailed explanations."""
-    print_header("Interactive Imagen 3 Settings Configuration")
-    
-    # Number of Images
-    print_section("Number of Images")
-    print_info("How many variations to generate (1-4)")
-    try:
-        num = int(input("Enter number of images (default 1): ").strip() or "1")
-        num = max(1, min(4, num))  # Limit to 4 images maximum
-        user_prefs.imagen_settings["number_of_images"] = num
-        print_success(f"Number of images set to {num}")
-    except ValueError:
-        print_warning("Invalid input. Using default value.")
-    
-    # Negative Prompt
-    print_section("Negative Prompt")
-    print_info("Specify elements you want to exclude from the generation")
-    print_info("Leave empty to skip")
-    negative_prompt = input("Enter negative prompt: ").strip()
-    user_prefs.imagen_settings["negative_prompt"] = negative_prompt
-    print_success("Negative prompt saved")
-    
-    # Seed
-    print_section("Random Seed")
-    print_info("Optional seed for reproducible results")
-    print_info("Leave empty for random seed")
-    seed_input = input("Enter seed number: ").strip()
-    if seed_input:
-        try:
-            seed = int(seed_input)
-            user_prefs.imagen_settings["seed"] = seed
-            print_success(f"Seed set to {seed}")
-        except ValueError:
-            print_warning("Invalid seed value. Using random seed.")
-            user_prefs.imagen_settings["seed"] = None
-    else:
-        user_prefs.imagen_settings["seed"] = None
-        print_success("Using random seed")
-    
-    # Save settings
-    user_prefs.save_preferences()
-    print_success("\nAll settings have been saved!")
-    
-    # Show summary
-    print_section("Current Settings Summary")
-    print_info(f"Number of Images: {user_prefs.imagen_settings['number_of_images']}")
-    print_info(f"Negative Prompt: {user_prefs.imagen_settings['negative_prompt'] or 'None'}")
-    print_info(f"Seed: {user_prefs.imagen_settings['seed'] or 'Random'}")
 
 def manage_imagen_settings():
     """Manage Imagen 3 specific settings."""
@@ -684,32 +688,432 @@ def manage_imagen_settings():
     
     while True:
         print_section("Options")
-        print_option("1", "Configure Settings Interactively")
-        print_option("2", "View Current Settings")
-        print_option("3", "Reset to Defaults")
-        print_option("4", "Return to Main Menu")
+        print_option("1", "View Current Settings")
+        print_option("2", "Reset to Defaults")
+        print_option("3", "Return to Main Menu")
         
-        choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
+        choice = get_validated_input("Select an option (1-3)", ["1", "2", "3"])
         
         if choice == "1":
-            configure_interactive_settings()
-        elif choice == "2":
             print_section("Current Settings")
             print_info(f"Number of Images: {user_prefs.imagen_settings['number_of_images']}")
             print_info(f"Seed: {user_prefs.imagen_settings['seed'] or 'Random'}")
             print_info(f"Negative Prompt: {user_prefs.imagen_settings['negative_prompt'] or 'None'}")
-        elif choice == "3":
+            print_info(f"Aspect Ratio: {user_prefs.aspect_ratio}")
+            print_info(f"Color Scheme: {user_prefs.imagen_settings.get('color_scheme', 'natural')}")
+            print_info(f"Lighting: {user_prefs.imagen_settings.get('lighting', 'natural')}")
+            print_info(f"Composition: {user_prefs.imagen_settings.get('composition', 'rule_of_thirds')}")
+            print_info(f"Depth of Field: {user_prefs.imagen_settings.get('depth_of_field', 'medium')}")
+            
+        elif choice == "2":
             print_section("Reset to Defaults")
             user_prefs.imagen_settings = {
                 "number_of_images": 1,
                 "seed": None,
                 "aspect_ratio": "16:9",
-                "negative_prompt": ""
+                "negative_prompt": "",
+                "color_scheme": "natural",
+                "lighting": "natural",
+                "composition": "rule_of_thirds",
+                "depth_of_field": "medium"
             }
             user_prefs.save_preferences()
             print_success("Settings reset to defaults")
-        elif choice == "4":
+            
+        elif choice == "3":
             break
+
+def configure_advanced_options():
+    """Configure advanced options for image generation."""
+    print_section("Advanced Options")
+    print_info("Fine-tune the generation parameters:")
+    
+    while True:
+        print_option("1", "Style Settings")
+        print_option("2", "Mood & Atmosphere")
+        print_option("3", "Technical Parameters")
+        print_option("4", "Composition & Lighting")
+        print_option("5", "Show Current Settings")
+        print_option("6", "Customize All Parameters")
+        print_option("7", "Return to previous menu")
+        
+        advanced_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+        
+        if advanced_choice == "1":
+            print_section("Style Settings")
+            print_info("Choose the artistic style for your wallpaper:")
+            print_option("1", "Photorealistic")
+            print_option("2", "Digital Art")
+            print_option("3", "Sketch")
+            print_option("4", "Watercolor")
+            print_option("5", "Cyberpunk")
+            print_option("6", "Pop Art")
+            print_option("7", "Oil Painting")
+            print_option("8", "Pixel Art")
+            print_option("9", "Anime")
+            print_option("10", "3D Render")
+            print_option("11", "Custom Style")
+            print_option("12", "Return")
+            
+            style_choice = get_validated_input("Select style (1-12)", [str(i) for i in range(1, 13)])
+            if style_choice == "12":
+                continue
+                
+            if style_choice == "11":
+                custom_style = input("Enter your custom style: ").strip()
+                if custom_style:
+                    user_prefs.preferred_styles = [custom_style]
+                    print_success(f"Custom style set to: {custom_style}")
+                continue
+                
+            styles = {
+                "1": "photorealistic",
+                "2": "digital_art",
+                "3": "sketch",
+                "4": "watercolor",
+                "5": "cyberpunk",
+                "6": "pop_art",
+                "7": "oil_painting",
+                "8": "pixel_art",
+                "9": "anime",
+                "10": "3d_render"
+            }
+            
+            selected_style = styles[style_choice]
+            user_prefs.preferred_styles = [selected_style]
+            print_success(f"Style set to {selected_style}")
+            
+        elif advanced_choice == "2":
+            print_section("Mood & Atmosphere")
+            print_info("Set the mood and atmosphere for your wallpaper:")
+            print_option("1", "Peaceful & Serene")
+            print_option("2", "Dramatic & Epic")
+            print_option("3", "Mysterious & Enigmatic")
+            print_option("4", "Energetic & Dynamic")
+            print_option("5", "Melancholic & Thoughtful")
+            print_option("6", "Joyful & Vibrant")
+            print_option("7", "Romantic & Dreamy")
+            print_option("8", "Eerie & Haunting")
+            print_option("9", "Nostalgic & Retro")
+            print_option("10", "Futuristic & Sci-fi")
+            print_option("11", "Custom Mood")
+            print_option("12", "Return")
+            
+            mood_choice = get_validated_input("Select mood (1-12)", [str(i) for i in range(1, 13)])
+            if mood_choice == "12":
+                continue
+                
+            if mood_choice == "11":
+                custom_mood = input("Enter your custom mood: ").strip()
+                if custom_mood:
+                    user_prefs.preferred_moods = [custom_mood]
+                    print_success(f"Custom mood set to: {custom_mood}")
+                continue
+                
+            moods = {
+                "1": "peaceful",
+                "2": "dramatic",
+                "3": "mysterious",
+                "4": "energetic",
+                "5": "melancholic",
+                "6": "joyful",
+                "7": "romantic",
+                "8": "eerie",
+                "9": "nostalgic",
+                "10": "futuristic"
+            }
+            
+            selected_mood = moods[mood_choice]
+            user_prefs.preferred_moods = [selected_mood]
+            print_success(f"Mood set to {selected_mood}")
+            
+        elif advanced_choice == "3":
+            print_section("Technical Parameters")
+            print_info("Configure technical aspects of the generation:")
+            print_option("1", "Aspect Ratio")
+            print_option("2", "Resolution")
+            print_option("3", "Color Scheme")
+            print_option("4", "Custom Technical Parameters")
+            print_option("5", "Return")
+            
+            tech_choice = get_validated_input("Select parameter (1-5)", ["1", "2", "3", "4", "5"])
+            if tech_choice == "5":
+                continue
+                
+            if tech_choice == "4":
+                print_info("Enter custom technical parameters (leave blank to skip):")
+                custom_res = input("Custom resolution (e.g., 1920x1080): ").strip()
+                custom_ratio = input("Custom aspect ratio (e.g., 16:9): ").strip()
+                custom_color = input("Custom color scheme: ").strip()
+                
+                if custom_res:
+                    user_prefs.imagen_settings["resolution"] = custom_res
+                if custom_ratio:
+                    user_prefs.aspect_ratio = custom_ratio
+                if custom_color:
+                    user_prefs.imagen_settings["color_scheme"] = custom_color
+                    
+                print_success("Custom technical parameters updated")
+                continue
+                
+            if tech_choice == "1":
+                print_info("Select aspect ratio:")
+                print_option("1", "16:9 (Widescreen)")
+                print_option("2", "21:9 (Ultrawide)")
+                print_option("3", "4:3 (Standard)")
+                print_option("4", "1:1 (Square)")
+                print_option("5", "9:16 (Portrait)")
+                ratio_choice = get_validated_input("Select aspect ratio (1-5)", ["1", "2", "3", "4", "5"])
+                aspect_ratio = ["16:9", "21:9", "4:3", "1:1", "9:16"][int(ratio_choice) - 1]
+                user_prefs.aspect_ratio = aspect_ratio
+                print_success(f"Aspect ratio set to {aspect_ratio}")
+                
+            elif tech_choice == "2":
+                print_info("Select resolution:")
+                print_option("1", "1920x1080 (Full HD)")
+                print_option("2", "2560x1440 (2K)")
+                print_option("3", "3840x2160 (4K)")
+                print_option("4", "5120x2880 (5K)")
+                print_option("5", "Custom")
+                res_choice = get_validated_input("Select resolution (1-5)", ["1", "2", "3", "4", "5"])
+                if res_choice == "5":
+                    custom_res = input("Enter custom resolution (e.g., 1920x1080): ").strip()
+                    if "x" in custom_res:
+                        user_prefs.imagen_settings["resolution"] = custom_res
+                        print_success(f"Resolution set to {custom_res}")
+                else:
+                    resolutions = ["1920x1080", "2560x1440", "3840x2160", "5120x2880"]
+                    user_prefs.imagen_settings["resolution"] = resolutions[int(res_choice) - 1]
+                    print_success(f"Resolution set to {resolutions[int(res_choice) - 1]}")
+                    
+            elif tech_choice == "3":
+                print_info("Select color scheme:")
+                print_option("1", "Warm colors")
+                print_option("2", "Cool colors")
+                print_option("3", "Monochromatic")
+                print_option("4", "Vibrant colors")
+                print_option("5", "Pastel colors")
+                print_option("6", "Neutral colors")
+                print_option("7", "High contrast")
+                print_option("8", "Low contrast")
+                print_option("9", "Custom")
+                print_option("10", "Return")
+                
+                color_choice = get_validated_input("Select color scheme (1-10)", [str(i) for i in range(1, 11)])
+                if color_choice == "10":
+                    continue
+                    
+                if color_choice == "9":
+                    custom_color = input("Enter custom color scheme: ").strip()
+                    if custom_color:
+                        user_prefs.imagen_settings["color_scheme"] = custom_color
+                        print_success(f"Custom color scheme set to: {custom_color}")
+                    continue
+                    
+                color_schemes = {
+                    "1": "warm",
+                    "2": "cool",
+                    "3": "monochromatic",
+                    "4": "vibrant",
+                    "5": "pastel",
+                    "6": "neutral",
+                    "7": "high_contrast",
+                    "8": "low_contrast"
+                }
+                
+                selected_scheme = color_schemes[color_choice]
+                user_prefs.imagen_settings["color_scheme"] = selected_scheme
+                print_success(f"Color scheme set to {selected_scheme}")
+                
+        elif advanced_choice == "4":
+            print_section("Composition & Lighting")
+            print_info("Configure composition and lighting settings:")
+            print_option("1", "Composition Style")
+            print_option("2", "Lighting Type")
+            print_option("3", "Depth of Field")
+            print_option("4", "Custom Lighting")
+            print_option("5", "Return")
+            
+            comp_choice = get_validated_input("Select parameter (1-5)", ["1", "2", "3", "4", "5"])
+            if comp_choice == "5":
+                continue
+                
+            if comp_choice == "4":
+                print_info("Enter custom lighting settings (leave blank to skip):")
+                custom_lighting = input("Custom lighting type: ").strip()
+                custom_composition = input("Custom composition style: ").strip()
+                custom_dof = input("Custom depth of field: ").strip()
+                
+                if custom_lighting:
+                    user_prefs.imagen_settings["lighting"] = custom_lighting
+                if custom_composition:
+                    user_prefs.imagen_settings["composition"] = custom_composition
+                if custom_dof:
+                    user_prefs.imagen_settings["depth_of_field"] = custom_dof
+                    
+                print_success("Custom lighting settings updated")
+                continue
+                
+            if comp_choice == "1":
+                print_info("Select composition style:")
+                print_option("1", "Rule of Thirds")
+                print_option("2", "Centered")
+                print_option("3", "Leading Lines")
+                print_option("4", "Symmetrical")
+                print_option("5", "Asymmetrical")
+                print_option("6", "Framed")
+                print_option("7", "Custom")
+                print_option("8", "Return")
+                
+                comp_style = get_validated_input("Select composition style (1-8)", [str(i) for i in range(1, 9)])
+                if comp_style == "8":
+                    continue
+                    
+                if comp_style == "7":
+                    custom_comp = input("Enter custom composition style: ").strip()
+                    if custom_comp:
+                        user_prefs.imagen_settings["composition"] = custom_comp
+                        print_success(f"Custom composition style set to: {custom_comp}")
+                    continue
+                    
+                compositions = {
+                    "1": "rule_of_thirds",
+                    "2": "centered",
+                    "3": "leading_lines",
+                    "4": "symmetrical",
+                    "5": "asymmetrical",
+                    "6": "framed"
+                }
+                
+                user_prefs.imagen_settings["composition"] = compositions[comp_style]
+                print_success(f"Composition style set to {compositions[comp_style]}")
+                
+            elif comp_choice == "2":
+                print_info("Select lighting type:")
+                print_option("1", "Natural Light")
+                print_option("2", "Studio Light")
+                print_option("3", "Dramatic Light")
+                print_option("4", "Soft Light")
+                print_option("5", "Harsh Light")
+                print_option("6", "Volumetric Light")
+                print_option("7", "Custom")
+                print_option("8", "Return")
+                
+                light_choice = get_validated_input("Select lighting type (1-8)", [str(i) for i in range(1, 9)])
+                if light_choice == "8":
+                    continue
+                    
+                if light_choice == "7":
+                    custom_light = input("Enter custom lighting type: ").strip()
+                    if custom_light:
+                        user_prefs.imagen_settings["lighting"] = custom_light
+                        print_success(f"Custom lighting type set to: {custom_light}")
+                    continue
+                    
+                lighting_types = {
+                    "1": "natural",
+                    "2": "studio",
+                    "3": "dramatic",
+                    "4": "soft",
+                    "5": "harsh",
+                    "6": "volumetric"
+                }
+                
+                user_prefs.imagen_settings["lighting"] = lighting_types[light_choice]
+                print_success(f"Lighting type set to {lighting_types[light_choice]}")
+                
+            elif comp_choice == "3":
+                print_info("Select depth of field:")
+                print_option("1", "Shallow (f/1.8)")
+                print_option("2", "Medium (f/4)")
+                print_option("3", "Deep (f/8)")
+                print_option("4", "Custom")
+                print_option("5", "Return")
+                
+                dof_choice = get_validated_input("Select depth of field (1-5)", ["1", "2", "3", "4", "5"])
+                if dof_choice == "5":
+                    continue
+                    
+                if dof_choice == "4":
+                    custom_dof = input("Enter custom depth of field: ").strip()
+                    if custom_dof:
+                        user_prefs.imagen_settings["depth_of_field"] = custom_dof
+                        print_success(f"Custom depth of field set to: {custom_dof}")
+                    continue
+                    
+                dof_settings = {
+                    "1": "shallow",
+                    "2": "medium",
+                    "3": "deep"
+                }
+                
+                user_prefs.imagen_settings["depth_of_field"] = dof_settings[dof_choice]
+                print_success(f"Depth of field set to {dof_settings[dof_choice]}")
+                
+        elif advanced_choice == "5":
+            print_section("Current Settings")
+            print_info("Style Settings:")
+            print_info(f"- Current Style: {user_prefs.preferred_styles[0] if user_prefs.preferred_styles else 'Not set'}")
+            
+            print_info("\nMood & Atmosphere:")
+            print_info(f"- Current Mood: {user_prefs.preferred_moods[0] if user_prefs.preferred_moods else 'Not set'}")
+            
+            print_info("\nTechnical Parameters:")
+            print_info(f"- Aspect Ratio: {user_prefs.aspect_ratio}")
+            print_info(f"- Resolution: {user_prefs.imagen_settings.get('resolution', 'Not set')}")
+            print_info(f"- Color Scheme: {user_prefs.imagen_settings.get('color_scheme', 'Not set')}")
+            
+            print_info("\nComposition & Lighting:")
+            print_info(f"- Composition Style: {user_prefs.imagen_settings.get('composition', 'Not set')}")
+            print_info(f"- Lighting Type: {user_prefs.imagen_settings.get('lighting', 'Not set')}")
+            print_info(f"- Depth of Field: {user_prefs.imagen_settings.get('depth_of_field', 'Not set')}")
+            
+        elif advanced_choice == "6":
+            print_section("Customize All Parameters")
+            print_info("Enter custom values for all parameters (leave blank to keep current):")
+            
+            # Style
+            custom_style = input("Custom style: ").strip()
+            if custom_style:
+                user_prefs.preferred_styles = [custom_style]
+            
+            # Mood
+            custom_mood = input("Custom mood: ").strip()
+            if custom_mood:
+                user_prefs.preferred_moods = [custom_mood]
+            
+            # Technical Parameters
+            custom_res = input("Custom resolution (e.g., 1920x1080): ").strip()
+            if custom_res:
+                user_prefs.imagen_settings["resolution"] = custom_res
+                
+            custom_ratio = input("Custom aspect ratio (e.g., 16:9): ").strip()
+            if custom_ratio:
+                user_prefs.aspect_ratio = custom_ratio
+                
+            custom_color = input("Custom color scheme: ").strip()
+            if custom_color:
+                user_prefs.imagen_settings["color_scheme"] = custom_color
+            
+            # Composition & Lighting
+            custom_comp = input("Custom composition style: ").strip()
+            if custom_comp:
+                user_prefs.imagen_settings["composition"] = custom_comp
+                
+            custom_light = input("Custom lighting type: ").strip()
+            if custom_light:
+                user_prefs.imagen_settings["lighting"] = custom_light
+                
+            custom_dof = input("Custom depth of field: ").strip()
+            if custom_dof:
+                user_prefs.imagen_settings["depth_of_field"] = custom_dof
+            
+            print_success("All custom parameters updated")
+            
+        elif advanced_choice == "7":
+            break
+            
+        user_prefs.save_preferences()
 
 def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
     """Generate a wallpaper based on the specified parameters.
@@ -860,16 +1264,22 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                     config=config
                 )
                 
-                if response.generated_images is not None:
-                    for i, generated_image in enumerate(response.generated_images):
-                        image_path = f"generated_image_{i}.png"
-                        with open(image_path, "wb") as f:
-                            f.write(generated_image.image.image_bytes)
-                    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                    os.rename(image_path, cache_path)
-                    print_success("Image generated successfully!")
+                if response and hasattr(response, 'generated_images'):
+                    if response.generated_images:
+                        for i, generated_image in enumerate(response.generated_images):
+                            image_path = f"generated_image_{i}.png"
+                            with open(image_path, "wb") as f:
+                                f.write(generated_image.image.image_bytes)
+                        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                        os.rename(image_path, cache_path)
+                        print_success("Image generated successfully!")
+                    else:
+                        print_error("Failed to generate image - no images returned")
+                        logging.error(f"Empty response from Imagen 3 for prompt: {enhanced_prompt}")
+                        return False
                 else:
-                    print_error("Failed to generate image - no images returned")
+                    print_error("Failed to generate image - invalid response format")
+                    logging.error(f"Invalid response format from Imagen 3: {response}")
                     return False
             except AttributeError as e:
                 print_error(f"Error with Gemini client: {e}")
@@ -1220,126 +1630,143 @@ def manage_preferences():
 
 def main():
     """Main function to execute the script."""
-    # Check dependencies
-    check_dependencies()
-    
-    print_header("AI Wallpaper Generator")
-    print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
-    
-    while True:
-        print_section("Main Menu")
-        print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
-        print_option("2", "Manage Preferences - Customize wallpaper settings")
-        print_option("3", "Manage Imagen 3 Settings - Fine-tune AI generation")
-        print_option("4", "Exit - Save and exit")
+    try:
+        # Check dependencies
+        check_dependencies()
         
-        choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
+        print_header("AI Wallpaper Generator")
+        print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
         
-        if choice == "1":
-            print_section("Generate AI Wallpaper")
-            print_option("1", "Use Gemini AI to generate a prompt")
-            print_option("2", "Use a random prompt")
-            print_option("3", "Enter your own custom prompt")
-            print_option("4", "Advanced Options - Fine-tune generation parameters")
-            print_option("5", "Return to Main Menu")
+        while True:
+            print_section("Main Menu")
+            print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
+            print_option("2", "Manage Preferences - Customize wallpaper settings")
+            print_option("3", "Manage Imagen 3 Settings - Fine-tune AI generation")
+            print_option("4", "Exit - Save and exit")
             
-            prompt_choice = get_validated_input("Select prompt type (1-5)", ["1", "2", "3", "4", "5"])
+            try:
+                choice = get_validated_input("Select an option (1-4)", ["1", "2", "3", "4"])
+            except KeyboardInterrupt:
+                print_info("\nSaving preferences before exit...")
+                user_prefs.save_preferences()
+                print_success("Goodbye!")
+                sys.exit(0)
             
-            if prompt_choice == "1":
-                # Get mood and style preferences for this generation
-                print_section("Optional Parameters")
-                print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
+            if choice == "1":
+                print_section("Generate AI Wallpaper")
+                print_option("1", "Use Gemini AI to generate a prompt")
+                print_option("2", "Use a random prompt")
+                print_option("3", "Enter your own custom prompt")
+                print_option("4", "Advanced Options - Fine-tune generation parameters")
+                print_option("5", "Return to Main Menu")
                 
-                mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
-                               "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
-                style_options = ["photograph", "digital_art", "landscape", "sketch", 
-                               "watercolor", "cyberpunk", "pop_art"]
+                try:
+                    prompt_choice = get_validated_input("Select prompt type (1-5)", ["1", "2", "3", "4", "5"])
+                except KeyboardInterrupt:
+                    print_info("\nSaving preferences before exit...")
+                    user_prefs.save_preferences()
+                    print_success("Goodbye!")
+                    sys.exit(0)
                 
-                print_info(f"Mood options: {', '.join(mood_options)}")
-                mood = input("Enter mood (optional): ").strip().lower()
-                if mood and mood not in mood_options:
-                    print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
-                
-                print_info(f"Style options: {', '.join(style_options)}")
-                style = input("Enter style (optional): ").strip().lower()
-                if style and style not in style_options:
-                    print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
-                
-                # Add more customization options
-                print_section("Advanced Settings")
-                print_info("You can specify additional parameters for the generation:")
-                print_option("1", "Use default settings")
-                print_option("2", "Customize settings")
-                
-                settings_choice = get_validated_input("Select settings option (1-2)", ["1", "2"])
-                if settings_choice == "2":
-                    print_info("Enter values for the following parameters (leave blank for default):")
-                    resolution = input("Resolution (e.g., 1920x1080): ").strip()
-                    color_scheme = input("Color scheme (e.g., warm, cool, monochromatic): ").strip()
-                    lighting = input("Lighting (e.g., soft, harsh, volumetric): ").strip()
-                    # Add these parameters to the generation
-                    generate_wallpaper("gemini", mood=mood, style=style,
-                                     resolution=resolution, color_scheme=color_scheme, lighting=lighting)
-                else:
-                    generate_wallpaper("gemini", mood=mood, style=style)
+                if prompt_choice == "1":
+                    # Get mood and style preferences for this generation
+                    print_section("Optional Parameters")
+                    print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
                     
-            elif prompt_choice == "2":
-                generate_wallpaper("random")
-            elif prompt_choice == "3":
-                custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
-                generate_wallpaper("custom", custom_prompt=custom_prompt)
-            elif prompt_choice == "4":
-                print_section("Advanced Options")
-                print_info("Fine-tune the generation parameters:")
-                print_option("1", "Set aspect ratio")
-                print_option("2", "Choose color palette")
-                print_option("3", "Select lighting style")
-                print_option("4", "Return to previous menu")
+                    mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
+                                   "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
+                    style_options = ["photograph", "digital_art", "landscape", "sketch", 
+                                   "watercolor", "cyberpunk", "pop_art"]
+                    
+                    print_info(f"Mood options: {', '.join(mood_options)}")
+                    try:
+                        mood = input("Enter mood (optional): ").strip().lower()
+                    except KeyboardInterrupt:
+                        print_info("\nSaving preferences before exit...")
+                        user_prefs.save_preferences()
+                        print_success("Goodbye!")
+                        sys.exit(0)
+                        
+                    if mood and mood not in mood_options:
+                        print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
+                    
+                    print_info(f"Style options: {', '.join(style_options)}")
+                    try:
+                        style = input("Enter style (optional): ").strip().lower()
+                    except KeyboardInterrupt:
+                        print_info("\nSaving preferences before exit...")
+                        user_prefs.save_preferences()
+                        print_success("Goodbye!")
+                        sys.exit(0)
+                        
+                    if style and style not in style_options:
+                        print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
+                    
+                    # Add more customization options
+                    print_section("Advanced Settings")
+                    print_info("You can specify additional parameters for the generation:")
+                    print_option("1", "Use default settings")
+                    print_option("2", "Customize settings")
+                    
+                    try:
+                        settings_choice = get_validated_input("Select settings option (1-2)", ["1", "2"])
+                    except KeyboardInterrupt:
+                        print_info("\nSaving preferences before exit...")
+                        user_prefs.save_preferences()
+                        print_success("Goodbye!")
+                        sys.exit(0)
+                        
+                    if settings_choice == "2":
+                        print_info("Enter values for the following parameters (leave blank for default):")
+                        try:
+                            resolution = input("Resolution (e.g., 1920x1080): ").strip()
+                            color_scheme = input("Color scheme (e.g., warm, cool, monochromatic): ").strip()
+                            lighting = input("Lighting (e.g., soft, harsh, volumetric): ").strip()
+                        except KeyboardInterrupt:
+                            print_info("\nSaving preferences before exit...")
+                            user_prefs.save_preferences()
+                            print_success("Goodbye!")
+                            sys.exit(0)
+                        # Add these parameters to the generation
+                        generate_wallpaper("gemini", mood=mood, style=style,
+                                         resolution=resolution, color_scheme=color_scheme, lighting=lighting)
+                    else:
+                        generate_wallpaper("gemini", mood=mood, style=style)
+                    
+                elif prompt_choice == "2":
+                    generate_wallpaper("random")
+                elif prompt_choice == "3":
+                    try:
+                        custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
+                    except KeyboardInterrupt:
+                        print_info("\nSaving preferences before exit...")
+                        user_prefs.save_preferences()
+                        print_success("Goodbye!")
+                        sys.exit(0)
+                    generate_wallpaper("custom", custom_prompt=custom_prompt)
+                elif prompt_choice == "4":
+                    configure_advanced_options()
+            
+            elif choice == "2":
+                manage_preferences()
+            
+            elif choice == "3":
+                manage_imagen_settings()
+            
+            elif choice == "4":
+                print_header("Thank you for using AI Wallpaper Generator!")
+                break
                 
-                advanced_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
-                if advanced_choice == "1":
-                    print_section("Aspect Ratio")
-                    print_option("1", "16:9 (Widescreen)")
-                    print_option("2", "21:9 (Ultrawide)")
-                    print_option("3", "4:3 (Standard)")
-                    print_option("4", "1:1 (Square)")
-                    print_option("5", "9:16 (Portrait)")
-                    ratio_choice = get_validated_input("Select aspect ratio (1-5)", ["1", "2", "3", "4", "5"])
-                    aspect_ratio = ["16:9", "21:9", "4:3", "1:1", "9:16"][int(ratio_choice) - 1]
-                    user_prefs.aspect_ratio = aspect_ratio
-                    print_success(f"Aspect ratio set to {aspect_ratio}")
-                elif advanced_choice == "2":
-                    print_section("Color Palette")
-                    print_option("1", "Warm colors")
-                    print_option("2", "Cool colors")
-                    print_option("3", "Monochromatic")
-                    print_option("4", "Vibrant colors")
-                    print_option("5", "Pastel colors")
-                    palette_choice = get_validated_input("Select color palette (1-5)", ["1", "2", "3", "4", "5"])
-                    color_palette = ["warm", "cool", "monochromatic", "vibrant", "pastel"][int(palette_choice) - 1]
-                    user_prefs.preferred_styles = [color_palette]
-                    print_success(f"Color palette set to {color_palette}")
-                elif advanced_choice == "3":
-                    print_section("Lighting Style")
-                    print_option("1", "Soft lighting")
-                    print_option("2", "Harsh lighting")
-                    print_option("3", "Volumetric lighting")
-                    print_option("4", "Natural lighting")
-                    print_option("5", "Studio lighting")
-                    lighting_choice = get_validated_input("Select lighting style (1-5)", ["1", "2", "3", "4", "5"])
-                    lighting_style = ["soft", "harsh", "volumetric", "natural", "studio"][int(lighting_choice) - 1]
-                    user_prefs.preferred_styles = [lighting_style]
-                    print_success(f"Lighting style set to {lighting_style}")
-        
-        elif choice == "2":
-            manage_preferences()
-        
-        elif choice == "3":
-            manage_imagen_settings()
-        
-        elif choice == "4":
-            print_header("Thank you for using AI Wallpaper Generator!")
-            break
+    except KeyboardInterrupt:
+        print_info("\nSaving preferences before exit...")
+        user_prefs.save_preferences()
+        print_success("Goodbye!")
+        sys.exit(0)
+    except Exception as e:
+        print_error(f"An unexpected error occurred: {e}")
+        print_info("Saving preferences before exit...")
+        user_prefs.save_preferences()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

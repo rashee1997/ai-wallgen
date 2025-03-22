@@ -1,7 +1,7 @@
 {
   "preferred_genres": [],
   "preferred_styles": [
-    "photograph"
+    "pixel_art"
   ],
   "preferred_moods": [],
   "aspect_ratio": "16:9",
@@ -10,7 +10,49 @@
     "number_of_images": 1,
     "seed": null,
     "aspect_ratio": "16:9",
-    "negative_prompt": ""
+    "negative_prompt": "",
+    "camera_settings": {
+      "camera_model": "ARRI Alexa",
+      "lens_type": "50mm",
+      "aperture": "f/2.8",
+      "special_lens": null
+    },
+    "lighting_settings": {
+      "time_of_day": "golden_hour",
+      "lighting_style": "natural",
+      "light_quality": "soft",
+      "artificial_sources": []
+    },
+    "composition_settings": {
+      "technique": "rule_of_thirds",
+      "camera_angle": "eye_level",
+      "perspective": "wide"
+    },
+    "environment_settings": {
+      "weather": "clear",
+      "season": "summer",
+      "atmospheric_effects": []
+    },
+    "style_settings": {
+      "overall_style": "vintage",
+      "post_processing": [],
+      "art_movement": "Abstract Expressionism"
+    },
+    "detail_settings": {
+      "detail_level": "ultra_detailed",
+      "texture_quality": "high",
+      "special_effects": []
+    },
+    "color_settings": {
+      "color_scheme": "natural",
+      "palette_type": "analogous",
+      "color_temperature": "neutral"
+    },
+    "quality_settings": {
+      "resolution": "8k",
+      "detail_level": "ultra_detailed",
+      "rendering_quality": "photorealistic"
+    }
   },
   "wallpaper_settings": {
     "auto_set": true,

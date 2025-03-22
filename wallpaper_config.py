@@ -194,4 +194,196 @@ CUSTOM_PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen
    - Prevent common issues
    - Maintain quality
 
-Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with these preferences. Focus on creating a vivid and immersive experience that matches the desired style while maintaining clarity and focus.""" 
+Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with these preferences. Focus on creating a vivid and immersive experience that matches the desired style while maintaining clarity and focus."""
+
+# Text and Logo Generation Instructions
+TEXT_LOGO_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model, specializing in text and logo generation. Your task is to craft clear, focused prompts that will generate high-quality text and logos in images.
+
+Key Guidelines for Text Generation:
+1. **Text Clarity & Readability:**
+   - Keep text short and concise (25 characters or less)
+   - Use clear, legible fonts
+   - Ensure good contrast with background
+   - Consider text placement and spacing
+
+2. **Logo Design Elements:**
+   - Include brand identity elements
+   - Specify logo style (minimalist, modern, vintage, etc.)
+   - Define color scheme and typography
+   - Consider logo placement and composition
+
+3. **Technical Specifications:**
+   - Resolution: {resolution}
+   - Aspect ratio: {aspect_ratio}
+   - Color scheme: {color_scheme}
+   - Background style: {background_style}
+
+4. **Quality Modifiers:**
+   - Use appropriate quality descriptors
+   - Include style-specific elements
+   - Consider brand guidelines
+   - Maintain professional appearance
+
+5. **Negative Elements:**
+   - Avoid text distortion
+   - Prevent unclear or illegible text
+   - Exclude unwanted styles
+   - Maintain brand consistency
+
+Output Format:
+Generate a single, detailed sentence that incorporates:
+1. Main text/logo content
+2. Style and design elements
+3. Technical specifications
+4. Quality modifiers
+5. Brand-specific requirements
+
+The final prompt should read like a professional designer's specification, emphasizing clarity and brand consistency while maintaining visual appeal."""
+
+# Logo Generation Templates
+LOGO_TEMPLATES = {
+    "minimalist": {
+        "style": "minimalist, clean lines, simple shapes",
+        "elements": ["geometric forms", "negative space", "typography"],
+        "quality": ["crisp", "precise", "professional"]
+    },
+    "modern": {
+        "style": "contemporary, sleek, innovative",
+        "elements": ["gradients", "shadows", "dynamic shapes"],
+        "quality": ["high-end", "sophisticated", "trendy"]
+    },
+    "vintage": {
+        "style": "retro, classic, timeless",
+        "elements": ["textures", "ornaments", "traditional typography"],
+        "quality": ["authentic", "detailed", "nostalgic"]
+    },
+    "playful": {
+        "style": "fun, energetic, vibrant",
+        "elements": ["bright colors", "whimsical shapes", "dynamic elements"],
+        "quality": ["engaging", "memorable", "eye-catching"]
+    },
+    "corporate": {
+        "style": "professional, trustworthy, established",
+        "elements": ["clean typography", "balanced composition", "corporate colors"],
+        "quality": ["polished", "credible", "authoritative"]
+    }
+}
+
+# Text Generation Templates
+TEXT_TEMPLATES = {
+    "headline": {
+        "style": "bold, impactful, attention-grabbing",
+        "elements": ["large text", "strong contrast", "clear hierarchy"],
+        "quality": ["sharp", "readable", "memorable"]
+    },
+    "body": {
+        "style": "clean, legible, professional",
+        "elements": ["proper spacing", "consistent alignment", "balanced layout"],
+        "quality": ["clear", "well-spaced", "professional"]
+    },
+    "decorative": {
+        "style": "artistic, stylized, ornamental",
+        "elements": ["flourishes", "decorative elements", "unique typography"],
+        "quality": ["elegant", "detailed", "artistic"]
+    },
+    "minimal": {
+        "style": "simple, clean, modern",
+        "elements": ["sparse design", "negative space", "essential elements"],
+        "quality": ["crisp", "refined", "contemporary"]
+    }
+}
+
+# Text and Logo Quality Modifiers
+TEXT_LOGO_QUALITY_MODIFIERS = {
+    "general_quality": [
+        "high-quality",
+        "professional",
+        "crisp",
+        "sharp",
+        "clean",
+        "precise",
+        "detailed",
+        "polished"
+    ],
+    "text_quality": [
+        "legible",
+        "readable",
+        "clear",
+        "well-spaced",
+        "balanced",
+        "harmonious",
+        "consistent",
+        "refined"
+    ],
+    "logo_quality": [
+        "memorable",
+        "distinctive",
+        "scalable",
+        "versatile",
+        "timeless",
+        "unique",
+        "balanced",
+        "proportional"
+    ],
+    "custom_quality": []  # For user-defined quality modifiers
+}
+
+# Text and Logo Style Modifiers
+TEXT_LOGO_STYLE_MODIFIERS = {
+    "typography": [
+        "serif",
+        "sans-serif",
+        "script",
+        "display",
+        "handwritten",
+        "monospace",
+        "decorative",
+        "geometric"
+    ],
+    "effects": [
+        "gradient",
+        "shadow",
+        "outline",
+        "3D",
+        "glow",
+        "texture",
+        "pattern",
+        "emboss"
+    ],
+    "composition": [
+        "centered",
+        "aligned",
+        "stacked",
+        "overlapping",
+        "interwoven",
+        "balanced",
+        "asymmetrical",
+        "dynamic"
+    ],
+    "custom_style": []  # For user-defined style modifiers
+}
+
+# Text and Logo Background Modifiers
+TEXT_LOGO_BACKGROUND_MODIFIERS = {
+    "solid": [
+        "white",
+        "black",
+        "transparent",
+        "gradient",
+        "pattern",
+        "texture",
+        "color-block",
+        "custom"
+    ],
+    "effects": [
+        "blur",
+        "noise",
+        "grain",
+        "vignette",
+        "gradient",
+        "pattern",
+        "texture",
+        "custom"
+    ],
+    "custom_background": []  # For user-defined background modifiers
+} 
