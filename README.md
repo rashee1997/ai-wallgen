@@ -12,9 +12,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 
 </div>
 
-## Features
+## ✨ Features
 
-### AI Generation
+<div align="center">
+
+### 🤖 AI Generation
+<table>
+<tr>
+<td>
+
 - Powered by Google's Imagen 3 model via Gemini API
 - Multiple prompt generation methods:
   - AI-powered prompts (Gemini)
@@ -22,13 +28,29 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
   - Custom prompt input
   - Enhanced prompts with user preferences
 
-### Generation Modes
+</td>
+</tr>
+</table>
+
+### 🎲 Generation Modes
+<table>
+<tr>
+<td>
+
 - AI Generation with Gemini
 - Random Tag Generation
 - Custom Prompt Generation
 - Advanced Options for fine-tuning
 
-### Style Settings
+</td>
+</tr>
+</table>
+
+### 🎨 Style Settings
+<table>
+<tr>
+<td>
+
 - Multiple artistic styles:
   - Photorealistic
   - Digital Art
@@ -49,7 +71,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Post-processing effects
 - Custom style options
 
-### Camera & Technical Settings
+</td>
+</tr>
+</table>
+
+### 📸 Camera & Technical Settings
+<table>
+<tr>
+<td>
+
 - Camera models:
   - ARRI Alexa
   - RED Digital Cinema
@@ -64,7 +94,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Depth of field control
 - Resolution options (up to 8K)
 
-### Lighting & Atmosphere
+</td>
+</tr>
+</table>
+
+### 💡 Lighting & Atmosphere
+<table>
+<tr>
+<td>
+
 - Time of day settings
 - Lighting styles:
   - Natural
@@ -79,7 +117,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Seasonal effects
 - Atmospheric effects
 
-### Composition & Environment
+</td>
+</tr>
+</table>
+
+### 🖼️ Composition & Environment
+<table>
+<tr>
+<td>
+
 - Composition techniques:
   - Rule of thirds
   - Leading lines
@@ -92,7 +138,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Seasonal settings
 - Atmospheric effects
 
-### Color & Detail Settings
+</td>
+</tr>
+</table>
+
+### 🎯 Color & Detail Settings
+<table>
+<tr>
+<td>
+
 - Color schemes:
   - Natural
   - Warm
@@ -110,7 +164,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Special effects
 - Detail levels
 
-### Quality Settings
+</td>
+</tr>
+</table>
+
+### ⚡ Quality Settings
+<table>
+<tr>
+<td>
+
 - Resolution options:
   - 1920x1080 (Full HD)
   - 2560x1440 (2K)
@@ -121,7 +183,15 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
 - Rendering quality
 - Texture quality
 
-### Wallpaper Management
+</td>
+</tr>
+</table>
+
+### 🖥️ Wallpaper Management
+<table>
+<tr>
+<td>
+
 - Auto-setting wallpaper
 - Cache management
 - Multi-monitor support:
@@ -140,27 +210,37 @@ A powerful tool for generating stunning AI wallpapers using Google's Imagen 3 mo
   - Monthly
   - Never
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 📋 Menu Structure
 
 ```mermaid
 graph TD
+    %% Main Menu
     A[Main Menu] --> B[Generate AI Wallpaper]
     A --> C[Manage Preferences]
     A --> D[Manage Imagen 3 Settings]
     A --> E[Exit]
-    
+
+    %% Generate AI Wallpaper Submenu
     B --> F[Use Gemini AI]
     B --> G[Use Random Prompt]
     B --> H[Custom Prompt]
     B --> I[Advanced Options]
-    
+
+    %% Manage Preferences Submenu
     C --> J[Manage Genres]
     C --> K[Manage Styles]
     C --> L[Manage Moods]
     C --> M[Manage Wallpaper Settings]
     C --> N[View Current Preferences]
     C --> O[Reset to Defaults]
-    
+
+    %% Manage Imagen 3 Settings Submenu
     D --> P[Style & Artistic Settings]
     D --> Q[Camera & Technical Settings]
     D --> R[Lighting & Atmosphere]
@@ -168,9 +248,45 @@ graph TD
     D --> T[Color & Detail Settings]
     D --> U[Show Current Settings]
     D --> V[Customize All Parameters]
+
+    %% Styling
+    classDef mainMenu fill:#f9f,stroke:#333,stroke-width:2px
+    classDef subMenu fill:#bbf,stroke:#333,stroke-width:2px
+    classDef option fill:#dfd,stroke:#333,stroke-width:1px
+
+    class A mainMenu
+    class B,C,D mainMenu
+    class F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V option
 ```
 
+<div align="center">
+
+<table>
+<tr>
+<td>
+
+### Menu Navigation Guide
+
+| Menu Level | Description |
+|------------|-------------|
+| **Main Menu** | Primary navigation hub |
+| **Generate AI Wallpaper** | Create new wallpapers |
+| **Manage Preferences** | Customize user settings |
+| **Manage Imagen 3 Settings** | Configure generation parameters |
+
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 🚀 Installation
+
+<div align="center">
+
+<table>
+<tr>
+<td>
 
 1. **Clone the repository**
    ```bash
@@ -188,7 +304,19 @@ graph TD
    export GEMINI_API_KEY='your-api-key-here'
    ```
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 💻 Usage
+
+<div align="center">
+
+<table>
+<tr>
+<td>
 
 1. **Run the script**
    ```bash
@@ -201,73 +329,19 @@ graph TD
    - 🔧 Manage Imagen 3 Settings
    - 🚪 Exit
 
-### Advanced Features
-
-#### 1. Prompt Generation
-
-<div align="center">
-
-| Mode | Features |
-|------|----------|
-| **Gemini AI** | • Contextual prompts<br>• Mood & style support<br>• Technical parameters<br>• Prompt caching |
-| **Random** | • Tag combinations<br>• Theme variety<br>• Curated lists |
-| **Custom** | • Manual input<br>• Auto-enhancement<br>• Quality optimization |
+</td>
+</tr>
+</table>
 
 </div>
-
-#### 2. Advanced Options
-
-<div align="center">
-
-| Category | Options |
-|----------|---------|
-| **Style & Artistic** | • Multiple styles<br>• Art movements<br>• Post-processing<br>• Custom styles |
-| **Camera & Technical** | • Camera models<br>• Lens settings<br>• Aperture control<br>• Special effects |
-| **Lighting & Atmosphere** | • Time of day<br>• Lighting styles<br>• Light quality<br>• Weather & season |
-| **Composition & Environment** | • Composition rules<br>• Camera angles<br>• Perspectives<br>• Environmental effects |
-| **Color & Detail** | • Color schemes<br>• Palette types<br>• Detail levels<br>• Special effects |
-
-</div>
-
-#### 3. Preferences Management
-
-<div align="center">
-
-| Category | Options |
-|----------|---------|
-| **Genres** | • 80+ categories<br>• Add/remove<br>• Clear all |
-| **Styles** | • 10+ options<br>• Custom styles<br>• Style removal |
-| **Moods** | • 10+ options<br>• Mood combinations<br>• Clear moods |
-
-</div>
-
-#### 4. Wallpaper Settings
-
-- **Display Options**
-  - Auto-set wallpaper
-  - Fit modes (Fill/Fit/Center/Tile)
-  - Background color
-  - Multi-monitor support
-
-- **Refresh Settings**
-  - Daily/Weekly/Monthly/Never
-  - Manual refresh
-  - Cache duration (1-365 days)
-
-- **Platform Support**
-  - Windows 10/11
-  - macOS
-  - Linux (GNOME/KDE/XFCE/MATE/Cinnamon/i3/Sway)
-
-### ⌨️ Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|---------|
-| `Ctrl+C` / `Cmd+C` | Exit program |
-| `Enter` | Confirm selection |
-| `Backspace` | Previous menu |
 
 ## ⚙️ Configuration
+
+<div align="center">
+
+<table>
+<tr>
+<td>
 
 ### User Preferences
 
@@ -352,11 +426,21 @@ Preferences are stored in `user_preferences.json`:
 - 🧹 Automatic cache cleanup
 - 💾 Prompt caching for efficiency
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 🔧 Troubleshooting
 
-### Common Issues
-
 <div align="center">
+
+<table>
+<tr>
+<td>
+
+### Common Issues
 
 | Issue | Solution |
 |-------|----------|
@@ -365,11 +449,7 @@ Preferences are stored in `user_preferences.json`:
 | **Generation Failures** | • Check internet<br>• Verify API key<br>• Review prompts |
 | **Display Issues** | • Check settings<br>• Verify permissions<br>• Test fit modes |
 
-</div>
-
 ### Desktop Environment Support
-
-<div align="center">
 
 | Platform | Method |
 |----------|---------|
@@ -377,22 +457,68 @@ Preferences are stored in `user_preferences.json`:
 | **macOS** | AppleScript |
 | **Linux** | Environment-specific commands |
 
+</td>
+</tr>
+</table>
+
 </div>
 
 ## 🤝 Contributing
 
+<div align="center">
+
+<table>
+<tr>
+<td>
+
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+</td>
+</tr>
+</table>
+
+</div>
 
 ## 📄 License
 
+<div align="center">
+
+<table>
+<tr>
+<td>
+
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 🙏 Acknowledgments
+
+<div align="center">
+
+<table>
+<tr>
+<td>
 
 - Google Gemini API and Imagen 3 model
 - The open-source community for wallpaper setting methods
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 🔄 Changelog
+
+<div align="center">
+
+<table>
+<tr>
+<td>
 
 ### Version 1.0.0
 - Initial release
@@ -404,14 +530,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Enhanced prompt generation
 - Detailed technical settings
 
+</td>
+</tr>
+</table>
+
+</div>
+
 ## 💬 Support
 
 <div align="center">
+
+<table>
+<tr>
+<td>
 
 For support, please:
 - Open an issue in the GitHub repository
 - Contact the maintainers
 - Check the documentation
+
+</td>
+</tr>
+</table>
 
 </div>
 
