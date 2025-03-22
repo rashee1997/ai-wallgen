@@ -7,11 +7,31 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Gemini API](https://img.shields.io/badge/Gemini%20API-Enabled-blue)](https://ai.google.dev/)
 
+<!-- Additional Badges -->
+[![AI](https://img.shields.io/badge/AI-Powered-orange.svg)](https://ai.google.dev/)
+[![Imagen](https://img.shields.io/badge/Imagen%203-Enabled-purple.svg)](https://ai.google.dev/)
+[![Wallpaper](https://img.shields.io/badge/Wallpaper-Generator-brightgreen.svg)](#features)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](#installation)
+
 <img src="asset/logo/gemini.svg" alt="Gemini Logo" width="48" height="48">
 
 A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
+
+<!-- Trending Tags -->
+<p align="center">
+  <code>#ai-image-generation</code> •
+  <code>#gemini-api</code> •
+  <code>#imagen3</code> •
+  <code>#wallpaper-generator</code> •
+  <code>#python-ai</code> •
+  <code>#google-ai</code> •
+  <code>#stable-diffusion</code> •
+  <code>#machine-learning</code> •
+  <code>#desktop-customization</code> •
+  <code>#generative-ai</code>
+</p>
 
 </div>
 
