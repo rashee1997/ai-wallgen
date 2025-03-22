@@ -19,8 +19,9 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
 - Powered by Google's Imagen 3 model via Gemini API
 - Multiple prompt generation methods:
   - AI-powered prompts (Gemini)
-  - Random tag combinations
-  - Custom prompt input
+  - Pre-defined genre-based prompts (Nature, Space, Sea, Flowers, Urban, Fantasy, Abstract)
+  - Random tag combinations from curated lists
+  - Custom prompt input with style guidance
   - Enhanced prompts with user preferences
 
 ### 🎨 Artistic Controls
@@ -44,12 +45,19 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
   - Weather conditions and seasonal effects
 
 ### 🖥️ Wallpaper Management
-- Auto-setting wallpaper
-- Cache management
+- Auto-setting wallpaper with system integration
+- Intelligent caching system for generated images
 - Multi-monitor support
 - Custom fit modes
 - Background color options
 - Refresh rate settings
+
+### 💾 System Features
+- Persistent user preferences
+- Intelligent prompt caching
+- Genre-based prompt generation
+- Comprehensive logging system
+- Cross-platform compatibility
 
 ## 🚀 Installation
 
@@ -113,7 +121,6 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
    pip install -r requirements.txt
    ```
 
-
 ## 💻 Usage
 
 1. **Run the script:**
@@ -128,34 +135,50 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
    - Help & Information
    - Exit
 
+## 📁 Project Structure
+
+```
+wallgen/
+├── wallpaper_generator.py    # Main application script
+├── wallpaper_config.py      # Wallpaper generation configuration
+├── prompt_config.py         # Prompt generation settings
+├── requirements.txt         # Project dependencies
+├── user_preferences.json    # User settings storage
+├── prompts.json            # Pre-defined prompts database
+├── cache/                  # Generated image cache
+├── prompt_cache/          # Prompt generation cache
+└── genimage/              # Generated image storage
+```
+
 ## 📋 Advanced Features
 
-### Style & Artistic Settings
-- Multiple artistic styles
-- Art movements
-- Post-processing effects
-- Custom style options
+### Prompt Generation System
+- Genre-based prompt templates
+- Dynamic tag combination
+- AI-enhanced prompt refinement
+- Custom prompt validation
+- Prompt history tracking
 
-### Camera & Technical Settings
-- Professional camera models
-- Lens options
-- Aperture settings
-- Depth of field control
-- Resolution options
+### User Preferences
+- Persistent settings storage
+- Customizable default options
+- Genre preferences
+- Style preferences
+- Technical preferences
 
-### Lighting & Atmosphere
-- Time of day settings
-- Lighting styles
-- Light quality options
-- Weather conditions
-- Seasonal effects
+### Caching System
+- Intelligent image caching
+- Prompt generation caching
+- Cache management tools
+- Automatic cache cleanup
+- Cache statistics
 
-### Composition & Environment
-- Composition techniques
-- Camera angles
-- Perspective options
-- Weather conditions
-- Atmospheric effects
+### Error Handling
+- Comprehensive logging
+- Graceful error recovery
+- User-friendly error messages
+- Debug mode support
+- System compatibility checks
 
 ## 🤝 Contributing
 
@@ -167,9 +190,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Google's Gemini API and Imagen 3 model
-- The open-source community
+- Google's Gemini API and Imagen 3 model for AI image generation
+- The open-source community for various tools and libraries
 - All contributors to this project
+- Special thanks to the Python community for the excellent libraries used in this project
 
 ---
 
