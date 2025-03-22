@@ -108,7 +108,50 @@ class UserPreferences:
             "number_of_images": 1,  # Number of images to generate (1-4)
             "seed": None,  # Optional seed for reproducible results
             "aspect_ratio": "16:9",  # Supported ratios: 16:9, 21:9, 4:3, 1:1, 9:16
-            "negative_prompt": ""  # Optional negative prompt
+            "negative_prompt": "",  # Optional negative prompt
+            "camera_settings": {
+                "camera_model": "ARRI Alexa",
+                "lens_type": "50mm",
+                "aperture": "f/2.8",
+                "special_lens": None,
+                "depth_of_field": "medium"  # Added depth of field setting
+            },
+            "lighting_settings": {
+                "time_of_day": "golden_hour",
+                "lighting_style": "natural",
+                "light_quality": "soft",
+                "artificial_sources": []
+            },
+            "composition_settings": {
+                "technique": "rule_of_thirds",
+                "camera_angle": "eye_level",
+                "perspective": "wide"
+            },
+            "environment_settings": {
+                "weather": "clear",
+                "season": "summer",
+                "atmospheric_effects": []
+            },
+            "style_settings": {
+                "overall_style": "vintage",
+                "post_processing": [],
+                "art_movement": "Abstract Expressionism"
+            },
+            "detail_settings": {
+                "detail_level": "ultra_detailed",
+                "texture_quality": "high",
+                "special_effects": []
+            },
+            "color_settings": {
+                "color_scheme": "natural",
+                "palette_type": "analogous",
+                "color_temperature": "neutral"
+            },
+            "quality_settings": {
+                "resolution": "8k",
+                "detail_level": "ultra_detailed",
+                "rendering_quality": "photorealistic"
+            }
         }
         # Add wallpaper settings
         self.wallpaper_settings = {
@@ -364,21 +407,97 @@ def generate_prompt_gemini(tags, use_cache=True, mood=None, style=None):
         return None
 
 def generate_prompt_random(tags):
-    """Generate a random prompt from the given tags with enhanced details."""
-    num_tags = random.randint(2, 4)  # Generate 2 to 4 tags
-    selected_tags = random.sample(tags, num_tags)
-
-    # Enhanced combinations with more descriptive words and technical details
-    combinations = [
-        f"A stunning {selected_tags[0]} with {selected_tags[1]}, captured with a 35mm lens at f/1.8, during golden hour, with soft, diffused light, and a warm color palette.",
-        f"The beauty of {selected_tags[0]} meeting the serenity of {selected_tags[1]}, shot with a wide-angle lens at f/8, during blue hour, with cool tones and a shallow depth of field.",
-        f"An artistic representation of {selected_tags[0]}, blended with {selected_tags[1]} and {selected_tags[2] if num_tags > 2 else ''}, using a 50mm lens at f/2.8, with harsh, direct light, and a vibrant color scheme.",
-        f"A photorealistic wallpaper of {selected_tags[0]}, {selected_tags[1]}, and {selected_tags[2] if num_tags > 2 else ''}, with a touch of {selected_tags[3] if num_tags > 3 else ''}, shot with a 85mm lens at f/4, during sunset, with warm, diffused light, and a rich color palette."
-    ]
-
-    prompt = random.choice(combinations)
-    logging.info(f"Generated random prompt: {prompt}")
-    return prompt
+    """Generate a random prompt using selected tags and user preferences."""
+    try:
+        # Get user preferences
+        style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "photorealistic"
+        mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else "neutral"
+        
+        # Get all settings from imagen_settings with default values
+        settings = user_prefs.imagen_settings
+        
+        # Camera & Technical Settings
+        camera_settings = settings.get("camera_settings", {})
+        camera_model = camera_settings.get("camera_model", "ARRI Alexa")
+        lens_type = camera_settings.get("lens_type", "50mm")
+        aperture = camera_settings.get("aperture", "f/2.8")
+        special_lens = camera_settings.get("special_lens", "standard")
+        depth_of_field = camera_settings.get("depth_of_field", "medium")
+        
+        # Lighting & Atmosphere
+        lighting_settings = settings.get("lighting_settings", {})
+        time_of_day = lighting_settings.get("time_of_day", "golden_hour")
+        lighting_style = lighting_settings.get("lighting_style", "natural")
+        light_quality = lighting_settings.get("light_quality", "soft")
+        artificial_sources = lighting_settings.get("artificial_sources", [])
+        
+        # Composition & Environment
+        composition_settings = settings.get("composition_settings", {})
+        technique = composition_settings.get("technique", "rule_of_thirds")
+        camera_angle = composition_settings.get("camera_angle", "eye_level")
+        perspective = composition_settings.get("perspective", "wide")
+        
+        environment_settings = settings.get("environment_settings", {})
+        weather = environment_settings.get("weather", "clear")
+        season = environment_settings.get("season", "summer")
+        atmospheric_effects = environment_settings.get("atmospheric_effects", [])
+        
+        # Style & Artistic Settings
+        style_settings = settings.get("style_settings", {})
+        art_movement = style_settings.get("art_movement", "Realism")
+        post_processing = style_settings.get("post_processing", [])
+        
+        # Detail & Quality Settings
+        detail_settings = settings.get("detail_settings", {})
+        detail_level = detail_settings.get("detail_level", "ultra_detailed")
+        texture_quality = detail_settings.get("texture_quality", "high")
+        special_effects = detail_settings.get("special_effects", [])
+        
+        # Color Settings
+        color_settings = settings.get("color_settings", {})
+        color_scheme = color_settings.get("color_scheme", "natural")
+        palette_type = color_settings.get("palette_type", "analogous")
+        color_temperature = color_settings.get("color_temperature", "neutral")
+        
+        # Quality Settings
+        quality_settings = settings.get("quality_settings", {})
+        resolution = quality_settings.get("resolution", "1920x1080")
+        rendering_quality = quality_settings.get("rendering_quality", "photorealistic")
+        
+        # Randomly select tags
+        selected_tags = random.sample(tags, min(3, len(tags)))
+        
+        # Format the prompt with all settings
+        prompt = f"A {style} {mood} {rendering_quality} image of {', '.join(selected_tags)}, "
+        prompt += f"captured with a {camera_model} using a {lens_type} lens at {aperture} with {depth_of_field} depth of field, "
+        prompt += f"during {time_of_day} with {lighting_style} {light_quality} lighting"
+        
+        if artificial_sources:
+            prompt += f" and {', '.join(artificial_sources)} artificial lighting"
+        
+        prompt += f", composed using {technique} from a {camera_angle} angle with {perspective} perspective, "
+        prompt += f"in {weather} weather during {season}"
+        
+        if atmospheric_effects:
+            prompt += f" with {', '.join(atmospheric_effects)}"
+        
+        prompt += f", styled in {art_movement} movement"
+        
+        if post_processing:
+            prompt += f" with {', '.join(post_processing)} post-processing"
+        
+        prompt += f", featuring {detail_level} details and {texture_quality} texture quality"
+        
+        if special_effects:
+            prompt += f" with {', '.join(special_effects)} effects"
+        
+        prompt += f", using a {color_scheme} color scheme with {palette_type} palette and {color_temperature} temperature, "
+        prompt += f"rendered at {resolution} resolution"
+        
+        return prompt
+    except Exception as e:
+        print_error(f"Error generating random prompt: {str(e)}")
+        return None
 
 def mask_sensitive_data_in_url(url):
     """Masks sensitive data in URLs before logging and decodes HTML entities."""
@@ -400,16 +519,87 @@ def sanitize_prompt(prompt):
     return sanitized_prompt
 
 def generate_prompt(custom_prompt=None):
-    """Generate a prompt based on the given custom prompt or random tags."""
-    if custom_prompt:
-        prompt = sanitize_prompt(custom_prompt)
-        logging.info(f"Using custom prompt: {prompt}")
-        return prompt
-
-    all_tags = nature_tags + space_tags + sea_tags + flowers_tags
-    prompt = random.choice(all_tags)
-    logging.info(f"Generated prompt: {prompt}")
-    return prompt
+    """Generate a prompt using either AI, random tags, or custom input."""
+    try:
+        if custom_prompt:
+            print_info("Processing custom prompt...")
+            try:
+                # Enhance the custom prompt with current settings
+                enhanced_prompt = enhance_custom_prompt(custom_prompt)
+                if enhanced_prompt:
+                    print_prompt(enhanced_prompt)
+                    return enhanced_prompt
+                else:
+                    print_warning("Failed to enhance custom prompt, using original")
+                    return custom_prompt
+            except Exception as e:
+                logging.error(f"Error enhancing custom prompt: {e}")
+                print_warning("Failed to enhance custom prompt, using original")
+                return custom_prompt
+        
+        print_section("Prompt Generation")
+        print_info("Choose prompt generation method:")
+        print_option("1", "AI-Powered Prompt")
+        print_option("2", "Random Tag Combination")
+        print_option("3", "Custom Prompt Input")
+        print_option("4", "Return to main menu")
+        
+        choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+        
+        if choice == "4":
+            return None
+            
+        if choice == "1":
+            # Get user preferences for prompt generation
+            tags = []
+            if user_prefs.preferred_genres:
+                tags.extend(user_prefs.preferred_genres)
+            
+            # Generate prompt using Gemini
+            prompt = generate_prompt_gemini(tags)
+            if prompt:
+                print_prompt(prompt)
+                return prompt
+                
+        elif choice == "2":
+            # Get user preferences for prompt generation
+            tags = []
+            if user_prefs.preferred_genres:
+                tags.extend(user_prefs.preferred_genres)
+            
+            # Generate prompt using random tags
+            prompt = generate_prompt_random(tags)
+            if prompt:
+                print_prompt(prompt)
+                return prompt
+                
+        elif choice == "3":
+            custom_prompt = input("\nEnter your custom prompt: ").strip()
+            if custom_prompt:
+                print_info("Processing custom prompt...")
+                try:
+                    # Enhance the custom prompt with current settings
+                    enhanced_prompt = enhance_custom_prompt(custom_prompt)
+                    if enhanced_prompt:
+                        print_prompt(enhanced_prompt)
+                        return enhanced_prompt
+                    else:
+                        print_warning("Failed to enhance custom prompt, using original")
+                        return custom_prompt
+                except Exception as e:
+                    logging.error(f"Error enhancing custom prompt: {e}")
+                    print_warning("Failed to enhance custom prompt, using original")
+                    return custom_prompt
+            else:
+                print_warning("Empty prompt provided")
+                return None
+        
+        return None
+        
+    except Exception as e:
+        logging.error(f"Error in generate_prompt: {e}")
+        print_error("An unexpected error occurred while generating the prompt")
+        return None
 
 def get_generated_image_path(prompt):
     """Get the cache path for the generated image."""
@@ -610,23 +800,88 @@ def enhance_custom_prompt(custom_prompt):
         # Get user preferences
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "photorealistic"
         mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else "neutral"
-        resolution = user_prefs.imagen_settings.get("resolution", "1920x1080")
-        aspect_ratio = user_prefs.aspect_ratio
-        color_scheme = user_prefs.imagen_settings.get("color_scheme", "natural")
-        lighting = user_prefs.imagen_settings.get("lighting", "natural")
-        composition = user_prefs.imagen_settings.get("composition", "rule_of_thirds")
-        depth_of_field = user_prefs.imagen_settings.get("depth_of_field", "medium")
         
-        # Format the custom prompt instructions with user preferences
+        # Get all settings from imagen_settings with default values
+        settings = user_prefs.imagen_settings
+        
+        # Camera & Technical Settings
+        camera_settings = settings.get("camera_settings", {})
+        camera_model = camera_settings.get("camera_model", "ARRI Alexa")
+        lens_type = camera_settings.get("lens_type", "50mm")
+        aperture = camera_settings.get("aperture", "f/2.8")
+        special_lens = camera_settings.get("special_lens", "standard")
+        depth_of_field = camera_settings.get("depth_of_field", "medium")  # Added depth of field
+        
+        # Lighting & Atmosphere
+        lighting_settings = settings.get("lighting_settings", {})
+        time_of_day = lighting_settings.get("time_of_day", "golden_hour")
+        lighting_style = lighting_settings.get("lighting_style", "natural")
+        light_quality = lighting_settings.get("light_quality", "soft")
+        artificial_sources = lighting_settings.get("artificial_sources", [])
+        
+        # Composition & Environment
+        composition_settings = settings.get("composition_settings", {})
+        technique = composition_settings.get("technique", "rule_of_thirds")
+        camera_angle = composition_settings.get("camera_angle", "eye_level")
+        perspective = composition_settings.get("perspective", "wide")
+        
+        environment_settings = settings.get("environment_settings", {})
+        weather = environment_settings.get("weather", "clear")
+        season = environment_settings.get("season", "summer")
+        atmospheric_effects = environment_settings.get("atmospheric_effects", [])
+        
+        # Style & Artistic Settings
+        style_settings = settings.get("style_settings", {})
+        art_movement = style_settings.get("art_movement", "Realism")
+        post_processing = style_settings.get("post_processing", [])
+        
+        # Detail & Quality Settings
+        detail_settings = settings.get("detail_settings", {})
+        detail_level = detail_settings.get("detail_level", "ultra_detailed")
+        texture_quality = detail_settings.get("texture_quality", "high")
+        special_effects = detail_settings.get("special_effects", [])
+        
+        # Color Settings
+        color_settings = settings.get("color_settings", {})
+        color_scheme = color_settings.get("color_scheme", "natural")
+        palette_type = color_settings.get("palette_type", "analogous")
+        color_temperature = color_settings.get("color_temperature", "neutral")
+        
+        # Quality Settings
+        quality_settings = settings.get("quality_settings", {})
+        resolution = quality_settings.get("resolution", "1920x1080")
+        rendering_quality = quality_settings.get("rendering_quality", "photorealistic")
+        
+        # Format the custom prompt instructions with all settings
         enhancement_instructions = CUSTOM_PROMPT_INSTRUCTIONS.format(
             style=style,
             mood=mood,
             resolution=resolution,
-            aspect_ratio=aspect_ratio,
+            aspect_ratio=user_prefs.aspect_ratio,
             color_scheme=color_scheme,
-            lighting=lighting,
-            composition=composition,
-            depth_of_field=depth_of_field
+            lighting=lighting_style,
+            composition=technique,
+            camera_model=camera_model,
+            lens_type=lens_type,
+            aperture=aperture,
+            special_lens=special_lens,
+            depth_of_field=depth_of_field,  # Added depth of field
+            time_of_day=time_of_day,
+            light_quality=light_quality,
+            artificial_sources=", ".join(artificial_sources) if artificial_sources else "none",
+            camera_angle=camera_angle,
+            perspective=perspective,
+            weather=weather,
+            season=season,
+            atmospheric_effects=", ".join(atmospheric_effects) if atmospheric_effects else "none",
+            art_movement=art_movement,
+            post_processing=", ".join(post_processing) if post_processing else "none",
+            detail_level=detail_level,
+            texture_quality=texture_quality,
+            special_effects=", ".join(special_effects) if special_effects else "none",
+            palette_type=palette_type,
+            color_temperature=color_temperature,
+            rendering_quality=rendering_quality
         )
         
         # Generate enhanced prompt using Gemini
@@ -729,288 +984,473 @@ def configure_advanced_options():
     print_info("Fine-tune the generation parameters:")
     
     while True:
-        print_option("1", "Style Settings")
-        print_option("2", "Mood & Atmosphere")
-        print_option("3", "Technical Parameters")
-        print_option("4", "Composition & Lighting")
-        print_option("5", "Show Current Settings")
-        print_option("6", "Customize All Parameters")
-        print_option("7", "Return to previous menu")
+        print_option("1", "Style & Artistic Settings")
+        print_option("2", "Camera & Technical Settings")
+        print_option("3", "Lighting & Atmosphere")
+        print_option("4", "Composition & Environment")
+        print_option("5", "Color & Detail Settings")
+        print_option("6", "Show Current Settings")
+        print_option("7", "Customize All Parameters")
+        print_option("8", "Return to previous menu")
         
-        advanced_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+        advanced_choice = get_validated_input("Select option (1-8)", ["1", "2", "3", "4", "5", "6", "7", "8"])
         
         if advanced_choice == "1":
-            print_section("Style Settings")
-            print_info("Choose the artistic style for your wallpaper:")
-            print_option("1", "Photorealistic")
-            print_option("2", "Digital Art")
-            print_option("3", "Sketch")
-            print_option("4", "Watercolor")
-            print_option("5", "Cyberpunk")
-            print_option("6", "Pop Art")
-            print_option("7", "Oil Painting")
-            print_option("8", "Pixel Art")
-            print_option("9", "Anime")
-            print_option("10", "3D Render")
-            print_option("11", "Custom Style")
-            print_option("12", "Return")
+            print_section("Style & Artistic Settings")
+            print_info("Choose the artistic style and style-specific settings:")
+            print_option("1", "Style Selection")
+            print_option("2", "Art Movement")
+            print_option("3", "Post-processing Effects")
+            print_option("4", "Return")
             
-            style_choice = get_validated_input("Select style (1-12)", [str(i) for i in range(1, 13)])
-            if style_choice == "12":
+            style_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+            if style_choice == "4":
                 continue
                 
-            if style_choice == "11":
-                custom_style = input("Enter your custom style: ").strip()
-                if custom_style:
-                    user_prefs.preferred_styles = [custom_style]
-                    print_success(f"Custom style set to: {custom_style}")
-                continue
+            if style_choice == "1":
+                print_info("Choose the artistic style for your wallpaper:")
+                print_option("1", "Photorealistic")
+                print_option("2", "Digital Art")
+                print_option("3", "Sketch")
+                print_option("4", "Watercolor")
+                print_option("5", "Cyberpunk")
+                print_option("6", "Pop Art")
+                print_option("7", "Oil Painting")
+                print_option("8", "Pixel Art")
+                print_option("9", "Anime")
+                print_option("10", "3D Render")
+                print_option("11", "Custom Style")
+                print_option("12", "Return")
                 
-            styles = {
-                "1": "photorealistic",
-                "2": "digital_art",
-                "3": "sketch",
-                "4": "watercolor",
-                "5": "cyberpunk",
-                "6": "pop_art",
-                "7": "oil_painting",
-                "8": "pixel_art",
-                "9": "anime",
-                "10": "3d_render"
-            }
-            
-            selected_style = styles[style_choice]
-            user_prefs.preferred_styles = [selected_style]
-            print_success(f"Style set to {selected_style}")
-            
-        elif advanced_choice == "2":
-            print_section("Mood & Atmosphere")
-            print_info("Set the mood and atmosphere for your wallpaper:")
-            print_option("1", "Peaceful & Serene")
-            print_option("2", "Dramatic & Epic")
-            print_option("3", "Mysterious & Enigmatic")
-            print_option("4", "Energetic & Dynamic")
-            print_option("5", "Melancholic & Thoughtful")
-            print_option("6", "Joyful & Vibrant")
-            print_option("7", "Romantic & Dreamy")
-            print_option("8", "Eerie & Haunting")
-            print_option("9", "Nostalgic & Retro")
-            print_option("10", "Futuristic & Sci-fi")
-            print_option("11", "Custom Mood")
-            print_option("12", "Return")
-            
-            mood_choice = get_validated_input("Select mood (1-12)", [str(i) for i in range(1, 13)])
-            if mood_choice == "12":
-                continue
-                
-            if mood_choice == "11":
-                custom_mood = input("Enter your custom mood: ").strip()
-                if custom_mood:
-                    user_prefs.preferred_moods = [custom_mood]
-                    print_success(f"Custom mood set to: {custom_mood}")
-                continue
-                
-            moods = {
-                "1": "peaceful",
-                "2": "dramatic",
-                "3": "mysterious",
-                "4": "energetic",
-                "5": "melancholic",
-                "6": "joyful",
-                "7": "romantic",
-                "8": "eerie",
-                "9": "nostalgic",
-                "10": "futuristic"
-            }
-            
-            selected_mood = moods[mood_choice]
-            user_prefs.preferred_moods = [selected_mood]
-            print_success(f"Mood set to {selected_mood}")
-            
-        elif advanced_choice == "3":
-            print_section("Technical Parameters")
-            print_info("Configure technical aspects of the generation:")
-            print_option("1", "Aspect Ratio")
-            print_option("2", "Resolution")
-            print_option("3", "Color Scheme")
-            print_option("4", "Custom Technical Parameters")
-            print_option("5", "Return")
-            
-            tech_choice = get_validated_input("Select parameter (1-5)", ["1", "2", "3", "4", "5"])
-            if tech_choice == "5":
-                continue
-                
-            if tech_choice == "4":
-                print_info("Enter custom technical parameters (leave blank to skip):")
-                custom_res = input("Custom resolution (e.g., 1920x1080): ").strip()
-                custom_ratio = input("Custom aspect ratio (e.g., 16:9): ").strip()
-                custom_color = input("Custom color scheme: ").strip()
-                
-                if custom_res:
-                    user_prefs.imagen_settings["resolution"] = custom_res
-                if custom_ratio:
-                    user_prefs.aspect_ratio = custom_ratio
-                if custom_color:
-                    user_prefs.imagen_settings["color_scheme"] = custom_color
+                style_select = get_validated_input("Select style (1-12)", [str(i) for i in range(1, 13)])
+                if style_select == "12":
+                    continue
                     
-                print_success("Custom technical parameters updated")
+                if style_select == "11":
+                    custom_style = input("Enter your custom style: ").strip()
+                    if custom_style:
+                        user_prefs.preferred_styles = [custom_style]
+                        print_success(f"Custom style set to: {custom_style}")
+                    continue
+                    
+                styles = {
+                    "1": "photorealistic",
+                    "2": "digital_art",
+                    "3": "sketch",
+                    "4": "watercolor",
+                    "5": "cyberpunk",
+                    "6": "pop_art",
+                    "7": "oil_painting",
+                    "8": "pixel_art",
+                    "9": "anime",
+                    "10": "3d_render"
+                }
+                
+                selected_style = styles[style_select]
+                user_prefs.preferred_styles = [selected_style]
+                print_success(f"Style set to {selected_style}")
+                
+            elif style_choice == "2":
+                print_info("Select art movement:")
+                print_option("1", "Abstract Expressionism")
+                print_option("2", "Impressionism")
+                print_option("3", "Surrealism")
+                print_option("4", "Minimalism")
+                print_option("5", "Cubism")
+                print_option("6", "Custom")
+                print_option("7", "Return")
+                
+                movement_choice = get_validated_input("Select movement (1-7)", [str(i) for i in range(1, 8)])
+                if movement_choice == "7":
+                    continue
+                    
+                if movement_choice == "6":
+                    custom_movement = input("Enter custom art movement: ").strip()
+                    if custom_movement:
+                        user_prefs.imagen_settings["style_settings"]["art_movement"] = custom_movement
+                        print_success(f"Custom art movement set to: {custom_movement}")
+                    continue
+                    
+                movements = {
+                    "1": "Abstract Expressionism",
+                    "2": "Impressionism",
+                    "3": "Surrealism",
+                    "4": "Minimalism",
+                    "5": "Cubism"
+                }
+                
+                user_prefs.imagen_settings["style_settings"]["art_movement"] = movements[movement_choice]
+                print_success(f"Art movement set to {movements[movement_choice]}")
+                
+            elif style_choice == "3":
+                print_info("Select post-processing effects (comma-separated):")
+                print_option("1", "Vintage")
+                print_option("2", "HDR")
+                print_option("3", "Film Grain")
+                print_option("4", "Color Grading")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                effects_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if effects_choice == "6":
+                    continue
+                    
+                if effects_choice == "5":
+                    custom_effects = input("Enter custom effects (comma-separated): ").strip()
+                    if custom_effects:
+                        user_prefs.imagen_settings["style_settings"]["post_processing"] = [e.strip() for e in custom_effects.split(",")]
+                        print_success(f"Custom effects set to: {custom_effects}")
+                    continue
+                    
+                effects = {
+                    "1": ["vintage"],
+                    "2": ["hdr"],
+                    "3": ["film_grain"],
+                    "4": ["color_grading"]
+                }
+                
+                user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
+                print_success(f"Post-processing effects set to {effects[effects_choice]}")
+                
+        elif advanced_choice == "2":
+            print_section("Camera & Technical Settings")
+            print_info("Configure camera and technical parameters:")
+            print_option("1", "Camera Model")
+            print_option("2", "Lens Settings")
+            print_option("3", "Resolution & Quality")
+            print_option("4", "Return")
+            
+            tech_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+            if tech_choice == "4":
                 continue
                 
             if tech_choice == "1":
-                print_info("Select aspect ratio:")
-                print_option("1", "16:9 (Widescreen)")
-                print_option("2", "21:9 (Ultrawide)")
-                print_option("3", "4:3 (Standard)")
-                print_option("4", "1:1 (Square)")
-                print_option("5", "9:16 (Portrait)")
-                ratio_choice = get_validated_input("Select aspect ratio (1-5)", ["1", "2", "3", "4", "5"])
-                aspect_ratio = ["16:9", "21:9", "4:3", "1:1", "9:16"][int(ratio_choice) - 1]
-                user_prefs.aspect_ratio = aspect_ratio
-                print_success(f"Aspect ratio set to {aspect_ratio}")
+                print_info("Select camera model:")
+                print_option("1", "ARRI Alexa")
+                print_option("2", "RED Digital Cinema")
+                print_option("3", "Sony Venice")
+                print_option("4", "Custom")
+                print_option("5", "Return")
+                
+                camera_choice = get_validated_input("Select camera (1-5)", ["1", "2", "3", "4", "5"])
+                if camera_choice == "5":
+                    continue
+                    
+                if camera_choice == "4":
+                    custom_camera = input("Enter custom camera model: ").strip()
+                    if custom_camera:
+                        user_prefs.imagen_settings["camera_settings"]["camera_model"] = custom_camera
+                        print_success(f"Custom camera model set to: {custom_camera}")
+                    continue
+                    
+                cameras = {
+                    "1": "ARRI Alexa",
+                    "2": "RED Digital Cinema",
+                    "3": "Sony Venice"
+                }
+                
+                user_prefs.imagen_settings["camera_settings"]["camera_model"] = cameras[camera_choice]
+                print_success(f"Camera model set to {cameras[camera_choice]}")
                 
             elif tech_choice == "2":
-                print_info("Select resolution:")
-                print_option("1", "1920x1080 (Full HD)")
-                print_option("2", "2560x1440 (2K)")
-                print_option("3", "3840x2160 (4K)")
-                print_option("4", "5120x2880 (5K)")
-                print_option("5", "Custom")
-                res_choice = get_validated_input("Select resolution (1-5)", ["1", "2", "3", "4", "5"])
-                if res_choice == "5":
-                    custom_res = input("Enter custom resolution (e.g., 1920x1080): ").strip()
-                    if "x" in custom_res:
-                        user_prefs.imagen_settings["resolution"] = custom_res
-                        print_success(f"Resolution set to {custom_res}")
-                else:
-                    resolutions = ["1920x1080", "2560x1440", "3840x2160", "5120x2880"]
-                    user_prefs.imagen_settings["resolution"] = resolutions[int(res_choice) - 1]
-                    print_success(f"Resolution set to {resolutions[int(res_choice) - 1]}")
+                print_info("Configure lens settings:")
+                print_option("1", "Lens Type")
+                print_option("2", "Aperture")
+                print_option("3", "Special Lens")
+                print_option("4", "Depth of Field")
+                print_option("5", "Return")
+                
+                lens_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+                if lens_choice == "5":
+                    continue
+                    
+                if lens_choice == "1":
+                    print_info("Select lens type:")
+                    print_option("1", "50mm")
+                    print_option("2", "85mm")
+                    print_option("3", "24mm")
+                    print_option("4", "Custom")
+                    print_option("5", "Return")
+                    
+                    lens_type = get_validated_input("Select lens type (1-5)", ["1", "2", "3", "4", "5"])
+                    if lens_type == "5":
+                        continue
+                        
+                    if lens_type == "4":
+                        custom_lens = input("Enter custom lens type: ").strip()
+                        if custom_lens:
+                            user_prefs.imagen_settings["camera_settings"]["lens_type"] = custom_lens
+                            print_success(f"Custom lens type set to: {custom_lens}")
+                        continue
+                        
+                    lenses = {
+                        "1": "50mm",
+                        "2": "85mm",
+                        "3": "24mm"
+                    }
+                    
+                    user_prefs.imagen_settings["camera_settings"]["lens_type"] = lenses[lens_type]
+                    print_success(f"Lens type set to {lenses[lens_type]}")
+                    
+                elif lens_choice == "2":
+                    print_info("Select aperture:")
+                    print_option("1", "f/1.8")
+                    print_option("2", "f/2.8")
+                    print_option("3", "f/4")
+                    print_option("4", "f/8")
+                    print_option("5", "Custom")
+                    print_option("6", "Return")
+                    
+                    aperture_choice = get_validated_input("Select aperture (1-6)", ["1", "2", "3", "4", "5", "6"])
+                    if aperture_choice == "6":
+                        continue
+                        
+                    if aperture_choice == "5":
+                        custom_aperture = input("Enter custom aperture: ").strip()
+                        if custom_aperture:
+                            user_prefs.imagen_settings["camera_settings"]["aperture"] = custom_aperture
+                            print_success(f"Custom aperture set to: {custom_aperture}")
+                        continue
+                        
+                    apertures = {
+                        "1": "f/1.8",
+                        "2": "f/2.8",
+                        "3": "f/4",
+                        "4": "f/8"
+                    }
+                    
+                    user_prefs.imagen_settings["camera_settings"]["aperture"] = apertures[aperture_choice]
+                    print_success(f"Aperture set to {apertures[aperture_choice]}")
+                    
+                elif lens_choice == "3":
+                    print_info("Select special lens (optional):")
+                    print_option("1", "Tilt-shift")
+                    print_option("2", "Fisheye")
+                    print_option("3", "Macro")
+                    print_option("4", "None")
+                    print_option("5", "Custom")
+                    print_option("6", "Return")
+                    
+                    special_choice = get_validated_input("Select special lens (1-6)", ["1", "2", "3", "4", "5", "6"])
+                    if special_choice == "6":
+                        continue
+                        
+                    if special_choice == "5":
+                        custom_special = input("Enter custom special lens: ").strip()
+                        if custom_special:
+                            user_prefs.imagen_settings["camera_settings"]["special_lens"] = custom_special
+                            print_success(f"Custom special lens set to: {custom_special}")
+                        continue
+                        
+                    if special_choice == "4":
+                        user_prefs.imagen_settings["camera_settings"]["special_lens"] = None
+                        print_success("Special lens set to None")
+                        continue
+                        
+                    special_lenses = {
+                        "1": "tilt_shift",
+                        "2": "fisheye",
+                        "3": "macro"
+                    }
+                    
+                    user_prefs.imagen_settings["camera_settings"]["special_lens"] = special_lenses[special_choice]
+                    print_success(f"Special lens set to {special_lenses[special_choice]}")
+                    
+                elif lens_choice == "4":
+                    print_info("Select depth of field:")
+                    print_option("1", "Shallow")
+                    print_option("2", "Medium")
+                    print_option("3", "Deep")
+                    print_option("4", "Custom")
+                    print_option("5", "Return")
+                    
+                    dof_choice = get_validated_input("Select depth of field (1-5)", ["1", "2", "3", "4", "5"])
+                    if dof_choice == "5":
+                        continue
+                        
+                    if dof_choice == "4":
+                        custom_dof = input("Enter custom depth of field: ").strip()
+                        if custom_dof:
+                            user_prefs.imagen_settings["camera_settings"]["depth_of_field"] = custom_dof
+                            print_success(f"Custom depth of field set to: {custom_dof}")
+                        continue
+                        
+                    dof_options = {
+                        "1": "shallow",
+                        "2": "medium",
+                        "3": "deep"
+                    }
+                    
+                    user_prefs.imagen_settings["camera_settings"]["depth_of_field"] = dof_options[dof_choice]
+                    print_success(f"Depth of field set to {dof_options[dof_choice]}")
                     
             elif tech_choice == "3":
-                print_info("Select color scheme:")
-                print_option("1", "Warm colors")
-                print_option("2", "Cool colors")
-                print_option("3", "Monochromatic")
-                print_option("4", "Vibrant colors")
-                print_option("5", "Pastel colors")
-                print_option("6", "Neutral colors")
-                print_option("7", "High contrast")
-                print_option("8", "Low contrast")
-                print_option("9", "Custom")
-                print_option("10", "Return")
+                print_info("Configure resolution and quality settings:")
+                print_option("1", "Resolution")
+                print_option("2", "Detail Level")
+                print_option("3", "Rendering Quality")
+                print_option("4", "Return")
                 
-                color_choice = get_validated_input("Select color scheme (1-10)", [str(i) for i in range(1, 11)])
-                if color_choice == "10":
+                quality_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+                if quality_choice == "4":
                     continue
                     
-                if color_choice == "9":
-                    custom_color = input("Enter custom color scheme: ").strip()
-                    if custom_color:
-                        user_prefs.imagen_settings["color_scheme"] = custom_color
-                        print_success(f"Custom color scheme set to: {custom_color}")
-                    continue
+                if quality_choice == "1":
+                    print_info("Select resolution:")
+                    print_option("1", "1920x1080 (Full HD)")
+                    print_option("2", "2560x1440 (2K)")
+                    print_option("3", "3840x2160 (4K)")
+                    print_option("4", "5120x2880 (5K)")
+                    print_option("5", "7680x4320 (8K)")
+                    print_option("6", "Custom")
+                    print_option("7", "Return")
                     
-                color_schemes = {
-                    "1": "warm",
-                    "2": "cool",
-                    "3": "monochromatic",
-                    "4": "vibrant",
-                    "5": "pastel",
-                    "6": "neutral",
-                    "7": "high_contrast",
-                    "8": "low_contrast"
-                }
-                
-                selected_scheme = color_schemes[color_choice]
-                user_prefs.imagen_settings["color_scheme"] = selected_scheme
-                print_success(f"Color scheme set to {selected_scheme}")
-                
-        elif advanced_choice == "4":
-            print_section("Composition & Lighting")
-            print_info("Configure composition and lighting settings:")
-            print_option("1", "Composition Style")
-            print_option("2", "Lighting Type")
-            print_option("3", "Depth of Field")
-            print_option("4", "Custom Lighting")
+                    res_choice = get_validated_input("Select resolution (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                    if res_choice == "7":
+                        continue
+                        
+                    if res_choice == "6":
+                        custom_res = input("Enter custom resolution (e.g., 1920x1080): ").strip()
+                        if "x" in custom_res:
+                            user_prefs.imagen_settings["quality_settings"]["resolution"] = custom_res
+                            print_success(f"Custom resolution set to: {custom_res}")
+                        continue
+                        
+                    resolutions = {
+                        "1": "1920x1080",
+                        "2": "2560x1440",
+                        "3": "3840x2160",
+                        "4": "5120x2880",
+                        "5": "7680x4320"
+                    }
+                    
+                    user_prefs.imagen_settings["quality_settings"]["resolution"] = resolutions[res_choice]
+                    print_success(f"Resolution set to {resolutions[res_choice]}")
+                    
+                elif quality_choice == "2":
+                    print_info("Select detail level:")
+                    print_option("1", "Ultra Detailed")
+                    print_option("2", "High Detail")
+                    print_option("3", "Medium Detail")
+                    print_option("4", "Low Detail")
+                    print_option("5", "Custom")
+                    print_option("6", "Return")
+                    
+                    detail_choice = get_validated_input("Select detail level (1-6)", ["1", "2", "3", "4", "5", "6"])
+                    if detail_choice == "6":
+                        continue
+                        
+                    if detail_choice == "5":
+                        custom_detail = input("Enter custom detail level: ").strip()
+                        if custom_detail:
+                            user_prefs.imagen_settings["quality_settings"]["detail_level"] = custom_detail
+                            print_success(f"Custom detail level set to: {custom_detail}")
+                        continue
+                        
+                    detail_levels = {
+                        "1": "ultra_detailed",
+                        "2": "high_detail",
+                        "3": "medium_detail",
+                        "4": "low_detail"
+                    }
+                    
+                    user_prefs.imagen_settings["quality_settings"]["detail_level"] = detail_levels[detail_choice]
+                    print_success(f"Detail level set to {detail_levels[detail_choice]}")
+                    
+                elif quality_choice == "3":
+                    print_info("Select rendering quality:")
+                    print_option("1", "Photorealistic")
+                    print_option("2", "High Quality")
+                    print_option("3", "Medium Quality")
+                    print_option("4", "Custom")
+                    print_option("5", "Return")
+                    
+                    render_choice = get_validated_input("Select rendering quality (1-5)", ["1", "2", "3", "4", "5"])
+                    if render_choice == "5":
+                        continue
+                        
+                    if render_choice == "4":
+                        custom_render = input("Enter custom rendering quality: ").strip()
+                        if custom_render:
+                            user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = custom_render
+                            print_success(f"Custom rendering quality set to: {custom_render}")
+                        continue
+                        
+                    render_qualities = {
+                        "1": "photorealistic",
+                        "2": "high_quality",
+                        "3": "medium_quality"
+                    }
+                    
+                    user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = render_qualities[render_choice]
+                    print_success(f"Rendering quality set to {render_qualities[render_choice]}")
+                    
+        elif advanced_choice == "3":
+            print_section("Lighting & Atmosphere")
+            print_info("Configure lighting and atmospheric settings:")
+            print_option("1", "Time of Day")
+            print_option("2", "Lighting Style")
+            print_option("3", "Light Quality")
+            print_option("4", "Artificial Sources")
             print_option("5", "Return")
             
-            comp_choice = get_validated_input("Select parameter (1-5)", ["1", "2", "3", "4", "5"])
-            if comp_choice == "5":
+            light_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+            if light_choice == "5":
                 continue
                 
-            if comp_choice == "4":
-                print_info("Enter custom lighting settings (leave blank to skip):")
-                custom_lighting = input("Custom lighting type: ").strip()
-                custom_composition = input("Custom composition style: ").strip()
-                custom_dof = input("Custom depth of field: ").strip()
+            if light_choice == "1":
+                print_info("Select time of day:")
+                print_option("1", "Golden Hour")
+                print_option("2", "Blue Hour")
+                print_option("3", "Midday")
+                print_option("4", "Night")
+                print_option("5", "Custom")
+                print_option("6", "Return")
                 
-                if custom_lighting:
-                    user_prefs.imagen_settings["lighting"] = custom_lighting
-                if custom_composition:
-                    user_prefs.imagen_settings["composition"] = custom_composition
-                if custom_dof:
-                    user_prefs.imagen_settings["depth_of_field"] = custom_dof
-                    
-                print_success("Custom lighting settings updated")
-                continue
-                
-            if comp_choice == "1":
-                print_info("Select composition style:")
-                print_option("1", "Rule of Thirds")
-                print_option("2", "Centered")
-                print_option("3", "Leading Lines")
-                print_option("4", "Symmetrical")
-                print_option("5", "Asymmetrical")
-                print_option("6", "Framed")
-                print_option("7", "Custom")
-                print_option("8", "Return")
-                
-                comp_style = get_validated_input("Select composition style (1-8)", [str(i) for i in range(1, 9)])
-                if comp_style == "8":
+                time_choice = get_validated_input("Select time of day (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if time_choice == "6":
                     continue
                     
-                if comp_style == "7":
-                    custom_comp = input("Enter custom composition style: ").strip()
-                    if custom_comp:
-                        user_prefs.imagen_settings["composition"] = custom_comp
-                        print_success(f"Custom composition style set to: {custom_comp}")
+                if time_choice == "5":
+                    custom_time = input("Enter custom time of day: ").strip()
+                    if custom_time:
+                        user_prefs.imagen_settings["lighting_settings"]["time_of_day"] = custom_time
+                        print_success(f"Custom time of day set to: {custom_time}")
                     continue
                     
-                compositions = {
-                    "1": "rule_of_thirds",
-                    "2": "centered",
-                    "3": "leading_lines",
-                    "4": "symmetrical",
-                    "5": "asymmetrical",
-                    "6": "framed"
+                times = {
+                    "1": "golden_hour",
+                    "2": "blue_hour",
+                    "3": "midday",
+                    "4": "night"
                 }
                 
-                user_prefs.imagen_settings["composition"] = compositions[comp_style]
-                print_success(f"Composition style set to {compositions[comp_style]}")
+                user_prefs.imagen_settings["lighting_settings"]["time_of_day"] = times[time_choice]
+                print_success(f"Time of day set to {times[time_choice]}")
                 
-            elif comp_choice == "2":
-                print_info("Select lighting type:")
-                print_option("1", "Natural Light")
-                print_option("2", "Studio Light")
-                print_option("3", "Dramatic Light")
-                print_option("4", "Soft Light")
-                print_option("5", "Harsh Light")
-                print_option("6", "Volumetric Light")
+            elif light_choice == "2":
+                print_info("Select lighting style:")
+                print_option("1", "Natural")
+                print_option("2", "Studio")
+                print_option("3", "Dramatic")
+                print_option("4", "Soft")
+                print_option("5", "Harsh")
+                print_option("6", "Volumetric")
                 print_option("7", "Custom")
                 print_option("8", "Return")
                 
-                light_choice = get_validated_input("Select lighting type (1-8)", [str(i) for i in range(1, 9)])
-                if light_choice == "8":
+                style_choice = get_validated_input("Select lighting style (1-8)", ["1", "2", "3", "4", "5", "6", "7", "8"])
+                if style_choice == "8":
                     continue
                     
-                if light_choice == "7":
-                    custom_light = input("Enter custom lighting type: ").strip()
-                    if custom_light:
-                        user_prefs.imagen_settings["lighting"] = custom_light
-                        print_success(f"Custom lighting type set to: {custom_light}")
+                if style_choice == "7":
+                    custom_style = input("Enter custom lighting style: ").strip()
+                    if custom_style:
+                        user_prefs.imagen_settings["lighting_settings"]["lighting_style"] = custom_style
+                        print_success(f"Custom lighting style set to: {custom_style}")
                     continue
                     
-                lighting_types = {
+                styles = {
                     "1": "natural",
                     "2": "studio",
                     "3": "dramatic",
@@ -1019,98 +1459,597 @@ def configure_advanced_options():
                     "6": "volumetric"
                 }
                 
-                user_prefs.imagen_settings["lighting"] = lighting_types[light_choice]
-                print_success(f"Lighting type set to {lighting_types[light_choice]}")
+                user_prefs.imagen_settings["lighting_settings"]["lighting_style"] = styles[style_choice]
+                print_success(f"Lighting style set to {styles[style_choice]}")
+                
+            elif light_choice == "3":
+                print_info("Select light quality:")
+                print_option("1", "Soft")
+                print_option("2", "Hard")
+                print_option("3", "Diffused")
+                print_option("4", "Direct")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                quality_choice = get_validated_input("Select light quality (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if quality_choice == "6":
+                    continue
+                    
+                if quality_choice == "5":
+                    custom_quality = input("Enter custom light quality: ").strip()
+                    if custom_quality:
+                        user_prefs.imagen_settings["lighting_settings"]["light_quality"] = custom_quality
+                        print_success(f"Custom light quality set to: {custom_quality}")
+                    continue
+                    
+                qualities = {
+                    "1": "soft",
+                    "2": "hard",
+                    "3": "diffused",
+                    "4": "direct"
+                }
+                
+                user_prefs.imagen_settings["lighting_settings"]["light_quality"] = qualities[quality_choice]
+                print_success(f"Light quality set to {qualities[quality_choice]}")
+                
+            elif light_choice == "4":
+                print_info("Add artificial light sources (comma-separated):")
+                print_option("1", "LED")
+                print_option("2", "Neon")
+                print_option("3", "Spotlight")
+                print_option("4", "Custom")
+                print_option("5", "None")
+                print_option("6", "Return")
+                
+                source_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if source_choice == "6":
+                    continue
+                    
+                if source_choice == "4":
+                    custom_sources = input("Enter custom light sources (comma-separated): ").strip()
+                    if custom_sources:
+                        user_prefs.imagen_settings["lighting_settings"]["artificial_sources"] = [s.strip() for s in custom_sources.split(",")]
+                        print_success(f"Custom light sources set to: {custom_sources}")
+                    continue
+                    
+                if source_choice == "5":
+                    user_prefs.imagen_settings["lighting_settings"]["artificial_sources"] = []
+                    print_success("Light sources set to None")
+                    continue
+                    
+                sources = {
+                    "1": ["led"],
+                    "2": ["neon"],
+                    "3": ["spotlight"]
+                }
+                
+                user_prefs.imagen_settings["lighting_settings"]["artificial_sources"] = sources[source_choice]
+                print_success(f"Light sources set to {sources[source_choice]}")
+                
+        elif advanced_choice == "4":
+            print_section("Composition & Environment")
+            print_info("Configure composition and environmental settings:")
+            print_option("1", "Composition Technique")
+            print_option("2", "Camera Angle")
+            print_option("3", "Perspective")
+            print_option("4", "Weather")
+            print_option("5", "Season")
+            print_option("6", "Atmospheric Effects")
+            print_option("7", "Return")
+            
+            comp_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+            if comp_choice == "7":
+                continue
+                
+            if comp_choice == "1":
+                print_info("Select composition technique:")
+                print_option("1", "Rule of Thirds")
+                print_option("2", "Leading Lines")
+                print_option("3", "Framing")
+                print_option("4", "Symmetry")
+                print_option("5", "Asymmetry")
+                print_option("6", "Custom")
+                print_option("7", "Return")
+                
+                technique_choice = get_validated_input("Select technique (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                if technique_choice == "7":
+                    continue
+                    
+                if technique_choice == "6":
+                    custom_technique = input("Enter custom composition technique: ").strip()
+                    if custom_technique:
+                        user_prefs.imagen_settings["composition_settings"]["technique"] = custom_technique
+                        print_success(f"Custom composition technique set to: {custom_technique}")
+                    continue
+                    
+                techniques = {
+                    "1": "rule_of_thirds",
+                    "2": "leading_lines",
+                    "3": "framing",
+                    "4": "symmetry",
+                    "5": "asymmetry"
+                }
+                
+                user_prefs.imagen_settings["composition_settings"]["technique"] = techniques[technique_choice]
+                print_success(f"Composition technique set to {techniques[technique_choice]}")
+                
+            elif comp_choice == "2":
+                print_info("Select camera angle:")
+                print_option("1", "Eye Level")
+                print_option("2", "Low Angle")
+                print_option("3", "High Angle")
+                print_option("4", "Dutch Angle")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                angle_choice = get_validated_input("Select camera angle (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if angle_choice == "6":
+                    continue
+                    
+                if angle_choice == "5":
+                    custom_angle = input("Enter custom camera angle: ").strip()
+                    if custom_angle:
+                        user_prefs.imagen_settings["composition_settings"]["camera_angle"] = custom_angle
+                        print_success(f"Custom camera angle set to: {custom_angle}")
+                    continue
+                    
+                angles = {
+                    "1": "eye_level",
+                    "2": "low_angle",
+                    "3": "high_angle",
+                    "4": "dutch_angle"
+                }
+                
+                user_prefs.imagen_settings["composition_settings"]["camera_angle"] = angles[angle_choice]
+                print_success(f"Camera angle set to {angles[angle_choice]}")
                 
             elif comp_choice == "3":
-                print_info("Select depth of field:")
-                print_option("1", "Shallow (f/1.8)")
-                print_option("2", "Medium (f/4)")
-                print_option("3", "Deep (f/8)")
+                print_info("Select perspective:")
+                print_option("1", "Wide")
+                print_option("2", "Telephoto")
+                print_option("3", "Macro")
                 print_option("4", "Custom")
                 print_option("5", "Return")
                 
-                dof_choice = get_validated_input("Select depth of field (1-5)", ["1", "2", "3", "4", "5"])
-                if dof_choice == "5":
+                perspective_choice = get_validated_input("Select perspective (1-5)", ["1", "2", "3", "4", "5"])
+                if perspective_choice == "5":
                     continue
                     
-                if dof_choice == "4":
-                    custom_dof = input("Enter custom depth of field: ").strip()
-                    if custom_dof:
-                        user_prefs.imagen_settings["depth_of_field"] = custom_dof
-                        print_success(f"Custom depth of field set to: {custom_dof}")
+                if perspective_choice == "4":
+                    custom_perspective = input("Enter custom perspective: ").strip()
+                    if custom_perspective:
+                        user_prefs.imagen_settings["composition_settings"]["perspective"] = custom_perspective
+                        print_success(f"Custom perspective set to: {custom_perspective}")
                     continue
                     
-                dof_settings = {
-                    "1": "shallow",
-                    "2": "medium",
-                    "3": "deep"
+                perspectives = {
+                    "1": "wide",
+                    "2": "telephoto",
+                    "3": "macro"
                 }
                 
-                user_prefs.imagen_settings["depth_of_field"] = dof_settings[dof_choice]
-                print_success(f"Depth of field set to {dof_settings[dof_choice]}")
+                user_prefs.imagen_settings["composition_settings"]["perspective"] = perspectives[perspective_choice]
+                print_success(f"Perspective set to {perspectives[perspective_choice]}")
+                
+            elif comp_choice == "4":
+                print_info("Select weather conditions:")
+                print_option("1", "Clear")
+                print_option("2", "Cloudy")
+                print_option("3", "Rainy")
+                print_option("4", "Snowy")
+                print_option("5", "Foggy")
+                print_option("6", "Custom")
+                print_option("7", "Return")
+                
+                weather_choice = get_validated_input("Select weather (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                if weather_choice == "7":
+                    continue
+                    
+                if weather_choice == "6":
+                    custom_weather = input("Enter custom weather: ").strip()
+                    if custom_weather:
+                        user_prefs.imagen_settings["environment_settings"]["weather"] = custom_weather
+                        print_success(f"Custom weather set to: {custom_weather}")
+                    continue
+                    
+                weathers = {
+                    "1": "clear",
+                    "2": "cloudy",
+                    "3": "rainy",
+                    "4": "snowy",
+                    "5": "foggy"
+                }
+                
+                user_prefs.imagen_settings["environment_settings"]["weather"] = weathers[weather_choice]
+                print_success(f"Weather set to {weathers[weather_choice]}")
+                
+            elif comp_choice == "5":
+                print_info("Select season:")
+                print_option("1", "Spring")
+                print_option("2", "Summer")
+                print_option("3", "Autumn")
+                print_option("4", "Winter")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                season_choice = get_validated_input("Select season (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if season_choice == "6":
+                    continue
+                    
+                if season_choice == "5":
+                    custom_season = input("Enter custom season: ").strip()
+                    if custom_season:
+                        user_prefs.imagen_settings["environment_settings"]["season"] = custom_season
+                        print_success(f"Custom season set to: {custom_season}")
+                    continue
+                    
+                seasons = {
+                    "1": "spring",
+                    "2": "summer",
+                    "3": "autumn",
+                    "4": "winter"
+                }
+                
+                user_prefs.imagen_settings["environment_settings"]["season"] = seasons[season_choice]
+                print_success(f"Season set to {seasons[season_choice]}")
+                
+            elif comp_choice == "6":
+                print_info("Add atmospheric effects (comma-separated):")
+                print_option("1", "Fog")
+                print_option("2", "Mist")
+                print_option("3", "Rain")
+                print_option("4", "Snow")
+                print_option("5", "Custom")
+                print_option("6", "None")
+                print_option("7", "Return")
+                
+                effect_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                if effect_choice == "7":
+                    continue
+                    
+                if effect_choice == "5":
+                    custom_effects = input("Enter custom atmospheric effects (comma-separated): ").strip()
+                    if custom_effects:
+                        user_prefs.imagen_settings["environment_settings"]["atmospheric_effects"] = [e.strip() for e in custom_effects.split(",")]
+                        print_success(f"Custom atmospheric effects set to: {custom_effects}")
+                    continue
+                    
+                if effect_choice == "6":
+                    user_prefs.imagen_settings["environment_settings"]["atmospheric_effects"] = []
+                    print_success("Atmospheric effects set to None")
+                    continue
+                    
+                effects = {
+                    "1": ["fog"],
+                    "2": ["mist"],
+                    "3": ["rain"],
+                    "4": ["snow"]
+                }
+                
+                user_prefs.imagen_settings["environment_settings"]["atmospheric_effects"] = effects[effect_choice]
+                print_success(f"Atmospheric effects set to {effects[effect_choice]}")
                 
         elif advanced_choice == "5":
-            print_section("Current Settings")
-            print_info("Style Settings:")
-            print_info(f"- Current Style: {user_prefs.preferred_styles[0] if user_prefs.preferred_styles else 'Not set'}")
+            print_section("Color & Detail Settings")
+            print_info("Configure color and detail settings:")
+            print_option("1", "Color Scheme")
+            print_option("2", "Color Palette")
+            print_option("3", "Color Temperature")
+            print_option("4", "Texture Quality")
+            print_option("5", "Special Effects")
+            print_option("6", "Return")
             
-            print_info("\nMood & Atmosphere:")
-            print_info(f"- Current Mood: {user_prefs.preferred_moods[0] if user_prefs.preferred_moods else 'Not set'}")
-            
-            print_info("\nTechnical Parameters:")
-            print_info(f"- Aspect Ratio: {user_prefs.aspect_ratio}")
-            print_info(f"- Resolution: {user_prefs.imagen_settings.get('resolution', 'Not set')}")
-            print_info(f"- Color Scheme: {user_prefs.imagen_settings.get('color_scheme', 'Not set')}")
-            
-            print_info("\nComposition & Lighting:")
-            print_info(f"- Composition Style: {user_prefs.imagen_settings.get('composition', 'Not set')}")
-            print_info(f"- Lighting Type: {user_prefs.imagen_settings.get('lighting', 'Not set')}")
-            print_info(f"- Depth of Field: {user_prefs.imagen_settings.get('depth_of_field', 'Not set')}")
-            
+            color_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+            if color_choice == "6":
+                continue
+                
+            if color_choice == "1":
+                print_info("Select color scheme:")
+                print_option("1", "Natural")
+                print_option("2", "Warm")
+                print_option("3", "Cool")
+                print_option("4", "Monochromatic")
+                print_option("5", "Vibrant")
+                print_option("6", "Pastel")
+                print_option("7", "Custom")
+                print_option("8", "Return")
+                
+                scheme_choice = get_validated_input("Select color scheme (1-8)", ["1", "2", "3", "4", "5", "6", "7", "8"])
+                if scheme_choice == "8":
+                    continue
+                    
+                if scheme_choice == "7":
+                    custom_scheme = input("Enter custom color scheme: ").strip()
+                    if custom_scheme:
+                        user_prefs.imagen_settings["color_settings"]["color_scheme"] = custom_scheme
+                        print_success(f"Custom color scheme set to: {custom_scheme}")
+                    continue
+                    
+                schemes = {
+                    "1": "natural",
+                    "2": "warm",
+                    "3": "cool",
+                    "4": "monochromatic",
+                    "5": "vibrant",
+                    "6": "pastel"
+                }
+                
+                user_prefs.imagen_settings["color_settings"]["color_scheme"] = schemes[scheme_choice]
+                print_success(f"Color scheme set to {schemes[scheme_choice]}")
+                
+            elif color_choice == "2":
+                print_info("Select color palette type:")
+                print_option("1", "Analogous")
+                print_option("2", "Complementary")
+                print_option("3", "Triadic")
+                print_option("4", "Split Complementary")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                palette_choice = get_validated_input("Select palette type (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if palette_choice == "6":
+                    continue
+                    
+                if palette_choice == "5":
+                    custom_palette = input("Enter custom palette type: ").strip()
+                    if custom_palette:
+                        user_prefs.imagen_settings["color_settings"]["palette_type"] = custom_palette
+                        print_success(f"Custom palette type set to: {custom_palette}")
+                    continue
+                    
+                palettes = {
+                    "1": "analogous",
+                    "2": "complementary",
+                    "3": "triadic",
+                    "4": "split_complementary"
+                }
+                
+                user_prefs.imagen_settings["color_settings"]["palette_type"] = palettes[palette_choice]
+                print_success(f"Palette type set to {palettes[palette_choice]}")
+                
+            elif color_choice == "3":
+                print_info("Select color temperature:")
+                print_option("1", "Warm")
+                print_option("2", "Cool")
+                print_option("3", "Neutral")
+                print_option("4", "Custom")
+                print_option("5", "Return")
+                
+                temp_choice = get_validated_input("Select color temperature (1-5)", ["1", "2", "3", "4", "5"])
+                if temp_choice == "5":
+                    continue
+                    
+                if temp_choice == "4":
+                    custom_temp = input("Enter custom color temperature: ").strip()
+                    if custom_temp:
+                        user_prefs.imagen_settings["color_settings"]["color_temperature"] = custom_temp
+                        print_success(f"Custom color temperature set to: {custom_temp}")
+                    continue
+                    
+                temperatures = {
+                    "1": "warm",
+                    "2": "cool",
+                    "3": "neutral"
+                }
+                
+                user_prefs.imagen_settings["color_settings"]["color_temperature"] = temperatures[temp_choice]
+                print_success(f"Color temperature set to {temperatures[temp_choice]}")
+                
+            elif color_choice == "4":
+                print_info("Select texture quality:")
+                print_option("1", "Ultra High")
+                print_option("2", "High")
+                print_option("3", "Medium")
+                print_option("4", "Low")
+                print_option("5", "Custom")
+                print_option("6", "Return")
+                
+                texture_choice = get_validated_input("Select texture quality (1-6)", ["1", "2", "3", "4", "5", "6"])
+                if texture_choice == "6":
+                    continue
+                    
+                if texture_choice == "5":
+                    custom_texture = input("Enter custom texture quality: ").strip()
+                    if custom_texture:
+                        user_prefs.imagen_settings["detail_settings"]["texture_quality"] = custom_texture
+                        print_success(f"Custom texture quality set to: {custom_texture}")
+                    continue
+                    
+                textures = {
+                    "1": "ultra_high",
+                    "2": "high",
+                    "3": "medium",
+                    "4": "low"
+                }
+                
+                user_prefs.imagen_settings["detail_settings"]["texture_quality"] = textures[texture_choice]
+                print_success(f"Texture quality set to {textures[texture_choice]}")
+                
+            elif color_choice == "5":
+                print_info("Add special effects (comma-separated):")
+                print_option("1", "Bloom")
+                print_option("2", "Glow")
+                print_option("3", "Motion Blur")
+                print_option("4", "Depth of Field")
+                print_option("5", "Custom")
+                print_option("6", "None")
+                print_option("7", "Return")
+                
+                effect_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                if effect_choice == "7":
+                    continue
+                    
+                if effect_choice == "5":
+                    custom_effects = input("Enter custom special effects (comma-separated): ").strip()
+                    if custom_effects:
+                        user_prefs.imagen_settings["detail_settings"]["special_effects"] = [e.strip() for e in custom_effects.split(",")]
+                        print_success(f"Custom special effects set to: {custom_effects}")
+                    continue
+                    
+                if effect_choice == "6":
+                    user_prefs.imagen_settings["detail_settings"]["special_effects"] = []
+                    print_success("Special effects set to None")
+                    continue
+                    
+                effects = {
+                    "1": ["bloom"],
+                    "2": ["glow"],
+                    "3": ["motion_blur"],
+                    "4": ["depth_of_field"]
+                }
+                
+                user_prefs.imagen_settings["detail_settings"]["special_effects"] = effects[effect_choice]
+                print_success(f"Special effects set to {effects[effect_choice]}")
+                
         elif advanced_choice == "6":
+            print_section("Current Settings")
+            print_info("Style & Artistic Settings:")
+            print_info(f"- Current Style: {user_prefs.preferred_styles[0] if user_prefs.preferred_styles else 'Not set'}")
+            print_info(f"- Art Movement: {user_prefs.imagen_settings['style_settings'].get('art_movement', 'Not set')}")
+            print_info(f"- Post-processing: {', '.join(user_prefs.imagen_settings['style_settings'].get('post_processing', [])) or 'None'}")
+            
+            print_info("\nCamera & Technical Settings:")
+            print_info(f"- Camera Model: {user_prefs.imagen_settings['camera_settings'].get('camera_model', 'Not set')}")
+            print_info(f"- Lens Type: {user_prefs.imagen_settings['camera_settings'].get('lens_type', 'Not set')}")
+            print_info(f"- Aperture: {user_prefs.imagen_settings['camera_settings'].get('aperture', 'Not set')}")
+            print_info(f"- Special Lens: {user_prefs.imagen_settings['camera_settings'].get('special_lens', 'None')}")
+            print_info(f"- Resolution: {user_prefs.imagen_settings['quality_settings'].get('resolution', 'Not set')}")
+            print_info(f"- Detail Level: {user_prefs.imagen_settings['quality_settings'].get('detail_level', 'Not set')}")
+            print_info(f"- Rendering Quality: {user_prefs.imagen_settings['quality_settings'].get('rendering_quality', 'Not set')}")
+            
+            print_info("\nLighting & Atmosphere:")
+            print_info(f"- Time of Day: {user_prefs.imagen_settings['lighting_settings'].get('time_of_day', 'Not set')}")
+            print_info(f"- Lighting Style: {user_prefs.imagen_settings['lighting_settings'].get('lighting_style', 'Not set')}")
+            print_info(f"- Light Quality: {user_prefs.imagen_settings['lighting_settings'].get('light_quality', 'Not set')}")
+            print_info(f"- Artificial Sources: {', '.join(user_prefs.imagen_settings['lighting_settings'].get('artificial_sources', [])) or 'None'}")
+            
+            print_info("\nComposition & Environment:")
+            print_info(f"- Composition Technique: {user_prefs.imagen_settings['composition_settings'].get('technique', 'Not set')}")
+            print_info(f"- Camera Angle: {user_prefs.imagen_settings['composition_settings'].get('camera_angle', 'Not set')}")
+            print_info(f"- Perspective: {user_prefs.imagen_settings['composition_settings'].get('perspective', 'Not set')}")
+            print_info(f"- Weather: {user_prefs.imagen_settings['environment_settings'].get('weather', 'Not set')}")
+            print_info(f"- Season: {user_prefs.imagen_settings['environment_settings'].get('season', 'Not set')}")
+            print_info(f"- Atmospheric Effects: {', '.join(user_prefs.imagen_settings['environment_settings'].get('atmospheric_effects', [])) or 'None'}")
+            
+            print_info("\nColor & Detail Settings:")
+            print_info(f"- Color Scheme: {user_prefs.imagen_settings['color_settings'].get('color_scheme', 'Not set')}")
+            print_info(f"- Palette Type: {user_prefs.imagen_settings['color_settings'].get('palette_type', 'Not set')}")
+            print_info(f"- Color Temperature: {user_prefs.imagen_settings['color_settings'].get('color_temperature', 'Not set')}")
+            print_info(f"- Texture Quality: {user_prefs.imagen_settings['detail_settings'].get('texture_quality', 'Not set')}")
+            print_info(f"- Special Effects: {', '.join(user_prefs.imagen_settings['detail_settings'].get('special_effects', [])) or 'None'}")
+            
+        elif advanced_choice == "7":
             print_section("Customize All Parameters")
             print_info("Enter custom values for all parameters (leave blank to keep current):")
             
-            # Style
+            # Style & Artistic Settings
             custom_style = input("Custom style: ").strip()
             if custom_style:
                 user_prefs.preferred_styles = [custom_style]
             
-            # Mood
-            custom_mood = input("Custom mood: ").strip()
-            if custom_mood:
-                user_prefs.preferred_moods = [custom_mood]
+            custom_movement = input("Custom art movement: ").strip()
+            if custom_movement:
+                user_prefs.imagen_settings["style_settings"]["art_movement"] = custom_movement
             
-            # Technical Parameters
-            custom_res = input("Custom resolution (e.g., 1920x1080): ").strip()
-            if custom_res:
-                user_prefs.imagen_settings["resolution"] = custom_res
-                
-            custom_ratio = input("Custom aspect ratio (e.g., 16:9): ").strip()
-            if custom_ratio:
-                user_prefs.aspect_ratio = custom_ratio
-                
-            custom_color = input("Custom color scheme: ").strip()
-            if custom_color:
-                user_prefs.imagen_settings["color_scheme"] = custom_color
+            custom_processing = input("Custom post-processing effects (comma-separated): ").strip()
+            if custom_processing:
+                user_prefs.imagen_settings["style_settings"]["post_processing"] = [e.strip() for e in custom_processing.split(",")]
             
-            # Composition & Lighting
-            custom_comp = input("Custom composition style: ").strip()
-            if custom_comp:
-                user_prefs.imagen_settings["composition"] = custom_comp
-                
-            custom_light = input("Custom lighting type: ").strip()
-            if custom_light:
-                user_prefs.imagen_settings["lighting"] = custom_light
-                
-            custom_dof = input("Custom depth of field: ").strip()
-            if custom_dof:
-                user_prefs.imagen_settings["depth_of_field"] = custom_dof
+            # Camera & Technical Settings
+            custom_camera = input("Custom camera model: ").strip()
+            if custom_camera:
+                user_prefs.imagen_settings["camera_settings"]["camera_model"] = custom_camera
+            
+            custom_lens = input("Custom lens type: ").strip()
+            if custom_lens:
+                user_prefs.imagen_settings["camera_settings"]["lens_type"] = custom_lens
+            
+            custom_aperture = input("Custom aperture: ").strip()
+            if custom_aperture:
+                user_prefs.imagen_settings["camera_settings"]["aperture"] = custom_aperture
+            
+            custom_special_lens = input("Custom special lens: ").strip()
+            if custom_special_lens:
+                user_prefs.imagen_settings["camera_settings"]["special_lens"] = custom_special_lens
+            
+            custom_resolution = input("Custom resolution: ").strip()
+            if custom_resolution:
+                user_prefs.imagen_settings["quality_settings"]["resolution"] = custom_resolution
+            
+            custom_detail = input("Custom detail level: ").strip()
+            if custom_detail:
+                user_prefs.imagen_settings["quality_settings"]["detail_level"] = custom_detail
+            
+            custom_render = input("Custom rendering quality: ").strip()
+            if custom_render:
+                user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = custom_render
+            
+            # Lighting & Atmosphere
+            custom_time = input("Custom time of day: ").strip()
+            if custom_time:
+                user_prefs.imagen_settings["lighting_settings"]["time_of_day"] = custom_time
+            
+            custom_light_style = input("Custom lighting style: ").strip()
+            if custom_light_style:
+                user_prefs.imagen_settings["lighting_settings"]["lighting_style"] = custom_light_style
+            
+            custom_light_quality = input("Custom light quality: ").strip()
+            if custom_light_quality:
+                user_prefs.imagen_settings["lighting_settings"]["light_quality"] = custom_light_quality
+            
+            custom_sources = input("Custom artificial light sources (comma-separated): ").strip()
+            if custom_sources:
+                user_prefs.imagen_settings["lighting_settings"]["artificial_sources"] = [s.strip() for s in custom_sources.split(",")]
+            
+            # Composition & Environment
+            custom_technique = input("Custom composition technique: ").strip()
+            if custom_technique:
+                user_prefs.imagen_settings["composition_settings"]["technique"] = custom_technique
+            
+            custom_angle = input("Custom camera angle: ").strip()
+            if custom_angle:
+                user_prefs.imagen_settings["composition_settings"]["camera_angle"] = custom_angle
+            
+            custom_perspective = input("Custom perspective: ").strip()
+            if custom_perspective:
+                user_prefs.imagen_settings["composition_settings"]["perspective"] = custom_perspective
+            
+            custom_weather = input("Custom weather: ").strip()
+            if custom_weather:
+                user_prefs.imagen_settings["environment_settings"]["weather"] = custom_weather
+            
+            custom_season = input("Custom season: ").strip()
+            if custom_season:
+                user_prefs.imagen_settings["environment_settings"]["season"] = custom_season
+            
+            custom_atmospheric = input("Custom atmospheric effects (comma-separated): ").strip()
+            if custom_atmospheric:
+                user_prefs.imagen_settings["environment_settings"]["atmospheric_effects"] = [e.strip() for e in custom_atmospheric.split(",")]
+            
+            # Color & Detail Settings
+            custom_scheme = input("Custom color scheme: ").strip()
+            if custom_scheme:
+                user_prefs.imagen_settings["color_settings"]["color_scheme"] = custom_scheme
+            
+            custom_palette = input("Custom palette type: ").strip()
+            if custom_palette:
+                user_prefs.imagen_settings["color_settings"]["palette_type"] = custom_palette
+            
+            custom_temp = input("Custom color temperature: ").strip()
+            if custom_temp:
+                user_prefs.imagen_settings["color_settings"]["color_temperature"] = custom_temp
+            
+            custom_texture = input("Custom texture quality: ").strip()
+            if custom_texture:
+                user_prefs.imagen_settings["detail_settings"]["texture_quality"] = custom_texture
+            
+            custom_effects = input("Custom special effects (comma-separated): ").strip()
+            if custom_effects:
+                user_prefs.imagen_settings["detail_settings"]["special_effects"] = [e.strip() for e in custom_effects.split(",")]
             
             print_success("All custom parameters updated")
             
-        elif advanced_choice == "7":
+        elif advanced_choice == "8":
             break
             
         user_prefs.save_preferences()
@@ -1609,7 +2548,11 @@ def manage_preferences():
                     "number_of_images": 1,
                     "seed": None,
                     "aspect_ratio": "16:9",
-                    "negative_prompt": ""
+                    "negative_prompt": "",
+                    "color_scheme": "natural",
+                    "lighting": "natural",
+                    "composition": "rule_of_thirds",
+                    "depth_of_field": "medium"
                 }
                 user_prefs.wallpaper_settings = {
                     "auto_set": True,

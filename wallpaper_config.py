@@ -108,93 +108,139 @@ PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 imag
 
 To achieve the best results, your prompts should be specific, detailed, and carefully consider the following elements:
 
-1. **Style & Artistic Direction:**
-   - Use the specified style (e.g., photorealistic, digital art, oil painting)
-   - Incorporate artistic techniques and effects
-   - Focus on style-specific elements and characteristics
-   - Use appropriate style-specific terminology
+1. **Style & Artistic Settings:**
+   - Overall style (e.g., photorealistic, digital art, oil painting)
+   - Art movement (e.g., Abstract Expressionism, Impressionism, Realism)
+   - Post-processing effects (e.g., vintage, HDR, film grain, color grading)
+   - Style-specific elements and characteristics
+   - Appropriate style-specific terminology
+   - Artistic coherence and consistency
 
-2. **Technical Specifications:**
-   - Resolution: {resolution}
-   - Aspect ratio: {aspect_ratio}
-   - Color scheme: {color_scheme}
-   - Lighting: {lighting}
-   - Composition: {composition}
-   - Depth of field: {depth_of_field}
+2. **Camera & Technical Settings:**
+   - Camera model (e.g., ARRI Alexa, RED Digital Cinema, Sony Venice)
+   - Lens type and focal length (e.g., 50mm, 85mm, 24mm)
+   - Aperture settings (e.g., f/1.8, f/2.8, f/4, f/8)
+   - Special lens effects (e.g., tilt-shift, fisheye, macro)
+   - Resolution and quality settings
+   - Detail level and rendering quality
+   - Technical specifications for the chosen style
 
-3. **Mood & Atmosphere:**
-   - Set the desired mood and emotional tone
-   - Use appropriate lighting and color to convey mood
-   - Include atmospheric elements that enhance the mood
-   - Consider time of day and weather conditions
+3. **Lighting & Atmosphere:**
+   - Time of day (e.g., golden hour, blue hour, twilight)
+   - Lighting style (e.g., natural, studio, dramatic, ambient)
+   - Light quality (e.g., soft, hard, diffused, directional)
+   - Artificial light sources (e.g., LED, neon, tungsten)
+   - Light direction and intensity
+   - Shadow characteristics
+   - Atmospheric conditions
 
-4. **Composition & Framing:**
-   - Use the specified composition style
-   - Define perspective and framing
-   - Include leading lines and focal points
-   - Consider rule of thirds or other composition rules
+4. **Composition & Environment:**
+   - Composition technique (e.g., rule of thirds, leading lines, golden ratio)
+   - Camera angle (e.g., eye-level, low angle, high angle, dutch angle)
+   - Perspective (e.g., wide, telephoto, aerial, ground-level)
+   - Weather conditions (e.g., clear, cloudy, rainy, foggy)
+   - Season (e.g., spring, summer, autumn, winter)
+   - Atmospheric effects (e.g., fog, mist, rain, snow)
+   - Environmental context and setting
 
-5. **Color & Tone:**
-   - Use the specified color scheme
-   - Consider color harmony and contrast
-   - Include color temperature and mood
-   - Use appropriate color terminology
+5. **Color & Detail Settings:**
+   - Color scheme (e.g., monochromatic, complementary, analogous)
+   - Palette type (e.g., warm, cool, neutral, vibrant)
+   - Color temperature (e.g., warm, cool, neutral)
+   - Detail level (e.g., ultra-detailed, high-detail, medium-detail)
+   - Texture quality (e.g., high, medium, low)
+   - Special effects (e.g., bloom, glow, motion blur, depth of field)
+   - Material properties and surface characteristics
 
-6. **Negative Elements:**
-   - Avoid specified negative elements
-   - Exclude unwanted styles or effects
-   - Prevent common issues
-   - Maintain quality
+6. **Quality Settings:**
+   - Resolution (e.g., 8K, 4K, 2K, 1920x1080)
+   - Aspect ratio (e.g., 16:9, 21:9, 4:3, 1:1)
+   - Rendering quality (e.g., photorealistic, high-quality, ultra-high-quality)
+   - Overall image quality and sharpness
+   - Noise reduction and clarity
+   - Dynamic range and contrast
+
+7. **Mood & Atmosphere:**
+   - Overall mood (e.g., peaceful, dramatic, mysterious, energetic)
+   - Emotional impact and atmosphere
+   - Narrative elements and storytelling
+   - Cultural and contextual elements
+   - Time period and historical accuracy
+   - Environmental mood and ambiance
 
 Critical Requirements:
-- Focus on a single, clear style
+- Focus on a single, clear style and vision
 - Use descriptive, specific language
 - Include all technical specifications
 - Maintain artistic coherence
 - Avoid mixing incompatible styles
 - Ensure prompt clarity and focus
+- Consider the relationship between different settings
+- Balance technical accuracy with artistic expression
+- Ensure all settings complement each other
+- Maintain consistency across all elements
 
 Output Format:
 Generate a single, detailed sentence that incorporates:
 1. Main subject and action/state
-2. Style-specific technical specifications
-3. Lighting conditions and style
-4. Environmental context
-5. Color/tone treatment
-6. Compositional elements
+2. Style and artistic direction
+3. Camera and technical specifications
+4. Lighting and atmospheric conditions
+5. Composition and environmental context
+6. Color treatment and special effects
+7. Quality and detail specifications
+8. Mood and emotional impact
 
-The final prompt should read like a professional artist's or photographer's description, emphasizing the chosen style while maintaining clarity and focus."""
+The final prompt should read like a professional artist's or photographer's description, emphasizing the chosen style while maintaining clarity and focus. Ensure all technical specifications are accurate and appropriate for the chosen style. The prompt should be detailed but concise, focusing on the most important elements that will contribute to the final image quality."""
 
 # Custom prompt enhancement instructions
-CUSTOM_PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model. Your task is to transform the given custom prompt into a highly detailed masterpiece that incorporates the following preferences:
+CUSTOM_PROMPT_INSTRUCTIONS = """Enhance the following prompt for generating a high-quality wallpaper image. Consider the following specifications:
 
-1. **Style & Artistic Direction:**
-   - Use the specified style: {style}
-   - Incorporate artistic techniques and effects
-   - Focus on style-specific elements
-   - Use appropriate style-specific terminology
+Style & Artistic Settings:
+- Style: {style}
+- Mood: {mood}
+- Art Movement: {art_movement}
+- Post-processing: {post_processing}
 
-2. **Technical Specifications:**
-   - Resolution: {resolution}
-   - Aspect ratio: {aspect_ratio}
-   - Color scheme: {color_scheme}
-   - Lighting: {lighting}
-   - Composition: {composition}
-   - Depth of field: {depth_of_field}
+Camera & Technical Settings:
+- Camera Model: {camera_model}
+- Lens Type: {lens_type}
+- Aperture: {aperture}
+- Special Lens: {special_lens}
+- Depth of Field: {depth_of_field}
 
-3. **Mood & Atmosphere:**
-   - Set the desired mood: {mood}
-   - Use appropriate lighting and color
-   - Include atmospheric elements
-   - Consider time and weather
+Lighting & Atmosphere:
+- Time of Day: {time_of_day}
+- Lighting Style: {lighting}
+- Light Quality: {light_quality}
+- Artificial Sources: {artificial_sources}
 
-4. **Negative Elements:**
-   - Avoid specified negative elements
-   - Exclude unwanted styles or effects
-   - Prevent common issues
-   - Maintain quality
+Composition & Environment:
+- Technique: {composition}
+- Camera Angle: {camera_angle}
+- Perspective: {perspective}
+- Weather: {weather}
+- Season: {season}
+- Atmospheric Effects: {atmospheric_effects}
 
-Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with these preferences. Focus on creating a vivid and immersive experience that matches the desired style while maintaining clarity and focus."""
+Color & Detail Settings:
+- Color Scheme: {color_scheme}
+- Palette Type: {palette_type}
+- Color Temperature: {color_temperature}
+- Detail Level: {detail_level}
+- Texture Quality: {texture_quality}
+- Special Effects: {special_effects}
+
+Quality Settings:
+- Resolution: {resolution}
+- Aspect Ratio: {aspect_ratio}
+- Rendering Quality: {rendering_quality}
+
+Please enhance the following prompt while maintaining its core concept and incorporating these specifications:
+
+{prompt}
+
+Output only the enhanced prompt without any additional explanations or formatting."""
 
 # Text and Logo Generation Instructions
 TEXT_LOGO_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model, specializing in text and logo generation. Your task is to craft clear, focused prompts that will generate high-quality text and logos in images.

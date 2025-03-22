@@ -12,18 +12,74 @@ A powerful tool that generates stunning desktop wallpapers using Google's Imagen
 
 </div>
 
+## 📋 Menu Structure
+
+```mermaid
+graph TD
+    A[Main Menu] --> B[Generate AI Wallpaper]
+    A --> C[Manage Preferences]
+    A --> D[Manage Imagen 3 Settings]
+    A --> E[Exit]
+
+    B --> B1[AI-Powered Prompt]
+    B --> B2[Random Tag Combination]
+    B --> B3[Custom Prompt Input]
+
+    C --> C1[Manage Genres]
+    C --> C2[Manage Styles]
+    C --> C3[Manage Moods]
+    C --> C4[Return]
+
+    D --> D1[Style & Artistic Settings]
+    D --> D2[Camera & Technical Settings]
+    D --> D3[Lighting & Atmosphere]
+    D --> D4[Composition & Environment]
+    D --> D5[Color & Detail Settings]
+    D --> D6[Show Current Settings]
+    D --> D7[Customize All Parameters]
+    D --> D8[Return]
+
+    D1 --> D1a[Style Selection]
+    D1 --> D1b[Art Movement]
+    D1 --> D1c[Post-processing Effects]
+
+    D2 --> D2a[Camera Model]
+    D2 --> D2b[Lens Settings]
+    D2 --> D2c[Aperture]
+    D2 --> D2d[Special Lens]
+
+    D3 --> D3a[Time of Day]
+    D3 --> D3b[Lighting Style]
+    D3 --> D3c[Light Quality]
+    D3 --> D3d[Artificial Sources]
+
+    D4 --> D4a[Composition Technique]
+    D4 --> D4b[Camera Angle]
+    D4 --> D4c[Perspective]
+    D4 --> D4d[Weather & Season]
+
+    D5 --> D5a[Color Scheme]
+    D5 --> D5b[Palette Type]
+    D5 --> D5c[Color Temperature]
+    D5 --> D5d[Detail Level]
+```
+
 ## ✨ Features
 
 <div align="center">
 
 | Category | Features |
 |----------|----------|
-| 🤖 **AI Generation** | • Imagen 3 model integration<br>• Gemini API powered<br>• High-quality output |
-| 🎲 **Generation Modes** | • AI-powered prompts<br>• Random tag combinations<br>• Custom prompt input |
-| 🎨 **Customization** | • Multiple artistic styles<br>• Mood & atmosphere<br>• Technical parameters |
-| 🧠 **Smart Features** | • Prompt enhancement<br>• Style preservation<br>• Technical optimization |
-| 🎯 **Settings** | • Genre preferences<br>• Style management<br>• Mood selection |
+| 🤖 **AI Generation** | • Imagen 3 model integration<br>• Gemini API powered<br>• High-quality output<br>• Advanced prompt engineering |
+| 🎲 **Generation Modes** | • AI-powered prompts<br>• Random tag combinations<br>• Custom prompt input<br>• Prompt enhancement |
+| 🎨 **Style Settings** | • Multiple artistic styles<br>• Art movements<br>• Post-processing effects<br>• Custom style support |
+| 📸 **Camera Settings** | • Professional camera models<br>• Lens configurations<br>• Aperture control<br>• Special lens effects |
+| 💡 **Lighting & Atmosphere** | • Time of day control<br>• Lighting styles<br>• Light quality<br>• Artificial sources |
+| 🖼️ **Composition** | • Rule of thirds<br>• Camera angles<br>• Perspectives<br>• Environmental context |
+| 🎯 **Technical Settings** | • Resolution control<br>• Aspect ratio selection<br>• Quality parameters<br>• Detail levels |
+| 🌈 **Color & Detail** | • Color schemes<br>• Palette types<br>• Temperature control<br>• Special effects |
 | 🌐 **Platforms** | • Windows<br>• macOS<br>• Linux |
+| 🔧 **Smart Features** | • Prompt caching<br>• Style preservation<br>• Technical optimization<br>• Error handling |
 
 </div>
 
@@ -39,6 +95,15 @@ A powerful tool that generates stunning desktop wallpapers using Google's Imagen
 - **Anime** - Japanese animation style
 - **3D Render** - Computer-generated 3D
 
+### 🎭 Available Art Movements
+- **Abstract Expressionism** - Bold, emotional expression
+- **Impressionism** - Light and color emphasis
+- **Surrealism** - Dreamlike and fantastical
+- **Minimalism** - Simple and essential
+- **Cubism** - Geometric abstraction
+- **Realism** - True-to-life representation
+- **Custom** - User-defined movement
+
 ### 🌟 Available Moods
 - **Peaceful** - Calm and serene
 - **Dramatic** - Bold and impactful
@@ -50,6 +115,30 @@ A powerful tool that generates stunning desktop wallpapers using Google's Imagen
 - **Eerie** - Haunting and atmospheric
 - **Nostalgic** - Retro and nostalgic
 - **Futuristic** - Sci-fi and modern
+
+### 📸 Camera & Technical Options
+- **Camera Models**: ARRI Alexa, RED Digital Cinema, Sony Venice
+- **Lens Types**: 50mm, 85mm, 24mm, Custom
+- **Aperture Settings**: f/1.8, f/2.8, f/4, f/8
+- **Special Lenses**: Tilt-shift, Fisheye, Macro
+- **Resolutions**: 8K, 4K, 2K, 1920x1080
+- **Aspect Ratios**: 16:9, 21:9, 4:3, 1:1, 9:16
+
+### 💡 Lighting & Atmosphere Options
+- **Time of Day**: Golden hour, Blue hour, Twilight
+- **Lighting Styles**: Natural, Studio, Dramatic, Ambient
+- **Light Quality**: Soft, Hard, Diffused, Directional
+- **Artificial Sources**: LED, Neon, Tungsten
+- **Weather**: Clear, Cloudy, Rainy, Foggy
+- **Seasons**: Spring, Summer, Autumn, Winter
+
+### 🎨 Color & Detail Options
+- **Color Schemes**: Monochromatic, Complementary, Analogous
+- **Palette Types**: Warm, Cool, Neutral, Vibrant
+- **Color Temperature**: Warm, Cool, Neutral
+- **Detail Levels**: Ultra-detailed, High-detail, Medium-detail
+- **Texture Quality**: High, Medium, Low
+- **Special Effects**: Bloom, Glow, Motion blur, Depth of field
 
 ## 🚀 Installation
 
@@ -100,27 +189,17 @@ A powerful tool that generates stunning desktop wallpapers using Google's Imagen
 
 #### 2. Advanced Options
 
-- **Style Settings**
-  - Multiple artistic styles
-  - Custom style support
-  - Style combinations
+<div align="center">
 
-- **Mood & Atmosphere**
-  - Predefined moods
-  - Custom mood input
-  - Mood combinations
+| Category | Options |
+|----------|---------|
+| **Style & Artistic** | • Multiple styles<br>• Art movements<br>• Post-processing<br>• Custom styles |
+| **Camera & Technical** | • Camera models<br>• Lens settings<br>• Aperture control<br>• Special effects |
+| **Lighting & Atmosphere** | • Time of day<br>• Lighting styles<br>• Light quality<br>• Weather & season |
+| **Composition & Environment** | • Composition rules<br>• Camera angles<br>• Perspectives<br>• Environmental effects |
+| **Color & Detail** | • Color schemes<br>• Palette types<br>• Detail levels<br>• Special effects |
 
-- **Technical Parameters**
-  - Resolution control
-  - Aspect ratio selection
-  - Color scheme definition
-  - Lighting configuration
-
-- **Composition & Lighting**
-  - Composition styles
-  - Lighting types
-  - Depth of field
-  - Parameter customization
+</div>
 
 #### 3. Preferences Management
 
@@ -151,18 +230,6 @@ A powerful tool that generates stunning desktop wallpapers using Google's Imagen
   - Windows 10/11
   - macOS
   - Linux (GNOME/KDE/XFCE/MATE/Cinnamon/i3/Sway)
-
-#### 5. Imagen 3 Settings
-
-- **Generation Parameters**
-  - Image count (1-4)
-  - Seed settings
-  - Aspect ratios (16:9, 21:9, 4:3, 1:1, 9:16)
-  - Negative prompts
-  - Color schemes
-  - Lighting options
-  - Composition styles
-  - Depth of field
 
 ### ⌨️ Keyboard Shortcuts
 
@@ -247,6 +314,7 @@ Preferences are stored in `user_preferences.json`:
   }
 }
 ```
+
 </details>
 
 ### Cache Management
@@ -304,6 +372,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Cross-platform support
 - User preference management
 - Advanced customization options
+- Comprehensive menu system
+- Enhanced prompt generation
+- Detailed technical settings
 
 ## 💬 Support
 
@@ -317,8 +388,9 @@ For support, please:
 </div>
 
 ---
+
 <div align="center">
 
 Made with ❤️ by [Your Name]
 
-</div> 
+</div>

@@ -1,9 +1,11 @@
 {
   "preferred_genres": [],
   "preferred_styles": [
-    "pixel_art"
+    "Claymation"
   ],
-  "preferred_moods": [],
+  "preferred_moods": [
+    "peaceful"
+  ],
   "aspect_ratio": "16:9",
   "negative_prompts": [],
   "imagen_settings": {
@@ -12,19 +14,20 @@
     "aspect_ratio": "16:9",
     "negative_prompt": "",
     "camera_settings": {
-      "camera_model": "ARRI Alexa",
+      "camera_model": "RED Digital Cinema",
       "lens_type": "50mm",
       "aperture": "f/2.8",
-      "special_lens": null
+      "special_lens": null,
+      "depth_of_field": "shallow"
     },
     "lighting_settings": {
-      "time_of_day": "golden_hour",
+      "time_of_day": "midday",
       "lighting_style": "natural",
       "light_quality": "soft",
       "artificial_sources": []
     },
     "composition_settings": {
-      "technique": "rule_of_thirds",
+      "technique": "framing",
       "camera_angle": "eye_level",
       "perspective": "wide"
     },
@@ -35,12 +38,14 @@
     },
     "style_settings": {
       "overall_style": "vintage",
-      "post_processing": [],
+      "post_processing": [
+        "color_grading"
+      ],
       "art_movement": "Abstract Expressionism"
     },
     "detail_settings": {
       "detail_level": "ultra_detailed",
-      "texture_quality": "high",
+      "texture_quality": "medium",
       "special_effects": []
     },
     "color_settings": {
