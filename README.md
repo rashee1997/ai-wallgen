@@ -7,11 +7,41 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Gemini API](https://img.shields.io/badge/Gemini%20API-Enabled-blue)](https://ai.google.dev/)
 
+<img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_24x24_color_2x.png" alt="Gemini Logo" width="48" height="48">
+
 A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
 
 </div>
+
+## 🚀 Getting the Most Out of Imagen 3
+
+To achieve the best results with Imagen 3, follow these tips:
+
+1. **Prompt Engineering:**
+   - Be specific and detailed in your descriptions
+   - Use artistic and technical terms effectively
+   - Include style references and mood indicators
+   - Combine multiple concepts for unique results
+
+2. **Quality Optimization:**
+   - Use high-resolution settings for better detail
+   - Experiment with different aspect ratios
+   - Try various lighting and atmosphere settings
+   - Utilize the advanced camera and lens options
+
+3. **Style Enhancement:**
+   - Mix different artistic styles for unique looks
+   - Use color schemes to set the mood
+   - Apply post-processing effects strategically
+   - Leverage the genre-based prompt system
+
+4. **Best Practices:**
+   - Start with simpler prompts and gradually add complexity
+   - Save successful prompt combinations
+   - Use the caching system to save generations
+   - Monitor your API usage for optimal results
 
 ## 📝 Note About Versions
 
