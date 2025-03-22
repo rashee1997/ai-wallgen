@@ -74,3 +74,5 @@ user_preferences.json
 prompt_cache/
 image_cache/
 last_genre.txt
+prompt
+.cursor/
