@@ -224,20 +224,9 @@ wallgen/
 - Debug mode support
 - System compatibility checks
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Google's Gemini API and Imagen 3 model for AI image generation
-- The open-source community for various tools and libraries
-- All contributors to this project
-- Special thanks to the Python community for the excellent libraries used in this project
 
 ---
 
