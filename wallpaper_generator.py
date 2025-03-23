@@ -721,7 +721,10 @@ def generate_prompt(custom_prompt=None):
                 return prompt
                 
         elif choice == "3":
-            custom_prompt = input("\nEnter your custom prompt: ").strip()
+            custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
+            if custom_prompt.lower() == 'b':
+                return None
+            
             if custom_prompt:
                 print_info("Processing custom prompt...")
                 try:
@@ -3281,9 +3284,11 @@ def main():
                     generate_wallpaper("random")
                     
                 elif prompt_choice == "3":
-                    custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
+                    custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
+                    if custom_prompt.lower() == 'b':
+                        continue
                     generate_wallpaper("custom", custom_prompt=custom_prompt)
-                    
+                
                 elif prompt_choice == "4":
                     configure_advanced_options()
             
