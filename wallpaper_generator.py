@@ -637,7 +637,7 @@ def extract_subject_from_prompt(prompt):
             subject = re.sub(r'[^\w\s-]', '', subject.lower())
             subject = re.sub(r'[-\s]+', '_', subject)
             
-            logging.info(f"Extracted subject from prompt: {subject}")
+            logging.debug(f"Extracted subject from prompt: {subject}")
             return subject
         else:
             logging.warning("Empty response from Gemini for subject extraction")
@@ -3171,8 +3171,12 @@ def import_settings():
     except Exception as e:
         print_error(f"Error importing settings: {e}")
 
-def update_history_with_filenames():
-    """Update the generation history to include image filenames for existing entries."""
+def update_history_with_filenames(silent=False):
+    """Update the generation history to include image filenames for existing entries.
+    
+    Args:
+        silent: If True, don't print status messages
+    """
     try:
         if os.path.exists("generation_history.json"):
             with open("generation_history.json", "r") as f:
@@ -3189,7 +3193,8 @@ def update_history_with_filenames():
             if updated:
                 with open("generation_history.json", "w") as f:
                     json.dump(history, f, indent=4)
-                print_info("Generation history updated with image filenames")
+                if not silent:
+                    print_info("Generation history updated with image filenames")
     except Exception as e:
         logging.error(f"Error updating history with filenames: {e}")
 
@@ -3202,8 +3207,8 @@ def main():
         # Check and create necessary directories
         os.makedirs("genimage", exist_ok=True)
         
-        # Update existing history entries with image filenames
-        update_history_with_filenames()
+        # Update existing history entries with image filenames (silently)
+        update_history_with_filenames(silent=True)
         
         print_header("AI Wallpaper Generator")
         print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
@@ -3292,9 +3297,10 @@ def main():
                 print_option("2", "View Generation History")
                 print_option("3", "Export Settings")
                 print_option("4", "Import Settings")
-                print_option("5", "Return to Main Menu")
+                print_option("5", "Update History Filenames")
+                print_option("6", "Return to Main Menu")
                 
-                tools_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+                tools_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
                 
                 if tools_choice == "1":
                     manage_presets()
@@ -3304,6 +3310,9 @@ def main():
                     export_settings()
                 elif tools_choice == "4":
                     import_settings()
+                elif tools_choice == "5":
+                    print_info("Updating generation history with descriptive filenames...")
+                    update_history_with_filenames(silent=False)
                 continue
             
             elif choice == "4":
