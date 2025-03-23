@@ -54,6 +54,17 @@ generated_prompts.json
 prompts.json
 last_genre.json
 
+# Preset and History files
+presets/*
+!presets/.gitkeep
+presets.json
+preset_backups/
+*.preset
+generation_history.json
+history/*
+!history/.gitkeep
+history_backups/
+
 # OS specific
 .DS_Store
 Thumbs.db

@@ -1,5 +1,217 @@
 # Advanced Features Guide
 
+This guide details the advanced features available in the AI Wallpaper Generator.
+
+## Table of Contents
+- [Prompt Generation & Enhancement](#prompt-generation--enhancement)
+- [AI-Powered Generation](#ai-powered-generation)
+- [Preset Management](#preset-management)
+- [Professional Controls](#professional-controls)
+- [Advanced Settings](#advanced-settings)
+- [Technical Features](#technical-features)
+
+## Prompt Generation & Enhancement
+
+### Smart Prompt Generation
+- **AI-Powered Generation**
+  - Context-aware prompt creation
+  - Style-specific vocabulary
+  - Mood-based adjustments
+  - Technical parameter integration
+
+- **Multiple Generation Methods**
+  - Gemini API integration
+  - Random tag combinations
+  - Custom prompt input
+  - Template-based generation
+
+### Prompt Enhancement System
+- **Intelligent Enhancement**
+  - Automatic style refinement
+  - Technical detail addition
+  - Contextual improvement
+  - Quality optimization
+
+- **Enhancement Features**
+  - Style consistency check
+  - Technical parameter validation
+  - Mood integration
+  - Artistic direction alignment
+
+### Advanced Prompt Controls
+- **Tag Management**
+  - Smart tag selection
+  - Category-based organization
+  - Priority weighting
+  - Negative prompt support
+
+- **Context Control**
+  - Scene composition hints
+  - Lighting descriptors
+  - Atmospheric elements
+  - Environmental details
+
+### Prompt Templates
+- **Pre-built Templates**
+  - Landscape optimized
+  - Portrait oriented
+  - Abstract designs
+  - Minimalist compositions
+
+- **Custom Templates**
+  - User-defined structures
+  - Variable placeholders
+  - Dynamic content insertion
+  - Template combination
+
+### Quality Optimization
+- **Semantic Analysis**
+  - Coherence checking
+  - Style consistency
+  - Technical validity
+  - Parameter compatibility
+
+- **Enhancement Strategies**
+  - Detail amplification
+  - Style reinforcement
+  - Technical precision
+  - Quality assurance
+
+## AI-Powered Generation
+
+### Gemini-Enhanced Prompts
+- Smart prompt enhancement using Gemini AI
+- Context-aware prompt modification
+- Style and mood integration
+- Automatic tag optimization
+
+### Multiple Generation Methods
+- AI-powered prompts via Gemini
+- Random tag combinations
+- Custom prompt input
+- Enhanced prompts with preferences
+
+## Preset Management
+
+### Comprehensive Settings Control
+- Save and load complete setting configurations
+- Merge or replace existing settings
+- Track active presets across sessions
+- Automatic backup system
+
+### Advanced Preset Features
+- Detailed preset information viewing
+- Atomic file operations for data safety
+- Settings validation and sanitization
+- Backup retention management
+
+### Workflow Integration
+- Quick access to favorite settings
+- Combine multiple presets
+- Session persistence
+- Cross-preset compatibility
+
+## Professional Controls
+
+### Camera Settings
+- Professional camera models:
+  - ARRI Alexa
+  - RED Digital Cinema
+  - Sony Venice
+  - Canon Cinema EOS
+- Lens options:
+  - Prime lenses (24mm, 50mm, 85mm)
+  - Zoom lenses
+  - Special effects lenses
+  - Anamorphic options
+
+### Lighting Control
+- Natural lighting conditions
+- Artificial lighting setups
+- Time of day effects
+- Weather conditions
+- Seasonal variations
+
+### Color Management
+- Color schemes
+- Color grading
+- Color temperature
+- Palette types
+- Custom color combinations
+
+## Advanced Settings
+
+### Resolution Options
+- Standard resolutions (1080p, 4K)
+- Ultra-high resolution (8K)
+- Custom aspect ratios
+- Multi-monitor configurations
+- Display-specific optimization
+
+### Style Controls
+- Artistic styles:
+  - Photorealistic
+  - Digital Art
+  - Sketch
+  - Painterly
+- Art movements:
+  - Abstract Expressionism
+  - Impressionism
+  - Minimalism
+  - Contemporary
+
+### Post-Processing
+- Detail enhancement
+- Texture quality
+- Noise reduction
+- Sharpening
+- Color correction
+
+## Technical Features
+
+### System Integration
+- Auto-wallpaper setting
+- Multi-monitor support
+- Custom fit modes
+- Background color options
+- Refresh rate settings
+
+### Performance Features
+- Cache management
+- Resource optimization
+- Batch processing
+- Background generation
+- Progress tracking
+
+### Data Management
+- Settings persistence
+- History tracking
+- Export/Import capabilities
+- Backup management
+- Error recovery
+
+## Advanced Tips
+
+1. **Optimal Performance**
+   - Use preset merging for complex effects
+   - Leverage cache for faster generation
+   - Optimize settings for your hardware
+
+2. **Quality Enhancement**
+   - Combine multiple artistic styles
+   - Layer lighting effects
+   - Use advanced color grading
+
+3. **Workflow Optimization**
+   - Create preset hierarchies
+   - Use quick access shortcuts
+   - Implement custom workflows
+
+4. **Resource Management**
+   - Monitor system resources
+   - Manage cache size
+   - Schedule batch operations
+
 ## 🎨 Artistic Controls
 
 ### Style Settings

@@ -27,6 +27,9 @@ from prompt_config import (
     fantasy_tags, abstract_tags, mood_tags, available_genres,
     PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS
 )
+from datetime import datetime
+import shutil
+import threading
 
 # Try to import colorama, but provide fallbacks if not available
 try:
@@ -96,111 +99,58 @@ os.makedirs("genimage", exist_ok=True)
 
 # User preferences
 class UserPreferences:
-    """Class to store and manage user preferences."""
+    """Class to manage user preferences."""
     def __init__(self):
+        """Initialize user preferences."""
         self.preferred_genres = []
         self.preferred_styles = []
         self.preferred_moods = []
         self.aspect_ratio = "16:9"
         self.negative_prompts = []
-        # Add new Imagen 3 specific settings
         self.imagen_settings = {
-            "number_of_images": 1,  # Number of images to generate (1-4)
-            "seed": None,  # Optional seed for reproducible results
-            "aspect_ratio": "16:9",  # Supported ratios: 16:9, 21:9, 4:3, 1:1, 9:16
-            "negative_prompt": "",  # Optional negative prompt
+            "number_of_images": 1,
+            "seed": None,
+            "aspect_ratio": "16:9",
+            "negative_prompt": "",
             "camera_settings": {
                 "camera_model": "ARRI Alexa",
                 "lens_type": "50mm",
                 "aperture": "f/2.8",
                 "special_lens": None,
-                "depth_of_field": "medium"  # Added depth of field setting
-            },
-            "lighting_settings": {
-                "time_of_day": "golden_hour",
-                "lighting_style": "natural",
-                "light_quality": "soft",
-                "artificial_sources": []
-            },
-            "composition_settings": {
-                "technique": "rule_of_thirds",
-                "camera_angle": "eye_level",
-                "perspective": "wide"
-            },
-            "environment_settings": {
-                "weather": "clear",
-                "season": "summer",
-                "atmospheric_effects": []
-            },
-            "style_settings": {
-                "overall_style": "vintage",
-                "post_processing": [],
-                "art_movement": "Abstract Expressionism"
-            },
-            "detail_settings": {
-                "detail_level": "ultra_detailed",
-                "texture_quality": "high",
-                "special_effects": []
-            },
-            "color_settings": {
-                "color_scheme": "natural",
-                "palette_type": "analogous",
-                "color_temperature": "neutral"
-            },
-            "quality_settings": {
-                "resolution": "8k",
-                "detail_level": "ultra_detailed",
-                "rendering_quality": "photorealistic"
+                "depth_of_field": "medium"
             }
         }
-        # Add wallpaper settings
-        self.wallpaper_settings = {
-            "auto_set": True,  # Whether to automatically set wallpaper after generation
-            "cache_duration": 30,  # Days to keep cached images
-            "fit_mode": "fill",  # fill, fit, center, tile
-            "background_color": "#000000",  # Background color for non-filling modes
-            "multi_monitor": "mirror",  # mirror, extend, individual
-            "refresh_rate": "daily",  # daily, weekly, monthly, never
-            "last_refresh": None,  # Timestamp of last refresh
-        }
+        self.wallpaper_settings = {}
+        self.current_preset = None
         self.load_preferences()
     
     def load_preferences(self, filename: str = "user_preferences.json") -> None:
-        """Load user preferences from a JSON file."""
-        try:
-            if os.path.exists(filename):
-                with open(filename, "r") as f:
-                    prefs = json.load(f)
-                    self.preferred_genres = prefs.get("preferred_genres", [])
-                    self.preferred_styles = prefs.get("preferred_styles", [])
-                    self.preferred_moods = prefs.get("preferred_moods", [])
-                    self.aspect_ratio = prefs.get("aspect_ratio", "16:9")
-                    self.negative_prompts = prefs.get("negative_prompts", [])
-                    # Load Imagen 3 settings
-                    if "imagen_settings" in prefs:
-                        self.imagen_settings.update(prefs["imagen_settings"])
-                    # Load wallpaper settings
-                    if "wallpaper_settings" in prefs:
-                        self.wallpaper_settings.update(prefs["wallpaper_settings"])
-        except (json.JSONDecodeError, IOError) as e:
-            logging.error(f"Error loading preferences: {e}")
-    
+        """Load preferences from file."""
+        if os.path.exists(filename):
+            try:
+                with open(filename) as f:
+                    data = json.load(f)
+                    self.imagen_settings = data.get("imagen_settings", {})
+                    self.wallpaper_settings = data.get("wallpaper_settings", {})
+                    self.current_preset = data.get("current_preset", None)
+            except Exception as e:
+                print_error(f"Error loading preferences: {e}")
+                self.imagen_settings = {}
+                self.wallpaper_settings = {}
+                self.current_preset = None
+        
     def save_preferences(self, filename: str = "user_preferences.json") -> None:
-        """Save user preferences to a JSON file."""
+        """Save preferences to file."""
         try:
-            prefs = {
-                "preferred_genres": self.preferred_genres,
-                "preferred_styles": self.preferred_styles,
-                "preferred_moods": self.preferred_moods,
-                "aspect_ratio": self.aspect_ratio,
-                "negative_prompts": self.negative_prompts,
+            data = {
                 "imagen_settings": self.imagen_settings,
-                "wallpaper_settings": self.wallpaper_settings
+                "wallpaper_settings": self.wallpaper_settings,
+                "current_preset": self.current_preset
             }
             with open(filename, "w") as f:
-                json.dump(prefs, f, indent=2)
+                json.dump(data, f, indent=4)
         except Exception as e:
-            logging.error(f"Error saving preferences: {e}")
+            print_error(f"Error saving preferences: {e}")
 
 # Initialize user preferences
 user_prefs = UserPreferences()
@@ -2150,18 +2100,120 @@ def configure_advanced_options():
             
         user_prefs.save_preferences()
 
-def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
-    """Generate a wallpaper based on the specified parameters.
+class GenerationHistory:
+    """Class to manage wallpaper generation history."""
+    def __init__(self, history_file="generation_history.json"):
+        self.history_file = history_file
+        self.history = []
+        self.load_history()
     
-    Args:
-        prompt_type: Type of prompt ("custom", "random", or "gemini")
-        custom_prompt: Custom prompt text if prompt_type is "custom"
-        mood: Optional mood for the wallpaper
-        style: Optional style for the wallpaper
-        resolution: Optional resolution (e.g., "1920x1080")
-        color_scheme: Optional color scheme (e.g., "warm", "cool")
-        lighting: Optional lighting style (e.g., "soft", "harsh")
-    """
+    def load_history(self):
+        """Load history from file."""
+        if os.path.exists(self.history_file):
+            try:
+                with open(self.history_file) as f:
+                    self.history = json.load(f)
+            except Exception as e:
+                print_error(f"Error loading history: {e}")
+                self.history = []
+    
+    def save_history(self):
+        """Save history to file."""
+        try:
+            with open(self.history_file, "w") as f:
+                json.dump(self.history, f, indent=4)
+        except Exception as e:
+            print_error(f"Error saving history: {e}")
+    
+    def add_entry(self, entry_data):
+        """Add a new generation entry to history."""
+        entry = {
+            "date": datetime.now().isoformat(),
+            "prompt": entry_data.get("prompt", ""),
+            "enhanced_prompt": entry_data.get("enhanced_prompt", ""),
+            "gemini_prompt": entry_data.get("gemini_prompt", ""),
+            "settings": {
+                "user_preferences": entry_data.get("user_preferences", {}),
+                "imagen_settings": entry_data.get("imagen_settings", {}),
+                "wallpaper_settings": entry_data.get("wallpaper_settings", {})
+            },
+            "output": entry_data.get("output", "")
+        }
+        
+        self.history.insert(0, entry)
+        self.history = self.history[:50]  # Keep only last 50 entries
+        self.save_history()
+    
+    def view_history(self):
+        """Display the generation history in a formatted way."""
+        if not self.history:
+            print("\nℹ No generation history available.")
+            return
+
+        for i, entry in enumerate(self.history, 1):
+            print(f"\nGeneration #{i}")
+            print("-" * 13)
+            
+            # Always show date and original prompt
+            print(f"Date: {entry.get('date', 'Not recorded')}")
+            print(f"Original Prompt: {entry.get('original_prompt', 'Not recorded')}")
+            
+            # Only show enhanced prompt if it exists and is different from original
+            if entry.get('enhanced_prompt') and entry['enhanced_prompt'] != entry.get('original_prompt'):
+                print(f"Enhanced Prompt: {entry['enhanced_prompt']}")
+            
+            # Only show Gemini prompt if it exists and is different from original
+            if entry.get('gemini_prompt') and entry['gemini_prompt'] != entry.get('original_prompt'):
+                print(f"Gemini Prompt: {entry['gemini_prompt']}")
+            
+            # Show settings if they exist
+            if entry.get('settings'):
+                print("\nSettings Used:")
+                settings = entry['settings']
+                
+                # User preferences
+                if settings.get('user_prefs'):
+                    print("User Preferences:")
+                    for key, value in settings['user_prefs'].items():
+                        if value:  # Only show non-empty values
+                            print(f"  {key}: {value}")
+                
+                # Imagen settings
+                if settings.get('imagen_settings'):
+                    print("\nImagen Settings:")
+                    for key, value in settings['imagen_settings'].items():
+                        if value:  # Only show non-empty values
+                            print(f"  {key}: {value}")
+                
+                # Wallpaper settings
+                if settings.get('wallpaper_settings'):
+                    print("\nWallpaper Settings:")
+                    for key, value in settings['wallpaper_settings'].items():
+                        if value is not None:  # Show even if False
+                            print(f"  {key}: {value}")
+            
+            print("-" * 40)
+
+# Initialize history at module level
+generation_history = GenerationHistory()
+
+def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
+    """Generate wallpaper based on given parameters."""
+    global generation_history, user_prefs
+    
+    # Create settings dictionary with all necessary parameters
+    current_settings = {
+        "prompt_type": prompt_type,
+        "custom_prompt": custom_prompt,
+        "mood": mood,
+        "style": style,
+        "resolution": resolution,
+        "color_scheme": color_scheme,
+        "lighting": lighting,
+        "imagen_settings": user_prefs.imagen_settings.copy(),
+        "wallpaper_settings": user_prefs.wallpaper_settings.copy()
+    }
+    
     enhanced_prompt = None
     gemini_prompt = None
     
@@ -2193,20 +2245,17 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             
         enhanced_prompt = gemini_prompt
         print_info("Review your prompt below:")
-        
-        # Enhance prompt with additional parameters if provided
-        if resolution or color_scheme or lighting:
-            print_info("Enhancing prompt with additional parameters...")
-            additional_params = []
-            if resolution:
-                additional_params.append(f"resolution: {resolution}")
-            if color_scheme:
-                additional_params.append(f"color scheme: {color_scheme}")
-            if lighting:
-                additional_params.append(f"lighting: {lighting}")
-            
-            enhanced_prompt = f"{enhanced_prompt}, with {', '.join(additional_params)}"
-            print_info("Enhanced prompt with additional parameters:")
+    
+    # Add to generation history
+    generation_history.add_entry({
+        "prompt": custom_prompt if custom_prompt else gemini_prompt,
+        "enhanced_prompt": enhanced_prompt,
+        "gemini_prompt": gemini_prompt,
+        "user_preferences": user_prefs.__dict__,
+        "imagen_settings": user_prefs.imagen_settings,
+        "wallpaper_settings": user_prefs.wallpaper_settings,
+        "output": None  # Will be updated when image is generated
+    })
     
     # Step 2: Display the prompt and get confirmation
     if enhanced_prompt:
@@ -2667,6 +2716,348 @@ def manage_preferences():
         
         user_prefs.save_preferences()
 
+def manage_presets():
+    """Manage generation presets."""
+    while True:
+        print_section("Manage Presets")
+        
+        # Show current preset if one is loaded
+        current_preset = getattr(user_prefs, 'current_preset', None)
+        if current_preset:
+            print_info(f"Current Preset: {current_preset}")
+        print()
+        
+        print_option("1", "Save Current Settings as Preset")
+        print_option("2", "Load Preset")
+        print_option("3", "Delete Preset")
+        print_option("4", "View Current Preset Details")
+        print_option("5", "Back to Main Menu")
+        
+        choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+        
+        if choice == "1":
+            # Get preset name from user
+            preset_name = get_validated_input("Enter preset name (or 'b' to go back)", allow_empty=False)
+            if preset_name.lower() == 'b':
+                continue
+                
+            # Validate preset name
+            if not preset_name.strip() or any(c in r'\/:*?"<>|' for c in preset_name):
+                print_error("Invalid preset name. Please avoid special characters.")
+                continue
+                
+            # Check if preset already exists
+            if os.path.exists(os.path.join("presets", f"{preset_name}.json")):
+                confirm = get_validated_input(f"Preset '{preset_name}' already exists. Overwrite? (y/n)", ["y", "n"])
+                if confirm.lower() != "y":
+                    continue
+            
+            try:
+                # Collect current settings
+                current_settings = {
+                    "imagen_settings": user_prefs.imagen_settings if hasattr(user_prefs, 'imagen_settings') else {},
+                    "wallpaper_settings": user_prefs.wallpaper_settings if hasattr(user_prefs, 'wallpaper_settings') else {},
+                    "metadata": {
+                        "created_at": datetime.now().isoformat(),
+                        "description": "User preset"
+                    }
+                }
+                
+                # Save the preset
+                if save_preset(current_settings, preset_name):
+                    print_success(f"Preset '{preset_name}' saved successfully")
+                    user_prefs.current_preset = preset_name
+                    user_prefs.save_preferences()
+                else:
+                    print_error("Failed to save preset")
+                    
+            except Exception as e:
+                print_error(f"Error preparing preset data: {e}")
+            
+        elif choice == "2":
+            # Load preset
+            result = load_preset()
+            if result:
+                settings, preset_name = result  # Unpack the returned tuple
+                try:
+                    print_section("Load Settings")
+                    print_option("1", "Replace current settings with preset")
+                    print_option("2", "Merge preset with current settings")
+                    print_option("b", "Back")
+                    
+                    load_choice = get_validated_input("Select option (1-2 or b)", ["1", "2", "b"])
+                    if load_choice == "b":
+                        continue
+                    
+                    if load_choice == "1":
+                        # Replace settings completely
+                        if "imagen_settings" in settings and hasattr(user_prefs, 'imagen_settings'):
+                            user_prefs.imagen_settings = settings["imagen_settings"].copy()
+                        if "wallpaper_settings" in settings and hasattr(user_prefs, 'wallpaper_settings'):
+                            user_prefs.wallpaper_settings = settings["wallpaper_settings"].copy()
+                        print_success("Settings replaced with preset")
+                    else:
+                        # Merge settings (update existing)
+                        if "imagen_settings" in settings and hasattr(user_prefs, 'imagen_settings'):
+                            user_prefs.imagen_settings.update(settings["imagen_settings"])
+                        if "wallpaper_settings" in settings and hasattr(user_prefs, 'wallpaper_settings'):
+                            user_prefs.wallpaper_settings.update(settings["wallpaper_settings"])
+                        print_success("Settings merged with preset")
+                    
+                    # Update current preset name
+                    user_prefs.current_preset = preset_name
+                    user_prefs.save_preferences()
+                    
+                except Exception as e:
+                    print_error(f"Error applying preset settings: {e}")
+            
+        elif choice == "3":
+            delete_preset()
+            # If deleted preset was current, clear current preset
+            if current_preset and not os.path.exists(os.path.join("presets", f"{current_preset}.json")):
+                user_prefs.current_preset = None
+                user_prefs.save_preferences()
+            
+        elif choice == "4":
+            # View current preset details
+            if not current_preset:
+                print_warning("No preset currently loaded")
+                continue
+                
+            print_section(f"Current Preset: {current_preset}")
+            try:
+                preset_file = os.path.join("presets", f"{current_preset}.json")
+                if os.path.exists(preset_file):
+                    with open(preset_file) as f:
+                        settings = json.load(f)
+                        
+                    # Display metadata if available
+                    if "metadata" in settings:
+                        print_info("Metadata:")
+                        for key, value in settings["metadata"].items():
+                            print_info(f"  {key}: {value}")
+                        print()
+                        
+                    # Display imagen settings
+                    if "imagen_settings" in settings:
+                        print_info("Imagen Settings:")
+                        for key, value in settings["imagen_settings"].items():
+                            if isinstance(value, dict):
+                                print_info(f"  {key}:")
+                                for k, v in value.items():
+                                    print_info(f"    {k}: {v}")
+                            else:
+                                print_info(f"  {key}: {value}")
+                        print()
+                        
+                    # Display wallpaper settings
+                    if "wallpaper_settings" in settings:
+                        print_info("Wallpaper Settings:")
+                        for key, value in settings["wallpaper_settings"].items():
+                            print_info(f"  {key}: {value}")
+                    
+                    input("\nPress Enter to continue...")
+                else:
+                    print_error(f"Preset file not found: {preset_file}")
+            except Exception as e:
+                print_error(f"Error reading preset details: {e}")
+            
+        else:  # choice == "5"
+            return
+
+def view_history():
+    """View wallpaper generation history."""
+    global generation_history
+    generation_history.view_history()
+
+def add_to_history(entry):
+    """Add a generation entry to history."""
+    global generation_history
+    generation_history.add_entry(entry)
+
+def load_preset():
+    """Load a saved preset."""
+    if not os.path.exists("presets"):
+        os.makedirs("presets")
+    
+    presets = [f for f in os.listdir("presets") if f.endswith(".json")]
+    if not presets:
+        print_warning("No saved presets found")
+        return None
+    
+    print_section("Available Presets")
+    for i, preset in enumerate(presets, 1):
+        print_option(str(i), preset.replace(".json", ""))
+    print_option("b", "Back")
+    
+    choice = get_validated_input("Select preset to load", ["b"] + [str(i) for i in range(1, len(presets) + 1)])
+    if choice == "b":
+        return None
+    
+    preset_file = presets[int(choice) - 1]
+    preset_name = os.path.splitext(preset_file)[0]
+    
+    try:
+        with open(os.path.join("presets", preset_file)) as f:
+            settings = json.load(f)
+        return settings, preset_name
+    except Exception as e:
+        print_error(f"Error loading preset: {e}")
+        return None
+
+def save_preset(settings, name):
+    """Save current settings as a preset."""
+    if not os.path.exists("presets"):
+        try:
+            os.makedirs("presets")
+            print_info("Created presets directory")
+        except Exception as e:
+            print_error(f"Error creating presets directory: {e}")
+            return False
+    
+    filename = f"{name}.json"
+    temp_file = os.path.join("presets", f"{filename}.tmp")
+    final_file = os.path.join("presets", filename)
+    
+    print_info(f"Saving preset to {final_file}")
+    
+    try:
+        # First write to a temporary file
+        with open(temp_file, "w") as f:
+            json.dump(settings, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())  # Ensure data is written to disk
+            
+        print_info("Temporary file written successfully")
+            
+        # If successful, rename to final filename (atomic operation)
+        if os.path.exists(final_file):
+            backup_file = os.path.join("presets", f"{filename}.bak")
+            if os.path.exists(backup_file):
+                os.remove(backup_file)
+                print_info("Removed old backup file")
+            os.rename(final_file, backup_file)
+            print_info("Created backup of existing preset")
+            
+        os.rename(temp_file, final_file)
+        print_info("Renamed temporary file to final preset file")
+        return True
+        
+    except Exception as e:
+        print_error(f"Error saving preset: {e}")
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+                print_info("Cleaned up temporary file after error")
+            except:
+                pass
+        return False
+
+def delete_preset():
+    """Delete a saved preset."""
+    if not os.path.exists("presets"):
+        print_warning("No presets directory found")
+        return
+    
+    presets = [f for f in os.listdir("presets") if f.endswith(".json") and not f.endswith((".tmp", ".bak"))]
+    if not presets:
+        print_warning("No saved presets found")
+        return
+    
+    print_section("Select Preset to Delete")
+    for i, preset in enumerate(presets, 1):
+        print_option(str(i), preset.replace(".json", ""))
+    print_option("b", "Back")
+    
+    choice = get_validated_input("Select preset to delete", ["b"] + [str(i) for i in range(1, len(presets) + 1)])
+    if choice == "b":
+        return
+    
+    preset_file = presets[int(choice) - 1]
+    preset_name = preset_file.replace(".json", "")
+    
+    # Ask for confirmation
+    confirm = get_validated_input(f"Are you sure you want to delete preset '{preset_name}'? (y/n)", ["y", "n"])
+    if confirm.lower() != "y":
+        print_info("Deletion cancelled")
+        return
+    
+    try:
+        preset_path = os.path.join("presets", preset_file)
+        backup_path = os.path.join("presets", f"{preset_file}.bak")
+        
+        # Create backup before deletion
+        if os.path.exists(preset_path):
+            shutil.copy2(preset_path, backup_path)
+            
+        # Delete the preset
+        os.remove(preset_path)
+        print_success(f"Deleted preset: {preset_name}")
+        
+        # Keep backup for 24 hours
+        def cleanup_backup():
+            time.sleep(86400)  # 24 hours
+            try:
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
+            except:
+                pass
+        
+        threading.Thread(target=cleanup_backup, daemon=True).start()
+        
+    except Exception as e:
+        print_error(f"Error deleting preset: {e}")
+        # Try to restore from backup if deletion failed
+        if os.path.exists(backup_path) and not os.path.exists(preset_path):
+            try:
+                shutil.move(backup_path, preset_path)
+                print_warning("Restored preset from backup after deletion error")
+            except:
+                pass
+
+def export_settings():
+    """Export current settings to file."""
+    print_section("Export Settings")
+    try:
+        filename = get_validated_input("Enter filename for export (without extension)", allow_empty=False)
+        filename = f"{filename}.json"
+        
+        settings = {
+            "preferences": user_prefs.__dict__,
+            "imagen_settings": user_prefs.imagen_settings,
+            "export_date": datetime.now().isoformat()
+        }
+        
+        with open(filename, "w") as f:
+            json.dump(settings, f, indent=4)
+        print_success(f"Settings exported to {filename}")
+    except Exception as e:
+        print_error(f"Error exporting settings: {e}")
+
+def import_settings():
+    """Import settings from file."""
+    print_section("Import Settings")
+    try:
+        filename = get_validated_input("Enter filename to import (with extension)", allow_empty=False)
+        if not os.path.exists(filename):
+            print_error("File not found")
+            return
+        
+        with open(filename) as f:
+            settings = json.load(f)
+        
+        # Update preferences
+        for key, value in settings["preferences"].items():
+            setattr(user_prefs, key, value)
+        
+        # Update imagen settings
+        user_prefs.imagen_settings.update(settings["imagen_settings"])
+        
+        user_prefs.save_preferences()
+        print_success("Settings imported successfully")
+    except Exception as e:
+        print_error(f"Error importing settings: {e}")
+
 def main():
     """Main function to execute the script."""
     try:
@@ -2680,10 +3071,12 @@ def main():
             print_section("Main Menu")
             print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
             print_option("2", "Manage Preferences - Customize wallpaper settings")
-            print_option("3", "Exit - Save and exit")
+            print_option("3", "Tools & Utilities")
+            print_option("4", "View Generation History")
+            print_option("5", "Exit - Save and exit")
             
             try:
-                choice = get_validated_input("Select an option (1-3)", ["1", "2", "3"])
+                choice = get_validated_input("Select an option (1-5)", ["1", "2", "3", "4", "5"])
             except KeyboardInterrupt:
                 print_info("\nSaving preferences before exit...")
                 user_prefs.save_preferences()
@@ -2692,21 +3085,28 @@ def main():
             
             if choice == "1":
                 print_section("Generate AI Wallpaper")
+                print_breadcrumb(["Main Menu", "Generate AI Wallpaper"])
                 print_option("1", "Use Gemini AI to generate a prompt")
                 print_option("2", "Use a random prompt")
                 print_option("3", "Enter your own custom prompt")
                 print_option("4", "Advanced Options - Fine-tune generation parameters")
-                print_option("5", "Return to Main Menu")
+                print_option("5", "Load Saved Preset")
+                print_option("6", "Return to Main Menu")
                 
                 try:
-                    prompt_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+                    prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
                 except KeyboardInterrupt:
                     print_info("\nSaving preferences before exit...")
                     user_prefs.save_preferences()
                     print_success("Goodbye!")
                     sys.exit(0)
                 
-                if prompt_choice == "5":
+                if prompt_choice == "6":
+                    continue
+                elif prompt_choice == "5":
+                    settings = load_preset()
+                    if settings:
+                        generate_wallpaper(**settings)
                     continue
                 
                 if prompt_choice == "1":
@@ -2715,96 +3115,72 @@ def main():
                     print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
                     
                     mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
-                                   "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
+                                  "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
                     style_options = ["photograph", "digital_art", "landscape", "sketch", 
                                    "watercolor", "cyberpunk", "pop_art"]
                     
                     print_info(f"Mood options: {', '.join(mood_options)}")
-                    try:
-                        mood = input("Enter mood (optional): ").strip().lower()
-                    except KeyboardInterrupt:
-                        print_info("\nSaving preferences before exit...")
-                        user_prefs.save_preferences()
-                        print_success("Goodbye!")
-                        sys.exit(0)
-                        
+                    mood = input("Enter mood (optional): ").strip().lower()
                     if mood and mood not in mood_options:
                         print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
                     
                     print_info(f"Style options: {', '.join(style_options)}")
-                    try:
-                        style = input("Enter style (optional): ").strip().lower()
-                    except KeyboardInterrupt:
-                        print_info("\nSaving preferences before exit...")
-                        user_prefs.save_preferences()
-                        print_success("Goodbye!")
-                        sys.exit(0)
-                        
+                    style = input("Enter style (optional): ").strip().lower()
                     if style and style not in style_options:
                         print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
                     
-                    # Add more customization options
-                    print_section("Advanced Settings")
-                    print_info("You can specify additional parameters for the generation:")
-                    print_option("1", "Use default settings")
-                    print_option("2", "Customize settings")
-                    
-                    try:
-                        settings_choice = get_validated_input("Select settings option (1-2)", ["1", "2"])
-                    except KeyboardInterrupt:
-                        print_info("\nSaving preferences before exit...")
-                        user_prefs.save_preferences()
-                        print_success("Goodbye!")
-                        sys.exit(0)
-                        
-                    if settings_choice == "2":
-                        print_info("Enter values for the following parameters (leave blank for default):")
-                        try:
-                            resolution = input("Resolution (e.g., 1920x1080): ").strip()
-                            color_scheme = input("Color scheme (e.g., warm, cool, monochromatic): ").strip()
-                            lighting = input("Lighting (e.g., soft, harsh, volumetric): ").strip()
-                        except KeyboardInterrupt:
-                            print_info("\nSaving preferences before exit...")
-                            user_prefs.save_preferences()
-                            print_success("Goodbye!")
-                            sys.exit(0)
-                        # Add these parameters to the generation
-                        generate_wallpaper("gemini", mood=mood, style=style,
-                                         resolution=resolution, color_scheme=color_scheme, lighting=lighting)
-                    else:
-                        generate_wallpaper("gemini", mood=mood, style=style)
+                    generate_wallpaper("gemini", mood=mood, style=style)
                     
                 elif prompt_choice == "2":
                     generate_wallpaper("random")
+                    
                 elif prompt_choice == "3":
-                    try:
-                        custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
-                    except KeyboardInterrupt:
-                        print_info("\nSaving preferences before exit...")
-                        user_prefs.save_preferences()
-                        print_success("Goodbye!")
-                        sys.exit(0)
+                    custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
                     generate_wallpaper("custom", custom_prompt=custom_prompt)
+                    
                 elif prompt_choice == "4":
                     configure_advanced_options()
             
             elif choice == "2":
                 manage_preferences()
-            
-            elif choice == "3":
-                print_header("Thank you for using AI Wallpaper Generator!")
-                break
                 
-    except KeyboardInterrupt:
-        print_info("\nSaving preferences before exit...")
-        user_prefs.save_preferences()
-        print_success("Goodbye!")
-        sys.exit(0)
+            elif choice == "3":
+                print_section("Tools & Utilities")
+                print_breadcrumb(["Main Menu", "Tools & Utilities"])
+                print_option("1", "Manage Presets")
+                print_option("2", "View Generation History")
+                print_option("3", "Export Settings")
+                print_option("4", "Import Settings")
+                print_option("5", "Return to Main Menu")
+                
+                tools_choice = get_validated_input("Select option (1-5)", ["1", "2", "3", "4", "5"])
+                
+                if tools_choice == "1":
+                    manage_presets()
+                elif tools_choice == "2":
+                    view_history()
+                elif tools_choice == "3":
+                    export_settings()
+                elif tools_choice == "4":
+                    import_settings()
+                continue
+            
+            elif choice == "4":
+                view_history()
+            elif choice == "5":
+                print_info("Saving preferences before exit...")
+                user_prefs.save_preferences()
+                print_success("Goodbye!")
+                break
     except Exception as e:
         print_error(f"An unexpected error occurred: {e}")
         print_info("Saving preferences before exit...")
         user_prefs.save_preferences()
         sys.exit(1)
+
+def print_breadcrumb(path_list):
+    """Print navigation breadcrumb."""
+    print_info(" > ".join(path_list))
 
 if __name__ == "__main__":
     main()

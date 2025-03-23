@@ -59,12 +59,42 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-- 🤖 AI-powered wallpaper generation using Imagen 3
-- 🎨 Multiple artistic styles and effects
-- 📸 Professional camera and lens simulations
-- 🖥️ Multi-monitor support
-- 💾 Intelligent caching system
-- 🔄 Cross-platform compatibility
+- **Advanced AI Image Generation**: Powered by Google's Imagen 3 model for stunning, high-quality wallpapers
+- **Intelligent Prompt System**:
+  - AI-powered prompt enhancement via Gemini
+  - Smart tag selection and organization
+  - Multiple generation methods (AI, Random, Custom)
+  - Template-based generation system
+  - Context-aware prompt refinement
+- **Smart Enhancement Engine**:
+  - Automatic style refinement
+  - Technical detail optimization
+  - Mood and atmosphere integration
+  - Quality assurance checks
+- **Comprehensive Settings Control**: Fine-tune every aspect of your wallpaper generation
+- **Preset Management System**: Save, load, and manage your favorite settings combinations
+  - Save current settings as reusable presets
+  - Choose between merging or replacing settings when loading
+  - View detailed preset information
+  - Track active preset across sessions
+  - Automatic backup system for data safety
+- **Professional Camera Controls**: Advanced camera, lens, and lighting options
+- **Multiple Generation Methods**: AI-powered, random, or custom prompt generation
+- **Cross-Platform Support**: Works on Linux, Windows, and macOS
+
+## 🌟 Benefits
+
+- **AI-Powered Creativity**: Let Gemini enhance your prompts for better results
+- **Perfect Control**: Fine-tune every aspect of prompt generation and enhancement
+- **Consistent Quality**: Use templates and enhancement features for reliable results
+- **Save Time with Presets**: Store your perfect settings combinations and reuse them instantly
+- **Experiment Safely**: Try new settings while keeping your favorites backed up
+- **Perfect Results**: Fine-tune every aspect of generation for exactly the wallpaper you want
+- **Work Efficiently**: Quick access to your most-used settings and configurations
+- **Stay Organized**: Track your active preset and manage your settings library
+- **Data Safety**: Atomic file operations and automatic backups protect your settings
+- **Flexible Workflow**: Merge or replace settings when loading presets for maximum control
+- **Session Persistence**: Your preferences and active preset are remembered between sessions
 
 ## 🚀 Quick Start
 
@@ -88,14 +118,13 @@ Here are some examples of wallpapers generated using this tool:
 
 For detailed setup and usage instructions, check our [Getting Started Guide](docs/getting-started.md).
 
-## 📚 Documentation
+## 📝 Documentation
 
-- [API Setup Guide](docs/api-setup.md)
-- [Getting Started Guide](docs/getting-started.md)
-- [Prompt Engineering Guide](docs/prompt-engineering.md)
+- [Installation Guide](docs/installation.md)
 - [Advanced Features](docs/advanced-features.md)
+- [Preset Management Guide](docs/preset-guide.md)
+- [Configuration Options](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [FAQ](docs/faq.md)
 
 ## 📝 License
 

@@ -76,4 +76,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Batch processing capabilities
 - Advanced image editing features
 - Community prompt sharing
-- Performance optimizations 
+- Performance optimizations
+
+## [1.1.0] - 2024-03-23
+
+### Added
+- Comprehensive preset management system:
+  - Save current settings as presets
+  - Load presets with merge or replace options
+  - View detailed preset information
+  - Track currently active preset
+  - Delete presets with backup functionality
+- Enhanced settings management:
+  - Atomic file operations for data safety
+  - Automatic backup system
+  - Settings validation and error handling
+  - Current preset tracking across sessions
+- Improved user interface:
+  - Clear preset management menu
+  - Detailed settings display
+  - Better error messages and user feedback
+  - Session persistence for user preferences
+
+### Changed
+- Improved settings storage format for better compatibility
+- Enhanced error handling in file operations
+- Better user feedback for all operations
+- Streamlined preset loading workflow
+
+### Fixed
+- Settings persistence across sessions
+- File handling safety issues
+- Error handling in preset operations
+- Settings validation and sanitization
+
+[Previous versions...] 

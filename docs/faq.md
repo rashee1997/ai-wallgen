@@ -1,65 +1,171 @@
-# Frequently Asked Questions
+# Frequently Asked Questions (FAQ)
+
+## Table of Contents
+- [General Questions](#general-questions)
+- [Prompt Generation & Enhancement](#prompt-generation--enhancement)
+- [Preset Management](#preset-management)
+- [Generation Settings](#generation-settings)
+- [Technical Issues](#technical-issues)
+- [Performance](#performance)
 
 ## General Questions
 
-### Q: What is AI Wallpaper Generator?
-A: It's a tool that uses Google's Imagen 3 AI model to generate custom wallpapers based on text descriptions or prompts.
+### What is the AI Wallpaper Generator?
+The AI Wallpaper Generator is a tool that uses Google's Imagen 3 model and Gemini API to create high-quality, customizable wallpapers based on your preferences and prompts.
 
-### Q: Is it free to use?
-A: The tool itself is free and open source, but you need a Gemini API key. Google offers a free trial with 100 generations per month.
+### Do I need an API key?
+Yes, you need a Google Gemini API key to use the AI features. You can get one from [Google's AI Studio](https://makersuite.google.com/app/apikey).
 
-### Q: Which operating systems are supported?
-A: The tool works on Linux, Windows, and macOS.
+### Which operating systems are supported?
+The tool supports Windows, macOS, and Linux. Some features may be platform-specific.
 
-## API and Usage
+## Prompt Generation & Enhancement
 
-### Q: How do I get an API key?
-A: Visit [Google AI Studio](https://makersuite.google.com/app/apikey) to get your API key. See our [API Setup Guide](api-setup.md) for details.
+### How does prompt enhancement work?
+The system uses Google's Gemini AI to analyze and improve your prompts by:
+- Adding technical details
+- Refining artistic descriptions
+- Ensuring style consistency
+- Optimizing for quality output
 
-### Q: What are the API usage limits?
-A: Free tier includes 100 generations/month. Paid tiers offer higher limits. Check [API Setup Guide](api-setup.md) for current limits.
+### What are the different ways to generate prompts?
+1. **AI-Powered Generation**: Using Gemini API for smart, context-aware prompts
+2. **Random Generation**: Combining tags from curated categories
+3. **Custom Input**: Your own prompts with automatic enhancement
+4. **Template-Based**: Using pre-built or custom templates
 
-### Q: Can I use the generated images commercially?
-A: Check Google's terms of service for commercial usage rights. Generally, you own the images you generate.
+### Can I control the enhancement process?
+Yes, you can:
+- Choose enhancement intensity
+- Specify style preferences
+- Add technical parameters
+- Include negative prompts
+- Override specific enhancements
 
-## Technical Questions
+### What are prompt templates?
+Templates are pre-defined structures that help create consistent, high-quality prompts. They include:
+- Landscape-optimized templates
+- Portrait-oriented templates
+- Abstract design templates
+- Custom user templates
 
-### Q: What's the maximum resolution?
-A: The tool supports up to 8K resolution, but actual limits may depend on your API tier.
+### How do I create effective prompts?
+1. Start with clear main subjects
+2. Add style and mood descriptors
+3. Include technical preferences
+4. Use appropriate templates
+5. Let the enhancement system refine it
 
-### Q: Does it support multiple monitors?
-A: Yes, the tool supports multi-monitor setups with individual settings for each display.
+### What makes a good prompt?
+- Clear subject matter
+- Specific style descriptions
+- Technical parameters
+- Mood/atmosphere indicators
+- Consistent theme
 
-### Q: How does the caching system work?
-A: Generated images and prompts are cached locally to improve performance and reduce API calls.
+### Can I save my enhanced prompts?
+Yes, you can:
+- Save successful prompts
+- Create prompt templates
+- Export prompt collections
+- Share prompts with others
 
-## Troubleshooting
+## Preset Management
 
-### Q: Why are my images not generating?
-A: Common reasons include:
-- Invalid API key
-- Rate limit exceeded
-- Network issues
-- Invalid prompt
+### What are presets?
+Presets are saved configurations of your generation settings, including imagen settings, wallpaper settings, and other preferences that you can reuse later.
 
-### Q: How can I improve image quality?
-A: Try:
-- Using more detailed prompts
-- Specifying technical parameters
-- Using higher resolution settings
-- Following our [Prompt Engineering Guide](prompt-engineering.md)
+### How do I save a preset?
+1. Configure your desired settings
+2. Go to Tools & Utilities > Manage Presets
+3. Select "Save Current Settings as Preset"
+4. Enter a name for your preset
 
-### Q: Where are the generated images stored?
-A: Images are saved in the `genimage` directory by default.
+### Can I modify an existing preset?
+Yes, you can:
+1. Load the preset
+2. Make your changes
+3. Save it again with the same name to overwrite
 
-## Development
+### What's the difference between "Replace" and "Merge" when loading presets?
+- **Replace**: Completely overwrites your current settings with the preset
+- **Merge**: Updates only the settings defined in the preset, keeping other current settings intact
 
-### Q: Can I contribute to the project?
-A: Yes! Check our [Contributing Guide](contributing.md) for guidelines.
+### Are my presets backed up?
+Yes, the system automatically creates backups when you delete presets, and they're kept for 24 hours.
 
-### Q: How can I report bugs?
-A: Open an issue on GitHub with:
-- Detailed description
-- Steps to reproduce
-- Error messages
-- System information 
+## Generation Settings
+
+### What resolution options are available?
+- Standard: 1080p, 1440p, 4K
+- Ultra HD: 8K
+- Custom resolutions (aspect ratio maintained)
+
+### Can I customize the artistic style?
+Yes, you can choose from:
+- Multiple artistic styles (Photorealistic, Digital Art, etc.)
+- Art movements (Impressionism, Abstract, etc.)
+- Custom style combinations
+
+### How do camera settings work?
+You can specify:
+- Camera model (ARRI Alexa, RED, etc.)
+- Lens type and focal length
+- Lighting conditions
+- Post-processing effects
+
+## Technical Issues
+
+### Why is generation taking long?
+- High resolution settings increase generation time
+- Complex prompts may take longer to process
+- Server load can affect response times
+- Network connectivity issues
+
+### How do I fix "Settings Not Applying" error?
+1. Check if all required settings exist
+2. Try using "Replace" instead of "Merge"
+3. Verify preset file integrity
+4. Reset to default settings if needed
+
+### What if I lose my presets?
+1. Check the presets directory for .bak files
+2. Restore from automatic backups (within 24 hours)
+3. Check for export files if you've exported settings
+
+## Performance
+
+### How can I optimize generation speed?
+1. Use lower resolutions for testing
+2. Enable caching
+3. Optimize your prompts
+4. Use preset combinations efficiently
+
+### Does the tool use GPU acceleration?
+The generation is cloud-based through Google's API, so local GPU isn't used for generation. However, some local operations may use GPU acceleration if available.
+
+### How can I manage system resources?
+1. Monitor cache size
+2. Clear unnecessary presets
+3. Remove old generation history
+4. Use batch processing for multiple generations
+
+## Best Practices
+
+### For Preset Management
+1. Use descriptive names for presets
+2. Regularly clean up unused presets
+3. Export important presets as backup
+4. Test presets before deleting old versions
+
+### For Generation
+1. Start with base presets
+2. Use merge feature for complex effects
+3. Save successful configurations
+4. Document special combinations
+
+### For Workflow
+1. Organize presets by purpose
+2. Use consistent naming conventions
+3. Create preset hierarchies
+4. Maintain backup copies of important settings 
