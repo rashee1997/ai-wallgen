@@ -118,13 +118,40 @@ Here are some examples of wallpapers generated using this tool:
 
 For detailed setup and usage instructions, check our [Getting Started Guide](docs/getting-started.md).
 
-## 📝 Documentation
+## �� Documentation
 
+- [Getting Started Guide](docs/getting-started.md)
 - [Installation Guide](docs/installation.md)
+- [User Manual](docs/user-manual.md)
 - [Advanced Features](docs/advanced-features.md)
 - [Preset Management Guide](docs/preset-guide.md)
-- [Configuration Options](docs/configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Configuration Guide](docs/configuration.md)
+- [API Setup Guide](docs/api-setup.md)
+- [Prompt Engineering Guide](docs/prompt-engineering.md)
+- [Troubleshooting Guide](docs/troubleshooting.md)
+- [FAQ](docs/faq.md)
+- [Contributing Guide](docs/contributing.md)
+- [Changelog](CHANGELOG.md)
+
+### Technical Documentation
+- [Architecture Overview](docs/architecture.md)
+- [Development Guide](docs/development.md)
+- [Git Commit Guide](docs/git-commit-guide.md)
+- [Code Style Guide](docs/code-style.md)
+- [Testing Guide](docs/testing.md)
+- [Security Guidelines](docs/security.md)
+
+### API Documentation
+- [Gemini API Integration](docs/gemini-api.md)
+- [Imagen API Usage](docs/imagen-api.md)
+- [API Reference](docs/api-reference.md)
+
+### Feature-Specific Guides
+- [Prompt Generation Guide](docs/prompt-generation.md)
+- [Style & Effects Guide](docs/style-effects.md)
+- [Camera Settings Guide](docs/camera-settings.md)
+- [Color Management Guide](docs/color-management.md)
+- [Resolution Guide](docs/resolution.md)
 
 ## 📝 License
 
