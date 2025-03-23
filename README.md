@@ -11,7 +11,7 @@
 [![AI](https://img.shields.io/badge/AI-Powered-orange.svg)](https://ai.google.dev/)
 [![Imagen](https://img.shields.io/badge/Imagen%203-Enabled-purple.svg)](https://ai.google.dev/)
 [![Wallpaper](https://img.shields.io/badge/Wallpaper-Generator-brightgreen.svg)](#features)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](#installation)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](#prerequisites)
 
 <div align="center">
 <img src="asset/logo/gemini.svg" alt="Gemini Logo" width="128" height="128">
@@ -21,11 +21,11 @@
 **Disclaimer**: This tool uses experimental AI technology that may sometimes provide inaccurate or unexpected content. Use discretion when generating and using the wallpapers. The generated content does not represent Google's views.
 </div>
 
-A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
+A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API. Create desktop wallpapers with customizable prompts and settings.
 
 > **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
 
-[Features](#-key-features) • [Benefits](#-benefits) • [Installation](#-quick-start) • [Documentation](#-documentation) • [License](#-license)
+[Features](#-key-features) • [Installation](#-prerequisites) • [Documentation](#-documentation) • [License](#-license)
 
 <!-- Trending Tags -->
 <p align="center">
@@ -33,12 +33,7 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
   <code>#gemini-api</code> •
   <code>#imagen3</code> •
   <code>#wallpaper-generator</code> •
-  <code>#python-ai</code> •
-  <code>#google-ai</code> •
-  <code>#stable-diffusion</code> •
-  <code>#machine-learning</code> •
-  <code>#desktop-customization</code> •
-  <code>#generative-ai</code>
+  <code>#python-ai</code>
 </p>
 
 </div>
@@ -62,98 +57,76 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-### AI-Powered Generation
-- **State-of-the-Art Image Generation**: Powered by Google's Imagen 3 model
-- **Gemini-Enhanced Prompts**: Smart prompt enhancement using Gemini AI
-- **Multiple Generation Methods**: AI-powered, random, or custom prompt options
+- **AI-Powered Generation**: Generate wallpapers using Google's Imagen 3 model via Gemini API
+- **Multiple Generation Methods**: Choose from AI-generated, random, or custom prompts
+- **Basic Settings**: Set resolution and image quality preferences
+- **Prompt Enhancement**: Automatically improve user-provided prompts
+- **Generation History**: View your previously generated wallpapers
+- **Terminal-Based UI**: Simple, text-based interface for all operating systems
 
-### Advanced Artistic Control
-- **Comprehensive Style Library**: 
-  - 40+ artistic styles including Photorealistic, Cyberpunk, Abstract, Anime, and more
-  - Smart style mixing that intelligently combines compatible styles
-  - Art movements and post-processing effects
-- **Professional Settings**:
-  - Camera, lens, and lighting controls
-  - Color schemes and grading options
-  - Resolution and quality settings
+For detailed feature documentation, see the [Advanced Features Guide](docs/advanced-features.md).
 
-### Intelligent Management
-- **Preset System**: Save, load, and manage your favorite settings
-- **Style Preferences**: Save custom style mixes for future use
-- **History Tracking**: View and reuse previous generations
-- **Smart Filename Generation**: AI-powered descriptive filenames
+## 🚀 Prerequisites
 
-### Technical Features
-- **Cross-Platform Support**: Works on Linux, Windows, and macOS
-- **Adaptive Caching**: Efficient storage of prompts and images
-- **Performance Optimization**: Resource-aware processing
+- Python 3.8+
+- Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
 
-## 🌟 Benefits
+For complete setup instructions, including installation steps for different operating systems, please refer to our [Getting Started Guide](docs/getting-started.md).
 
-### Enhanced Creativity
-- **Style Experimentation**: Discover unique combinations with smart style mixing
-- **AI-Powered Inspiration**: Let Gemini enhance your ideas into stunning prompts
-- **Creative Freedom**: Fine-tune every aspect of generation for perfect results
+## 🧩 System Components
 
-### Workflow Efficiency
-- **Save Time**: Store your favorite settings and style combinations
-- **Consistent Results**: Use templates and enhancement features
-- **Fast Iteration**: Quickly try various artistic styles and settings
+Wallgen's main components include:
 
-### Professional Quality
-- **Technical Excellence**: Professional camera and lighting simulation
-- **Artistic Cohesion**: Style-appropriate technical parameters
-- **High-Resolution Output**: Up to 8K resolution support
+- **Core Generator**: Controls the wallpaper generation process
+- **Settings Manager**: Manages user preferences
+- **UI Utilities**: Provides terminal interface elements
+- **Prompt Engineer**: Enhances prompts for better results
+- **API Client**: Communicates with the Gemini API
 
-### Powerful Organization
-- **Intelligent File Naming**: Descriptive, content-based filenames
-- **Settings Management**: Track and organize your presets
-- **Generation History**: Access and reuse previous wallpapers
+For a detailed architecture explanation, see our [Architecture Documentation](docs/ARCHITECTURE.md).
 
-## 🚀 Quick Start
+## ⚡ Quick Usage
 
-1. **Prerequisites:**
-   - Python 3.8+
-   - Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+After installation, run the application:
 
-2. **Installation:**
-   ```bash
-   git clone https://github.com/rashee1997/wallgen.git
-   cd wallgen
-   uv venv
-   source .venv/bin/activate  # On Unix/macOS
-   uv pip install -r requirements.txt
-   ```
+```bash
+python wallpaper_generator.py
+```
 
-3. **Run:**
-   ```bash
-   python wallpaper_generator.py
-   ```
+### Common Commands
 
-For detailed setup and usage instructions, check our [Getting Started Guide](docs/getting-started.md).
+```bash
+# Generate with a random prompt
+python wallpaper_generator.py --random
+
+# Generate with a custom prompt
+python wallpaper_generator.py --prompt "mountain landscape at sunset"
+
+# Specify resolution (if supported by your API tier)
+python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
+```
+
+For more examples and usage options, see the [Quick Reference Guide](docs/QUICK_REFERENCE.md).
 
 ## 📚 Documentation
 
-- [Getting Started Guide](docs/getting-started.md) - Quick setup and basic usage
-- [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
-- [Preset Management Guide](docs/preset-guide.md) - Managing and using presets
-- [Settings Import/Export Guide](GUIDE_settings_import_export.md) - Backup and restore your settings
-- [Wallpaper Settings Module](README_wallpaper_settings.md) - Complete settings management documentation
-- [UI Utilities Module](README_ui_utils.md) - Terminal UI utilities documentation
+### Getting Started
+- [Getting Started Guide](docs/getting-started.md) - Installation and basic usage
+- [Quick Reference Guide](docs/QUICK_REFERENCE.md) - Commands and common tasks
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
-- [FAQ](docs/faq.md) - Frequently asked questions and answers
+
+### User Documentation
+- [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
+- [User Guide](docs/user-guide.md) - Comprehensive usage instructions
+
+### Developer Documentation
+- [Architecture Overview](docs/ARCHITECTURE.md) - System design
+- [API Reference](docs/api-reference.md) - Programmatic interface
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- [Terminology Reference](docs/TERMINOLOGY.md) - Standard terminology
+
+### Reference
 - [Changelog](CHANGELOG.md) - Version history and updates
-
-## 🧩 Architecture
-
-The application is structured into modular components for maintainability and extensibility:
-
-- **wallpaper_generator.py** - Main application and generation logic
-- **wallpaper_settings.py** - Preferences, presets, and settings management
-- **ui_utils.py** - Terminal UI elements and user interaction utilities
-- **prompt_config.py** - Prompt generation configuration and templates
-
-This modular design allows for easier maintenance and future enhancements.
 
 ## 📝 License
 
