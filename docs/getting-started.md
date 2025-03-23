@@ -26,7 +26,6 @@ This guide will help you quickly set up and start using Wallgen, a terminal-base
 - [Setting Up API Access](#setting-up-api-access)
 - [First Run](#first-run)
 - [Generating Your First Wallpaper](#generating-your-first-wallpaper)
-- [Basic Commands](#basic-commands)
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -44,7 +43,7 @@ Before you begin, ensure you have the following:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/wallgen.git
+   git clone https://github.com/rasheedh/wallgen.git
    cd wallgen
    ```
 
@@ -63,7 +62,7 @@ Before you begin, ensure you have the following:
 
 1. Clone the repository:
    ```powershell
-   git clone https://github.com/yourusername/wallgen.git
+   git clone https://github.com/rasheedh/wallgen.git
    cd wallgen
    ```
 
@@ -110,10 +109,10 @@ Wallgen requires a Google Gemini API key to function:
 
 1. Start the application:
    ```bash
-   python wallgen.py
+   python wallpaper_generator.py
    ```
 
-2. You'll see the main menu with options for generating wallpapers and browsing generated wallpapers.
+2. You'll see the main menu with options for generating wallpapers.
 
 ## Generating Your First Wallpaper
 
@@ -123,13 +122,16 @@ Let's create your first AI-generated wallpaper:
 
 2. Choose a generation method:
    - **Random Generation**: Creates a wallpaper with a randomly generated theme
-   - **Custom Prompt**: Allows you to write your own prompt
+   - **Custom Prompt**: Allows you to write your own prompt with optional tags
 
-3. If you select **"Custom Prompt"**, enter a description of what you want to see. For tips on creating effective prompts, see the [FAQ section on prompt creation](faq.md#can-i-use-negative-prompts).
+3. If you select **"Custom Prompt"**, enter a description of what you want to see. You can enhance your prompt using tags:
+   ```
+   A mountain landscape --style digital art --mood peaceful --quality high detail
+   ```
 
 4. Wait for the API to process your request (typically 10-30 seconds)
 
-5. When generation completes, your new wallpaper will be saved to the `generated/` directory
+5. When generation completes, your new wallpaper will be saved to the `genimage/` directory
 
 ### Example Session
 
@@ -141,8 +143,7 @@ Let's create your first AI-generated wallpaper:
 Main Menu
 ---------
   1: Generate New Wallpaper
-  2: Browse Generated Wallpapers
-  3: Exit
+  2: Exit
 
 > Select an option 1
 
@@ -154,33 +155,16 @@ Generation Method
 > Select an option 2
 
 Enter your prompt:
-> A mountain landscape at sunset with pine trees
+> A mountain landscape --style digital art --mood peaceful
 
 ⠋ Generating your wallpaper...
 ⠙ Generating your wallpaper...
 ⠹ Generating your wallpaper...
 
 ✓ Wallpaper generated successfully!
-✓ Saved to: generated/mountain_landscape_20240325_123456.png
+✓ Saved to: genimage/wallpaper_20240325_123456.png
 
 > Return to main menu? (Y/n) Y
-```
-
-## Basic Commands
-
-For detailed command-line options and examples, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
-
-Here are some basic commands to get you started:
-
-```bash
-# Generate with a custom prompt
-python wallgen.py --prompt "mountain landscape at sunset"
-
-# Generate with a random prompt
-python wallgen.py --random
-
-# Show help
-python wallgen.py --help
 ```
 
 ## Troubleshooting

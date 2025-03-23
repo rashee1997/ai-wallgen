@@ -17,116 +17,92 @@
 
 ## Overview
 
-This quick reference guide provides a comprehensive summary of commands, settings, and common usage patterns for the Wallgen application. It focuses on currently implemented features, with notes about planned future enhancements.
+This quick reference guide provides a comprehensive summary of features, settings, and common usage patterns for the Wallgen application.
 
 ## Table of Contents
 
-- [Command Reference](#command-reference)
-- [Settings Reference](#settings-reference)
-- [Prompt Patterns](#prompt-patterns)
+- [Basic Usage](#basic-usage)
+- [Prompt System](#prompt-system)
 - [File Locations](#file-locations)
 - [Common Tasks](#common-tasks)
 - [See Also](#see-also)
 
-## Command Reference
+## Basic Usage
 
-### Basic Commands
+### Starting the Application
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `python wallpaper_generator.py` | Start the application | `python wallpaper_generator.py` |
-| `python wallpaper_generator.py --help` | Display help information | `python wallpaper_generator.py --help` |
-| `python wallpaper_generator.py --quiet` | Run in quiet mode (reduced output) | `python wallpaper_generator.py --quiet` |
-| `python wallpaper_generator.py --debug` | Run in debug mode (verbose output) | `python wallpaper_generator.py --debug` |
+1. Open a terminal
+2. Navigate to the Wallgen directory
+3. Run the application:
+   ```bash
+   python wallpaper_generator.py
+   ```
 
-### Generation Commands
+### Main Menu Options
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `python wallpaper_generator.py --random` | Generate with random prompt | `python wallpaper_generator.py --random` |
-| `python wallpaper_generator.py --prompt "..."` | Generate with custom prompt | `python wallpaper_generator.py --prompt "mountain sunset"` |
-| `python wallpaper_generator.py --resolution "..."` | Set output resolution | `python wallpaper_generator.py --resolution "3840x2160"` |
+1. Generate New Wallpaper
+   - Random Generation
+   - Custom Prompt
 
-> **Note:** Some commands shown in documentation, such as preset management and desktop wallpaper setting, are planned for future implementation.
+2. Exit
 
-## Settings Reference
+## Prompt System
 
-### Resolution Options
+### Tag-Based System
 
-| Setting | Description | Values |
-|---------|-------------|--------|
-| `resolution` | Output resolution | `1080p`, `4K`, `8K`, or custom (`WIDTHxHEIGHT`) |
-| `aspect_ratio` | Aspect ratio | `16:9`, `21:9`, `4:3`, `1:1` |
+Wallgen uses a tag-based system to enhance your prompts. Available tags:
 
-### Style Options
-
-| Setting | Description | Values |
-|---------|-------------|--------|
-| `style` | Artistic style | `photorealistic`, `digital_art`, `sketch`, etc. |
-
-## Prompt Patterns
-
-### Basic Patterns
-
-```
-[subject] in [style] style
-[location] during [time of day]
-[subject] with [lighting] lighting
-[adjective] [subject] in [environment]
-```
-
-### Advanced Patterns
-
-```
-[adjective], [adjective] [subject] in [environment], [lighting] lighting, [camera] lens, [style] style
-```
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `--style` | Specify art style | `--style digital art` |
+| `--mood` | Set the mood/atmosphere | `--mood peaceful` |
+| `--quality` | Add quality descriptors | `--quality high detail` |
 
 ### Example Prompts
 
 ```
-"Misty mountain landscape at sunrise, photorealistic style"
-"Cyberpunk cityscape at night with neon lights, 85mm lens, shallow depth of field"
-"Abstract geometric patterns in vibrant colors, minimalist style, ultra-detailed"
-"Ancient temple ruins overgrown with vegetation, dramatic lighting, cinematic style"
+# Basic prompt with style
+A mountain landscape --style digital art
+
+# Detailed prompt with multiple tags
+A cityscape at night --style cyberpunk --mood mysterious --quality high detail
+
+# Prompt with negative elements
+A forest scene -people -text -watermark
 ```
 
-For more guidance on creating effective prompts, see the [Advanced Features Guide section on effective prompt construction](advanced-features.md#effective-prompt-construction).
+For more guidance on creating effective prompts, see the [Advanced Features Guide section on tag-based prompt system](advanced-features.md#tag-based-prompt-system).
 
 ## File Locations
 
 | File/Directory | Description | Location |
 |----------------|-------------|----------|
-| Generated Images | Output wallpapers | `./generated/` |
-| Logs | Application logs | `./logs/` |
+| Generated Images | Output wallpapers | `./genimage/` |
+| Preferences | User settings | `./preferences.json` |
 
 ## Common Tasks
 
 ### Generate a Wallpaper with Random Prompt
 
-```bash
-# Generate a wallpaper using a random prompt
-python wallpaper_generator.py --random
-```
+1. Start the application
+2. Select "Generate New Wallpaper"
+3. Choose "Random Generation"
+4. Wait for generation to complete
 
 ### Generate a Wallpaper with Custom Prompt
 
-```bash
-# Generate a wallpaper with a specific prompt
-python wallpaper_generator.py --prompt "mountain landscape at sunset"
-```
-
-### Specify Resolution
-
-```bash
-# Generate with specific resolution
-python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
-```
+1. Start the application
+2. Select "Generate New Wallpaper"
+3. Choose "Custom Prompt"
+4. Enter your prompt with optional tags
+5. Wait for generation to complete
 
 ### Use Negative Prompts
 
-```bash
-# Generate with negative prompts
-python wallpaper_generator.py --prompt "forest scene" --negative "people, text, watermark"
+Add negative elements to your prompt using the `-` prefix:
+
+```
+A forest scene -people -text -watermark
 ```
 
 For information on using negative prompts, see the [Advanced Features Guide section on negative prompts](advanced-features.md#negative-prompts).

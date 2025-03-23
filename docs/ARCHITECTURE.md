@@ -1,6 +1,19 @@
 # Wallgen Architecture
 
-![Architecture Banner](../asset/doc_banners/template_banner.png)
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║    █████╗ ██████╗ ██╗   ██╗ ██████╗███████╗██████╗ ██╗   ██╗ ██████╗ ███████╗ ║
+║   ██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗██║   ██║██╔═══██╗██╔════╝ ║
+║   ███████║██████╔╝██║   ██║██║     █████╗  ██████╔╝██║   ██║██║   ██║█████╗   ║
+║   ██╔══██║██╔══██╗██║   ██║██║     ██╔══╝  ██╔══██╗██║   ██║██║   ██║██╔══╝   ║
+║   ██║  ██║██║  ██║╚██████╔╝╚██████╗███████╗██║  ██║╚██████╔╝╚██████╔╝███████╗ ║
+║   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝ ║
+║                                                                            ║
+║   System Architecture of Wallgen                                           ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
 
 ## Overview
 
@@ -12,8 +25,6 @@ This document describes the architecture and system design of the Wallgen projec
 - [Component Interactions](#component-interactions)
 - [Data Flow](#data-flow)
 - [Key Classes and Interfaces](#key-classes-and-interfaces)
-- [Design Patterns](#design-patterns)
-- [Extension Points](#extension-points)
 - [Implementation Details](#implementation-details)
 - [See Also](#see-also)
 
@@ -24,48 +35,40 @@ The Wallgen application is structured into the following primary components:
 1. **Core Generator** - Primary wallpaper generation logic
 2. **Settings Management** - User preferences and configuration
 3. **UI Utilities** - Terminal interface elements
-4. **Prompt Engineering** - AI-based prompt generation and enhancement
-5. **File Management** - Image and settings storage
-6. **API Integration** - Gemini API communication
+4. **File Management** - Image storage and organization
+5. **API Integration** - Gemini API communication
 
 ### Component Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Wallgen System                          │
-│                                                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │             │    │             │    │             │     │
-│  │ UI Utilities│<───│Core Generator│───>│ File Manager│     │
-│  │             │    │             │    │             │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-│         ▲                  ▲                  ▲            │
-│         │                  │                  │            │
-│         ▼                  ▼                  ▼            │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │             │    │             │    │             │     │
-│  │  Settings   │<───│   Prompt    │<───│ API Client  │     │
-│  │  Manager    │    │  Engineer   │    │             │     │
-│  │             │    │             │    │             │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │     │                     │
+│   User Interface    │◄───►│   Core Generator    │◄───►│   API Integration   │
+│                     │     │                     │     │                     │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+          ▲                           ▲                           ▲
+          │                           │                           │
+          ▼                           ▼                           ▼
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │     │                     │
+│  Settings Manager   │◄───►│   File Management   │     │   Prompt System     │
+│                     │     │                     │     │                     │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
 ```
 
 ## Component Interactions
 
 ### Core Generator
 - Interacts with Settings Manager to retrieve user preferences
-- Uses Prompt Engineer to generate and enhance prompts
+- Uses Prompt System to enhance user prompts
 - Communicates with API Client to generate images
 - Uses File Manager to save generated wallpapers
 - Leverages UI Utilities for user interaction
 
 ### Settings Manager
 - Handles user preferences persistence
-- Manages presets and favorite settings
 - Provides configuration to Core Generator
-- Supports import/export of settings
+- Manages basic settings like resolution and style preferences
 
 ### UI Utilities
 - Provides terminal UI elements for all components
@@ -73,23 +76,16 @@ The Wallgen application is structured into the following primary components:
 - Displays progress and status information
 - Implements consistent UI styling
 
-### Prompt Engineer
-- Generates AI-powered prompts
-- Enhances user-provided prompts
-- Implements style mixing and compatibility checks
-- Manages prompt templates and structures
-
 ### File Manager
 - Handles saving and loading images
-- Manages cache for prompt and image storage
-- Implements intelligent filename generation
-- Organizes wallpaper history
+- Implements filename generation with timestamps
+- Organizes wallpapers in the genimage directory
 
 ### API Client
 - Manages communication with Gemini API
 - Handles authentication and API keys
 - Processes API responses
-- Implements error handling and retries
+- Implements basic error handling
 
 ## Data Flow
 
@@ -100,16 +96,15 @@ The Wallgen application is structured into the following primary components:
    - Core Generator initiates wallpaper creation
 
 2. **Prompt Generation Flow**
-   - Core Generator requests prompt from Prompt Engineer
-   - Prompt Engineer creates or enhances prompt using user preferences
-   - Enhanced prompt is returned to Core Generator
-   - Core Generator sends prompt to API Client
+   - Core Generator receives user prompt
+   - Prompt System enhances prompt with tags
+   - Enhanced prompt is sent to API Client
 
 3. **Image Generation Flow**
    - API Client sends prompt to Gemini API
    - API responds with generated image
    - Core Generator receives image from API Client
-   - File Manager saves image with appropriate filename
+   - File Manager saves image with timestamp
    - UI Utilities display success message and image path
 
 ## Key Classes and Interfaces
@@ -117,98 +112,57 @@ The Wallgen application is structured into the following primary components:
 ### Core Classes
 - `WallpaperGenerator`: Main application class
 - `UserPreferences`: Stores and manages user settings
-- `PromptEnhancer`: Handles prompt generation and improvement
 - `GeminiClient`: Manages API communication
-- `FileManager`: Handles file operations
-- `UIManager`: Provides terminal UI elements
-
-### Important Interfaces
-- `PromptStrategy`: Interface for different prompt generation strategies
-- `APIProvider`: Interface for different API providers
-- `StorageProvider`: Interface for different storage mechanisms
-- `StyleMixer`: Interface for style combination algorithms
-
-## Design Patterns
-
-The Wallgen project implements several design patterns to promote modularity and maintainability:
-
-1. **Singleton Pattern**
-   - Used for `UserPreferences` to ensure single instance
-   - Implemented in `GeminiClient` for API connection reuse
-
-2. **Strategy Pattern**
-   - Used for prompt generation methods
-   - Allows swapping between random, AI-powered, and custom prompts
-
-3. **Factory Pattern**
-   - Implemented for creating style combinations
-   - Used to generate appropriate UI elements
-
-4. **Observer Pattern**
-   - Used for progress updates and notifications
-   - Implemented in long-running operations
-
-5. **Command Pattern**
-   - Used for executing user commands
-   - Enables undo/redo functionality for settings
-
-## Extension Points
-
-The architecture includes several extension points for future enhancements:
-
-1. **API Providers**
-   - Alternative image generation APIs
-   - Additional AI model integrations
-
-2. **Storage Mechanisms**
-   - Cloud storage integration
-   - Alternative local storage options
-
-3. **UI Interfaces**
-   - Graphical user interface
-   - Web interface
-
-4. **Prompt Strategies**
-   - Additional prompt generation methods
-   - New style combinations
+- `WallpaperManager`: Handles file operations
+- `UIUtils`: Provides terminal UI elements
 
 ## Implementation Details
 
 ### File Structure
 ```
 wallgen/
-├── wallpaper_generator.py   # Main application
-├── wallpaper_settings.py    # Settings management
-├── wallpaper_config.py      # Configuration constants
-├── ui_utils.py              # Terminal UI utilities
-├── prompt_config.py         # Prompt configuration
-├── prompt_generator.log     # Logging
-├── genimage/                # Generated images
-├── asset/                   # Application assets
-├── cache/                   # Cached data
-├── history/                 # Generation history
-├── presets/                 # User presets
-└── docs/                    # Documentation
+├── wallpaper_generator.py    # Main entry point
+├── api/                      # API integration
+│   ├── __init__.py
+│   └── gemini_client.py      # Gemini API client
+├── core/                     # Core generation logic
+│   ├── __init__.py
+│   └── generator.py          # Main generation engine
+├── ui/                       # User interface
+│   ├── __init__.py
+│   └── ui_utils.py           # UI utilities
+├── settings/                 # Settings management
+│   ├── __init__.py
+│   └── preferences.py        # User preferences
+├── utils/                    # Utility functions
+│   ├── __init__.py
+│   └── file_utils.py         # File management utilities
+├── tests/                    # Test suite
+│   ├── test_generator.py
+│   └── test_preferences.py
+├── docs/                     # Documentation
+├── asset/                    # Assets like images and banners
+├── requirements.txt          # Dependencies
+└── setup.py                  # Package setup script
 ```
 
 ### Dependencies
 - `google-generativeai`: Gemini API client
-- `requests`: HTTP requests
+- `python-dotenv`: Environment variable management
 - `colorama`: Terminal colors
 - `pillow`: Image processing
-- `absl-py`: Command line parsing
 
 ## See Also
 
-- [README.md](../README.md): Main project documentation
-- [README_wallpaper_settings.md](../README_wallpaper_settings.md): Settings module documentation
-- [README_ui_utils.md](../README_ui_utils.md): UI utilities documentation
-- [GUIDE_settings_import_export.md](../GUIDE_settings_import_export.md): Settings management guide
+- [Developer Guide](developer-guide.md): Technical documentation for developers
+- [API Reference](api-reference.md): API integration details
+- [User Guide](user-guide.md): User documentation
+- [Getting Started Guide](getting-started.md): Setup and first steps
 
 ---
 
 <div align="center">
 <img src="../asset/logo/gemini.svg" alt="Logo" width="64" height="64">
 
-Documentation last updated: 2024-03-24
+Documentation last updated: 2024-03-28
 </div> 

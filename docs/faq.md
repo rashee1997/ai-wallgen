@@ -37,7 +37,17 @@ Wallgen itself is free and open-source software. However, you'll need a Google G
 
 ### How do I create effective prompts?
 
-For guidance on creating effective prompts, see the [Advanced Features Guide](advanced-features.md#effective-prompt-construction).
+Wallgen uses a tag-based system to enhance your prompts. You can use tags to specify:
+- Art style: `--style digital art`
+- Mood: `--mood peaceful`
+- Quality: `--quality high detail`
+
+Example:
+```
+A mountain landscape --style digital art --mood peaceful --quality high detail
+```
+
+For more guidance on creating effective prompts, see the [Advanced Features Guide](advanced-features.md#tag-based-prompt-system).
 
 ### Can I use negative prompts?
 
@@ -61,15 +71,11 @@ The Gemini model understands many art styles, but results may vary. Common style
 
 ### Where are generated wallpapers saved?
 
-All generated wallpapers are saved to the `generated/` directory in the Wallgen project folder with a timestamp and theme identifier in the filename.
+All generated wallpapers are saved to the `genimage/` directory in the Wallgen project folder with a timestamp and theme identifier in the filename.
 
-### What resolutions can I generate?
+### What resolution are the wallpapers?
 
-You can specify various resolutions when generating wallpapers, with the available options depending on your API tier. For information on specifying resolution, see the [Advanced Features Guide](advanced-features.md#resolution-settings).
-
-### How do I run Wallgen from the command line?
-
-For a complete reference of command-line options and examples, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+Wallgen generates wallpapers at a fixed resolution of 1920x1080, which is optimized for most desktop displays.
 
 ### What happens if the API is unavailable?
 
@@ -108,7 +114,6 @@ For information on contributing to Wallgen, including bug reports and feature re
 - [User Guide](user-guide.md)
 - [Advanced Features Guide](advanced-features.md)
 - [Troubleshooting Guide](troubleshooting.md)
-- [Quick Reference Guide](QUICK_REFERENCE.md)
 
 ---
 

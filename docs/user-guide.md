@@ -17,128 +17,114 @@
 
 ## Introduction
 
-Welcome to the user guide for Wallgen, a terminal-based AI wallpaper generator. This guide provides information on using Wallgen, from installation to basic operations. Whether you're a new user or looking to explore Wallgen's capabilities, this guide will help you use the application effectively.
+Welcome to the user guide for Wallgen, a terminal-based AI wallpaper generator. This guide provides comprehensive information on using Wallgen's features and capabilities. For installation and basic setup, please refer to the [Getting Started Guide](getting-started.md).
 
 ## Table of Contents
 
-- [Installation](#installation)
 - [Getting Started](#getting-started)
-- [Basic Usage](#basic-usage)
+- [Advanced Usage](#advanced-usage)
 - [Working with Prompts](#working-with-prompts)
 - [Managing Generated Images](#managing-generated-images)
-- [Basic Settings](#basic-settings)
+- [Advanced Settings](#advanced-settings)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 
-## Installation
-
-### System Requirements
-
-For system requirements and detailed installation instructions, see the [Getting Started Guide](getting-started.md#prerequisites).
-
-### API Key Setup
-
-Wallgen requires a Google Gemini API key to function. See the [Getting Started Guide](getting-started.md#setting-up-api-access) for detailed instructions on obtaining and setting up your API key.
-
 ## Getting Started
 
-### First Launch
+For installation and basic setup instructions, see the [Getting Started Guide](getting-started.md).
 
-1. Start Wallgen using:
-   ```bash
-   python wallgen.py
-   ```
+## Advanced Usage
 
-2. You'll see the main menu with options for generating wallpapers and browsing generated wallpapers.
+### Application Interface
 
-### Application Layout
+Wallgen uses a text-based interface with these components:
 
-Wallgen uses a simple text-based interface with these components:
+- **Menus**: Hierarchical navigation system with numbered options
+- **Prompts**: Context-aware input requests with guidance
+- **Messages**: Status updates and error notifications
+- **Progress Indicators**: Visual feedback during operations
 
-- **Menus**: Lists of numbered options
-- **Prompts**: Input requests with guidance
-- **Messages**: Success, error, and information displays
+### Advanced Generation Options
 
-## Basic Usage
+1. **Random Generation with Tags**
+   - Select specific style tags
+   - Choose mood modifiers
+   - Set quality parameters
 
-### Generating Your First Wallpaper
+2. **Custom Prompt Generation**
+   - Use advanced prompt syntax
+   - Combine multiple tags
+   - Apply style modifiers
 
-1. From the main menu, select **"Generate New Wallpaper"**
-
-2. Choose a generation method:
-   - **Random Generation**: Creates wallpaper with a random theme
-   - **Custom Prompt**: Allows you to provide a specific prompt
-
-3. If using **Custom Prompt**, enter your description of the desired wallpaper
-
-4. Wait for the API to process your request (typically 10-30 seconds)
-
-5. When complete, you'll see:
-   - Preview information
-   - Save location
-
-For a step-by-step example of this process, see the [Getting Started Guide](getting-started.md#generating-your-first-wallpaper).
-
-### Viewing Generated Wallpapers
-
-1. From the main menu, select **"Browse Generated Wallpapers"**
-
-2. Navigate using the displayed commands:
-   - **Next/Previous**: Move through your collection
-   - **View**: Open the current wallpaper in your default image viewer
-   - **Delete**: Remove the wallpaper
-   - **Back**: Return to main menu
+3. **Batch Generation**
+   - Generate multiple variations
+   - Save preferred settings
+   - Compare results
 
 ## Working with Prompts
 
-### Prompt Structure
+### Advanced Prompt Techniques
 
-Effective prompts typically include:
+1. **Tag Combinations**
+   ```
+   A mountain landscape --style digital art --mood peaceful --quality high detail
+   ```
 
-- **Subject**: What should be in the image
-- **Style**: How it should be rendered
-- **Mood/Atmosphere**: The feeling it should evoke
+2. **Style Modifiers**
+   - Digital art styles
+   - Photographic styles
+   - Artistic movements
 
-### Example Prompts
+3. **Mood Enhancement**
+   - Atmosphere modifiers
+   - Lighting effects
+   - Color schemes
 
-Basic prompt:
-```
-A mountain landscape at sunset
-```
-
-Detailed prompt:
-```
-A majestic mountain range at sunset with golden light illuminating
-snow-capped peaks. Digital art style.
-```
-
-### Prompt Enhancement
-
-Wallgen automatically enhances your prompts to improve results. This process:
-
-1. Adds technical details
-2. Expands descriptive elements
-3. Improves style consistency
-
-### Using Negative Prompts
-
-For information on using negative prompts to avoid unwanted elements in your images, see the [Advanced Features Guide](advanced-features.md#negative-prompts).
+For detailed prompt examples and techniques, see the [Advanced Features Guide](advanced-features.md#prompt-techniques).
 
 ## Managing Generated Images
 
-### Organization System
+### Advanced Organization
 
-All generated wallpapers are saved to the `generated/` directory with a timestamp and theme identifier in the filename.
+1. **File Management**
+   - Automatic organization by date
+   - Custom naming patterns
+   - Batch operations
 
-## Basic Settings
+2. **Image Processing**
+   - Resolution verification
+   - Format conversion
+   - Quality assessment
 
-### Resolution Settings
+3. **Collection Management**
+   - Create themed collections
+   - Tag-based organization
+   - Quick search and filter
 
-For information on specifying resolution and other settings when generating wallpapers, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+## Advanced Settings
+
+### Image Generation Settings
+
+1. **Quality Control**
+   - Detail level adjustment
+   - Style consistency
+   - Resolution optimization
+
+2. **Generation Parameters**
+   - Style strength
+   - Mood intensity
+   - Detail enhancement
+
+3. **Output Configuration**
+   - Format selection
+   - Naming patterns
+   - Save location
+
+For detailed settings information, see the [Advanced Features Guide](advanced-features.md#advanced-settings).
 
 ## Troubleshooting
 
-For common issues and their solutions, see the comprehensive [Troubleshooting Guide](troubleshooting.md).
+For common issues and solutions, see the [Troubleshooting Guide](troubleshooting.md).
 
 ## FAQ
 
@@ -156,5 +142,5 @@ For answers to frequently asked questions, see the [FAQ](faq.md).
 <div align="center">
 <img src="../asset/logo/gemini.svg" alt="Logo" width="64" height="64">
 
-Documentation last updated: 2024-03-25
+Documentation last updated: 2024-03-28
 </div> 

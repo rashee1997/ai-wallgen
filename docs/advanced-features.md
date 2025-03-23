@@ -10,108 +10,210 @@
 ║   ██║  ██║██████╔╝ ╚████╔╝ ██║  ██║██║ ╚████║╚██████╗███████╗██████╔╝      ║
 ║   ╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═════╝       ║
 ║                                                                            ║
-║   Additional Features for Wallgen                                          ║
+║   Advanced Features and Techniques for Wallgen                             ║
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 ```
 
 ## Overview
 
-This guide outlines the additional features available in Wallgen beyond basic wallpaper generation. These features help you get more out of the application through prompt techniques and basic configuration options.
+This guide covers advanced features and techniques for Wallgen, helping you maximize the potential of the application through sophisticated prompt engineering, advanced generation options, and comprehensive image management.
 
 ## Table of Contents
 
-- [Prompt Engineering Techniques](#prompt-engineering-techniques)
-- [Basic Generation Settings](#basic-generation-settings)
-- [History Management](#history-management)
-- [Command-Line Usage](#command-line-usage)
+- [Advanced Prompt Techniques](#advanced-prompt-techniques)
+- [Advanced Generation Options](#advanced-generation-options)
+- [Advanced Image Management](#advanced-image-management)
+- [Advanced Settings](#advanced-settings)
+- [See Also](#see-also)
 
-## Prompt Engineering Techniques
+## Advanced Prompt Techniques
 
-### Effective Prompt Construction
+### Tag-Based System
 
-Create effective prompts that produce better results from the Imagen 3 model:
+Wallgen uses a sophisticated tag-based system to enhance your prompts:
 
-- **Subject-Style-Mood Structure**
-  ```
-  [subject] in [art style] with [mood] atmosphere
-  ```
-  
-  Example: "A mountain landscape in digital art style with peaceful atmosphere"
+#### Style Tags
+- **Digital Art Styles**
+  - `--style digital art`
+  - `--style pixel art`
+  - `--style vector art`
+  - `--style 3d render`
 
-- **Technical Parameter Inclusion**
-  ```
-  [subject] in [style], [technical parameters]
-  ```
-  
-  Example: "A cityscape in cinematic style, 4K resolution, dramatic lighting"
+- **Photographic Styles**
+  - `--style photograph`
+  - `--style macro`
+  - `--style long exposure`
+  - `--style hdr`
 
-For more guidance on creating effective prompts, see the [User Guide section on prompt structure](user-guide.md#prompt-structure).
+- **Artistic Movements**
+  - `--style impressionist`
+  - `--style surrealist`
+  - `--style minimalist`
+  - `--style abstract`
+
+#### Mood Tags
+- **Atmosphere Modifiers**
+  - `--mood peaceful`
+  - `--mood dramatic`
+  - `--mood mysterious`
+  - `--mood energetic`
+
+- **Lighting Effects**
+  - `--mood golden hour`
+  - `--mood night`
+  - `--mood foggy`
+  - `--mood backlit`
+
+- **Color Schemes**
+  - `--mood monochrome`
+  - `--mood vibrant`
+  - `--mood pastel`
+  - `--mood dark`
+
+#### Quality Tags
+- **Detail Level**
+  - `--quality high detail`
+  - `--quality ultra sharp`
+  - `--quality 8k`
+  - `--quality professional`
+
+- **Style Consistency**
+  - `--quality consistent style`
+  - `--quality artistic`
+  - `--quality photorealistic`
+  - `--quality stylized`
+
+### Advanced Prompt Examples
+
+```
+# Complex scene with multiple style elements
+A cyberpunk cityscape at night with neon signs and flying cars --style digital art --mood mysterious --quality high detail
+
+# Artistic interpretation with specific movement
+A mountain landscape in the style of impressionist painting --style impressionist --mood peaceful --quality artistic
+
+# Photographic style with specific lighting
+A forest scene with rays of sunlight through mist --style photograph --mood backlit --quality professional
+```
 
 ### Negative Prompts
 
-Negative prompts tell the AI what to avoid:
+Advanced negative prompt techniques:
 
 ```
-A forest scene with mountain backdrop -people -text -watermark -signature
+# Complex scene with multiple exclusions
+A cityscape at night -people -text -watermark -signature -blur -noise -grain
+
+# Specific style exclusions
+A landscape -cartoon -anime -pixelated -low quality -oversaturated
 ```
 
-Common elements to exclude:
-- Text and watermarks
-- People (if not desired)
-- Specific objects or styles
+## Advanced Generation Options
 
-### Prompt Enhancement
+### Batch Generation
 
-Wallgen can automatically enhance your basic prompts:
+1. **Multiple Variations**
+   - Generate multiple versions of the same prompt
+   - Compare and select the best results
+   - Save preferred settings for future use
 
-1. Type a simple prompt like "mountain landscape at sunset"
-2. The system will add details and technical parameters
-3. The enhanced prompt produces better results than the basic input
+2. **Style Exploration**
+   - Try different style combinations
+   - Mix and match artistic movements
+   - Experiment with mood combinations
 
-For more details on how prompt enhancement works, see the [User Guide section on prompt enhancement](user-guide.md#prompt-enhancement).
+3. **Quality Optimization**
+   - Generate at different detail levels
+   - Compare style consistency
+   - Test different lighting effects
 
-## Basic Generation Settings
+### Advanced Settings
 
-### Resolution Settings
+#### Quality Control
+- **Detail Level Adjustment**
+  - Fine-tune detail generation
+  - Balance between detail and style
+  - Optimize for specific use cases
 
-You can specify resolution when generating wallpapers from the command line. For detailed command-line options, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+- **Style Consistency**
+  - Maintain artistic coherence
+  - Blend multiple styles
+  - Control style strength
 
-Basic resolution example:
-```bash
-# Generate with specific resolution (if supported by your API tier)
-python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
-```
+- **Resolution Optimization**
+  - Maximize image quality
+  - Balance file size
+  - Optimize for display
 
-Available resolution options depend on your API tier limitations.
+#### Generation Parameters
+- **Style Strength**
+  - Control style influence
+  - Blend multiple styles
+  - Adjust artistic intensity
 
-### Random vs Custom Generation
+- **Mood Intensity**
+  - Fine-tune atmosphere
+  - Balance mood elements
+  - Create specific effects
 
-Choose your preferred generation method:
+- **Detail Enhancement**
+  - Enhance specific elements
+  - Control detail distribution
+  - Optimize for viewing
 
-```bash
-# Generate with a random prompt
-python wallpaper_generator.py --random
+## Advanced Image Management
 
-# Generate with a custom prompt
-python wallpaper_generator.py --prompt "mountain landscape at sunset"
-```
+### File Organization
 
-For a complete list of command options, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+1. **Automatic Organization**
+   - Date-based sorting
+   - Theme-based grouping
+   - Style-based categorization
 
-## History Management
+2. **Custom Naming**
+   - Pattern-based naming
+   - Metadata inclusion
+   - Version tracking
 
-### Viewing Generated Wallpapers
+3. **Batch Operations**
+   - Bulk renaming
+   - Format conversion
+   - Quality assessment
 
-All generated wallpapers are saved to the `generated/` directory with a timestamp and theme identifier in the filename.
+### Image Processing
 
-To browse your generated wallpapers, select "Browse Generated Wallpapers" from the main menu.
+1. **Resolution Verification**
+   - Check image dimensions
+   - Verify quality settings
+   - Validate output format
 
-For more information on managing your generated images, see the [User Guide section on managing generated images](user-guide.md#managing-generated-images).
+2. **Format Conversion**
+   - Convert between formats
+   - Optimize file size
+   - Preserve quality
 
-## Command-Line Usage
+3. **Quality Assessment**
+   - Check detail level
+   - Verify style consistency
+   - Validate mood effects
 
-For a complete reference of command-line options and examples, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+### Collection Management
+
+1. **Themed Collections**
+   - Create style-based sets
+   - Organize by mood
+   - Group by theme
+
+2. **Tag-Based Organization**
+   - Sort by style tags
+   - Filter by mood
+   - Search by quality
+
+3. **Quick Search and Filter**
+   - Find specific styles
+   - Filter by date
+   - Search by theme
 
 ## See Also
 
@@ -125,5 +227,5 @@ For a complete reference of command-line options and examples, see the [Quick Re
 <div align="center">
 <img src="../asset/logo/gemini.svg" alt="Logo" width="64" height="64">
 
-Documentation last updated: 2024-03-25
+Documentation last updated: 2024-03-28
 </div>
