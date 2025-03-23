@@ -1192,6 +1192,7 @@ def configure_advanced_options():
                 selected_style = styles[style_select]
                 user_prefs.preferred_styles = [selected_style]
                 print_success(f"Style set to {selected_style}")
+                continue
                 
             elif style_choice == "2":
                 print_info("Select art movement:")
@@ -1224,6 +1225,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["style_settings"]["art_movement"] = movements[movement_choice]
                 print_success(f"Art movement set to {movements[movement_choice]}")
+                continue
                 
             elif style_choice == "3":
                 print_info("Select post-processing effects (comma-separated):")
@@ -1254,6 +1256,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
                 print_success(f"Post-processing effects set to {effects[effects_choice]}")
+                continue
                 
         elif advanced_choice == "2":
             print_section("Camera & Technical Settings")
@@ -1294,6 +1297,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["camera_settings"]["camera_model"] = cameras[camera_choice]
                 print_success(f"Camera model set to {cameras[camera_choice]}")
+                continue
                 
             elif tech_choice == "2":
                 print_info("Configure lens settings:")
@@ -1334,6 +1338,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["camera_settings"]["lens_type"] = lenses[lens_type]
                     print_success(f"Lens type set to {lenses[lens_type]}")
+                    continue
                     
                 elif lens_choice == "2":
                     print_info("Select aperture:")
@@ -1364,6 +1369,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["camera_settings"]["aperture"] = apertures[aperture_choice]
                     print_success(f"Aperture set to {apertures[aperture_choice]}")
+                    continue
                     
                 elif lens_choice == "3":
                     print_info("Select special lens (optional):")
@@ -1398,6 +1404,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["camera_settings"]["special_lens"] = special_lenses[special_choice]
                     print_success(f"Special lens set to {special_lenses[special_choice]}")
+                    continue
                     
                 elif lens_choice == "4":
                     print_info("Select depth of field:")
@@ -1426,6 +1433,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["camera_settings"]["depth_of_field"] = dof_options[dof_choice]
                     print_success(f"Depth of field set to {dof_options[dof_choice]}")
+                    continue
                     
             elif tech_choice == "3":
                 print_info("Configure resolution and quality settings:")
@@ -1469,6 +1477,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["quality_settings"]["resolution"] = resolutions[res_choice]
                     print_success(f"Resolution set to {resolutions[res_choice]}")
+                    continue
                     
                 elif quality_choice == "2":
                     print_info("Select detail level:")
@@ -1499,6 +1508,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["quality_settings"]["detail_level"] = detail_levels[detail_choice]
                     print_success(f"Detail level set to {detail_levels[detail_choice]}")
+                    continue
                     
                 elif quality_choice == "3":
                     print_info("Select rendering quality:")
@@ -1527,6 +1537,7 @@ def configure_advanced_options():
                     
                     user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = render_qualities[render_choice]
                     print_success(f"Rendering quality set to {render_qualities[render_choice]}")
+                    continue
                     
         elif advanced_choice == "3":
             print_section("Lighting & Atmosphere")
@@ -1604,6 +1615,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["lighting_settings"]["lighting_style"] = styles[style_choice]
                 print_success(f"Lighting style set to {styles[style_choice]}")
+                continue
                 
             elif light_choice == "3":
                 print_info("Select light quality:")
@@ -1634,6 +1646,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["lighting_settings"]["light_quality"] = qualities[quality_choice]
                 print_success(f"Light quality set to {qualities[quality_choice]}")
+                continue
                 
             elif light_choice == "4":
                 print_info("Add artificial light sources (comma-separated):")
@@ -1668,6 +1681,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["lighting_settings"]["artificial_sources"] = sources[source_choice]
                 print_success(f"Light sources set to {sources[source_choice]}")
+                continue
                 
         elif advanced_choice == "4":
             print_section("Composition & Environment")
@@ -1715,6 +1729,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["composition_settings"]["technique"] = techniques[technique_choice]
                 print_success(f"Composition technique set to {techniques[technique_choice]}")
+                continue
                 
             elif comp_choice == "2":
                 print_info("Select camera angle:")
