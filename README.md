@@ -137,9 +137,23 @@ For detailed setup and usage instructions, check our [Getting Started Guide](doc
 - [Getting Started Guide](docs/getting-started.md) - Quick setup and basic usage
 - [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
 - [Preset Management Guide](docs/preset-guide.md) - Managing and using presets
+- [Settings Import/Export Guide](GUIDE_settings_import_export.md) - Backup and restore your settings
+- [Wallpaper Settings Module](README_wallpaper_settings.md) - Complete settings management documentation
+- [UI Utilities Module](README_ui_utils.md) - Terminal UI utilities documentation
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 - [FAQ](docs/faq.md) - Frequently asked questions and answers
 - [Changelog](CHANGELOG.md) - Version history and updates
+
+## 🧩 Architecture
+
+The application is structured into modular components for maintainability and extensibility:
+
+- **wallpaper_generator.py** - Main application and generation logic
+- **wallpaper_settings.py** - Preferences, presets, and settings management
+- **ui_utils.py** - Terminal UI elements and user interaction utilities
+- **prompt_config.py** - Prompt generation configuration and templates
+
+This modular design allows for easier maintenance and future enhancements.
 
 ## 📝 License
 

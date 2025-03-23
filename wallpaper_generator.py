@@ -5,8 +5,8 @@ This script generates high-quality desktop wallpapers using Google's Imagen 3 mo
 via the Gemini API. It offers various customization options and prompt engineering 
 techniques to create visually appealing wallpapers tailored to your preferences.
 """
+# Standard library imports
 import json
-from typing import Optional, Dict, List, Any, Tuple
 import os
 import platform
 import random
@@ -15,55 +15,54 @@ import shlex
 import logging
 import sys
 import time
-from urllib.parse import quote
+import threading
+import re
+import glob
 import hashlib
-import google.generativeai as genai
+import html
+import shutil
+from urllib.parse import quote
+from datetime import datetime
+from typing import Optional, Dict, List, Any, Tuple
+
+# Third-party imports
 import bleach
 import ctypes
-import html
-from absl import logging
+import tkinter as tk
+import google.generativeai as genai
+
+# Local application imports
 from prompt_config import (
     nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
     fantasy_tags, abstract_tags, mood_tags, available_genres,
     PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS
 )
-from datetime import datetime
-import shutil
-import threading
-import re
-import glob
-import tkinter as tk
-
-# Try to import colorama, but provide fallbacks if not available
-try:
-    import colorama
-    from colorama import Fore, Style, Back
-    # Initialize colorama for cross-platform colored terminal output
-    colorama.init()
-    COLORAMA_AVAILABLE = True
-except ImportError:
-    # Create dummy classes for Fore, Style, and Back if colorama is not available
-    class DummyColorClass:
-        def __getattr__(self, name):
-            return ""
-    
-    Fore = DummyColorClass()
-    Style = DummyColorClass()
-    Back = DummyColorClass()
-    COLORAMA_AVAILABLE = False
-    print("Note: For colored output, install colorama with: pip install colorama")
+from ui_utils import (
+    print_header, print_section, print_option, print_success, print_error,
+    print_warning, print_info, print_prompt, get_validated_input, show_spinner,
+    print_breadcrumb, print_colored
+)
+from wallpaper_settings import (
+    export_settings, import_settings, update_history_with_filenames, 
+    initialize_settings, manage_preferences, manage_imagen_settings,
+    configure_advanced_options, manage_presets, UserPreferences,
+    load_last_genre, save_last_genre
+)
 
 # Configure logging
-logging.set_verbosity(logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("wallpaper_generator.log"),
+        logging.StreamHandler()
+    ]
+)
 
 # Check for required dependencies
 def check_dependencies():
     """Check if all required dependencies are installed."""
     missing_deps = []
-    
-    # Check for colorama
-    if not COLORAMA_AVAILABLE:
-        missing_deps.append("colorama")
     
     # Check for PIL/Pillow
     try:
@@ -78,7 +77,7 @@ def check_dependencies():
         missing_deps.append("bleach")
     
     if missing_deps:
-        print("\nMissing optional dependencies:")
+        print_warning("\nMissing optional dependencies:")
         for dep in missing_deps:
             print(f"  - {dep}")
         print("\nTo install missing dependencies, run:")
@@ -90,8 +89,8 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 else:
-    print("\nWarning: GEMINI_API_KEY environment variable not set.")
-    print("AI image generation will not be available.\n")
+    print_warning("\nGEMINI_API_KEY environment variable not set.")
+    print_info("AI image generation will not be available.\n")
 
 # Create a cache for generated prompts
 prompt_cache = {}
@@ -100,215 +99,8 @@ prompt_cache = {}
 os.makedirs("cache", exist_ok=True)
 os.makedirs("genimage", exist_ok=True)
 
-# User preferences
-class UserPreferences:
-    """Class to manage user preferences."""
-    def __init__(self):
-        """Initialize user preferences."""
-        self.preferred_genres = []
-        self.preferred_styles = []
-        self.preferred_moods = []
-        self.aspect_ratio = "16:9"
-        self.negative_prompts = []
-        self.imagen_settings = {
-            "number_of_images": 1,
-            "seed": None,
-            "aspect_ratio": "16:9",
-            "negative_prompt": "",
-            "camera_settings": {
-                "camera_model": "ARRI Alexa",
-                "lens_type": "50mm",
-                "aperture": "f/2.8",
-                "special_lens": None,
-                "depth_of_field": "medium"
-            }
-        }
-        self.wallpaper_settings = {}
-        self.current_preset = None
-        self.load_preferences()
-    
-    def load_preferences(self, filename: str = "user_preferences.json") -> None:
-        """Load preferences from file."""
-        # Use absolute path for the preferences file
-        if not os.path.isabs(filename):
-            abs_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-        else:
-            abs_filename = filename
-            
-        if os.path.exists(abs_filename):
-            try:
-                with open(abs_filename) as f:
-                    data = json.load(f)
-                    # Load main settings
-                    self.imagen_settings = data.get("imagen_settings", {})
-                    self.wallpaper_settings = data.get("wallpaper_settings", {})
-                    self.current_preset = data.get("current_preset", None)
-                    
-                    # Load preferred genres, styles, and moods
-                    self.preferred_genres = data.get("preferred_genres", [])
-                    self.preferred_styles = data.get("preferred_styles", [])
-                    self.preferred_moods = data.get("preferred_moods", [])
-                    self.aspect_ratio = data.get("aspect_ratio", "16:9")
-                    self.negative_prompts = data.get("negative_prompts", [])
-                    
-                    logging.info(f"Loaded preferences from {abs_filename}")
-                    logging.info(f"Preferred genres: {self.preferred_genres}")
-                    logging.info(f"Preferred styles: {self.preferred_styles}")
-                    logging.info(f"Preferred moods: {self.preferred_moods}")
-            except Exception as e:
-                print_error(f"Error loading preferences: {e}")
-                logging.error(f"Error loading preferences from {abs_filename}: {e}")
-                # Don't reset everything, just leave the defaults
-        else:
-            logging.info(f"No preferences file found at {abs_filename}, using defaults")
-    
-    def save_preferences(self, filename: str = "user_preferences.json") -> None:
-        """Save preferences to file."""
-        # Use absolute path for the preferences file
-        if not os.path.isabs(filename):
-            abs_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-        else:
-            abs_filename = filename
-            
-        try:
-            data = {
-                "imagen_settings": self.imagen_settings,
-                "wallpaper_settings": self.wallpaper_settings,
-                "current_preset": self.current_preset,
-                "preferred_genres": self.preferred_genres,
-                "preferred_styles": self.preferred_styles,
-                "preferred_moods": self.preferred_moods,
-                "aspect_ratio": self.aspect_ratio,
-                "negative_prompts": self.negative_prompts
-            }
-            
-            # Ensure the directory exists
-            os.makedirs(os.path.dirname(abs_filename), exist_ok=True)
-            
-            with open(abs_filename, "w") as f:
-                json.dump(data, f, indent=4)
-                
-            logging.info(f"Saved preferences to {abs_filename}")
-            logging.info(f"Preferred genres: {self.preferred_genres}")
-            logging.info(f"Preferred styles: {self.preferred_styles}")
-            logging.info(f"Preferred moods: {self.preferred_moods}")
-        except Exception as e:
-            print_error(f"Error saving preferences: {e}")
-            logging.error(f"Error saving preferences to {abs_filename}: {e}")
-
 # Initialize user preferences
-user_prefs = UserPreferences()
-
-def load_last_genre(filename: str = "last_genre.json") -> Optional[str]:
-    """Loads the last used genre from a JSON file."""
-    try:
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                return json.load(f).get("last_genre")
-    except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
-        logging.error(f"Error loading last genre: {e}")
-    return None
-
-def save_last_genre(genre, filename="last_genre.json"):
-    """Saves the last used genre to a JSON file."""
-    try:
-        with open(filename, "w") as f:
-            json.dump({"last_genre": genre}, f, indent=2)
-    except Exception as e:
-        logging.error(f"Error saving last genre: {e}")
-
-def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end="\n"):
-    """Print colored text to the terminal."""
-    print(f"{style}{color}{text}{Style.RESET_ALL}", end=end)
-
-def print_header(text):
-    """Print a formatted header."""
-    try:
-        width = min(80, os.get_terminal_size().columns)
-    except (AttributeError, OSError):
-        # Default width if terminal size cannot be determined
-        width = 80
-    
-    print_colored("\n" + "=" * width, Fore.CYAN, Style.BRIGHT)
-    print_colored(f" {text.center(width - 2)} ", Fore.CYAN, Style.BRIGHT)
-    print_colored("=" * width + "\n", Fore.CYAN, Style.BRIGHT)
-
-def print_section(text):
-    """Print a formatted section header."""
-    print_colored(f"\n{text}", Fore.GREEN, Style.BRIGHT)
-    print_colored("-" * len(text), Fore.GREEN, Style.BRIGHT)
-
-def print_option(key, description):
-    """Print a formatted option."""
-    print_colored(f"  {key}: ", Fore.YELLOW, Style.BRIGHT, end="")
-    print_colored(description)
-
-def print_success(text):
-    """Print a success message."""
-    print_colored(f"✓ {text}", Fore.GREEN, Style.BRIGHT)
-
-def print_error(text):
-    """Print an error message."""
-    print_colored(f"✗ {text}", Fore.RED, Style.BRIGHT)
-
-def print_warning(text):
-    """Print a warning message."""
-    print_colored(f"⚠ {text}", Fore.YELLOW, Style.BRIGHT)
-
-def print_info(text):
-    """Print an info message."""
-    print_colored(f"ℹ {text}", Fore.BLUE, Style.NORMAL)
-
-def print_prompt(text):
-    """Print a prompt message."""
-    print_colored(f"\n> {text} ", Fore.MAGENTA, Style.BRIGHT, end="")
-
-def get_validated_input(prompt, options=None, default=None, allow_empty=False):
-    """Get validated input from the user."""
-    while True:
-        print_prompt(prompt)
-        user_input = input().strip().lower()
-        
-        if not user_input:
-            if allow_empty and default is not None:
-                return default
-            elif allow_empty:
-                return ""
-            print_warning("Input cannot be empty. Please try again.")
-            continue
-            
-        if options and user_input not in options:
-            print_warning(f"Invalid input. Please choose from: {', '.join(options)}")
-            continue
-            
-        return user_input
-
-def show_spinner(message, duration=2):
-    """Show a spinner animation with a message."""
-    # Check if we're in an interactive terminal
-    if not sys.stdout.isatty() or not COLORAMA_AVAILABLE:
-        # Just print the message if not in an interactive terminal
-        print_info(message)
-        time.sleep(duration)
-        return
-    
-    try:
-        spinner = ["|", "/", "-", "\\"]
-        start_time = time.time()
-        i = 0
-        
-        while time.time() - start_time < duration:
-            sys.stdout.write(f"\r{Fore.CYAN}{spinner[i % len(spinner)]} {message}{Style.RESET_ALL}")
-            sys.stdout.flush()
-            time.sleep(0.1)
-            i += 1
-        
-        sys.stdout.write("\r" + " " * (len(message) + 2) + "\r")
-        sys.stdout.flush()
-    except (IOError, ValueError):
-        # Fallback if spinner fails
-        print_info(message)
-        time.sleep(duration)
+user_prefs = initialize_settings()
 
 def generate_prompt_gemini(tags, use_cache=True, mood=None, style=None):
     """Generate a prompt using the Gemini model with enhanced options.
@@ -3589,75 +3381,13 @@ def delete_preset():
             except:
                 pass
 
-def export_settings():
-    """Export current settings to file."""
-    print_section("Export Settings")
-    try:
-        filename = get_validated_input("Enter filename for export (without extension)", allow_empty=False)
-        filename = f"{filename}.json"
-        
-        settings = {
-            "preferences": user_prefs.__dict__,
-            "imagen_settings": user_prefs.imagen_settings,
-            "export_date": datetime.now().isoformat()
-        }
-        
-        with open(filename, "w") as f:
-            json.dump(settings, f, indent=4)
-        print_success(f"Settings exported to {filename}")
-    except Exception as e:
-        print_error(f"Error exporting settings: {e}")
 
-def import_settings():
-    """Import settings from file."""
-    print_section("Import Settings")
-    try:
-        filename = get_validated_input("Enter filename to import (with extension)", allow_empty=False)
-        if not os.path.exists(filename):
-            print_error("File not found")
-            return
-        
-        with open(filename) as f:
-            settings = json.load(f)
-        
-        # Update preferences
-        for key, value in settings["preferences"].items():
-            setattr(user_prefs, key, value)
-        
-        # Update imagen settings
-        user_prefs.imagen_settings.update(settings["imagen_settings"])
-        
-        user_prefs.save_preferences()
-        print_success("Settings imported successfully")
-    except Exception as e:
-        print_error(f"Error importing settings: {e}")
+# Settings import/export functions moved to wallpaper_settings.py module
 
-def update_history_with_filenames(silent=False):
-    """Update the generation history to include image filenames for existing entries.
-    
-    Args:
-        silent: If True, don't print status messages
-    """
-    try:
-        if os.path.exists("generation_history.json"):
-            with open("generation_history.json", "r") as f:
-                history = json.load(f)
-            
-            updated = False
-            for entry in history:
-                if "image_filename" not in entry and entry.get("enhanced_prompt"):
-                    image_path = get_generated_image_path(entry["enhanced_prompt"])
-                    if os.path.exists(image_path) or True:  # Include even if file doesn't exist
-                        entry["image_filename"] = os.path.basename(image_path)
-                        updated = True
-            
-            if updated:
-                with open("generation_history.json", "w") as f:
-                    json.dump(history, f, indent=4)
-                if not silent:
-                    print_info("Generation history updated with image filenames")
-    except Exception as e:
-        logging.error(f"Error updating history with filenames: {e}")
+
+
+
+
 
 def main():
     """Main function to execute the script."""
@@ -3839,10 +3569,4 @@ def main():
         print_success("Goodbye!")
         sys.exit(0)
 
-def print_breadcrumb(path_list):
-    """Print navigation breadcrumb."""
-    print_info(" > ".join(path_list))
-
-if __name__ == "__main__":
-    main()
 

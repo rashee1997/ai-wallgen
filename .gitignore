@@ -32,27 +32,28 @@ ENV/
 .vscode/
 *.swp
 *.swo
-
-# Project specific
-cache/*
-!cache/.gitkeep
-prompt_cache/*
-!prompt_cache/.gitkeep
-*.log
-user_preferences.json
-last_genre.json
-genimage/*
-!genimage/.gitkeep
+.cursor/
 
 # Wallpaper Generator specific
-cache/
-genimage/
-*.log
-preferences.json
-.env
-generated_prompts.json
-prompts.json
+# User data
+user_preferences.json
 last_genre.json
+last_genre.txt
+generation_history.json
+prompts.json
+rasheedhh.json
+
+# Logs and cache
+*.log
+cache/
+prompt_cache/
+image_cache/
+genimage/
+
+# Keep empty directories
+!cache/.gitkeep
+!prompt_cache/.gitkeep
+!genimage/.gitkeep
 
 # Preset and History files
 presets/*
@@ -60,7 +61,6 @@ presets/*
 presets.json
 preset_backups/
 *.preset
-generation_history.json
 history/*
 !history/.gitkeep
 history_backups/
@@ -85,16 +85,18 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-prompt_cache/
 
-# Project specific
-*.log
-user_preferences.json
-prompt_cache/
-image_cache/
-last_genre.txt
+# Test files
+tests/
+*_test.py
+test_*.py
+
+# Documentation and planning
+plans/
+implementation_phases.md
+task_tracking.md
+*_summary.md
+settings_refactor_plan.md
+dependencies.md
 prompt
-.cursor/
-
-# Local development
-docs/git-commit-guide.md
+generate_prompts.json
