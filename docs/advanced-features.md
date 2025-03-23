@@ -1,373 +1,129 @@
 # Advanced Features Guide
 
-This guide details the advanced features available in the AI Wallpaper Generator.
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║    █████╗ ██████╗ ██╗   ██╗ █████╗ ███╗   ██╗ ██████╗███████╗██████╗       ║
+║   ██╔══██╗██╔══██╗██║   ██║██╔══██╗████╗  ██║██╔════╝██╔════╝██╔══██╗      ║
+║   ███████║██║  ██║██║   ██║███████║██╔██╗ ██║██║     █████╗  ██║  ██║      ║
+║   ██╔══██║██║  ██║╚██╗ ██╔╝██╔══██║██║╚██╗██║██║     ██╔══╝  ██║  ██║      ║
+║   ██║  ██║██████╔╝ ╚████╔╝ ██║  ██║██║ ╚████║╚██████╗███████╗██████╔╝      ║
+║   ╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═════╝       ║
+║                                                                            ║
+║   Additional Features for Wallgen                                          ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
+
+## Overview
+
+This guide outlines the additional features available in Wallgen beyond basic wallpaper generation. These features help you get more out of the application through prompt techniques and basic configuration options.
 
 ## Table of Contents
-- [Prompt Generation & Enhancement](#prompt-generation--enhancement)
-- [AI-Powered Generation](#ai-powered-generation)
-- [Preset Management](#preset-management)
-- [Professional Controls](#professional-controls)
-- [Advanced Settings](#advanced-settings)
-  - [Resolution Options](#resolution-options)
-  - [Style Controls](#style-controls)
-    - [Smart Style Mixing](#smart-style-mixing)
-  - [Post-Processing](#post-processing)
-- [Technical Features](#technical-features)
-  - [System Integration](#system-integration)
-  - [Performance Features](#performance-features)
-  - [Data Management](#data-management)
-  - [Intelligent Filename Generation](#intelligent-filename-generation)
-- [Advanced Tips](#advanced-tips)
-- [Artistic Controls](#-artistic-controls)
-- [Technical Features](#-technical-features)
-- [Wallpaper Management](#-wallpaper-management)
-- [System Features](#-system-features)
-  - [Caching System](#caching-system)
-  - [User Preferences](#user-preferences)
-  - [Intelligent Filename Generation](#intelligent-filename-generation-1)
-- [Advanced Configuration](#-advanced-configuration)
 
-## Prompt Generation & Enhancement
+- [Prompt Engineering Techniques](#prompt-engineering-techniques)
+- [Basic Generation Settings](#basic-generation-settings)
+- [History Management](#history-management)
+- [Command-Line Usage](#command-line-usage)
 
-### Smart Prompt Generation
-- **AI-Powered Generation**
-  - Context-aware prompt creation
-  - Style-specific vocabulary
-  - Mood-based adjustments
-  - Technical parameter integration
+## Prompt Engineering Techniques
 
-- **Multiple Generation Methods**
-  - Gemini API integration
-  - Random tag combinations
-  - Custom prompt input
-  - Template-based generation
+### Effective Prompt Construction
 
-### Prompt Enhancement System
-- **Intelligent Enhancement**
-  - Automatic style refinement
-  - Technical detail addition
-  - Contextual improvement
-  - Quality optimization
+Create effective prompts that produce better results from the Imagen 3 model:
 
-- **Enhancement Features**
-  - Style consistency check
-  - Technical parameter validation
-  - Mood integration
-  - Artistic direction alignment
+- **Subject-Style-Mood Structure**
+  ```
+  [subject] in [art style] with [mood] atmosphere
+  ```
+  
+  Example: "A mountain landscape in digital art style with peaceful atmosphere"
 
-### Advanced Prompt Controls
-- **Tag Management**
-  - Smart tag selection
-  - Category-based organization
-  - Priority weighting
-  - Negative prompt support
+- **Technical Parameter Inclusion**
+  ```
+  [subject] in [style], [technical parameters]
+  ```
+  
+  Example: "A cityscape in cinematic style, 4K resolution, dramatic lighting"
 
-- **Context Control**
-  - Scene composition hints
-  - Lighting descriptors
-  - Atmospheric elements
-  - Environmental details
+For more guidance on creating effective prompts, see the [User Guide section on prompt structure](user-guide.md#prompt-structure).
 
-### Prompt Templates
-- **Pre-built Templates**
-  - Landscape optimized
-  - Portrait oriented
-  - Abstract designs
-  - Minimalist compositions
+### Negative Prompts
 
-- **Custom Templates**
-  - User-defined structures
-  - Variable placeholders
-  - Dynamic content insertion
-  - Template combination
+Negative prompts tell the AI what to avoid:
 
-### Quality Optimization
-- **Semantic Analysis**
-  - Coherence checking
-  - Style consistency
-  - Technical validity
-  - Parameter compatibility
-
-- **Enhancement Strategies**
-  - Detail amplification
-  - Style reinforcement
-  - Technical precision
-  - Quality assurance
-
-## AI-Powered Generation
-
-### Gemini-Enhanced Prompts
-- Smart prompt enhancement using Gemini AI
-- Context-aware prompt modification
-- Style and mood integration
-- Automatic tag optimization
-
-### Multiple Generation Methods
-- AI-powered prompts via Gemini
-- Random tag combinations
-- Custom prompt input
-- Enhanced prompts with preferences
-
-## Preset Management
-
-### Comprehensive Settings Control
-- Save and load complete setting configurations
-- Merge or replace existing settings
-- Track active presets across sessions
-- Automatic backup system
-
-### Advanced Preset Features
-- Detailed preset information viewing
-- Atomic file operations for data safety
-- Settings validation and sanitization
-- Backup retention management
-
-### Workflow Integration
-- Quick access to favorite settings
-- Combine multiple presets
-- Session persistence
-- Cross-preset compatibility
-
-## Professional Controls
-
-### Camera Settings
-- Professional camera models:
-  - ARRI Alexa
-  - RED Digital Cinema
-  - Sony Venice
-  - Canon Cinema EOS
-- Lens options:
-  - Prime lenses (24mm, 50mm, 85mm)
-  - Zoom lenses
-  - Special effects lenses
-  - Anamorphic options
-
-### Lighting Control
-- Natural lighting conditions
-- Artificial lighting setups
-- Time of day effects
-- Weather conditions
-- Seasonal variations
-
-### Color Management
-- Color schemes
-- Color grading
-- Color temperature
-- Palette types
-- Custom color combinations
-
-## Advanced Settings
-
-### Resolution Options
-- Standard resolutions (1080p, 4K)
-- Ultra-high resolution (8K)
-- Custom aspect ratios
-- Multi-monitor configurations
-- Display-specific optimization
-
-### Style Controls
-- Artistic styles:
-  - Photorealistic
-  - Digital Art
-  - Sketch
-  - Watercolor
-  - Cyberpunk
-  - Pop Art
-  - Oil Painting
-  - Pixel Art
-  - Anime
-  - 3D Render
-  - Abstract
-  - Impressionism
-  - And 30+ more art styles
-- Art movements:
-  - Abstract Expressionism
-  - Impressionism
-  - Minimalism
-  - Contemporary
-
-#### Smart Style Mixing
-- **Intelligent Style Combination**:
-  - Automatically combines 2-3 compatible styles from the same category
-  - Prevents mixing incompatible styles that would result in poor-quality images
-  - Randomly generates creative combinations while ensuring aesthetic quality
-  - Option to save and reuse your favorite style combinations
-
-- **Style Categories**:
-  - Traditional Art: oil painting, watercolor, sketch, impressionism, etc.
-  - Digital Art: abstract, cyberpunk, fantasy, sci-fi, etc.
-  - Illustration: anime, cartoon, comic book, pixel art, etc.
-
-- **Style Management**:
-  - One-click generation of style mixes
-  - Save style combinations to user preferences
-  - Browse and select from previously saved style mixes
-  - Easily apply saved style mixes to new generations
-
-### Post-Processing
-- Detail enhancement
-- Texture quality
-- Noise reduction
-- Sharpening
-- Color correction
-
-## Technical Features
-
-### System Integration
-- Auto-wallpaper setting
-- Multi-monitor support
-- Custom fit modes
-- Background color options
-- Refresh rate settings
-
-### Performance Features
-- Cache management
-- Resource optimization
-- Batch processing
-- Background generation
-- Progress tracking
-
-### Data Management
-- Settings persistence
-- History tracking
-- Export/Import capabilities
-- Backup management
-- Error recovery
-
-### Intelligent Filename Generation
-- AI-powered subject extraction from prompts
-- Descriptive, meaningful filenames instead of generic hashes
-- Consistent naming conventions for easier organization
-- Semantic analysis of image content for accurate naming
-- Automatic fallback to conventional naming if AI analysis fails
-- Easy identification of wallpapers based on content
-
-## Advanced Tips
-
-1. **Optimal Performance**
-   - Use preset merging for complex effects
-   - Leverage cache for faster generation
-   - Optimize settings for your hardware
-
-2. **Quality Enhancement**
-   - Combine multiple artistic styles
-   - Layer lighting effects
-   - Use advanced color grading
-   - Experiment with style mixes for unique results
-
-3. **Workflow Optimization**
-   - Create preset hierarchies
-   - Use quick access shortcuts
-   - Implement custom workflows
-   - Save favorite style mixes for repeated use
-
-4. **Resource Management**
-   - Monitor system resources
-   - Manage cache size
-   - Schedule batch operations
-
-## 🎨 Artistic Controls
-
-### Style Settings
-- Multiple artistic styles:
-  - Photorealistic
-  - Digital Art
-  - Sketch
-  - Watercolor
-  - Cyberpunk
-  - Pop Art
-  - And 35+ more styles
-- Smart style mixing across compatible categories
-- Art movements integration
-- Post-processing effects
-
-### Color & Detail
-- Color schemes (Natural, Warm, Cool)
-- Palette types (Analogous, Complementary)
-- Detail levels and texture quality
-
-## 📸 Technical Features
-
-### Camera Settings
-- Professional camera models:
-  - ARRI Alexa
-  - RED
-  - Sony Venice
-- Lens options:
-  - 50mm (Standard)
-  - 85mm (Portrait)
-  - 24mm (Wide)
-  - Special lenses
-
-### Resolution & Quality
-- Up to 8K resolution support
-- Multiple aspect ratios
-- Quality presets
-- Detail enhancement options
-
-## 🖥️ Wallpaper Management
-
-### Multi-Monitor Support
-- Individual monitor settings
-- Custom resolutions per display
-- Independent wallpaper cycling
-- Synchronized themes
-
-### Fit Options
-- Fill
-- Fit
-- Stretch
-- Center
-- Tile
-- Span
-
-## 💾 System Features
-
-### Caching System
-- Intelligent prompt caching
-- Generated image storage
-- Cache duration settings
-- Auto-cleanup options
-
-### User Preferences
-- Persistent settings
-- Genre preferences
-- Style presets
-- Custom style mix saving
-- Technical defaults
-
-### Intelligent Filename Generation
-- AI-powered subject extraction from prompts
-- Descriptive, meaningful filenames instead of generic hashes
-- Consistent naming conventions for easier organization
-- Semantic analysis of image content for accurate naming
-- Automatic fallback to conventional naming if AI analysis fails
-- Easy identification of wallpapers based on content
-
-#### Example
 ```
-Original Prompt: "Majestic mountains with snow-capped peaks reflecting in a crystal clear lake at sunset, with pink and orange clouds"
-
-Generated Filename: mountain_lake_sunset_ae358c5f.png
-
-Original Prompt: "Futuristic cyberpunk cityscape at night with neon lights and flying cars" 
-
-Generated Filename: cyberpunk_cityscape_night_12345678.png
+A forest scene with mountain backdrop -people -text -watermark -signature
 ```
 
-## 🔧 Advanced Configuration
+Common elements to exclude:
+- Text and watermarks
+- People (if not desired)
+- Specific objects or styles
 
-### Environment Variables
+### Prompt Enhancement
+
+Wallgen can automatically enhance your basic prompts:
+
+1. Type a simple prompt like "mountain landscape at sunset"
+2. The system will add details and technical parameters
+3. The enhanced prompt produces better results than the basic input
+
+For more details on how prompt enhancement works, see the [User Guide section on prompt enhancement](user-guide.md#prompt-enhancement).
+
+## Basic Generation Settings
+
+### Resolution Settings
+
+You can specify resolution when generating wallpapers from the command line. For detailed command-line options, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+
+Basic resolution example:
 ```bash
-# API Configuration
-GEMINI_API_KEY='your-api-key'
-CACHE_DURATION='7d'
-DEFAULT_RESOLUTION='1920x1080'
-DEBUG_MODE='false'
+# Generate with specific resolution (if supported by your API tier)
+python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
 ```
 
-### Command Line Arguments
+Available resolution options depend on your API tier limitations.
+
+### Random vs Custom Generation
+
+Choose your preferred generation method:
+
 ```bash
-# Example usage
-python wallpaper_generator.py --resolution=4k --style=cyberpunk --cache-days=30
+# Generate with a random prompt
+python wallpaper_generator.py --random
+
+# Generate with a custom prompt
+python wallpaper_generator.py --prompt "mountain landscape at sunset"
 ```
+
+For a complete list of command options, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+
+## History Management
+
+### Viewing Generated Wallpapers
+
+All generated wallpapers are saved to the `generated/` directory with a timestamp and theme identifier in the filename.
+
+To browse your generated wallpapers, select "Browse Generated Wallpapers" from the main menu.
+
+For more information on managing your generated images, see the [User Guide section on managing generated images](user-guide.md#managing-generated-images).
+
+## Command-Line Usage
+
+For a complete reference of command-line options and examples, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
+
+## See Also
+
+- [Getting Started Guide](getting-started.md)
+- [Quick Reference Guide](QUICK_REFERENCE.md)
+- [Troubleshooting Guide](troubleshooting.md)
+- [User Guide](user-guide.md)
+
+---
+
+<div align="center">
+<img src="../asset/logo/gemini.svg" alt="Logo" width="64" height="64">
+
+Documentation last updated: 2024-03-25
+</div>

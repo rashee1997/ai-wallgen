@@ -1,171 +1,119 @@
-# Frequently Asked Questions (FAQ)
+# Frequently Asked Questions
 
-## Table of Contents
-- [General Questions](#general-questions)
-- [Prompt Generation & Enhancement](#prompt-generation--enhancement)
-- [Preset Management](#preset-management)
-- [Generation Settings](#generation-settings)
-- [Technical Issues](#technical-issues)
-- [Performance](#performance)
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   ███████╗ █████╗  ██████╗                                                 ║
+║   ██╔════╝██╔══██╗██╔═══██╗                                                ║
+║   █████╗  ███████║██║   ██║                                                ║
+║   ██╔══╝  ██╔══██║██║▄▄ ██║                                                ║
+║   ██║     ██║  ██║╚██████╔╝                                                ║
+║   ╚═╝     ╚═╝  ╚═╝ ╚══▀▀═╝                                                 ║
+║                                                                            ║
+║   Frequently Asked Questions About Wallgen                                 ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
 
 ## General Questions
 
-### What is the AI Wallpaper Generator?
-The AI Wallpaper Generator is a tool that uses Google's Imagen 3 model and Gemini API to create high-quality, customizable wallpapers based on your preferences and prompts.
+### What is Wallgen?
+
+Wallgen is a terminal-based AI wallpaper generator that uses Google's Gemini API to create wallpapers from text prompts. It allows you to generate custom wallpapers based on your descriptions without requiring artistic skills.
+
+### What are the system requirements?
+
+For detailed system requirements, see the [Getting Started Guide](getting-started.md#prerequisites).
 
 ### Do I need an API key?
-Yes, you need a Google Gemini API key to use the AI features. You can get one from [Google's AI Studio](https://makersuite.google.com/app/apikey).
 
-### Which operating systems are supported?
-The tool supports Windows, macOS, and Linux. Some features may be platform-specific.
+Yes, Wallgen requires a Google Gemini API key to function. For detailed instructions on obtaining and setting up your API key, see the [Getting Started Guide](getting-started.md#setting-up-api-access).
 
-## Prompt Generation & Enhancement
+### Is it free to use?
 
-### How does prompt enhancement work?
-The system uses Google's Gemini AI to analyze and improve your prompts by:
-- Adding technical details
-- Refining artistic descriptions
-- Ensuring style consistency
-- Optimizing for quality output
+Wallgen itself is free and open-source software. However, you'll need a Google Gemini API key which may have free tier limitations or costs depending on usage.
 
-### What are the different ways to generate prompts?
-1. **AI-Powered Generation**: Using Gemini API for smart, context-aware prompts
-2. **Random Generation**: Combining tags from curated categories
-3. **Custom Input**: Your own prompts with automatic enhancement
-4. **Template-Based**: Using pre-built or custom templates
-
-### Can I control the enhancement process?
-Yes, you can:
-- Choose enhancement intensity
-- Specify style preferences
-- Add technical parameters
-- Include negative prompts
-- Override specific enhancements
-
-### What are prompt templates?
-Templates are pre-defined structures that help create consistent, high-quality prompts. They include:
-- Landscape-optimized templates
-- Portrait-oriented templates
-- Abstract design templates
-- Custom user templates
+## Prompt-Related Questions
 
 ### How do I create effective prompts?
-1. Start with clear main subjects
-2. Add style and mood descriptors
-3. Include technical preferences
-4. Use appropriate templates
-5. Let the enhancement system refine it
 
-### What makes a good prompt?
-- Clear subject matter
-- Specific style descriptions
-- Technical parameters
-- Mood/atmosphere indicators
-- Consistent theme
+For guidance on creating effective prompts, see the [Advanced Features Guide](advanced-features.md#effective-prompt-construction).
 
-### Can I save my enhanced prompts?
-Yes, you can:
-- Save successful prompts
-- Create prompt templates
-- Export prompt collections
-- Share prompts with others
+### Can I use negative prompts?
 
-## Preset Management
+Yes, negative prompts tell the AI what to avoid in the generated image. For details on using negative prompts, see the [Advanced Features Guide](advanced-features.md#negative-prompts).
 
-### What are presets?
-Presets are saved configurations of your generation settings, including imagen settings, wallpaper settings, and other preferences that you can reuse later.
+### Why are my images not matching my prompts?
 
-### How do I save a preset?
-1. Configure your desired settings
-2. Go to Tools & Utilities > Manage Presets
-3. Select "Save Current Settings as Preset"
-4. Enter a name for your preset
+There could be several reasons:
 
-### Can I modify an existing preset?
-Yes, you can:
-1. Load the preset
-2. Make your changes
-3. Save it again with the same name to overwrite
+1. The prompt might be too vague
+2. The API may have content filters blocking certain elements
+3. The AI model may interpret your prompt differently than intended
 
-### What's the difference between "Replace" and "Merge" when loading presets?
-- **Replace**: Completely overwrites your current settings with the preset
-- **Merge**: Updates only the settings defined in the preset, keeping other current settings intact
+Try providing more specific details in your prompts and checking for any terminology that might trigger content filters.
 
-### Are my presets backed up?
-Yes, the system automatically creates backups when you delete presets, and they're kept for 24 hours.
+### Does the model understand all art styles?
 
-## Generation Settings
+The Gemini model understands many art styles, but results may vary. Common styles like "digital art," "oil painting," "watercolor," and "photorealistic" generally produce good results. Highly specific or niche styles may not be interpreted as accurately.
 
-### What resolution options are available?
-- Standard: 1080p, 1440p, 4K
-- Ultra HD: 8K
-- Custom resolutions (aspect ratio maintained)
+## Technical Questions
 
-### Can I customize the artistic style?
-Yes, you can choose from:
-- Multiple artistic styles (Photorealistic, Digital Art, etc.)
-- Art movements (Impressionism, Abstract, etc.)
-- Custom style combinations
+### Where are generated wallpapers saved?
 
-### How do camera settings work?
-You can specify:
-- Camera model (ARRI Alexa, RED, etc.)
-- Lens type and focal length
-- Lighting conditions
-- Post-processing effects
+All generated wallpapers are saved to the `generated/` directory in the Wallgen project folder with a timestamp and theme identifier in the filename.
 
-## Technical Issues
+### What resolutions can I generate?
 
-### Why is generation taking long?
-- High resolution settings increase generation time
-- Complex prompts may take longer to process
-- Server load can affect response times
-- Network connectivity issues
+You can specify various resolutions when generating wallpapers, with the available options depending on your API tier. For information on specifying resolution, see the [Advanced Features Guide](advanced-features.md#resolution-settings).
 
-### How do I fix "Settings Not Applying" error?
-1. Check if all required settings exist
-2. Try using "Replace" instead of "Merge"
-3. Verify preset file integrity
-4. Reset to default settings if needed
+### How do I run Wallgen from the command line?
 
-### What if I lose my presets?
-1. Check the presets directory for .bak files
-2. Restore from automatic backups (within 24 hours)
-3. Check for export files if you've exported settings
+For a complete reference of command-line options and examples, see the [Quick Reference Guide](QUICK_REFERENCE.md#command-line-options).
 
-## Performance
+### What happens if the API is unavailable?
 
-### How can I optimize generation speed?
-1. Use lower resolutions for testing
-2. Enable caching
-3. Optimize your prompts
-4. Use preset combinations efficiently
+If the API is unavailable or returns an error:
 
-### Does the tool use GPU acceleration?
-The generation is cloud-based through Google's API, so local GPU isn't used for generation. However, some local operations may use GPU acceleration if available.
+1. Wallgen will display an appropriate error message
+2. No image will be generated
+3. You can try again later or check your internet connection
 
-### How can I manage system resources?
-1. Monitor cache size
-2. Clear unnecessary presets
-3. Remove old generation history
-4. Use batch processing for multiple generations
+For troubleshooting API connection issues, see the [Troubleshooting Guide](troubleshooting.md#api-connection-issues).
 
-## Best Practices
+## Error and Troubleshooting
 
-### For Preset Management
-1. Use descriptive names for presets
-2. Regularly clean up unused presets
-3. Export important presets as backup
-4. Test presets before deleting old versions
+### I'm getting "API Key Invalid" errors
 
-### For Generation
-1. Start with base presets
-2. Use merge feature for complex effects
-3. Save successful configurations
-4. Document special combinations
+For solutions to API key issues, see the [Troubleshooting Guide](troubleshooting.md#api-key-issues).
 
-### For Workflow
-1. Organize presets by purpose
-2. Use consistent naming conventions
-3. Create preset hierarchies
-4. Maintain backup copies of important settings 
+### Why is generation sometimes slow?
+
+Image generation speed depends on several factors:
+
+1. Your internet connection speed
+2. Current load on the Google Gemini API servers
+3. Complexity of your prompt
+4. Current API rate limits on your account
+
+Most generations should complete within 10-30 seconds under normal conditions.
+
+### How do I report bugs or suggest features?
+
+For information on contributing to Wallgen, including bug reports and feature requests, see the [Contributing Guide](../CONTRIBUTING.md).
+
+## See Also
+
+- [Getting Started Guide](getting-started.md)
+- [User Guide](user-guide.md)
+- [Advanced Features Guide](advanced-features.md)
+- [Troubleshooting Guide](troubleshooting.md)
+- [Quick Reference Guide](QUICK_REFERENCE.md)
+
+---
+
+<div align="center">
+<img src="../asset/logo/gemini.svg" alt="Logo" width="64" height="64">
+
+Documentation last updated: 2024-03-25
+</div> 
