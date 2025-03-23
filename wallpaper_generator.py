@@ -55,9 +55,14 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler("wallpaper_generator.log"),
-        logging.StreamHandler()
     ]
 )
+
+# Add a separate stream handler that only shows errors
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.ERROR)
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logging.getLogger().addHandler(console_handler)
 
 # Check for required dependencies
 def check_dependencies():
@@ -278,7 +283,7 @@ def generate_prompt_gemini(tags, use_cache=True, mood=None, style=None):
 
         if response.parts:
             gemini_prompt = response.parts[0].text.strip()
-            logging.info(f"Generated Gemini prompt: {gemini_prompt}")
+            logging.debug(f"Generated Gemini prompt: {gemini_prompt}")
 
             prompt_cache[cache_key] = gemini_prompt
             return gemini_prompt
@@ -499,7 +504,7 @@ def get_generated_image_path(prompt):
     genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
     try:
         os.makedirs(genimage_dir, exist_ok=True)
-        logging.info(f"Ensuring genimage directory exists at: {genimage_dir}")
+        logging.debug(f"Ensuring genimage directory exists at: {genimage_dir}")
     except Exception as e:
         logging.error(f"Error creating genimage directory: {e}")
         # Fallback to relative path if absolute path fails
@@ -643,14 +648,15 @@ def set_wallpaper(image_path):
             SPI_SETDESKWALLPAPER = 0x0014
             SPIF_UPDATEINIFILE = 0x01
             SPIF_SENDWININICHANGE = 0x02
-            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, absolute_path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
-            logging.info("Wallpaper set successfully on Windows")
+            # Success
+            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, image_path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+            logging.debug("Wallpaper set successfully on Windows")
             return True
         elif os_name == "Darwin":
             script = f'tell application "Finder" to set desktop picture to POSIX file "{absolute_path}"'
             command = f"osascript -e '{script}'"
             subprocess.run(shlex.split(command), check=True, capture_output=True, text=True)
-            logging.info("Wallpaper set successfully on macOS")
+            logging.debug("Wallpaper set successfully on macOS")
             return True
         elif os_name == "Linux":
             file_uri = "file://" + absolute_path
@@ -669,20 +675,20 @@ def set_wallpaper(image_path):
                     subprocess.run(command, check=True, capture_output=True, text=True)
                 except subprocess.CalledProcessError:
                     pass  # Ignore if not supported
-                logging.info(f"Wallpaper set successfully on Linux using path: {absolute_path}")
-                logging.info(f"Original path was: {original_path}")
+                logging.debug(f"Wallpaper set successfully on Linux using path: {absolute_path}")
+                logging.debug(f"Original path was: {original_path}")
                 return True
             elif desktop_env == 'CINNAMON':
                 # Cinnamon
                 command = ["gsettings", "set", "org.cinnamon.desktop.background", "picture-uri", file_uri]
                 subprocess.run(command, check=True, capture_output=True, text=True)
-                logging.info("Wallpaper set successfully on Linux")
+                logging.debug("Wallpaper set successfully on Linux")
                 return True
             elif desktop_env == 'MATE':
                 # MATE
                 command = ["gsettings", "set", "org.mate.background", "picture-filename", absolute_path]
                 subprocess.run(command, check=True, capture_output=True, text=True)
-                logging.info("Wallpaper set successfully on Linux")
+                logging.debug("Wallpaper set successfully on Linux")
                 return True
             elif desktop_env == 'XFCE':
                 # XFCE
@@ -695,7 +701,7 @@ def set_wallpaper(image_path):
                         for monitor in monitors:
                             command = ["xfconf-query", "-c", "xfce4-desktop", "-p", monitor, "-s", absolute_path]
                             subprocess.run(command, check=True, capture_output=True, text=True)
-                        logging.info("Wallpaper set successfully on Linux")
+                        logging.debug("Wallpaper set successfully on Linux")
                         return True
                     else:
                         print_warning("No monitors found for XFCE")
@@ -717,7 +723,7 @@ def set_wallpaper(image_path):
                     """
                     command = ["qdbus", "org.kde.plasmashell", "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", script]
                     subprocess.run(command, check=True, capture_output=True, text=True)
-                    logging.info("Wallpaper set successfully on Linux")
+                    logging.debug("Wallpaper set successfully on Linux")
                     return True
                 except (subprocess.SubprocessError, FileNotFoundError):
                     print_warning("Failed to set wallpaper using KDE Plasma method")
@@ -727,13 +733,13 @@ def set_wallpaper(image_path):
                 try:
                     command = ["feh", "--bg-fill", absolute_path]
                     subprocess.run(command, check=True, capture_output=True, text=True)
-                    logging.info("Wallpaper set successfully on Linux")
+                    logging.debug("Wallpaper set successfully on Linux")
                     return True
                 except (subprocess.SubprocessError, FileNotFoundError):
                     try:
                         command = ["nitrogen", "--set-zoom-fill", absolute_path]
                         subprocess.run(command, check=True, capture_output=True, text=True)
-                        logging.info("Wallpaper set successfully on Linux")
+                        logging.debug("Wallpaper set successfully on Linux")
                         return True
                     except (subprocess.SubprocessError, FileNotFoundError):
                         print_warning("Failed to set wallpaper using feh or nitrogen")
@@ -770,7 +776,7 @@ def set_wallpaper(image_path):
                 
                 if success:
                     print_info("Wallpaper set using fallback method")
-                    logging.info("Wallpaper set successfully on Linux")
+                    logging.debug("Wallpaper set successfully on Linux")
                     return True
                 else:
                     print_warning("Could not set wallpaper with any known method")
@@ -2184,7 +2190,7 @@ class GenerationHistory:
             self.history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), history_file)
         else:
             self.history_file = history_file
-        logging.info(f"Generation history file path: {self.history_file}")
+        logging.debug(f"Generation history file path: {self.history_file}")
         self.load_history()
     
     def load_history(self):
@@ -2198,9 +2204,9 @@ class GenerationHistory:
                     else:
                         logging.error(f"Invalid history format in {self.history_file}")
                         self.history = []
-                logging.info(f"Loaded {len(self.history)} history entries")
+                logging.debug(f"Loaded {len(self.history)} history entries")
             else:
-                logging.info(f"No history file found at {self.history_file}, creating new history")
+                logging.debug(f"No history file found at {self.history_file}, creating new history")
                 self.history = []
         except Exception as e:
             logging.error(f"Error loading history: {e}")
@@ -2211,10 +2217,10 @@ class GenerationHistory:
         try:
             with open(self.history_file, 'w') as f:
                 json.dump(self.history, f, indent=4)
-            logging.info(f"Saved {len(self.history)} history entries to {self.history_file}")
+            logging.debug(f"Saved {len(self.history)} history entries to {self.history_file}")
             # Verify the file was saved correctly
             if os.path.exists(self.history_file):
-                logging.info(f"Verified history file exists at {self.history_file}")
+                logging.debug(f"Verified history file exists at {self.history_file}")
             else:
                 logging.error(f"Failed to save history file at {self.history_file}")
         except Exception as e:
@@ -2224,7 +2230,7 @@ class GenerationHistory:
                 fallback_path = "generation_history_fallback.json"
                 with open(fallback_path, 'w') as f:
                     json.dump(self.history, f, indent=4)
-                logging.info(f"Saved history to fallback location: {fallback_path}")
+                logging.debug(f"Saved history to fallback location: {fallback_path}")
             except Exception as fallback_e:
                 logging.error(f"Error saving to fallback location: {fallback_e}")
     
@@ -2236,7 +2242,7 @@ class GenerationHistory:
             if entry_data.get("enhanced_prompt"):
                 image_path = get_generated_image_path(entry_data["enhanced_prompt"])
                 image_filename = os.path.basename(image_path)
-                logging.info(f"Adding history entry with image filename: {image_filename}")
+                logging.debug(f"Adding history entry with image filename: {image_filename}")
             
             entry = {
                 "date": datetime.now().isoformat(),
@@ -2258,7 +2264,7 @@ class GenerationHistory:
             
             # Save immediately to ensure it's persisted
             self.save_history()
-            logging.info(f"Added entry to history, current count: {len(self.history)}")
+            logging.debug(f"Added entry to history, current count: {len(self.history)}")
         except Exception as e:
             logging.error(f"Error adding entry to history: {e}")
             # Try to save anyway in case it's just the add_entry logic that failed
@@ -2511,7 +2517,7 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                                 f.write(generated_image.image.image_bytes)
                         
                         # Log the paths being used
-                        logging.info(f"Temporary image path: {temp_image_path}")
+                        logging.debug(f"Temporary image path: {temp_image_path}")
                         logging.info(f"Target cache path: {cache_path}")
                         
                         # Make sure the directory exists using absolute path
@@ -3568,5 +3574,8 @@ def main():
         user_prefs.save_preferences()
         print_success("Goodbye!")
         sys.exit(0)
+
+if __name__ == "__main__":
+    main()
 
 

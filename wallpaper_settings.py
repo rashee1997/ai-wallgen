@@ -70,10 +70,12 @@ class UserPreferences:
         preferred_genres (List[str]): List of genres the user prefers for generation
         preferred_styles (List[str]): List of style combinations the user prefers
         preferred_moods (List[str]): List of mood modifiers the user prefers
+        negative_prompts (List[str]): List of negative prompts the user prefers
         imagen_settings (Dict): Dictionary of settings for the image generation model
         wallpaper_settings (Dict): Dictionary of settings for wallpaper handling
         history_file (str): Path to the generation history file
         last_preset (str): Name of the last loaded preset, if any
+        aspect_ratio (str): The aspect ratio of the wallpaper
     """
     def __init__(self):
         """
@@ -87,6 +89,7 @@ class UserPreferences:
         self.preferred_genres = []
         self.preferred_styles = []
         self.preferred_moods = []
+        self.negative_prompts = []
         
         # Default Imagen settings
         self.imagen_settings = {
@@ -115,8 +118,13 @@ class UserPreferences:
             "refresh_rate": "daily"
         }
         
+        # Default aspect ratio
+        self.aspect_ratio = "16:9"
+        
         # Set history file path
-        self.history_file = "generation_history.json"
+        history_file = "generation_history.json"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.history_file = os.path.join(script_dir, history_file)
         
         # Track last used preset
         self.last_preset = None
@@ -138,8 +146,14 @@ class UserPreferences:
                                      Defaults to "user_preferences.json".
         """
         try:
-            if os.path.exists(filename):
-                with open(filename, "r") as f:
+            # Get the absolute path to the preferences file
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            pref_file_path = os.path.join(script_dir, filename)
+            
+            logging.debug(f"Loading preferences from {pref_file_path}")
+            
+            if os.path.exists(pref_file_path):
+                with open(pref_file_path, "r") as f:
                     data = json.load(f)
                 
                 # Update fields from loaded data
@@ -149,15 +163,13 @@ class UserPreferences:
                     self.preferred_styles = data["preferred_styles"]
                 if "preferred_moods" in data:
                     self.preferred_moods = data["preferred_moods"]
+                if "negative_prompts" in data:
+                    self.negative_prompts = data["negative_prompts"]
                 if "imagen_settings" in data:
                     # Merge with defaults to ensure all keys are present
                     for key, value in data["imagen_settings"].items():
                         if key in self.imagen_settings:
-                            if isinstance(value, dict) and isinstance(self.imagen_settings[key], dict):
-                                # For nested dicts, update each key
-                                self.imagen_settings[key].update(value)
-                            else:
-                                self.imagen_settings[key] = value
+                            self.imagen_settings[key] = value
                 if "wallpaper_settings" in data:
                     # Merge with defaults
                     for key, value in data["wallpaper_settings"].items():
@@ -167,48 +179,56 @@ class UserPreferences:
                     self.history_file = data["history_file"]
                 if "last_preset" in data:
                     self.last_preset = data["last_preset"]
+                if "aspect_ratio" in data:
+                    self.aspect_ratio = data["aspect_ratio"]
                 
-                logging.info(f"Loaded preferences from {os.path.abspath(filename)}")
-                logging.info(f"Preferred genres: {self.preferred_genres}")
-                logging.info(f"Preferred styles: {self.preferred_styles}")
-                logging.info(f"Preferred moods: {self.preferred_moods}")
-        except Exception as e:
+                logging.debug(f"Preferred genres: {self.preferred_genres}")
+                logging.debug(f"Preferred styles: {self.preferred_styles}")
+                logging.debug(f"Preferred moods: {self.preferred_moods}")
+            else:
+                logging.debug(f"No preferences file found at {pref_file_path}, using defaults")
+        except (json.JSONDecodeError, FileNotFoundError) as e:
             logging.error(f"Error loading preferences: {e}")
-            # Keep using defaults
+            # Keep default values from __init__
     
     def save_preferences(self, filename: str = "user_preferences.json") -> None:
         """
         Save user preferences to a JSON file.
         
-        This method saves the current state of the user preferences to the
-        specified file in JSON format. This includes all settings like preferred
-        genres, styles, moods, and the various configuration dictionaries.
+        This method serializes the current user preferences to a JSON file
+        for persistence across sessions.
         
         Args:
-            filename (str, optional): Path to save the preferences to.
+            filename (str, optional): Path where the preferences should be saved.
                                      Defaults to "user_preferences.json".
         """
+        # Get the absolute path to the preferences file
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        pref_file_path = os.path.join(script_dir, filename)
+        
         try:
-            # Prepare data to save
+            # Prepare data for serialization
             data = {
                 "preferred_genres": self.preferred_genres,
                 "preferred_styles": self.preferred_styles,
                 "preferred_moods": self.preferred_moods,
+                "negative_prompts": self.negative_prompts,
                 "imagen_settings": self.imagen_settings,
                 "wallpaper_settings": self.wallpaper_settings,
                 "history_file": self.history_file,
-                "last_preset": self.last_preset
+                "last_preset": self.last_preset,
+                "aspect_ratio": self.aspect_ratio
             }
             
             # Write to file
-            with open(filename, "w") as f:
+            with open(pref_file_path, "w") as f:
                 json.dump(data, f, indent=4)
             
-            logging.info(f"Saved preferences to {os.path.abspath(filename)}")
-            logging.info(f"Preferred genres: {self.preferred_genres}")
-            logging.info(f"Preferred styles: {self.preferred_styles}")
-            logging.info(f"Preferred moods: {self.preferred_moods}")
-        except Exception as e:
+            logging.debug(f"Saved preferences to {pref_file_path}")
+            logging.debug(f"Preferred genres: {self.preferred_genres}")
+            logging.debug(f"Preferred styles: {self.preferred_styles}")
+            logging.debug(f"Preferred moods: {self.preferred_moods}")
+        except (IOError, OSError) as e:
             logging.error(f"Error saving preferences: {e}")
 
 # Interface functions
@@ -252,11 +272,15 @@ def load_last_genre(filename: str = "last_genre.json") -> Optional[str]:
         Optional[str]: The last used genre, or None if the file doesn't exist or is invalid
     """
     try:
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
+        # Get the absolute path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = os.path.join(script_dir, filename)
+        
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
                 return json.load(f).get("last_genre")
     except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
-        logging.error(f"Error loading last genre: {e}")
+        logging.error(f"Error loading last genre from {filepath}: {e}")
     return None
 
 def save_last_genre(genre: str, filename: str = "last_genre.json") -> None:
@@ -269,10 +293,14 @@ def save_last_genre(genre: str, filename: str = "last_genre.json") -> None:
                                  Defaults to "last_genre.json".
     """
     try:
-        with open(filename, "w") as f:
+        # Get the absolute path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = os.path.join(script_dir, filename)
+        
+        with open(filepath, "w") as f:
             json.dump({"last_genre": genre}, f, indent=2)
     except Exception as e:
-        logging.error(f"Error saving last genre: {e}")
+        logging.error(f"Error saving last genre to {filepath}: {e}")
 
 def generate_random_style_mix(style_categories: Optional[List[str]] = None) -> str:
     """
@@ -1077,8 +1105,12 @@ def update_history_with_filenames(silent: bool = False) -> None:
     """
     try:
         history_file = "generation_history.json"
-        if os.path.exists(history_file):
-            with open(history_file, "r") as f:
+        # Get the absolute path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        history_filepath = os.path.join(script_dir, history_file)
+        
+        if os.path.exists(history_filepath):
+            with open(history_filepath, "r") as f:
                 history = json.load(f)
             
             updated = False
@@ -1090,7 +1122,7 @@ def update_history_with_filenames(silent: bool = False) -> None:
                         updated = True
             
             if updated:
-                with open(history_file, "w") as f:
+                with open(history_filepath, "w") as f:
                     json.dump(history, f, indent=4)
                 if not silent:
                     print_info("Generation history updated with image filenames")
