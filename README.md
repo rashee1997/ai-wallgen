@@ -120,38 +120,13 @@ For detailed setup and usage instructions, check our [Getting Started Guide](doc
 
 ## �� Documentation
 
-- [Getting Started Guide](docs/getting-started.md)
-- [Installation Guide](docs/installation.md)
-- [User Manual](docs/user-manual.md)
-- [Advanced Features](docs/advanced-features.md)
-- [Preset Management Guide](docs/preset-guide.md)
-- [Configuration Guide](docs/configuration.md)
-- [API Setup Guide](docs/api-setup.md)
-- [Prompt Engineering Guide](docs/prompt-engineering.md)
-- [Troubleshooting Guide](docs/troubleshooting.md)
-- [FAQ](docs/faq.md)
-- [Contributing Guide](docs/contributing.md)
-- [Changelog](CHANGELOG.md)
-
-### Technical Documentation
-- [Architecture Overview](docs/architecture.md)
-- [Development Guide](docs/development.md)
-- [Git Commit Guide](docs/git-commit-guide.md)
-- [Code Style Guide](docs/code-style.md)
-- [Testing Guide](docs/testing.md)
-- [Security Guidelines](docs/security.md)
-
-### API Documentation
-- [Gemini API Integration](docs/gemini-api.md)
-- [Imagen API Usage](docs/imagen-api.md)
-- [API Reference](docs/api-reference.md)
-
-### Feature-Specific Guides
-- [Prompt Generation Guide](docs/prompt-generation.md)
-- [Style & Effects Guide](docs/style-effects.md)
-- [Camera Settings Guide](docs/camera-settings.md)
-- [Color Management Guide](docs/color-management.md)
-- [Resolution Guide](docs/resolution.md)
+- [Getting Started Guide](docs/getting-started.md) - Quick setup and basic usage
+- [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
+- [Preset Management Guide](docs/preset-guide.md) - Managing and using presets
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
+- [FAQ](docs/faq.md) - Frequently asked questions and answers
+- [Git Commit Guide](docs/git-commit-guide.md) - Guidelines for contributing code
+- [Changelog](CHANGELOG.md) - Version history and updates
 
 ## 📝 License
 
