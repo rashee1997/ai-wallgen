@@ -1,76 +1,72 @@
 {
-  "preferred_genres": [],
-  "preferred_styles": [
-    "mix of digital and oilpastel style"
-  ],
-  "preferred_moods": [
-    "romantic"
-  ],
-  "aspect_ratio": "16:9",
-  "negative_prompts": [],
-  "imagen_settings": {
-    "number_of_images": 1,
-    "seed": null,
-    "aspect_ratio": "16:9",
-    "negative_prompt": "",
-    "camera_settings": {
-      "camera_model": "Sony Venice",
-      "lens_type": "50mm",
-      "aperture": "f/1.8",
-      "special_lens": null,
-      "depth_of_field": "shallow"
+    "imagen_settings": {
+        "number_of_images": 1,
+        "seed": null,
+        "aspect_ratio": "16:9",
+        "negative_prompt": "",
+        "camera_settings": {
+            "camera_model": "Sony Venice",
+            "lens_type": "50mm",
+            "aperture": "f/1.8",
+            "special_lens": null,
+            "depth_of_field": "shallow"
+        },
+        "lighting_settings": {
+            "time_of_day": "golden_hour",
+            "lighting_style": "natural",
+            "light_quality": "soft",
+            "artificial_sources": [],
+            "light_effects": [
+                "bokeh"
+            ]
+        },
+        "composition_settings": {
+            "technique": "framing",
+            "camera_angle": "eye_level",
+            "perspective": "telephoto"
+        },
+        "environment_settings": {
+            "weather": "clear",
+            "season": "summer",
+            "atmospheric_effects": [
+                "fog"
+            ]
+        },
+        "style_settings": {
+            "overall_style": "vintage",
+            "post_processing": [
+                "color_grading"
+            ],
+            "art_movement": "Abstract Expressionism"
+        },
+        "detail_settings": {
+            "detail_level": "ultra_detailed",
+            "texture_quality": "high",
+            "special_effects": []
+        },
+        "color_settings": {
+            "color_scheme": "natural",
+            "palette_type": "triadic",
+            "color_temperature": "neutral"
+        },
+        "quality_settings": {
+            "resolution": "2560x1440",
+            "detail_level": "high_detail",
+            "rendering_quality": "high_quality"
+        },
+        "color_scheme": "natural",
+        "lighting": "natural",
+        "composition": "rule_of_thirds",
+        "depth_of_field": "medium"
     },
-    "lighting_settings": {
-      "time_of_day": "golden_hour",
-      "lighting_style": "natural",
-      "light_quality": "soft",
-      "artificial_sources": [],
-      "light_effects": [
-        "bokeh"
-      ]
+    "wallpaper_settings": {
+        "auto_set": true,
+        "cache_duration": 60,
+        "fit_mode": "fill",
+        "background_color": "#000000",
+        "multi_monitor": "mirror",
+        "refresh_rate": "daily",
+        "last_refresh": null
     },
-    "composition_settings": {
-      "technique": "framing",
-      "camera_angle": "eye_level",
-      "perspective": "telephoto"
-    },
-    "environment_settings": {
-      "weather": "clear",
-      "season": "summer",
-      "atmospheric_effects": [
-        "fog"
-      ]
-    },
-    "style_settings": {
-      "overall_style": "vintage",
-      "post_processing": [
-        "color_grading"
-      ],
-      "art_movement": "Abstract Expressionism"
-    },
-    "detail_settings": {
-      "detail_level": "ultra_detailed",
-      "texture_quality": "high",
-      "special_effects": []
-    },
-    "color_settings": {
-      "color_scheme": "natural",
-      "palette_type": "triadic",
-      "color_temperature": "neutral"
-    },
-    "quality_settings": {
-      "resolution": "2560x1440",
-      "detail_level": "high_detail",
-      "rendering_quality": "high_quality"
-    }
-  },
-  "wallpaper_settings": {
-    "auto_set": true,
-    "cache_duration": 60,
-    "fit_mode": "fill",
-    "background_color": "#000000",
-    "multi_monitor": "mirror",
-    "refresh_rate": "daily",
-    "last_refresh": null
-  }
+    "current_preset": "water"
 }
