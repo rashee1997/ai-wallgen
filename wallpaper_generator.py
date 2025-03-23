@@ -2221,11 +2221,18 @@ class GenerationHistory:
     
     def add_entry(self, entry_data):
         """Add a new generation entry to history."""
+        # Get the image filename if we have an enhanced prompt
+        image_filename = None
+        if entry_data.get("enhanced_prompt"):
+            image_path = get_generated_image_path(entry_data["enhanced_prompt"])
+            image_filename = os.path.basename(image_path)
+        
         entry = {
             "date": datetime.now().isoformat(),
             "prompt": entry_data.get("prompt", ""),
             "enhanced_prompt": entry_data.get("enhanced_prompt", ""),
             "gemini_prompt": entry_data.get("gemini_prompt", ""),
+            "image_filename": image_filename,
             "settings": {
                 "user_preferences": entry_data.get("user_preferences", {}),
                 "imagen_settings": entry_data.get("imagen_settings", {}),
@@ -2288,9 +2295,13 @@ class GenerationHistory:
             
             # Show the image file if available
             if entry.get('enhanced_prompt'):
-                image_path = get_generated_image_path(entry['enhanced_prompt'])
-                if os.path.exists(image_path):
-                    print(f"\nImage Filename: {os.path.basename(image_path)}")
+                if entry.get('image_filename'):
+                    print(f"\nImage Filename: {entry['image_filename']}")
+                else:
+                    # Fallback for entries created before this feature was added
+                    image_path = get_generated_image_path(entry['enhanced_prompt'])
+                    if os.path.exists(image_path):
+                        print(f"\nImage Filename: {os.path.basename(image_path)}")
             
             print("-" * 40)
 
@@ -3160,11 +3171,39 @@ def import_settings():
     except Exception as e:
         print_error(f"Error importing settings: {e}")
 
+def update_history_with_filenames():
+    """Update the generation history to include image filenames for existing entries."""
+    try:
+        if os.path.exists("generation_history.json"):
+            with open("generation_history.json", "r") as f:
+                history = json.load(f)
+            
+            updated = False
+            for entry in history:
+                if "image_filename" not in entry and entry.get("enhanced_prompt"):
+                    image_path = get_generated_image_path(entry["enhanced_prompt"])
+                    if os.path.exists(image_path) or True:  # Include even if file doesn't exist
+                        entry["image_filename"] = os.path.basename(image_path)
+                        updated = True
+            
+            if updated:
+                with open("generation_history.json", "w") as f:
+                    json.dump(history, f, indent=4)
+                print_info("Generation history updated with image filenames")
+    except Exception as e:
+        logging.error(f"Error updating history with filenames: {e}")
+
 def main():
     """Main function to execute the script."""
     try:
         # Check dependencies
         check_dependencies()
+        
+        # Check and create necessary directories
+        os.makedirs("genimage", exist_ok=True)
+        
+        # Update existing history entries with image filenames
+        update_history_with_filenames()
         
         print_header("AI Wallpaper Generator")
         print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
@@ -3274,11 +3313,12 @@ def main():
                 user_prefs.save_preferences()
                 print_success("Goodbye!")
                 break
-    except Exception as e:
-        print_error(f"An unexpected error occurred: {e}")
-        print_info("Saving preferences before exit...")
+
+    except KeyboardInterrupt:
+        print_info("\nSaving preferences before exit...")
         user_prefs.save_preferences()
-        sys.exit(1)
+        print_success("Goodbye!")
+        sys.exit(0)
 
 def print_breadcrumb(path_list):
     """Print navigation breadcrumb."""
