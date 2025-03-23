@@ -22,6 +22,9 @@
 </div>
 
 A powerful and intuitive tool for generating stunning AI wallpapers using Google's Imagen 3 model via the Gemini API. Create beautiful, customized desktop wallpapers with advanced artistic and technical controls.
+
+> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
+
 [Features](docs/advanced-features.md) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
 
 <!-- Trending Tags -->
@@ -118,7 +121,7 @@ Here are some examples of wallpapers generated using this tool:
 
 For detailed setup and usage instructions, check our [Getting Started Guide](docs/getting-started.md).
 
-## �� Documentation
+## 📝 Documentation
 
 - [Getting Started Guide](docs/getting-started.md) - Quick setup and basic usage
 - [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
