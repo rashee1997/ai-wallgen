@@ -8,6 +8,10 @@ This guide details the advanced features available in the AI Wallpaper Generator
 - [Preset Management](#preset-management)
 - [Professional Controls](#professional-controls)
 - [Advanced Settings](#advanced-settings)
+  - [Resolution Options](#resolution-options)
+  - [Style Controls](#style-controls)
+    - [Smart Style Mixing](#smart-style-mixing)
+  - [Post-Processing](#post-processing)
 - [Technical Features](#technical-features)
   - [System Integration](#system-integration)
   - [Performance Features](#performance-features)
@@ -166,12 +170,39 @@ This guide details the advanced features available in the AI Wallpaper Generator
   - Photorealistic
   - Digital Art
   - Sketch
-  - Painterly
+  - Watercolor
+  - Cyberpunk
+  - Pop Art
+  - Oil Painting
+  - Pixel Art
+  - Anime
+  - 3D Render
+  - Abstract
+  - Impressionism
+  - And 30+ more art styles
 - Art movements:
   - Abstract Expressionism
   - Impressionism
   - Minimalism
   - Contemporary
+
+#### Smart Style Mixing
+- **Intelligent Style Combination**:
+  - Automatically combines 2-3 compatible styles from the same category
+  - Prevents mixing incompatible styles that would result in poor-quality images
+  - Randomly generates creative combinations while ensuring aesthetic quality
+  - Option to save and reuse your favorite style combinations
+
+- **Style Categories**:
+  - Traditional Art: oil painting, watercolor, sketch, impressionism, etc.
+  - Digital Art: abstract, cyberpunk, fantasy, sci-fi, etc.
+  - Illustration: anime, cartoon, comic book, pixel art, etc.
+
+- **Style Management**:
+  - One-click generation of style mixes
+  - Save style combinations to user preferences
+  - Browse and select from previously saved style mixes
+  - Easily apply saved style mixes to new generations
 
 ### Post-Processing
 - Detail enhancement
@@ -222,11 +253,13 @@ This guide details the advanced features available in the AI Wallpaper Generator
    - Combine multiple artistic styles
    - Layer lighting effects
    - Use advanced color grading
+   - Experiment with style mixes for unique results
 
 3. **Workflow Optimization**
    - Create preset hierarchies
    - Use quick access shortcuts
    - Implement custom workflows
+   - Save favorite style mixes for repeated use
 
 4. **Resource Management**
    - Monitor system resources
@@ -243,6 +276,8 @@ This guide details the advanced features available in the AI Wallpaper Generator
   - Watercolor
   - Cyberpunk
   - Pop Art
+  - And 35+ more styles
+- Smart style mixing across compatible categories
 - Art movements integration
 - Post-processing effects
 
@@ -298,6 +333,7 @@ This guide details the advanced features available in the AI Wallpaper Generator
 - Persistent settings
 - Genre preferences
 - Style presets
+- Custom style mix saving
 - Technical defaults
 
 ### Intelligent Filename Generation
@@ -317,6 +353,7 @@ Generated Filename: mountain_lake_sunset_ae358c5f.png
 Original Prompt: "Futuristic cyberpunk cityscape at night with neon lights and flying cars" 
 
 Generated Filename: cyberpunk_cityscape_night_12345678.png
+```
 
 ## 🔧 Advanced Configuration
 

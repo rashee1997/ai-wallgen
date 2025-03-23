@@ -31,6 +31,8 @@ from datetime import datetime
 import shutil
 import threading
 import re
+import glob
+import tkinter as tk
 
 # Try to import colorama, but provide fallbacks if not available
 try:
@@ -127,31 +129,72 @@ class UserPreferences:
     
     def load_preferences(self, filename: str = "user_preferences.json") -> None:
         """Load preferences from file."""
-        if os.path.exists(filename):
+        # Use absolute path for the preferences file
+        if not os.path.isabs(filename):
+            abs_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        else:
+            abs_filename = filename
+            
+        if os.path.exists(abs_filename):
             try:
-                with open(filename) as f:
+                with open(abs_filename) as f:
                     data = json.load(f)
+                    # Load main settings
                     self.imagen_settings = data.get("imagen_settings", {})
                     self.wallpaper_settings = data.get("wallpaper_settings", {})
                     self.current_preset = data.get("current_preset", None)
+                    
+                    # Load preferred genres, styles, and moods
+                    self.preferred_genres = data.get("preferred_genres", [])
+                    self.preferred_styles = data.get("preferred_styles", [])
+                    self.preferred_moods = data.get("preferred_moods", [])
+                    self.aspect_ratio = data.get("aspect_ratio", "16:9")
+                    self.negative_prompts = data.get("negative_prompts", [])
+                    
+                    logging.info(f"Loaded preferences from {abs_filename}")
+                    logging.info(f"Preferred genres: {self.preferred_genres}")
+                    logging.info(f"Preferred styles: {self.preferred_styles}")
+                    logging.info(f"Preferred moods: {self.preferred_moods}")
             except Exception as e:
                 print_error(f"Error loading preferences: {e}")
-                self.imagen_settings = {}
-                self.wallpaper_settings = {}
-                self.current_preset = None
-        
+                logging.error(f"Error loading preferences from {abs_filename}: {e}")
+                # Don't reset everything, just leave the defaults
+        else:
+            logging.info(f"No preferences file found at {abs_filename}, using defaults")
+    
     def save_preferences(self, filename: str = "user_preferences.json") -> None:
         """Save preferences to file."""
+        # Use absolute path for the preferences file
+        if not os.path.isabs(filename):
+            abs_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        else:
+            abs_filename = filename
+            
         try:
             data = {
                 "imagen_settings": self.imagen_settings,
                 "wallpaper_settings": self.wallpaper_settings,
-                "current_preset": self.current_preset
+                "current_preset": self.current_preset,
+                "preferred_genres": self.preferred_genres,
+                "preferred_styles": self.preferred_styles,
+                "preferred_moods": self.preferred_moods,
+                "aspect_ratio": self.aspect_ratio,
+                "negative_prompts": self.negative_prompts
             }
-            with open(filename, "w") as f:
+            
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(abs_filename), exist_ok=True)
+            
+            with open(abs_filename, "w") as f:
                 json.dump(data, f, indent=4)
+                
+            logging.info(f"Saved preferences to {abs_filename}")
+            logging.info(f"Preferred genres: {self.preferred_genres}")
+            logging.info(f"Preferred styles: {self.preferred_styles}")
+            logging.info(f"Preferred moods: {self.preferred_moods}")
         except Exception as e:
             print_error(f"Error saving preferences: {e}")
+            logging.error(f"Error saving preferences to {abs_filename}: {e}")
 
 # Initialize user preferences
 user_prefs = UserPreferences()
@@ -660,10 +703,19 @@ def get_generated_image_path(prompt):
         # Fall back to the original method
         filename = create_filename_from_prompt(prompt)
     
-    # Ensure the genimage directory exists
-    os.makedirs("genimage", exist_ok=True)
+    # Ensure the genimage directory exists with absolute path
+    genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
+    try:
+        os.makedirs(genimage_dir, exist_ok=True)
+        logging.info(f"Ensuring genimage directory exists at: {genimage_dir}")
+    except Exception as e:
+        logging.error(f"Error creating genimage directory: {e}")
+        # Fallback to relative path if absolute path fails
+        genimage_dir = "genimage"
+        os.makedirs(genimage_dir, exist_ok=True)
         
-    return f"genimage/{filename}"
+    # Return absolute path to ensure consistency
+    return os.path.join(genimage_dir, filename)
 
 def generate_prompt(custom_prompt=None):
     """Generate a prompt using either AI, random tags, or custom input."""
@@ -783,22 +835,32 @@ def detect_linux_desktop_environment():
 def set_wallpaper(image_path):
     """Set the wallpaper based on the operating system."""
     os_name = platform.system()
+    
+    # Ensure we have an absolute path from the project directory
+    if not os.path.isabs(image_path):
+        # Convert relative path to absolute path based on the project directory
+        absolute_path = os.path.abspath(image_path)
+    else:
+        absolute_path = image_path
+    
+    # Save the original path for later verification
+    original_path = image_path
+        
     try:
         if os_name == "Windows":
             SPI_SETDESKWALLPAPER = 0x0014
             SPIF_UPDATEINIFILE = 0x01
             SPIF_SENDWININICHANGE = 0x02
-            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, image_path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, absolute_path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
             logging.info("Wallpaper set successfully on Windows")
             return True
         elif os_name == "Darwin":
-            script = f'tell application "Finder" to set desktop picture to POSIX file "{image_path}"'
+            script = f'tell application "Finder" to set desktop picture to POSIX file "{absolute_path}"'
             command = f"osascript -e '{script}'"
             subprocess.run(shlex.split(command), check=True, capture_output=True, text=True)
             logging.info("Wallpaper set successfully on macOS")
             return True
         elif os_name == "Linux":
-            absolute_path = os.path.abspath(image_path)
             file_uri = "file://" + absolute_path
             
             # Detect desktop environment
@@ -815,7 +877,8 @@ def set_wallpaper(image_path):
                     subprocess.run(command, check=True, capture_output=True, text=True)
                 except subprocess.CalledProcessError:
                     pass  # Ignore if not supported
-                logging.info("Wallpaper set successfully on Linux")
+                logging.info(f"Wallpaper set successfully on Linux using path: {absolute_path}")
+                logging.info(f"Original path was: {original_path}")
                 return True
             elif desktop_env == 'CINNAMON':
                 # Cinnamon
@@ -1162,22 +1225,114 @@ def configure_advanced_options():
                 print_option("8", "Pixel Art")
                 print_option("9", "Anime")
                 print_option("10", "3D Render")
-                print_option("11", "Custom Style")
-                print_option("12", "Return")
+                print_option("11", "Abstract")
+                print_option("12", "Impressionism")
+                print_option("13", "Minimalist")
+                print_option("14", "Surrealism")
+                print_option("15", "Random Style Mix (combines 2-3 compatible styles)")
+                print_option("16", "More Styles...")
+                print_option("17", "Custom Style")
+                print_option("18", "Return")
                 
-                style_select = get_validated_input("Select style (1-12)", [str(i) for i in range(1, 13)])
-                if style_select == "12":
+                style_select = get_validated_input("Select style (1-18)", [str(i) for i in range(1, 19)])
+                if style_select == "18":
+                    continue
+                
+                if style_select == "16":
+                    # Show more styles submenu
+                    print_info("Additional art styles:")
+                    print_option("1", "Art Deco")
+                    print_option("2", "Art Nouveau")
+                    print_option("3", "Cartoon")
+                    print_option("4", "Charcoal")
+                    print_option("5", "Cinematic")
+                    print_option("6", "Comic Book")
+                    print_option("7", "Cubism")
+                    print_option("8", "Fantasy")
+                    print_option("9", "Futurism")
+                    print_option("10", "Gothic")
+                    print_option("11", "Manga")
+                    print_option("12", "Retro/Vaporwave")
+                    print_option("13", "Sci-Fi")
+                    print_option("14", "Steampunk")
+                    print_option("15", "Return")
+                    
+                    more_style_select = get_validated_input("Select style (1-15)", [str(i) for i in range(1, 16)])
+                    if more_style_select == "15":
+                        continue
+                    
+                    more_styles = {
+                        "1": "art_deco",
+                        "2": "art_nouveau",
+                        "3": "cartoon",
+                        "4": "charcoal",
+                        "5": "cinematic",
+                        "6": "comic_book",
+                        "7": "cubism",
+                        "8": "fantasy",
+                        "9": "futurism",
+                        "10": "gothic",
+                        "11": "manga",
+                        "12": "vaporwave",
+                        "13": "sci_fi",
+                        "14": "steampunk"
+                    }
+                    
+                    selected_style = more_styles[more_style_select]
+                    user_prefs.preferred_styles = [selected_style]
+                    print_success(f"Style set to {selected_style}")
                     continue
                     
-                if style_select == "11":
+                if style_select == "17":
                     custom_style = input("Enter your custom style: ").strip()
                     if custom_style:
                         user_prefs.preferred_styles = [custom_style]
                         print_success(f"Custom style set to: {custom_style}")
                     continue
+                
+                if style_select == "15":
+                    # Use the same style categories defined elsewhere
+                    style_categories = {
+                        "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
+                                          "gothic", "impressionism", "oil_painting", "pastel", 
+                                          "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
+                        "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
+                                      "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
+                                      "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
+                                      "stained_glass", "steampunk", "surrealism", "vaporwave"],
+                        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
+                                       "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
+                                       "pointillism", "pop_art", "ukiyo_e"]
+                    }
+                    
+                    # Select a random category
+                    category = random.choice(list(style_categories.keys()))
+                    # Select 2-3 compatible styles from the same category
+                    num_styles = random.randint(2, 3)
+                    available_styles = style_categories[category]
+                    if len(available_styles) < num_styles:
+                        num_styles = len(available_styles)
+                    selected_styles = random.sample(available_styles, num_styles)
+                    style_mix = " + ".join(selected_styles)
+                    
+                    print_info(f"Generated random style mix: {style_mix}")
+                    user_prefs.preferred_styles = [style_mix]
+                    
+                    # Ask if the user wants to save this style mix to their preferences long-term
+                    save_style = get_validated_input("Save this style mix for future use? (y/n)", ["y", "n"])
+                    if save_style == "y":
+                        if style_mix not in user_prefs.preferred_styles:
+                            user_prefs.preferred_styles.append(style_mix)
+                            user_prefs.save_preferences()
+                            print_success(f"Added '{style_mix}' to preferred styles")
+                        else:
+                            print_warning(f"'{style_mix}' is already in your preferred styles")
+                    
+                    print_success(f"Style set to {style_mix}")
+                    continue
                     
                 styles = {
-                    "1": "photorealistic",
+                    "1": "photograph",
                     "2": "digital_art",
                     "3": "sketch",
                     "4": "watercolor",
@@ -1186,7 +1341,11 @@ def configure_advanced_options():
                     "7": "oil_painting",
                     "8": "pixel_art",
                     "9": "anime",
-                    "10": "3d_render"
+                    "10": "3d_render",
+                    "11": "abstract",
+                    "12": "impressionism",
+                    "13": "minimalist",
+                    "14": "surrealism"
                 }
                 
                 selected_style = styles[style_select]
@@ -1760,6 +1919,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["composition_settings"]["camera_angle"] = angles[angle_choice]
                 print_success(f"Camera angle set to {angles[angle_choice]}")
+                continue
                 
             elif comp_choice == "3":
                 print_info("Select perspective:")
@@ -1788,6 +1948,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["composition_settings"]["perspective"] = perspectives[perspective_choice]
                 print_success(f"Perspective set to {perspectives[perspective_choice]}")
+                continue
                 
             elif comp_choice == "4":
                 print_info("Select weather conditions:")
@@ -1820,6 +1981,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["environment_settings"]["weather"] = weathers[weather_choice]
                 print_success(f"Weather set to {weathers[weather_choice]}")
+                continue
                 
             elif comp_choice == "5":
                 print_info("Select season:")
@@ -1850,6 +2012,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["environment_settings"]["season"] = seasons[season_choice]
                 print_success(f"Season set to {seasons[season_choice]}")
+                continue
                 
             elif comp_choice == "6":
                 print_info("Add atmospheric effects (comma-separated):")
@@ -1886,6 +2049,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["environment_settings"]["atmospheric_effects"] = effects[effect_choice]
                 print_success(f"Atmospheric effects set to {effects[effect_choice]}")
+                continue
                 
         elif advanced_choice == "5":
             print_section("Color & Detail Settings")
@@ -1934,6 +2098,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["color_settings"]["color_scheme"] = schemes[scheme_choice]
                 print_success(f"Color scheme set to {schemes[scheme_choice]}")
+                continue
                 
             elif color_choice == "2":
                 print_info("Select color palette type:")
@@ -1964,6 +2129,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["color_settings"]["palette_type"] = palettes[palette_choice]
                 print_success(f"Palette type set to {palettes[palette_choice]}")
+                continue
                 
             elif color_choice == "3":
                 print_info("Select color temperature:")
@@ -1992,6 +2158,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["color_settings"]["color_temperature"] = temperatures[temp_choice]
                 print_success(f"Color temperature set to {temperatures[temp_choice]}")
+                continue
                 
             elif color_choice == "4":
                 print_info("Select texture quality:")
@@ -2022,6 +2189,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["detail_settings"]["texture_quality"] = textures[texture_choice]
                 print_success(f"Texture quality set to {textures[texture_choice]}")
+                continue
                 
             elif color_choice == "5":
                 print_info("Add special effects (comma-separated):")
@@ -2058,6 +2226,7 @@ def configure_advanced_options():
                 
                 user_prefs.imagen_settings["detail_settings"]["special_effects"] = effects[effect_choice]
                 print_success(f"Special effects set to {effects[effect_choice]}")
+                continue
                 
         elif advanced_choice == "6":
             print_section("Current Settings")
@@ -2213,115 +2382,177 @@ def configure_advanced_options():
         user_prefs.save_preferences()
 
 class GenerationHistory:
-    """Class to manage wallpaper generation history."""
+    """Class to manage the history of generated images."""
+    
     def __init__(self, history_file="generation_history.json"):
-        self.history_file = history_file
+        """Initialize the history object."""
         self.history = []
+        # Use absolute path for history file
+        if not os.path.isabs(history_file):
+            self.history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), history_file)
+        else:
+            self.history_file = history_file
+        logging.info(f"Generation history file path: {self.history_file}")
         self.load_history()
     
     def load_history(self):
         """Load history from file."""
-        if os.path.exists(self.history_file):
-            try:
-                with open(self.history_file) as f:
-                    self.history = json.load(f)
-            except Exception as e:
-                print_error(f"Error loading history: {e}")
+        try:
+            if os.path.exists(self.history_file):
+                with open(self.history_file, 'r') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        self.history = data
+                    else:
+                        logging.error(f"Invalid history format in {self.history_file}")
+                        self.history = []
+                logging.info(f"Loaded {len(self.history)} history entries")
+            else:
+                logging.info(f"No history file found at {self.history_file}, creating new history")
                 self.history = []
+        except Exception as e:
+            logging.error(f"Error loading history: {e}")
+            self.history = []
     
     def save_history(self):
         """Save history to file."""
         try:
-            with open(self.history_file, "w") as f:
+            with open(self.history_file, 'w') as f:
                 json.dump(self.history, f, indent=4)
+            logging.info(f"Saved {len(self.history)} history entries to {self.history_file}")
+            # Verify the file was saved correctly
+            if os.path.exists(self.history_file):
+                logging.info(f"Verified history file exists at {self.history_file}")
+            else:
+                logging.error(f"Failed to save history file at {self.history_file}")
         except Exception as e:
-            print_error(f"Error saving history: {e}")
+            logging.error(f"Error saving history: {e}")
+            # Try to save to a fallback location
+            try:
+                fallback_path = "generation_history_fallback.json"
+                with open(fallback_path, 'w') as f:
+                    json.dump(self.history, f, indent=4)
+                logging.info(f"Saved history to fallback location: {fallback_path}")
+            except Exception as fallback_e:
+                logging.error(f"Error saving to fallback location: {fallback_e}")
     
     def add_entry(self, entry_data):
         """Add a new generation entry to history."""
-        # Get the image filename if we have an enhanced prompt
-        image_filename = None
-        if entry_data.get("enhanced_prompt"):
-            image_path = get_generated_image_path(entry_data["enhanced_prompt"])
-            image_filename = os.path.basename(image_path)
-        
-        entry = {
-            "date": datetime.now().isoformat(),
-            "prompt": entry_data.get("prompt", ""),
-            "enhanced_prompt": entry_data.get("enhanced_prompt", ""),
-            "gemini_prompt": entry_data.get("gemini_prompt", ""),
-            "image_filename": image_filename,
-            "settings": {
-                "user_preferences": entry_data.get("user_preferences", {}),
-                "imagen_settings": entry_data.get("imagen_settings", {}),
-                "wallpaper_settings": entry_data.get("wallpaper_settings", {})
-            },
-            "output": entry_data.get("output", "")
-        }
-        
-        self.history.insert(0, entry)
-        self.history = self.history[:50]  # Keep only last 50 entries
-        self.save_history()
-    
+        try:
+            # Get the image filename if we have an enhanced prompt
+            image_filename = None
+            if entry_data.get("enhanced_prompt"):
+                image_path = get_generated_image_path(entry_data["enhanced_prompt"])
+                image_filename = os.path.basename(image_path)
+                logging.info(f"Adding history entry with image filename: {image_filename}")
+            
+            entry = {
+                "date": datetime.now().isoformat(),
+                "prompt": entry_data.get("prompt", ""),
+                "enhanced_prompt": entry_data.get("enhanced_prompt", ""),
+                "gemini_prompt": entry_data.get("gemini_prompt", ""),
+                "image_filename": image_filename,
+                "settings": {
+                    "user_preferences": entry_data.get("user_preferences", {}),
+                    "imagen_settings": entry_data.get("imagen_settings", {}),
+                    "wallpaper_settings": entry_data.get("wallpaper_settings", {})
+                },
+                "output": entry_data.get("output", "")
+            }
+            
+            # Insert at beginning to show most recent first
+            self.history.insert(0, entry)
+            self.history = self.history[:50]  # Keep only last 50 entries
+            
+            # Save immediately to ensure it's persisted
+            self.save_history()
+            logging.info(f"Added entry to history, current count: {len(self.history)}")
+        except Exception as e:
+            logging.error(f"Error adding entry to history: {e}")
+            # Try to save anyway in case it's just the add_entry logic that failed
+            try:
+                self.save_history()
+            except:
+                pass
+
     def view_history(self):
         """Display the generation history in a formatted way."""
-        if not self.history:
-            print("\nℹ No generation history available.")
-            return
+        try:
+            if not self.history:
+                print("\nℹ No generation history available.")
+                return
 
-        for i, entry in enumerate(self.history, 1):
-            print(f"\nGeneration #{i}")
-            print("-" * 13)
-            
-            # Always show date and original prompt
-            print(f"Date: {entry.get('date', 'Not recorded')}")
-            print(f"Original Prompt: {entry.get('original_prompt', 'Not recorded')}")
-            
-            # Only show enhanced prompt if it exists and is different from original
-            if entry.get('enhanced_prompt') and entry['enhanced_prompt'] != entry.get('original_prompt'):
-                print(f"Enhanced Prompt: {entry['enhanced_prompt']}")
-            
-            # Only show Gemini prompt if it exists and is different from original
-            if entry.get('gemini_prompt') and entry['gemini_prompt'] != entry.get('original_prompt'):
-                print(f"Gemini Prompt: {entry['gemini_prompt']}")
-            
-            # Show settings if they exist
-            if entry.get('settings'):
-                print("\nSettings Used:")
-                settings = entry['settings']
+            for i, entry in enumerate(self.history, 1):
+                print(f"\nGeneration #{i}")
+                print("-" * 13)
                 
-                # User preferences
-                if settings.get('user_prefs'):
-                    print("User Preferences:")
-                    for key, value in settings['user_prefs'].items():
-                        if value:  # Only show non-empty values
-                            print(f"  {key}: {value}")
+                # Always show date and original prompt
+                print(f"Date: {entry.get('date', 'Not recorded')}")
+                print(f"Original Prompt: {entry.get('prompt', 'Not recorded')}")
                 
-                # Imagen settings
-                if settings.get('imagen_settings'):
-                    print("\nImagen Settings:")
-                    for key, value in settings['imagen_settings'].items():
-                        if value:  # Only show non-empty values
-                            print(f"  {key}: {value}")
+                # Only show enhanced prompt if it exists and is different from original
+                if entry.get('enhanced_prompt') and entry['enhanced_prompt'] != entry.get('prompt'):
+                    print(f"Enhanced Prompt: {entry['enhanced_prompt']}")
                 
-                # Wallpaper settings
-                if settings.get('wallpaper_settings'):
-                    print("\nWallpaper Settings:")
-                    for key, value in settings['wallpaper_settings'].items():
-                        if value is not None:  # Show even if False
-                            print(f"  {key}: {value}")
-            
-            # Show the image file if available
-            if entry.get('enhanced_prompt'):
+                # Only show Gemini prompt if it exists and is different from original
+                if entry.get('gemini_prompt') and entry['gemini_prompt'] != entry.get('prompt'):
+                    print(f"Gemini Prompt: {entry['gemini_prompt']}")
+                
+                # Show settings if they exist
+                if entry.get('settings'):
+                    print("\nSettings Used:")
+                    settings = entry['settings']
+                    
+                    # User preferences
+                    if settings.get('user_preferences'):
+                        print("User Preferences:")
+                        for key, value in settings['user_preferences'].items():
+                            if value:  # Only show non-empty values
+                                print(f"  {key}: {value}")
+                    
+                    # Imagen settings
+                    if settings.get('imagen_settings'):
+                        print("\nImagen Settings:")
+                        for key, value in settings['imagen_settings'].items():
+                            if value is not None:  # Show even if False
+                                print(f"  {key}: {value}")
+                    
+                    # Wallpaper settings
+                    if settings.get('wallpaper_settings'):
+                        print("\nWallpaper Settings:")
+                        for key, value in settings['wallpaper_settings'].items():
+                            if value is not None:  # Show even if False
+                                print(f"  {key}: {value}")
+                
+                # Show the image file if available
                 if entry.get('image_filename'):
+                    image_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage", entry['image_filename'])
                     print(f"\nImage Filename: {entry['image_filename']}")
-                else:
+                    
+                    # Check if the file exists
+                    if os.path.exists(image_file):
+                        print(f"Image exists at: {image_file}")
+                    else:
+                        print(f"⚠️ Image file not found at expected location: {image_file}")
+                        
+                        # Try to find the file
+                        basename = entry['image_filename']
+                        home_dir = os.path.expanduser("~")
+                        possible_home_path = os.path.join(home_dir, basename)
+                        
+                        if os.path.exists(possible_home_path):
+                            print(f"✓ Found image in home directory: {possible_home_path}")
+                elif entry.get('enhanced_prompt'):
                     # Fallback for entries created before this feature was added
                     image_path = get_generated_image_path(entry['enhanced_prompt'])
                     if os.path.exists(image_path):
                         print(f"\nImage Filename: {os.path.basename(image_path)}")
-            
-            print("-" * 40)
+                        print(f"Image exists at: {image_path}")
+                
+                print("-" * 40)
+        except Exception as e:
+            logging.error(f"Error displaying history: {e}")
+            print(f"Error displaying history: {e}")
 
 # Initialize history at module level
 generation_history = GenerationHistory()
@@ -2482,12 +2713,54 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 if response and hasattr(response, 'generated_images'):
                     if response.generated_images:
                         for i, generated_image in enumerate(response.generated_images):
-                            temp_image_path = f"generated_image_{i}.png"
+                            # Create temp file with absolute path in project directory
+                            temp_image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"generated_image_{i}.png")
                             with open(temp_image_path, "wb") as f:
                                 f.write(generated_image.image.image_bytes)
-                        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                        os.rename(temp_image_path, cache_path)
-                        print_success(f"Image generated and saved as: {os.path.basename(cache_path)}")
+                        
+                        # Log the paths being used
+                        logging.info(f"Temporary image path: {temp_image_path}")
+                        logging.info(f"Target cache path: {cache_path}")
+                        
+                        # Make sure the directory exists using absolute path
+                        cache_dir = os.path.dirname(os.path.abspath(cache_path))
+                        os.makedirs(cache_dir, exist_ok=True)
+                        logging.info(f"Ensuring cache directory exists: {cache_dir}")
+                        
+                        try:
+                            # Copy instead of rename to avoid issues with files being in different filesystems
+                            shutil.copy2(temp_image_path, cache_path)
+                            
+                            # Verify the file was copied correctly
+                            if os.path.exists(cache_path):
+                                print_success(f"Image generated and saved as: {os.path.basename(cache_path)}")
+                                logging.info(f"Image successfully saved to: {cache_path}")
+                                
+                                # Update generation history with the image filename
+                                if generation_history.history and len(generation_history.history) > 0:
+                                    filename = os.path.basename(cache_path)
+                                    generation_history.history[0]["image_filename"] = filename
+                                    logging.info(f"Updating history with image filename: {filename}")
+                                    generation_history.save_history()
+                                
+                                # Remove the temporary file after successful copy
+                                try:
+                                    os.remove(temp_image_path)
+                                    logging.info(f"Temporary file removed: {temp_image_path}")
+                                except Exception as e:
+                                    # Non-critical error, just log it
+                                    logging.warning(f"Could not remove temporary file {temp_image_path}: {e}")
+                            else:
+                                print_warning(f"Image was generated but may not have been saved properly to {cache_path}")
+                                logging.error(f"Failed to save image to {cache_path}, file does not exist after copy")
+                                # Keep the temp file as a backup
+                                print_info(f"Temporary file preserved at {temp_image_path}")
+                        except Exception as e:
+                            print_warning(f"Error saving image to final location: {e}")
+                            logging.error(f"Exception while saving image to {cache_path}: {e}")
+                            print_info(f"Temporary file preserved at {temp_image_path}")
+                            # Use the temp file as the cache path
+                            cache_path = temp_image_path
                     else:
                         print_error("Failed to generate image - no images returned")
                         logging.error(f"Empty response from Imagen 3 for prompt: {enhanced_prompt}")
@@ -2510,10 +2783,115 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         print_info("Applying your new wallpaper...")
         show_spinner("Configuring desktop settings...", 1)
         
+        # Make sure we're using an absolute path
+        if not os.path.isabs(cache_path):
+            cache_path = os.path.abspath(cache_path)
+        
+        logging.info(f"Setting wallpaper with path: {cache_path}")
+        
+        # Make sure the file exists before setting it
+        if not os.path.exists(cache_path):
+            logging.warning(f"Wallpaper file not found at {cache_path} before setting")
+            print_warning(f"Wallpaper file may be missing: {cache_path}")
+        
         result = set_wallpaper(cache_path)
         if result:
             print_success("Wallpaper successfully applied!")
             print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+            logging.info(f"Wallpaper successfully set to: {cache_path}")
+            
+            # Update the generation history with the correct image file path
+            # First, find the most recent entry which should be the one for this generation
+            if generation_history.history and len(generation_history.history) > 0:
+                # Update the most recent entry with the correct image filename
+                filename = os.path.basename(cache_path)
+                generation_history.history[0]["image_filename"] = filename
+                logging.info(f"Updated history entry with image filename: {filename}")
+                
+                # Save the history to ensure the image filename is recorded
+                generation_history.save_history()
+                
+                # Make sure the file really exists in genimage
+                if not os.path.exists(cache_path):
+                    print_warning("Image file not found in expected location, attempting to recreate it")
+                    logging.warning(f"Image file not found at {cache_path} after setting wallpaper")
+                    
+                    # The wallpaper might have been saved to the home directory instead of project directory
+                    basename = os.path.basename(cache_path)
+                    home_dir = os.path.expanduser("~")
+                    possible_home_path = os.path.join(home_dir, basename)
+                    
+                    if os.path.exists(possible_home_path):
+                        print_success(f"Found the image file in home directory: {possible_home_path}")
+                        logging.info(f"Found missing image file in home directory: {possible_home_path}")
+                        try:
+                            # Ensure the genimage directory exists
+                            genimage_dir = os.path.dirname(cache_path)
+                            os.makedirs(genimage_dir, exist_ok=True)
+                            
+                            # Copy the file to the genimage directory
+                            shutil.copy2(possible_home_path, cache_path)
+                            print_success(f"Successfully copied the file to project location: {cache_path}")
+                            logging.info(f"Copied file from {possible_home_path} to {cache_path}")
+                        except Exception as e:
+                            print_warning(f"Error copying file from home directory: {e}")
+                            logging.error(f"Error copying file from {possible_home_path} to {cache_path}: {e}")
+                    else:
+                        # This extensive search might be needed but is expensive, so log it
+                        logging.info(f"Image not found in home directory, starting deeper search for {basename}")
+                        # Search for the file in the home directory
+                        found_file = None
+                        
+                        try:
+                            # Search in common locations
+                            common_dirs = [
+                                home_dir,
+                                os.path.join(home_dir, "Downloads"),
+                                os.path.join(home_dir, "Pictures"),
+                                "/tmp",
+                                "."
+                            ]
+                            
+                            for directory in common_dirs:
+                                if os.path.exists(os.path.join(directory, basename)):
+                                    found_file = os.path.join(directory, basename)
+                                    print_success(f"Found the image file at: {found_file}")
+                                    break
+                            
+                            # More extensive search if needed
+                            if not found_file:
+                                for directory in common_dirs:
+                                    for root, dirs, files in os.walk(directory, topdown=True):
+                                        # Skip hidden directories and large system directories
+                                        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['.cache', '.local']]
+                                        
+                                        if basename in files:
+                                            found_file = os.path.join(root, basename)
+                                            print_success(f"Found the image file at: {found_file}")
+                                            break
+                                    
+                                    if found_file:
+                                        break
+                                        
+                                    # Limit search depth for performance
+                                    if directory == home_dir:
+                                        break
+                            
+                            if found_file:
+                                # Ensure the genimage directory exists
+                                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                                
+                                # Copy the file to the genimage directory
+                                shutil.copy2(found_file, cache_path)
+                                print_success(f"Successfully copied the file to: {cache_path}")
+                            else:
+                                print_warning("Image file not found in common locations, please check manually.")
+                        except Exception as e:
+                            print_warning(f"Error while searching for the file: {e}")
+                    
+                    # This shouldn't happen, but if it does, ensure the directory exists
+                    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            
             return True
         else:
             print_warning("Wallpaper may not have been set correctly.")
@@ -2559,7 +2937,7 @@ def manage_preferences():
         print_option("5", "View Current Preferences")
         print_option("6", "Reset to Defaults")
         print_option("7", "Return to Main Menu")
-        
+                
         choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
         
         if choice == "1":
@@ -2618,49 +2996,114 @@ def manage_preferences():
                 print_info(f"- {style}")
             
             print_info("\nAvailable styles:")
-            style_options = ["photograph", "digital_art", "landscape", "sketch", 
-                               "watercolor", "cyberpunk", "pop_art"]
+            style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
+                           "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
+                           "digital_art", "divisionism", "double_exposure", "expressionism", 
+                           "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
+                           "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
+                           "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
+                           "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
+                           "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
+                           "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
+                           "vaporwave", "watercolor", "woodcut"]
+            
+            # Group styles by compatibility for random mixing
+            style_categories = {
+                "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
+                                   "gothic", "impressionism", "oil_painting", "pastel", 
+                                   "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
+                "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
+                               "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
+                               "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
+                               "stained_glass", "steampunk", "surrealism", "vaporwave"],
+                "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
+                                "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
+                                "pointillism", "pop_art", "ukiyo_e"]
+            }
+            
+            def generate_random_style_mix():
+                # Select a random category
+                category = random.choice(list(style_categories.keys()))
+                # Select 2-3 compatible styles from the same category
+                num_styles = random.randint(2, 3)
+                available_styles = style_categories[category]
+                if len(available_styles) < num_styles:
+                    num_styles = len(available_styles)
+                selected_styles = random.sample(available_styles, num_styles)
+                return " + ".join(selected_styles)
+            
             for i, style in enumerate(style_options, 1):
                 print_option(str(i), style)
             
+            print_option(str(len(style_options) + 1), "Random Style Mix (combines 2-3 compatible styles)")
             print_option("a", "Add style")
             print_option("r", "Remove style")
             print_option("c", "Clear all")
             print_option("b", "Back")
             
-            action = get_validated_input("Select action", ["a", "r", "c", "b"] + [str(i) for i in range(1, len(style_options) + 1)])
+            style_choice = get_validated_input("Select an option", 
+                                              [str(i) for i in range(1, len(style_options) + 2)] + ["a", "r", "c", "b"])
             
-            if action == "a":
+            if style_choice == "b":
+                return
+            elif style_choice == "a":
                 style = input("Enter style to add: ").strip()
-                if style in style_options and style not in user_prefs.preferred_styles:
-                    user_prefs.preferred_styles.append(style)
-                    print_success(f"Added style: {style}")
-                else:
-                    print_warning("Invalid style or already in preferences")
-            elif action == "r":
-                if user_prefs.preferred_styles:
-                    print_info("Select style to remove:")
-                    for i, style in enumerate(user_prefs.preferred_styles, 1):
-                        print_option(str(i), style)
-                    idx = int(get_validated_input("Enter number", [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)])) - 1
-                    removed = user_prefs.preferred_styles.pop(idx)
-                    print_success(f"Removed style: {removed}")
-                else:
-                    print_warning("No styles to remove")
-            elif action == "c":
-                user_prefs.preferred_styles.clear()
-                print_success("Cleared all styles")
-            elif action == "b":
-                continue
-            else:
-                idx = int(action) - 1
-                if 0 <= idx < len(style_options):
-                    style = style_options[idx]
+                if style:
                     if style not in user_prefs.preferred_styles:
                         user_prefs.preferred_styles.append(style)
-                        print_success(f"Added style: {style}")
+                        user_prefs.save_preferences()
+                        print_success(f"Added '{style}' to preferred styles")
                     else:
-                        print_warning("Style already in preferences")
+                        print_warning(f"'{style}' is already in your preferred styles")
+            elif style_choice == "r":
+                if not user_prefs.preferred_styles:
+                    print_warning("You don't have any preferred styles to remove")
+                    continue
+                
+                print_info("Select style to remove:")
+                for i, style in enumerate(user_prefs.preferred_styles, 1):
+                    print_option(str(i), style)
+                
+                remove_choice = get_validated_input("Select style to remove (or 'c' to cancel)", 
+                                                   [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)] + ["c"])
+                
+                if remove_choice == "c":
+                    continue
+                
+                style_to_remove = user_prefs.preferred_styles[int(remove_choice) - 1]
+                user_prefs.preferred_styles.remove(style_to_remove)
+                user_prefs.save_preferences()
+                print_success(f"Removed '{style_to_remove}' from preferred styles")
+            elif style_choice == "c":
+                confirm = get_validated_input("Are you sure you want to clear all styles? (y/n)", ["y", "n"])
+                if confirm == "y":
+                    user_prefs.preferred_styles.clear()
+                    user_prefs.save_preferences()
+                    print_success("Cleared all preferred styles")
+            elif style_choice == str(len(style_options) + 1):
+                # Random style mix option
+                style_mix = generate_random_style_mix()
+                print_info(f"Generated random style mix: {style_mix}")
+                add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
+                if add_to_preferences == "y":
+                    if style_mix not in user_prefs.preferred_styles:
+                        user_prefs.preferred_styles.append(style_mix)
+                        user_prefs.save_preferences()
+                        print_success(f"Added '{style_mix}' to preferred styles")
+                    else:
+                        print_warning(f"'{style_mix}' is already in your preferred styles")
+            else:
+                # Add the selected style from the list
+                try:
+                    selected_style = style_options[int(style_choice) - 1]
+                    if selected_style not in user_prefs.preferred_styles:
+                        user_prefs.preferred_styles.append(selected_style)
+                        user_prefs.save_preferences()
+                        print_success(f"Added '{selected_style}' to preferred styles")
+                    else:
+                        print_warning(f"'{selected_style}' is already in your preferred styles")
+                except (ValueError, IndexError):
+                    print_error(f"Invalid selection: {style_choice}")
         
         elif choice == "3":
             print_section("Manage Moods")
@@ -3280,8 +3723,41 @@ def main():
                     
                     mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
                                   "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
-                    style_options = ["photograph", "digital_art", "landscape", "sketch", 
-                                   "watercolor", "cyberpunk", "pop_art"]
+                    style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
+                                   "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
+                                   "digital_art", "divisionism", "double_exposure", "expressionism", 
+                                   "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
+                                   "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
+                                   "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
+                                   "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
+                                   "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
+                                   "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
+                                   "vaporwave", "watercolor", "woodcut"]
+                    
+                    # Group styles by compatibility for random mixing
+                    style_categories = {
+                        "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
+                                           "gothic", "impressionism", "oil_painting", "pastel", 
+                                           "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
+                        "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
+                                       "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
+                                       "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
+                                       "stained_glass", "steampunk", "surrealism", "vaporwave"],
+                        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
+                                        "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
+                                        "pointillism", "pop_art", "ukiyo_e"]
+                    }
+                    
+                    def generate_random_style_mix():
+                        # Select a random category
+                        category = random.choice(list(style_categories.keys()))
+                        # Select 2-3 compatible styles from the same category
+                        num_styles = random.randint(2, 3)
+                        available_styles = style_categories[category]
+                        if len(available_styles) < num_styles:
+                            num_styles = len(available_styles)
+                        selected_styles = random.sample(available_styles, num_styles)
+                        return " + ".join(selected_styles)
                     
                     print_info(f"Mood options: {', '.join(mood_options)}")
                     mood = input("Enter mood (optional): ").strip().lower()
@@ -3289,8 +3765,22 @@ def main():
                         print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
                     
                     print_info(f"Style options: {', '.join(style_options)}")
+                    print_info("You can also enter 'random_mix' to combine 2-3 compatible styles for creative results")
                     style = input("Enter style (optional): ").strip().lower()
-                    if style and style not in style_options:
+                    
+                    if style == "random_mix":
+                        style = generate_random_style_mix()
+                        print_info(f"Selected style mix: {style}")
+                        # Ask if the user wants to save this style mix to their preferences
+                        save_style = get_validated_input("Save this style mix to your preferences? (y/n)", ["y", "n"])
+                        if save_style == "y":
+                            if style not in user_prefs.preferred_styles:
+                                user_prefs.preferred_styles.append(style)
+                                user_prefs.save_preferences()
+                                print_success(f"Added '{style}' to preferred styles")
+                            else:
+                                print_warning(f"'{style}' is already in your preferred styles")
+                    elif style and style not in style_options:
                         print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
                     
                     generate_wallpaper("gemini", mood=mood, style=style)
@@ -3355,3 +3845,4 @@ def print_breadcrumb(path_list):
 
 if __name__ == "__main__":
     main()
+

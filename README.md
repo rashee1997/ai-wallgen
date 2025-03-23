@@ -25,7 +25,7 @@ A powerful and intuitive tool for generating stunning AI wallpapers using Google
 
 > **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
 
-[Features](docs/advanced-features.md) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
+[Features](#-key-features) • [Benefits](#-benefits) • [Installation](#-quick-start) • [Documentation](#-documentation) • [License](#-license)
 
 <!-- Trending Tags -->
 <p align="center">
@@ -62,42 +62,53 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-- **Advanced AI Image Generation**: Powered by Google's Imagen 3 model for stunning, high-quality wallpapers
-- **Intelligent Prompt System**:
-  - AI-powered prompt enhancement via Gemini
-  - Smart tag selection and organization
-  - Multiple generation methods (AI, Random, Custom)
-  - Template-based generation system
-  - Context-aware prompt refinement
-- **Smart Enhancement Engine**:
-  - Automatic style refinement
-  - Technical detail optimization
-  - Mood and atmosphere integration
-  - Quality assurance checks
-- **Comprehensive Settings Control**: Fine-tune every aspect of your wallpaper generation
-- **Preset Management System**: Save, load, and manage your favorite settings combinations
-  - Save current settings as reusable presets
-  - Choose between merging or replacing settings when loading
-  - View detailed preset information
-  - Track active preset across sessions
-  - Automatic backup system for data safety
-- **Professional Camera Controls**: Advanced camera, lens, and lighting options
-- **Multiple Generation Methods**: AI-powered, random, or custom prompt generation
+### AI-Powered Generation
+- **State-of-the-Art Image Generation**: Powered by Google's Imagen 3 model
+- **Gemini-Enhanced Prompts**: Smart prompt enhancement using Gemini AI
+- **Multiple Generation Methods**: AI-powered, random, or custom prompt options
+
+### Advanced Artistic Control
+- **Comprehensive Style Library**: 
+  - 40+ artistic styles including Photorealistic, Cyberpunk, Abstract, Anime, and more
+  - Smart style mixing that intelligently combines compatible styles
+  - Art movements and post-processing effects
+- **Professional Settings**:
+  - Camera, lens, and lighting controls
+  - Color schemes and grading options
+  - Resolution and quality settings
+
+### Intelligent Management
+- **Preset System**: Save, load, and manage your favorite settings
+- **Style Preferences**: Save custom style mixes for future use
+- **History Tracking**: View and reuse previous generations
+- **Smart Filename Generation**: AI-powered descriptive filenames
+
+### Technical Features
 - **Cross-Platform Support**: Works on Linux, Windows, and macOS
+- **Adaptive Caching**: Efficient storage of prompts and images
+- **Performance Optimization**: Resource-aware processing
 
 ## 🌟 Benefits
 
-- **AI-Powered Creativity**: Let Gemini enhance your prompts for better results
-- **Perfect Control**: Fine-tune every aspect of prompt generation and enhancement
-- **Consistent Quality**: Use templates and enhancement features for reliable results
-- **Save Time with Presets**: Store your perfect settings combinations and reuse them instantly
-- **Experiment Safely**: Try new settings while keeping your favorites backed up
-- **Perfect Results**: Fine-tune every aspect of generation for exactly the wallpaper you want
-- **Work Efficiently**: Quick access to your most-used settings and configurations
-- **Stay Organized**: Track your active preset and manage your settings library
-- **Data Safety**: Atomic file operations and automatic backups protect your settings
-- **Flexible Workflow**: Merge or replace settings when loading presets for maximum control
-- **Session Persistence**: Your preferences and active preset are remembered between sessions
+### Enhanced Creativity
+- **Style Experimentation**: Discover unique combinations with smart style mixing
+- **AI-Powered Inspiration**: Let Gemini enhance your ideas into stunning prompts
+- **Creative Freedom**: Fine-tune every aspect of generation for perfect results
+
+### Workflow Efficiency
+- **Save Time**: Store your favorite settings and style combinations
+- **Consistent Results**: Use templates and enhancement features
+- **Fast Iteration**: Quickly try various artistic styles and settings
+
+### Professional Quality
+- **Technical Excellence**: Professional camera and lighting simulation
+- **Artistic Cohesion**: Style-appropriate technical parameters
+- **High-Resolution Output**: Up to 8K resolution support
+
+### Powerful Organization
+- **Intelligent File Naming**: Descriptive, content-based filenames
+- **Settings Management**: Track and organize your presets
+- **Generation History**: Access and reuse previous wallpapers
 
 ## 🚀 Quick Start
 
@@ -121,14 +132,13 @@ Here are some examples of wallpapers generated using this tool:
 
 For detailed setup and usage instructions, check our [Getting Started Guide](docs/getting-started.md).
 
-## 📝 Documentation
+## 📚 Documentation
 
 - [Getting Started Guide](docs/getting-started.md) - Quick setup and basic usage
 - [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
 - [Preset Management Guide](docs/preset-guide.md) - Managing and using presets
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 - [FAQ](docs/faq.md) - Frequently asked questions and answers
-- [Git Commit Guide](docs/git-commit-guide.md) - Guidelines for contributing code
 - [Changelog](CHANGELOG.md) - Version history and updates
 
 ## 📝 License
