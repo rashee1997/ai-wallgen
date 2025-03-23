@@ -30,6 +30,7 @@ from prompt_config import (
 from datetime import datetime
 import shutil
 import threading
+import re
 
 # Try to import colorama, but provide fallbacks if not available
 try:
@@ -566,6 +567,104 @@ def sanitize_prompt(prompt):
     sanitized_prompt = bleach.clean(prompt, tags=allowed_tags, attributes=allowed_attributes, strip=True)
     return sanitized_prompt
 
+def create_filename_from_prompt(prompt, max_length=30):
+    """Create a descriptive filename from the prompt.
+    
+    Args:
+        prompt: The prompt to create a filename from
+        max_length: Maximum length of the descriptive part of the filename
+        
+    Returns:
+        A sanitized, shortened filename based on the prompt
+    """
+    # Remove special characters and replace spaces with underscores
+    sanitized = re.sub(r'[^\w\s-]', '', prompt.lower())
+    sanitized = re.sub(r'[-\s]+', '_', sanitized)
+    
+    # Truncate to the maximum length
+    if len(sanitized) > max_length:
+        # Try to cut at a word boundary
+        sanitized = sanitized[:max_length].rsplit('_', 1)[0]
+    
+    # Add a unique identifier (first 8 chars of the hash)
+    hash_object = hashlib.sha256(prompt.encode())
+    short_hash = hash_object.hexdigest()[:8]
+    
+    return f"{sanitized}_{short_hash}.png"
+
+def extract_subject_from_prompt(prompt):
+    """Extract the main subject from a prompt using Gemini.
+    
+    Args:
+        prompt: The prompt to extract the subject from
+        
+    Returns:
+        A string containing the main subject of the prompt
+    """
+    if not GEMINI_API_KEY:
+        logging.warning("No Gemini API key configured, using fallback filename generation")
+        return None
+        
+    try:
+        # Use the same approach as generate_prompt_gemini
+        import google.generativeai as genai
+        
+        # Set up the model
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Create the analysis request
+        analysis_prompt = f"""
+        Extract the main subject or theme from this wallpaper description in 2-5 words.
+        Only return the extracted subject - no explanations or additional text.
+        Make it suitable for use as a filename.
+        
+        Description: {prompt}
+        """
+        
+        # Get the response
+        response = model.generate_content(
+            contents=analysis_prompt
+        )
+        
+        if response and hasattr(response, 'candidates') and response.candidates:
+            text = response.candidates[0].content.parts[0].text
+            subject = text.strip()
+            # Clean up any quotes or extra formatting
+            subject = subject.replace('"', '').replace("'", "")
+            
+            # Sanitize for filename use
+            subject = re.sub(r'[^\w\s-]', '', subject.lower())
+            subject = re.sub(r'[-\s]+', '_', subject)
+            
+            logging.info(f"Extracted subject from prompt: {subject}")
+            return subject
+        else:
+            logging.warning("Empty response from Gemini for subject extraction")
+            return None
+    except Exception as e:
+        logging.error(f"Error extracting subject with Gemini: {e}")
+        return None
+
+def get_generated_image_path(prompt):
+    """Get the cache path for the generated image."""
+    # Try to extract a meaningful subject from the prompt
+    subject = extract_subject_from_prompt(prompt)
+    
+    if subject:
+        # Use the extracted subject for the filename
+        hash_object = hashlib.sha256(prompt.encode())
+        short_hash = hash_object.hexdigest()[:8]
+        filename = f"{subject}_{short_hash}.png"
+    else:
+        # Fall back to the original method
+        filename = create_filename_from_prompt(prompt)
+    
+    # Ensure the genimage directory exists
+    os.makedirs("genimage", exist_ok=True)
+        
+    return f"genimage/{filename}"
+
 def generate_prompt(custom_prompt=None):
     """Generate a prompt using either AI, random tags, or custom input."""
     try:
@@ -648,11 +747,6 @@ def generate_prompt(custom_prompt=None):
         logging.error(f"Error in generate_prompt: {e}")
         print_error("An unexpected error occurred while generating the prompt")
         return None
-
-def get_generated_image_path(prompt):
-    """Get the cache path for the generated image."""
-    hash_object = hashlib.sha256(prompt.encode())
-    return f"genimage/{hash_object.hexdigest()}.png"
 
 def detect_linux_desktop_environment():
     """Detect the Linux desktop environment."""
@@ -2192,6 +2286,12 @@ class GenerationHistory:
                         if value is not None:  # Show even if False
                             print(f"  {key}: {value}")
             
+            # Show the image file if available
+            if entry.get('enhanced_prompt'):
+                image_path = get_generated_image_path(entry['enhanced_prompt'])
+                if os.path.exists(image_path):
+                    print(f"\nImage Filename: {os.path.basename(image_path)}")
+            
             print("-" * 40)
 
 # Initialize history at module level
@@ -2314,6 +2414,8 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         client = genai.Client(api_key=GEMINI_API_KEY)
         
         cache_path = get_generated_image_path(enhanced_prompt)
+        print_info(f"Image will be saved as: {os.path.basename(cache_path)}")
+        
         if os.path.exists(cache_path):
             print_info("Using cached image")
             image_path = cache_path
@@ -2351,12 +2453,12 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 if response and hasattr(response, 'generated_images'):
                     if response.generated_images:
                         for i, generated_image in enumerate(response.generated_images):
-                            image_path = f"generated_image_{i}.png"
-                            with open(image_path, "wb") as f:
+                            temp_image_path = f"generated_image_{i}.png"
+                            with open(temp_image_path, "wb") as f:
                                 f.write(generated_image.image.image_bytes)
                         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                        os.rename(image_path, cache_path)
-                        print_success("Image generated successfully!")
+                        os.rename(temp_image_path, cache_path)
+                        print_success(f"Image generated and saved as: {os.path.basename(cache_path)}")
                     else:
                         print_error("Failed to generate image - no images returned")
                         logging.error(f"Empty response from Imagen 3 for prompt: {enhanced_prompt}")
@@ -2382,7 +2484,7 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         result = set_wallpaper(cache_path)
         if result:
             print_success("Wallpaper successfully applied!")
-            print_info("Your desktop should now display the new wallpaper.")
+            print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
             return True
         else:
             print_warning("Wallpaper may not have been set correctly.")

@@ -9,6 +9,19 @@ This guide details the advanced features available in the AI Wallpaper Generator
 - [Professional Controls](#professional-controls)
 - [Advanced Settings](#advanced-settings)
 - [Technical Features](#technical-features)
+  - [System Integration](#system-integration)
+  - [Performance Features](#performance-features)
+  - [Data Management](#data-management)
+  - [Intelligent Filename Generation](#intelligent-filename-generation)
+- [Advanced Tips](#advanced-tips)
+- [Artistic Controls](#-artistic-controls)
+- [Technical Features](#-technical-features)
+- [Wallpaper Management](#-wallpaper-management)
+- [System Features](#-system-features)
+  - [Caching System](#caching-system)
+  - [User Preferences](#user-preferences)
+  - [Intelligent Filename Generation](#intelligent-filename-generation-1)
+- [Advanced Configuration](#-advanced-configuration)
 
 ## Prompt Generation & Enhancement
 
@@ -190,6 +203,14 @@ This guide details the advanced features available in the AI Wallpaper Generator
 - Backup management
 - Error recovery
 
+### Intelligent Filename Generation
+- AI-powered subject extraction from prompts
+- Descriptive, meaningful filenames instead of generic hashes
+- Consistent naming conventions for easier organization
+- Semantic analysis of image content for accurate naming
+- Automatic fallback to conventional naming if AI analysis fails
+- Easy identification of wallpapers based on content
+
 ## Advanced Tips
 
 1. **Optimal Performance**
@@ -279,6 +300,24 @@ This guide details the advanced features available in the AI Wallpaper Generator
 - Style presets
 - Technical defaults
 
+### Intelligent Filename Generation
+- AI-powered subject extraction from prompts
+- Descriptive, meaningful filenames instead of generic hashes
+- Consistent naming conventions for easier organization
+- Semantic analysis of image content for accurate naming
+- Automatic fallback to conventional naming if AI analysis fails
+- Easy identification of wallpapers based on content
+
+#### Example
+```
+Original Prompt: "Majestic mountains with snow-capped peaks reflecting in a crystal clear lake at sunset, with pink and orange clouds"
+
+Generated Filename: mountain_lake_sunset_ae358c5f.png
+
+Original Prompt: "Futuristic cyberpunk cityscape at night with neon lights and flying cars" 
+
+Generated Filename: cyberpunk_cityscape_night_12345678.png
+
 ## 🔧 Advanced Configuration
 
 ### Environment Variables
@@ -294,4 +333,4 @@ DEBUG_MODE='false'
 ```bash
 # Example usage
 python wallpaper_generator.py --resolution=4k --style=cyberpunk --cache-days=30
-``` 
+```
