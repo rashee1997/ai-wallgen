@@ -15,6 +15,9 @@
 ╚════════════════════════════════════════════════════════════════════════════╝
 ```
 
+> For information about importing and exporting settings, see [Settings Import/Export Guide](GUIDE_settings_import_export.md).
+> For information about the UI components, see [UI Utilities Module](README_ui_utils.md).
+
 ## Overview
 
 The `wallpaper_settings.py` module serves as the central hub for all settings management in the Wallgen application. This module encapsulates user preferences, preset management, and import/export functionality, providing a clean separation of concerns from the main application logic.
@@ -129,23 +132,6 @@ save_preset(preset_data, "sci_fi_space")
 
 # Delete an unused preset
 delete_preset("old_preset")
-```
-
-### Import/Export Functionality
-
-Backup and share your settings across installations:
-
-```python
-# Example: Exporting and importing settings
-from wallpaper_settings import export_settings, import_settings
-
-# Export all settings to a file
-export_file = export_settings()
-print(f"Settings exported to {export_file}")
-
-# Import settings from a file (interactive file selection)
-if import_settings():
-    print("Settings imported successfully")
 ```
 
 ## Settings Configuration Options

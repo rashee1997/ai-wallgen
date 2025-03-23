@@ -2,6 +2,8 @@
 
 ![Import/Export Banner](https://i.imgur.com/placeholder3.png)
 
+> For detailed information about the settings module, see [Wallpaper Settings Module](README_wallpaper_settings.md).
+
 ## Introduction
 
 The AI Wallpaper Generator allows you to back up, restore, and share your carefully crafted settings through its powerful import/export functionality. This guide will walk you through everything you need to know about managing your settings.

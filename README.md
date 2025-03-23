@@ -118,12 +118,16 @@ For more examples and usage options, see the [Quick Reference Guide](docs/QUICK_
 ### User Documentation
 - [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
 - [User Guide](docs/user-guide.md) - Comprehensive usage instructions
+- [Settings Import/Export Guide](docs/GUIDE_settings_import_export.md) - Managing your settings
 
 ### Developer Documentation
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design
 - [API Reference](docs/api-reference.md) - Programmatic interface
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute
 - [Terminology Reference](docs/TERMINOLOGY.md) - Standard terminology
+- [UI Utilities Module](docs/README_ui_utils.md) - Terminal interface components
+- [Wallpaper Settings Module](docs/README_wallpaper_settings.md) - Settings management
+- [Testing Guide](docs/testing-guide.md) - Testing framework and guidelines
 
 ### Reference
 - [Changelog](CHANGELOG.md) - Version history and updates

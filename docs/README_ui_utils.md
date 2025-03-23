@@ -15,6 +15,8 @@
 ╚════════════════════════════════════════════════════════════════════════════╝
 ```
 
+> For detailed information about settings management, see [Wallpaper Settings Module](README_wallpaper_settings.md).
+
 ## Overview
 
 The `ui_utils.py` module provides a comprehensive set of utilities for creating beautiful, consistent terminal interfaces in the Wallgen application. It handles everything from colored text output to user input validation, ensuring a smooth and intuitive user experience across the entire application.
