@@ -71,12 +71,6 @@ logging.basicConfig(
     ]
 )
 
-# Add a separate stream handler that only shows errors
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.ERROR)
-console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logging.getLogger().addHandler(console_handler)
-
 # Check for required dependencies
 def check_dependencies():
     """Check if all required dependencies are installed."""
@@ -1546,19 +1540,13 @@ def configure_logging(level=logging.INFO):
     file_handler.setLevel(level)
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     
-    # Configure console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(level)
-    console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    
     # Get root logger and clear any existing handlers
     root_logger = logging.getLogger()
     root_logger.handlers = []
     
-    # Set new level and add handlers
+    # Set new level and add file handler only
     root_logger.setLevel(level)
     root_logger.addHandler(file_handler)
-    root_logger.addHandler(console_handler)
     
     logging.debug("Logging configured with level: %s", level)
 
