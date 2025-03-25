@@ -26,13 +26,39 @@ import shutil
 import re
 import hashlib
 from datetime import datetime
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Dict, List, Any, Optional, Union, Tuple
+from pathlib import Path
+from textwrap import wrap
+
+# Try to import prompt_generator module
+try:
+    from prompt_generator import (
+        set_prompt_preferences, 
+        generate_prompt_gemini, 
+        generate_prompt_random, 
+        enhance_custom_prompt,
+        enforce_prompt_format
+    )
+    PROMPT_GENERATOR_AVAILABLE = True
+except ImportError:
+    logging.warning("Could not import prompt_generator module. Some features will be disabled.")
+    PROMPT_GENERATOR_AVAILABLE = False
+
+# Try to import Google's GenerativeAI module
+try:
+    import google.generativeai as genai
+except ImportError:
+    logging.warning("google.generativeai module not found. Some features will be disabled.")
 
 # Local application imports
+from wallpaper_config import (
+    TEXT_LOGO_INSTRUCTIONS, LOGO_TEMPLATES, TEXT_TEMPLATES,
+    TEXT_LOGO_QUALITY_MODIFIERS, TEXT_LOGO_STYLE_MODIFIERS, TEXT_LOGO_BACKGROUND_MODIFIERS
+)
 from ui_utils import (
     print_header, print_section, print_option, print_success, print_error,
     print_warning, print_info, print_prompt, get_validated_input, show_spinner,
-    print_breadcrumb
+    print_breadcrumb, print_colored
 )
 
 # Configuration imports
@@ -79,43 +105,35 @@ class UserPreferences:
     """
     def __init__(self):
         """
-        Initialize user preferences with default values.
+        Initialize user preferences with minimal default values.
         
-        Sets up the initial state of user preferences with default values for all
-        settings. This includes empty lists for preferred genres, styles, and moods,
-        and default dictionaries for imagen_settings and wallpaper_settings.
+        Sets up the initial state of user preferences with minimal values for required
+        settings. This prevents loading all options in the settings menu.
         """
-        # Initialize with default values
+        # Initialize with empty collections
         self.preferred_genres = []
         self.preferred_styles = []
         self.preferred_moods = []
         self.negative_prompts = []
         
-        # Default Imagen settings
+        # Minimal default Imagen settings
         self.imagen_settings = {
             "number_of_images": 1,
-            "seed": None,  # None means random seed
-            "negative_prompt": "blurry, ugly, text, watermark, logo, signature, deformed, out of frame, low quality, multiple images",
-            "quality_settings": {
-                "resolution": "1920x1080",
-                "detail_level": "rich_details",
-                "rendering_quality": "photorealistic"
-            },
+            "seed": None,
+            "negative_prompt": "",
+            "quality_settings": {},
             "style_settings": {},
             "camera_settings": {},
             "lighting_settings": {},
             "composition_settings": {},
-            "color_settings": {}
+            "environment_settings": {},
+            "color_settings": {},
+            "detail_settings": {}
         }
         
         # Default wallpaper settings
         self.wallpaper_settings = {
-            "auto_set": True,
-            "cache_duration": 30,  # days
-            "fit_mode": "center",  # center, fit, fill, stretch, etc.
-            "background_color": "#000000",
-            "multi_monitor": "same",  # same, extend, etc.
-            "refresh_rate": "daily"
+            "auto_set": False
         }
         
         # Default aspect ratio
@@ -166,15 +184,17 @@ class UserPreferences:
                 if "negative_prompts" in data:
                     self.negative_prompts = data["negative_prompts"]
                 if "imagen_settings" in data:
-                    # Merge with defaults to ensure all keys are present
-                    for key, value in data["imagen_settings"].items():
-                        if key in self.imagen_settings:
-                            self.imagen_settings[key] = value
+                    # Only update the top level keys that exist in our current settings
+                    imagen_data = data["imagen_settings"]
+                    for key in self.imagen_settings.keys():
+                        if key in imagen_data:
+                            self.imagen_settings[key] = imagen_data[key]
                 if "wallpaper_settings" in data:
-                    # Merge with defaults
-                    for key, value in data["wallpaper_settings"].items():
-                        if key in self.wallpaper_settings:
-                            self.wallpaper_settings[key] = value
+                    # Only update existing keys
+                    wallpaper_data = data["wallpaper_settings"]
+                    for key in self.wallpaper_settings.keys():
+                        if key in wallpaper_data:
+                            self.wallpaper_settings[key] = wallpaper_data[key]
                 if "history_file" in data:
                     self.history_file = data["history_file"]
                 if "last_preset" in data:
@@ -302,23 +322,23 @@ def save_last_genre(genre: str, filename: str = "last_genre.json") -> None:
     except Exception as e:
         logging.error(f"Error saving last genre to {filepath}: {e}")
 
-def generate_random_style_mix(style_categories: Optional[List[str]] = None) -> str:
+def generate_random_style_mix():
     """
     Generate a random mix of artistic styles.
     
     This function combines styles from different categories to create unique
     style combinations for image generation prompts.
     
-    Args:
-        style_categories (Optional[List[str]], optional): List of style categories to include.
-                                                         If None, uses all available categories.
-    
     Returns:
         str: A string containing a combination of artistic styles, joined with " + "
     """
-    if style_categories is None:
-        # Define style categories if not provided
-        style_categories = {
+    # Check if user has custom style categories in preferences
+    settings = user_prefs.imagen_settings
+    style_settings = settings.get("style_settings", {})
+    custom_style_categories = style_settings.get("style_categories", {})
+    
+    # Define default style categories to use if no custom categories available
+    default_style_categories = {
             "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
                                "gothic", "impressionism", "oil_painting", "pastel", 
                                "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
@@ -331,11 +351,14 @@ def generate_random_style_mix(style_categories: Optional[List[str]] = None) -> s
                             "pointillism", "pop_art", "ukiyo_e"]
         }
     
+    # Use custom categories if available, otherwise use the default ones
+    categories_to_use = custom_style_categories if custom_style_categories else default_style_categories
+    
     # Select a random category
-    category = random.choice(list(style_categories.keys()))
+    category = random.choice(list(categories_to_use.keys()))
     # Select 2-3 compatible styles from the same category
     num_styles = random.randint(2, 3)
-    available_styles = style_categories[category]
+    available_styles = categories_to_use[category]
     if len(available_styles) < num_styles:
         num_styles = len(available_styles)
     selected_styles = random.sample(available_styles, num_styles)
@@ -344,354 +367,35 @@ def generate_random_style_mix(style_categories: Optional[List[str]] = None) -> s
 # Settings management functions will be implemented here
 def manage_preferences():
     """
-    Display and manage user preferences through an interactive menu.
+    Main function to manage user preferences.
     
-    This function provides a user interface for modifying various preference
-    settings including genres, styles, and moods. It allows users to add,
-    remove, and manage their preferred creative elements.
+    This function displays a menu of preference categories and allows the user
+    to select which category to manage. It then delegates to the appropriate
+    function for that category.
     """
-    global user_prefs
-    print_header("Wallpaper Preferences")
-    
     while True:
-        print_section("Options")
-        print_option("1", "Manage Genres")
-        print_option("2", "Manage Styles")
-        print_option("3", "Manage Moods")
-        print_option("4", "Manage Wallpaper Settings")
-        print_option("5", "View Current Preferences")
-        print_option("6", "Reset to Defaults")
-        print_option("7", "Return to Main Menu")
-                
-        choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+        print_section("Manage Preferences")
+        print_option("1", "Wallpaper Settings")
+        print_option("2", "Advanced Options")
+        print_option("3", "Reset All Settings to None")
+        print_option("4", "Back")
+        
+        choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
         
         if choice == "1":
-            print_section("Manage Genres")
-            print_info("Current preferred genres:")
-            for genre in user_prefs.preferred_genres:
-                print_info(f"- {genre}")
-            
-            print_info("\nAvailable genres:")
-            for i, genre in enumerate(available_genres, 1):
-                print_option(str(i), genre)
-            
-            print_option("a", "Add genre")
-            print_option("r", "Remove genre")
-            print_option("c", "Clear all")
-            print_option("b", "Back")
-            
-            action = get_validated_input("Select action", ["a", "r", "c", "b"] + [str(i) for i in range(1, len(available_genres) + 1)])
-            
-            if action == "a":
-                genre = input("Enter genre to add: ").strip()
-                if genre in available_genres and genre not in user_prefs.preferred_genres:
-                    user_prefs.preferred_genres.append(genre)
-                    print_success(f"Added genre: {genre}")
-                else:
-                    print_warning("Invalid genre or already in preferences")
-            elif action == "r":
-                if user_prefs.preferred_genres:
-                    print_info("Select genre to remove:")
-                    for i, genre in enumerate(user_prefs.preferred_genres, 1):
-                        print_option(str(i), genre)
-                    idx = int(get_validated_input("Enter number", [str(i) for i in range(1, len(user_prefs.preferred_genres) + 1)])) - 1
-                    removed = user_prefs.preferred_genres.pop(idx)
-                    print_success(f"Removed genre: {removed}")
-                else:
-                    print_warning("No genres to remove")
-            elif action == "c":
-                user_prefs.preferred_genres.clear()
-                print_success("Cleared all genres")
-            elif action == "b":
-                continue
-            else:
-                idx = int(action) - 1
-                if 0 <= idx < len(available_genres):
-                    genre = available_genres[idx]
-                    if genre not in user_prefs.preferred_genres:
-                        user_prefs.preferred_genres.append(genre)
-                        print_success(f"Added genre: {genre}")
-                    else:
-                        print_warning("Genre already in preferences")
-        
+            manage_wallpaper_settings()
         elif choice == "2":
-            print_section("Manage Styles")
-            print_info("Current preferred styles:")
-            for style in user_prefs.preferred_styles:
-                print_info(f"- {style}")
-            
-            print_info("\nAvailable styles:")
-            style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
-                           "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
-                           "digital_art", "divisionism", "double_exposure", "expressionism", 
-                           "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
-                           "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
-                           "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
-                           "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
-                           "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
-                           "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
-                           "vaporwave", "watercolor", "woodcut"]
-            
-            # Group styles by compatibility for random mixing
-            style_categories = {
-                "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
-                                   "gothic", "impressionism", "oil_painting", "pastel", 
-                                   "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
-                "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
-                               "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
-                               "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
-                               "stained_glass", "steampunk", "surrealism", "vaporwave"],
-                "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
-                                "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
-                                "pointillism", "pop_art", "ukiyo_e"]
-            }
-            
-            for i, style in enumerate(style_options, 1):
-                print_option(str(i), style)
-            
-            print_option(str(len(style_options) + 1), "Random Style Mix (combines 2-3 compatible styles)")
-            print_option("a", "Add style")
-            print_option("r", "Remove style")
-            print_option("c", "Clear all")
-            print_option("b", "Back")
-            
-            style_choice = get_validated_input("Select an option", 
-                                              [str(i) for i in range(1, len(style_options) + 2)] + ["a", "r", "c", "b"])
-            
-            if style_choice == "b":
-                continue
-            elif style_choice == "a":
-                style = input("Enter style to add: ").strip()
-                if style:
-                    if style not in user_prefs.preferred_styles:
-                        user_prefs.preferred_styles.append(style)
-                        user_prefs.save_preferences()
-                        print_success(f"Added '{style}' to preferred styles")
-                    else:
-                        print_warning(f"'{style}' is already in your preferred styles")
-            elif style_choice == "r":
-                if not user_prefs.preferred_styles:
-                    print_warning("You don't have any preferred styles to remove")
-                    continue
-                
-                print_info("Select style to remove:")
-                for i, style in enumerate(user_prefs.preferred_styles, 1):
-                    print_option(str(i), style)
-                
-                remove_choice = get_validated_input("Select style to remove (or 'c' to cancel)", 
-                                                   [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)] + ["c"])
-                
-                if remove_choice == "c":
-                    continue
-                
-                style_to_remove = user_prefs.preferred_styles[int(remove_choice) - 1]
-                user_prefs.preferred_styles.remove(style_to_remove)
-                user_prefs.save_preferences()
-                print_success(f"Removed '{style_to_remove}' from preferred styles")
-            elif style_choice == "c":
-                confirm = get_validated_input("Are you sure you want to clear all styles? (y/n)", ["y", "n"])
-                if confirm == "y":
-                    user_prefs.preferred_styles.clear()
-                    user_prefs.save_preferences()
-                    print_success("Cleared all preferred styles")
-            elif style_choice == str(len(style_options) + 1):
-                # Random style mix option
-                style_mix = generate_random_style_mix(style_categories)
-                print_info(f"Generated random style mix: {style_mix}")
-                add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
-                if add_to_preferences == "y":
-                    if style_mix not in user_prefs.preferred_styles:
-                        user_prefs.preferred_styles.append(style_mix)
-                        user_prefs.save_preferences()
-                        print_success(f"Added '{style_mix}' to preferred styles")
-                    else:
-                        print_warning(f"'{style_mix}' is already in your preferred styles")
-            else:
-                # Add the selected style from the list
-                try:
-                    selected_style = style_options[int(style_choice) - 1]
-                    if selected_style not in user_prefs.preferred_styles:
-                        user_prefs.preferred_styles.append(selected_style)
-                        user_prefs.save_preferences()
-                        print_success(f"Added '{selected_style}' to preferred styles")
-                    else:
-                        print_warning(f"'{selected_style}' is already in your preferred styles")
-                except (ValueError, IndexError):
-                    print_error(f"Invalid selection: {style_choice}")
-        
+            configure_advanced_options()
         elif choice == "3":
-            print_section("Manage Moods")
-            print_info("Current preferred moods:")
-            for mood in user_prefs.preferred_moods:
-                print_info(f"- {mood}")
-            
-            print_info("\nAvailable moods:")
-            mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
-                          "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
-            for i, mood in enumerate(mood_options, 1):
-                print_option(str(i), mood)
-            
-            print_option("a", "Add mood")
-            print_option("r", "Remove mood")
-            print_option("c", "Clear all")
-            print_option("b", "Back")
-            
-            action = get_validated_input("Select action", ["a", "r", "c", "b"] + [str(i) for i in range(1, len(mood_options) + 1)])
-            
-            if action == "a":
-                mood = input("Enter mood to add: ").strip()
-                if mood in mood_options and mood not in user_prefs.preferred_moods:
-                    user_prefs.preferred_moods.append(mood)
-                    print_success(f"Added mood: {mood}")
-                else:
-                    print_warning("Invalid mood or already in preferences")
-            elif action == "r":
-                if user_prefs.preferred_moods:
-                    print_info("Select mood to remove:")
-                    for i, mood in enumerate(user_prefs.preferred_moods, 1):
-                        print_option(str(i), mood)
-                    idx = int(get_validated_input("Enter number", [str(i) for i in range(1, len(user_prefs.preferred_moods) + 1)])) - 1
-                    removed = user_prefs.preferred_moods.pop(idx)
-                    print_success(f"Removed mood: {removed}")
-                else:
-                    print_warning("No moods to remove")
-            elif action == "c":
-                user_prefs.preferred_moods.clear()
-                print_success("Cleared all moods")
-            elif action == "b":
-                continue
+            # Confirm before resetting all settings to None
+            confirm = get_validated_input("Are you sure you want to reset ALL settings to None? This cannot be undone. (y/n)", ["y", "n"])
+            if confirm.lower() == "y":
+                reset_all_settings_to_none()
             else:
-                idx = int(action) - 1
-                if 0 <= idx < len(mood_options):
-                    mood = mood_options[idx]
-                    if mood not in user_prefs.preferred_moods:
-                        user_prefs.preferred_moods.append(mood)
-                        print_success(f"Added mood: {mood}")
-                    else:
-                        print_warning("Mood already in preferences")
-        
+                print_info("Reset cancelled.")
         elif choice == "4":
-            print_section("Wallpaper Settings")
-            print_option("1", "Auto-set wallpaper")
-            print_option("2", "Cache duration")
-            print_option("3", "Fit mode")
-            print_option("4", "Background color")
-            print_option("5", "Multi-monitor mode")
-            print_option("6", "Refresh rate")
-            print_option("7", "Back")
-            
-            setting_choice = get_validated_input("Select setting to configure (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
-            
-            if setting_choice == "1":
-                print_info("Auto-set wallpaper after generation")
-                print_option("1", "Enabled")
-                print_option("2", "Disabled")
-                auto_set = get_validated_input("Select option (1-2)", ["1", "2"])
-                user_prefs.wallpaper_settings["auto_set"] = (auto_set == "1")
-                print_success(f"Auto-set wallpaper {'enabled' if user_prefs.wallpaper_settings['auto_set'] else 'disabled'}")
-            
-            elif setting_choice == "2":
-                print_info("Set cache duration (days)")
-                try:
-                    days = int(input("Enter number of days (1-365): ").strip())
-                    days = max(1, min(365, days))
-                    user_prefs.wallpaper_settings["cache_duration"] = days
-                    print_success(f"Cache duration set to {days} days")
-                except ValueError:
-                    print_warning("Invalid input. Using default value.")
-            
-            elif setting_choice == "3":
-                print_info("Select wallpaper fit mode")
-                print_option("1", "Fill (stretch to fill)")
-                print_option("2", "Fit (maintain aspect ratio)")
-                print_option("3", "Center (no scaling)")
-                print_option("4", "Tile (repeat pattern)")
-                fit_mode = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
-                modes = ["fill", "fit", "center", "tile"]
-                user_prefs.wallpaper_settings["fit_mode"] = modes[int(fit_mode) - 1]
-                print_success(f"Fit mode set to {user_prefs.wallpaper_settings['fit_mode']}")
-            
-            elif setting_choice == "4":
-                print_info("Set background color (hex format)")
-                print_info("Example: #000000 for black")
-                color = input("Enter hex color code: ").strip()
-                if color.startswith("#") and len(color) == 7:
-                    try:
-                        int(color[1:], 16)  # Validate hex
-                        user_prefs.wallpaper_settings["background_color"] = color
-                        print_success(f"Background color set to {color}")
-                    except ValueError:
-                        print_warning("Invalid hex color code")
-                else:
-                    print_warning("Invalid color format")
-            
-            elif setting_choice == "5":
-                print_info("Select multi-monitor mode")
-                print_option("1", "Mirror (same wallpaper on all monitors)")
-                print_option("2", "Extend (different wallpapers)")
-                print_option("3", "Individual (customize per monitor)")
-                monitor_mode = get_validated_input("Select option (1-3)", ["1", "2", "3"])
-                modes = ["mirror", "extend", "individual"]
-                user_prefs.wallpaper_settings["multi_monitor"] = modes[int(monitor_mode) - 1]
-                print_success(f"Multi-monitor mode set to {user_prefs.wallpaper_settings['multi_monitor']}")
-            
-            elif setting_choice == "6":
-                print_info("Select wallpaper refresh rate")
-                print_option("1", "Daily")
-                print_option("2", "Weekly")
-                print_option("3", "Monthly")
-                print_option("4", "Never")
-                refresh_rate = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
-                rates = ["daily", "weekly", "monthly", "never"]
-                user_prefs.wallpaper_settings["refresh_rate"] = rates[int(refresh_rate) - 1]
-                print_success(f"Refresh rate set to {user_prefs.wallpaper_settings['refresh_rate']}")
-        
-        elif choice == "5":
-            print_section("Current Preferences")
-            print_info("Preferred Genres:")
-            for genre in user_prefs.preferred_genres:
-                print_info(f"- {genre}")
-            
-            print_info("\nPreferred Styles:")
-            for style in user_prefs.preferred_styles:
-                print_info(f"- {style}")
-            
-            print_info("\nPreferred Moods:")
-            for mood in user_prefs.preferred_moods:
-                print_info(f"- {mood}")
-            
-            print_info("\nWallpaper Settings:")
-            print_info(f"- Auto-set: {'Enabled' if user_prefs.wallpaper_settings['auto_set'] else 'Disabled'}")
-            print_info(f"- Cache Duration: {user_prefs.wallpaper_settings['cache_duration']} days")
-            print_info(f"- Fit Mode: {user_prefs.wallpaper_settings['fit_mode']}")
-            print_info(f"- Background Color: {user_prefs.wallpaper_settings['background_color']}")
-            print_info(f"- Multi-monitor Mode: {user_prefs.wallpaper_settings['multi_monitor']}")
-            print_info(f"- Refresh Rate: {user_prefs.wallpaper_settings['refresh_rate']}")
-        
-        elif choice == "6":
-            print_section("Reset to Defaults")
-            confirm = get_validated_input("Are you sure you want to reset all preferences? (yes/no)", ["yes", "no"])
-            if confirm == "yes":
-                user_prefs.preferred_genres = []
-                user_prefs.preferred_styles = ["photograph"]  # Default to photograph style
-                user_prefs.preferred_moods = []
-                user_prefs.wallpaper_settings = {
-                    "auto_set": True,
-                    "cache_duration": 30,
-                    "fit_mode": "fill",
-                    "background_color": "#000000",
-                    "multi_monitor": "mirror",
-                    "refresh_rate": "daily"
-                }
-                user_prefs.save_preferences()
-                print_success("All preferences reset to defaults")
-        
-        elif choice == "7":
-            break
-        
-        user_prefs.save_preferences()
+            return
 
-# Preset management functions will be implemented here
 def manage_presets():
     """
     Display and manage preset settings through an interactive menu.
@@ -848,7 +552,7 @@ def manage_presets():
         else:  # choice == "5"
             return
 
-def load_preset() -> bool:
+def load_preset() -> Union[Tuple[Dict[str, Any], str], None]:
     """
     Load a preset from a file and apply it to the current user preferences.
     
@@ -857,7 +561,8 @@ def load_preset() -> bool:
     the current settings.
     
     Returns:
-        bool: True if a preset was successfully loaded, False otherwise
+        Union[Tuple[Dict[str, Any], str], None]: A tuple of (settings, preset_name) if successful,
+        None if no presets found or user cancels
     """
     if not os.path.exists("presets"):
         os.makedirs("presets")
@@ -865,7 +570,7 @@ def load_preset() -> bool:
     presets = [f for f in os.listdir("presets") if f.endswith(".json")]
     if not presets:
         print_warning("No saved presets found")
-        return False
+        return None
     
     print_section("Available Presets")
     for i, preset in enumerate(presets, 1):
@@ -874,7 +579,7 @@ def load_preset() -> bool:
     
     choice = get_validated_input("Select preset to load", ["b"] + [str(i) for i in range(1, len(presets) + 1)])
     if choice == "b":
-        return False
+        return None
     
     preset_file = presets[int(choice) - 1]
     preset_name = os.path.splitext(preset_file)[0]
@@ -885,7 +590,7 @@ def load_preset() -> bool:
         return settings, preset_name
     except Exception as e:
         print_error(f"Error loading preset: {e}")
-        return False
+        return None
 
 def save_preset(settings: Dict[str, Any], name: str) -> bool:
     """
@@ -900,7 +605,13 @@ def save_preset(settings: Dict[str, Any], name: str) -> bool:
     
     Returns:
         bool: True if the preset was successfully saved, False otherwise
+    
+    Raises:
+        ValueError: If the preset name is empty or contains invalid characters
     """
+    if not name or not name.strip():
+        raise ValueError("Preset name cannot be empty")
+    
     if not os.path.exists("presets"):
         try:
             os.makedirs("presets")
@@ -1130,431 +841,1084 @@ def update_history_with_filenames(silent: bool = False) -> None:
         logging.error(f"Error updating history with filenames: {e}")
 
 def manage_imagen_settings():
-    """
-    Display and manage Imagen model settings through an interactive menu.
-    
-    This function provides a user interface for modifying various image generation
-    settings including number of images, seed, resolution, and model-specific parameters.
-    """
-    global user_prefs
-    print_header("Imagen 3 Settings")
-    
+    """Manage Imagen 3 specific settings like number of images, seed, etc."""
     while True:
-        print_section("Options")
-        print_option("1", "View Current Settings")
-        print_option("2", "Number of Images")
-        print_option("3", "Seed")
-        print_option("4", "Negative Prompt")
-        print_option("5", "Quality Settings")
-        print_option("6", "Reset to Defaults")
-        print_option("7", "Return to Main Menu")
+        print_section("Imagen 3 Settings")
+        print_option("1", "Number of Images")
+        print_option("2", "Set Specific Seed")
+        print_option("3", "Model Version")
+        print_option("4", "View Current Settings")
+        print_option("5", "Reset to Defaults")
+        print_option("b", "Return to Previous Menu")
         
-        choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+        choice = get_validated_input("Select an option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+        
+        if choice == "b":
+            return
         
         if choice == "1":
-            print_section("Current Settings")
-            print_info(f"Number of Images: {user_prefs.imagen_settings.get('number_of_images', 1)}")
-            print_info(f"Seed: {user_prefs.imagen_settings.get('seed') or 'Random'}")
-            print_info(f"Negative Prompt: {user_prefs.imagen_settings.get('negative_prompt', '') or 'None'}")
-            
-            # Display quality settings if they exist
-            quality_settings = user_prefs.imagen_settings.get('quality_settings', {})
-            if quality_settings:
-                print_info("\nQuality Settings:")
-                print_info(f"  Resolution: {quality_settings.get('resolution', '1920x1080')}")
-                print_info(f"  Detail Level: {quality_settings.get('detail_level', 'medium_detail')}")
-                print_info(f"  Rendering Quality: {quality_settings.get('rendering_quality', 'medium_quality')}")
-            
-            input("\nPress Enter to continue...")
-            
-        elif choice == "2":
             print_section("Number of Images")
-            print_info("Set the number of images to generate (1-4)")
-            try:
-                num = input("Enter number of images: ").strip()
-                num = int(num)
-                if 1 <= num <= 4:
-                    user_prefs.imagen_settings["number_of_images"] = num
-                    print_success(f"Number of images set to {num}")
-                else:
-                    print_warning("Value must be between 1 and 4. Setting to 1.")
-                    user_prefs.imagen_settings["number_of_images"] = 1
-            except ValueError:
-                print_warning("Invalid input. Setting to default (1).")
-                user_prefs.imagen_settings["number_of_images"] = 1
+            print_info(f"Current setting: {user_prefs.imagen_settings.get('number_of_images', 1)}")
+            print_option("1", "1 image")
+            print_option("2", "2 images")
+            print_option("3", "3 images")
+            print_option("4", "4 images")
             
+            num_choice = get_validated_input("Select number of images (1-4)", ["1", "2", "3", "4"])
+            user_prefs.imagen_settings["number_of_images"] = int(num_choice)
+            print_success(f"Number of images set to {num_choice}")
             user_prefs.save_preferences()
             
-        elif choice == "3":
-            print_section("Generation Seed")
-            print_info("Set a seed for reproducible results")
-            print_info("Leave empty for random seed")
+        elif choice == "2":
+            print_section("Set Specific Seed")
+            print_info(f"Current seed: {user_prefs.imagen_settings.get('seed') or 'Random (None)'}")
+            print_info("Setting a specific seed allows you to reproduce the same image style.")
+            print_option("1", "Use Random Seed (None)")
+            print_option("2", "Set Specific Seed")
             
-            seed_input = input("Enter seed (integer) or leave empty: ").strip()
-            if not seed_input:
+            seed_choice = get_validated_input("Select option (1-2)", ["1", "2"])
+            
+            if seed_choice == "1":
                 user_prefs.imagen_settings["seed"] = None
-                print_success("Seed set to random")
+                print_success("Seed set to Random (None)")
+                user_prefs.save_preferences()
             else:
                 try:
-                    seed = int(seed_input)
-                    user_prefs.imagen_settings["seed"] = seed
-                    print_success(f"Seed set to {seed}")
+                    new_seed = input("Enter seed (integer number): ").strip()
+                    if new_seed:
+                        user_prefs.imagen_settings["seed"] = int(new_seed)
+                        print_success(f"Seed set to {new_seed}")
+                    else:
+                        user_prefs.imagen_settings["seed"] = None
+                        print_success("Seed set to Random (None)")
+                    user_prefs.save_preferences()
                 except ValueError:
-                    print_warning("Invalid input. Setting to random.")
-                    user_prefs.imagen_settings["seed"] = None
+                    print_error("Invalid seed value. Please enter a valid integer.")
             
+        elif choice == "3":
+            print_section("Model Version")
+            print_info("Select Imagen model version:")
+            print_option("1", "imagen-3.0-generate-002 (Default)")
+            print_option("2", "imagen-3.0-generate-001 (Legacy)")
+            
+            model_choice = get_validated_input("Select model version (1-2)", ["1", "2"])
+            models = {
+                "1": "imagen-3.0-generate-002",
+                "2": "imagen-3.0-generate-001"
+            }
+            
+            user_prefs.imagen_settings["model_version"] = models[model_choice]
+            print_success(f"Model version set to {models[model_choice]}")
             user_prefs.save_preferences()
             
         elif choice == "4":
-            print_section("Negative Prompt")
-            print_info("Set negative prompt (things to exclude from generation)")
+            print_section("Current Settings")
+            print_info(f"Number of Images: {user_prefs.imagen_settings.get('number_of_images', 1)}")
+            print_info(f"Seed: {user_prefs.imagen_settings.get('seed') or 'Random (None)'}")
+            print_info(f"Model Version: {user_prefs.imagen_settings.get('model_version', 'imagen-3.0-generate-002')}")
+            print_info(f"Negative Prompt: {user_prefs.imagen_settings.get('negative_prompt', '') or 'None'}")
+            print_info(f"Aspect Ratio: {user_prefs.aspect_ratio}")
             
-            current = user_prefs.imagen_settings.get("negative_prompt", "")
-            print_info(f"Current negative prompt: {current or 'None'}")
-            
-            negative_prompt = input("Enter negative prompt or leave empty to clear: ").strip()
-            user_prefs.imagen_settings["negative_prompt"] = negative_prompt
-            
-            if negative_prompt:
-                print_success(f"Negative prompt set to: {negative_prompt}")
-            else:
-                print_success("Negative prompt cleared")
-            
-            user_prefs.save_preferences()
+            print("\nPress Enter to continue...")
+            input()
             
         elif choice == "5":
-            manage_quality_settings()
-            
-        elif choice == "6":
             print_section("Reset to Defaults")
-            confirm = get_validated_input("Are you sure you want to reset Imagen settings? (yes/no)", ["yes", "no"])
-            if confirm == "yes":
-                user_prefs.imagen_settings = {
-                    "number_of_images": 1,
-                    "seed": None,
-                    "negative_prompt": "",
-                    "quality_settings": {
-                        "resolution": "1920x1080",
-                        "detail_level": "medium_detail",
-                        "rendering_quality": "medium_quality"
-                    }
-                }
+            confirm = get_validated_input("Are you sure you want to reset Imagen settings to defaults? (y/n)", ["y", "n"])
+            
+            if confirm.lower() == "y":
+                # Reset only specific imagen settings, not all settings
+                user_prefs.imagen_settings["number_of_images"] = 1
+                user_prefs.imagen_settings["seed"] = None
+                user_prefs.imagen_settings["model_version"] = "imagen-3.0-generate-002"
+                user_prefs.imagen_settings["negative_prompt"] = ""
+                user_prefs.aspect_ratio = "16:9"
+                
                 user_prefs.save_preferences()
-                print_success("Settings reset to defaults")
-            
-        elif choice == "7":
+                print_success("Imagen settings reset to defaults")
+
+def manage_genres():
+    """Manage user's preferred genres for wallpaper generation."""
+    print_header("Manage Genres")
+    print_section("Current Preferred Genres")
+    
+    if not user_prefs.preferred_genres:
+        print_info("No preferred genres set yet.")
+    else:
+        for i, genre in enumerate(user_prefs.preferred_genres, 1):
+            print_option(str(i), genre)
+    
+    print_section("Available Genres")
+    for i, genre in enumerate(available_genres, 1):
+        print_option(str(i), genre)
+    
+    print_section("Options")
+    print_option("1", "Add genre")
+    print_option("2", "Remove genre")
+    print_option("3", "Clear all genres")
+    print_option("4", "Back to main menu")
+    
+    choice = get_validated_input("\nEnter your choice (1-4): ", ["1", "2", "3", "4"])
+    
+    if choice == "1":
+        print_prompt("\nEnter the number of the genre to add (or 'b' to go back): ")
+        genre_choice = input().strip().lower()
+        
+        if genre_choice == 'b':
             return
         
-def manage_quality_settings():
-    """
-    Display and manage image quality settings through an interactive menu.
+        try:
+            genre_index = int(genre_choice) - 1
+            if 0 <= genre_index < len(available_genres):
+                genre = available_genres[genre_index]
+                if genre not in user_prefs.preferred_genres:
+                    user_prefs.preferred_genres.append(genre)
+                    user_prefs.save_preferences()
+                    print_success(f"\nAdded '{genre}' to preferred genres.")
+                else:
+                    print_warning(f"\n'{genre}' is already in your preferred genres.")
+            else:
+                print_error("\nInvalid genre number.")
+        except ValueError:
+            print_error("\nPlease enter a valid number.")
     
-    This function provides a user interface for modifying various quality-related
-    settings including resolution, detail level, and rendering quality.
-    """
-    global user_prefs
-    
-    # Ensure quality_settings exists in imagen_settings
-    if "quality_settings" not in user_prefs.imagen_settings:
-        user_prefs.imagen_settings["quality_settings"] = {
-            "resolution": "1920x1080",
-            "detail_level": "medium_detail",
-            "rendering_quality": "medium_quality"
-        }
-    
-    while True:
-        print_section("Quality Settings")
-        print_option("1", "Resolution")
-        print_option("2", "Detail Level")
-        print_option("3", "Rendering Quality")
-        print_option("4", "Return")
-        
-        quality_choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
-        
-        if quality_choice == "4":
+    elif choice == "2":
+        if not user_prefs.preferred_genres:
+            print_warning("\nNo genres to remove.")
             return
-            
-        if quality_choice == "1":
-            print_info("Select resolution:")
-            print_option("1", "1920x1080 (Full HD)")
-            print_option("2", "2560x1440 (2K)")
-            print_option("3", "3840x2160 (4K)")
-            print_option("4", "5120x2880 (5K)")
-            print_option("5", "7680x4320 (8K)")
-            print_option("6", "Custom")
-            
-            res_choice = get_validated_input("Select resolution (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
-            if res_choice == "6":
-                custom_res = input("Enter custom resolution (e.g., 1920x1080): ").strip()
-                if "x" in custom_res:
-                    user_prefs.imagen_settings["quality_settings"]["resolution"] = custom_res
-                    print_success(f"Custom resolution set to: {custom_res}")
-                else:
-                    print_warning("Invalid format. Using default 1920x1080.")
-                    user_prefs.imagen_settings["quality_settings"]["resolution"] = "1920x1080"
-            else:
-                resolutions = {
-                    "1": "1920x1080",
-                    "2": "2560x1440",
-                    "3": "3840x2160", 
-                    "4": "5120x2880",
-                    "5": "7680x4320"
-                }
-                
-                user_prefs.imagen_settings["quality_settings"]["resolution"] = resolutions[res_choice]
-                print_success(f"Resolution set to {resolutions[res_choice]}")
-            
-        elif quality_choice == "2":
-            print_info("Select detail level:")
-            print_option("1", "Ultra Detailed")
-            print_option("2", "High Detail")
-            print_option("3", "Medium Detail")
-            print_option("4", "Low Detail")
-            print_option("5", "Custom")
-            
-            detail_choice = get_validated_input("Select detail level (1-5)", ["1", "2", "3", "4", "5"])
-            
-            if detail_choice == "5":
-                custom_detail = input("Enter custom detail level: ").strip()
-                if custom_detail:
-                    user_prefs.imagen_settings["quality_settings"]["detail_level"] = custom_detail
-                    print_success(f"Custom detail level set to: {custom_detail}")
-                else:
-                    print_warning("Invalid input. Using medium_detail.")
-                    user_prefs.imagen_settings["quality_settings"]["detail_level"] = "medium_detail"
-            else:
-                detail_levels = {
-                    "1": "ultra_detailed",
-                    "2": "high_detail",
-                    "3": "medium_detail",
-                    "4": "low_detail"
-                }
-                
-                user_prefs.imagen_settings["quality_settings"]["detail_level"] = detail_levels[detail_choice]
-                print_success(f"Detail level set to {detail_levels[detail_choice]}")
-            
-        elif quality_choice == "3":
-            print_info("Select rendering quality:")
-            print_option("1", "Photorealistic")
-            print_option("2", "High Quality")
-            print_option("3", "Medium Quality")
-            print_option("4", "Custom")
-            
-            render_choice = get_validated_input("Select rendering quality (1-4)", ["1", "2", "3", "4"])
-            
-            if render_choice == "4":
-                custom_render = input("Enter custom rendering quality: ").strip()
-                if custom_render:
-                    user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = custom_render
-                    print_success(f"Custom rendering quality set to: {custom_render}")
-                else:
-                    print_warning("Invalid input. Using medium_quality.")
-                    user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = "medium_quality"
-            else:
-                render_qualities = {
-                    "1": "photorealistic",
-                    "2": "high_quality",
-                    "3": "medium_quality"
-                }
-                
-                user_prefs.imagen_settings["quality_settings"]["rendering_quality"] = render_qualities[render_choice]
-                print_success(f"Rendering quality set to {render_qualities[render_choice]}")
         
+        print_prompt("\nEnter the number of the genre to remove (or 'b' to go back): ")
+        genre_choice = input().strip().lower()
+        
+        if genre_choice == 'b':
+            return
+        
+        try:
+            genre_index = int(genre_choice) - 1
+            if 0 <= genre_index < len(user_prefs.preferred_genres):
+                removed_genre = user_prefs.preferred_genres.pop(genre_index)
+                user_prefs.save_preferences()
+                print_success(f"\nRemoved '{removed_genre}' from preferred genres.")
+            else:
+                print_error("\nInvalid genre number.")
+        except ValueError:
+            print_error("\nPlease enter a valid number.")
+    
+    elif choice == "3":
+        if not user_prefs.preferred_genres:
+            print_warning("\nNo genres to clear.")
+            return
+        
+        print_warning("\nAre you sure you want to clear all preferred genres? (y/n): ")
+        if input().strip().lower() == 'y':
+            user_prefs.preferred_genres.clear()
+            user_prefs.save_preferences()
+            print_success("\nCleared all preferred genres.")
+    
+    elif choice == "4":
+        return
+
+def manage_styles():
+    """Manage user's preferred styles for wallpaper generation."""
+    print_section("Manage Styles")
+    print_info("Current preferred styles:")
+    for style in user_prefs.preferred_styles:
+        print_info(f"- {style}")
+    
+    print_info("\nAvailable styles:")
+    style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
+                   "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
+                   "digital_art", "divisionism", "double_exposure", "expressionism", 
+                   "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
+                   "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
+                   "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
+                   "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
+                   "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
+                   "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
+                   "vaporwave", "watercolor", "woodcut"]
+    
+    # Group styles by compatibility for random mixing
+    style_categories = {
+        "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
+                           "gothic", "impressionism", "oil_painting", "pastel", 
+                           "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
+        "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
+                       "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
+                       "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
+                       "stained_glass", "steampunk", "surrealism", "vaporwave"],
+        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
+                        "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
+                        "pointillism", "pop_art", "ukiyo_e"]
+    }
+    
+    def generate_random_style_mix():
+        # Check if user has custom style categories in preferences
+        settings = user_prefs.imagen_settings
+        style_settings = settings.get("style_settings", {})
+        custom_style_categories = style_settings.get("style_categories", {})
+        
+        # Define default style categories to use if no custom categories available
+        default_style_categories = style_categories
+        
+        # Use custom categories if available, otherwise use the default ones
+        categories_to_use = custom_style_categories if custom_style_categories else default_style_categories
+        
+        # Select a random category
+        category = random.choice(list(categories_to_use.keys()))
+        # Select 2-3 compatible styles from the same category
+        num_styles = random.randint(2, 3)
+        available_styles = categories_to_use[category]
+        if len(available_styles) < num_styles:
+            num_styles = len(available_styles)
+        selected_styles = random.sample(available_styles, num_styles)
+        return " + ".join(selected_styles)
+    
+    for i, style in enumerate(style_options, 1):
+        print_option(str(i), style)
+    
+    print_option(str(len(style_options) + 1), "Random Style Mix (combines 2-3 compatible styles)")
+    print_option(str(len(style_options) + 2), "Custom Style")
+    print_option("a", "Add style")
+    print_option("r", "Remove style")
+    print_option("c", "Clear all")
+    print_option("b", "Back")
+    
+    style_choice = get_validated_input("Select an option", 
+                                      [str(i) for i in range(1, len(style_options) + 3)] + ["a", "r", "c", "b"])
+    
+    if style_choice == "b":
+        return
+    elif style_choice == "a":
+        style = input("Enter style to add: ").strip()
+        if style:
+            if style not in user_prefs.preferred_styles:
+                user_prefs.preferred_styles.append(style)
+                user_prefs.save_preferences()
+                print_success(f"Added '{style}' to preferred styles")
+            else:
+                print_warning(f"'{style}' is already in your preferred styles")
+    elif style_choice == "r":
+        if not user_prefs.preferred_styles:
+            print_warning("You don't have any preferred styles to remove")
+            return
+        
+        print_info("Select style to remove:")
+        for i, style in enumerate(user_prefs.preferred_styles, 1):
+            print_option(str(i), style)
+        
+        remove_choice = get_validated_input("Select style to remove (or 'c' to cancel)", 
+                                           [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)] + ["c"])
+        
+        if remove_choice == "c":
+            return
+        
+        style_to_remove = user_prefs.preferred_styles[int(remove_choice) - 1]
+        user_prefs.preferred_styles.remove(style_to_remove)
         user_prefs.save_preferences()
+        print_success(f"Removed '{style_to_remove}' from preferred styles")
+    elif style_choice == "c":
+        confirm = get_validated_input("Are you sure you want to clear all styles? (y/n)", ["y", "n"])
+        if confirm == "y":
+            user_prefs.preferred_styles.clear()
+            user_prefs.save_preferences()
+            print_success("Cleared all preferred styles")
+    elif style_choice == str(len(style_options) + 1):
+        # Random style mix option
+        style_mix = generate_random_style_mix()
+        print_info(f"Generated random style mix: {style_mix}")
+        add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
+        if add_to_preferences == "y":
+            if style_mix not in user_prefs.preferred_styles:
+                user_prefs.preferred_styles.append(style_mix)
+                user_prefs.save_preferences()
+                print_success(f"Added '{style_mix}' to preferred styles")
+            else:
+                print_warning(f"'{style_mix}' is already in your preferred styles")
+    elif style_choice == str(len(style_options) + 2):
+        # Simple custom style option
+        print_info("Enter your custom style (e.g., 'mix of water colour and pastel paint')")
+        custom_style = input("Custom style: ").strip()
+        if not custom_style:
+            print_error("Style cannot be empty")
+            return
+            
+        # Add directly to preferred styles
+        if custom_style not in user_prefs.preferred_styles:
+            user_prefs.preferred_styles.append(custom_style)
+            user_prefs.save_preferences()
+            print_success(f"Added custom style '{custom_style}' to preferred styles")
+        else:
+            print_warning(f"'{custom_style}' is already in your preferred styles")
+    else:
+        # Add the selected style from the list
+        try:
+            selected_style = style_options[int(style_choice) - 1]
+            if selected_style not in user_prefs.preferred_styles:
+                user_prefs.preferred_styles.append(selected_style)
+                user_prefs.save_preferences()
+                print_success(f"Added '{selected_style}' to preferred styles")
+            else:
+                print_warning(f"'{selected_style}' is already in your preferred styles")
+        except (ValueError, IndexError):
+            print_error(f"Invalid selection: {style_choice}")
+
+def manage_moods():
+    """Manage user's preferred moods for wallpaper generation."""
+    print_section("Manage Moods")
+    print_info("Current preferred moods:")
+    for mood in user_prefs.preferred_moods:
+        print_info(f"- {mood}")
+    
+    print_info("\nAvailable moods:")
+    mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
+                  "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
+    for i, mood in enumerate(mood_options, 1):
+        print_option(str(i), mood)
+    
+    print_option("a", "Add mood")
+    print_option("r", "Remove mood")
+    print_option("c", "Clear all")
+    print_option("b", "Back")
+    
+    action = get_validated_input("Select action", ["a", "r", "c", "b"] + [str(i) for i in range(1, len(mood_options) + 1)])
+    
+    if action == "a":
+        mood = input("Enter mood to add: ").strip()
+        if mood in mood_options and mood not in user_prefs.preferred_moods:
+            user_prefs.preferred_moods.append(mood)
+            print_success(f"Added mood: {mood}")
+        else:
+            print_warning("Invalid mood or already in preferences")
+    elif action == "r":
+        if user_prefs.preferred_moods:
+            print_info("Select mood to remove:")
+            for i, mood in enumerate(user_prefs.preferred_moods, 1):
+                print_option(str(i), mood)
+            idx = int(get_validated_input("Enter number", [str(i) for i in range(1, len(user_prefs.preferred_moods) + 1)])) - 1
+            removed = user_prefs.preferred_moods.pop(idx)
+            print_success(f"Removed mood: {removed}")
+        else:
+            print_warning("No moods to remove")
+    elif action == "c":
+        user_prefs.preferred_moods.clear()
+        print_success("Cleared all moods")
+    elif action == "b":
+        return
+    else:
+        idx = int(action) - 1
+        if 0 <= idx < len(mood_options):
+            mood = mood_options[idx]
+            if mood not in user_prefs.preferred_moods:
+                user_prefs.preferred_moods.append(mood)
+                print_success(f"Added mood: {mood}")
+            else:
+                print_warning("Mood already in preferences") 
+
+def manage_wallpaper_settings():
+    """Manage wallpaper-specific settings."""
+    print_section("Manage Wallpaper Settings")
+    print_option("1", "Auto-set wallpaper")
+    print_option("2", "Cache duration")
+    print_option("3", "Fit mode")
+    print_option("4", "Background color")
+    print_option("5", "Multi-monitor mode")
+    print_option("6", "Refresh rate")
+    print_option("7", "Back")
+    
+    setting_choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+    
+    if setting_choice == "1":
+        print_info("Enable or disable automatic wallpaper setting")
+        print_option("1", "Enable")
+        print_option("2", "Disable")
+        auto_set = get_validated_input("Select option (1-2)", ["1", "2"])
+        user_prefs.wallpaper_settings["auto_set"] = (auto_set == "1")
+        print_success(f"Auto-set wallpaper {'enabled' if user_prefs.wallpaper_settings['auto_set'] else 'disabled'}")
+    
+    elif setting_choice == "2":
+        print_info("Set how long to keep generated wallpapers (in days)")
+        print_option("1", "7 days")
+        print_option("2", "14 days")
+        print_option("3", "30 days")
+        print_option("4", "60 days")
+        print_option("5", "90 days")
+        print_option("6", "Custom duration")
+        duration_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+        
+        if duration_choice == "6":
+            while True:
+                try:
+                    days = int(input("Enter number of days (1-365): "))
+                    if 1 <= days <= 365:
+                        user_prefs.wallpaper_settings["cache_duration"] = days
+                        print_success(f"Cache duration set to {days} days")
+                        break
+                    else:
+                        print_warning("Please enter a number between 1 and 365")
+                except ValueError:
+                    print_warning("Please enter a valid number")
+        else:
+            durations = [7, 14, 30, 60, 90]
+            user_prefs.wallpaper_settings["cache_duration"] = durations[int(duration_choice) - 1]
+            print_success(f"Cache duration set to {user_prefs.wallpaper_settings['cache_duration']} days")
+    
+    elif setting_choice == "3":
+        print_info("Select how the wallpaper should fit the screen")
+        print_option("1", "Center")
+        print_option("2", "Fit")
+        print_option("3", "Fill")
+        print_option("4", "Stretch")
+        fit_mode = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+        modes = ["center", "fit", "fill", "stretch"]
+        user_prefs.wallpaper_settings["fit_mode"] = modes[int(fit_mode) - 1]
+        print_success(f"Fit mode set to {user_prefs.wallpaper_settings['fit_mode']}")
+    
+    elif setting_choice == "4":
+        print_info("Select background color (shown when wallpaper doesn't fill screen)")
+        print_option("1", "Black")
+        print_option("2", "White")
+        print_option("3", "Custom color")
+        color_choice = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+        
+        if color_choice == "1":
+            user_prefs.wallpaper_settings["background_color"] = "#000000"
+            print_success("Background color set to black")
+        elif color_choice == "2":
+            user_prefs.wallpaper_settings["background_color"] = "#FFFFFF"
+            print_success("Background color set to white")
+        else:
+            while True:
+                color = input("Enter hex color code (e.g., #FF0000 for red): ").strip()
+                if re.match(r'^#[0-9A-Fa-f]{6}$', color):
+                    user_prefs.wallpaper_settings["background_color"] = color
+                    print_success(f"Background color set to {color}")
+                    break
+                else:
+                    print_warning("Please enter a valid hex color code (e.g., #FF0000)")
+    
+    elif setting_choice == "5":
+        print_info("Select multi-monitor mode")
+        print_option("1", "Mirror (same wallpaper on all monitors)")
+        print_option("2", "Extend (different wallpapers)")
+        print_option("3", "Individual (customize per monitor)")
+        monitor_mode = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+        modes = ["mirror", "extend", "individual"]
+        user_prefs.wallpaper_settings["multi_monitor"] = modes[int(monitor_mode) - 1]
+        print_success(f"Multi-monitor mode set to {user_prefs.wallpaper_settings['multi_monitor']}")
+    
+    elif setting_choice == "6":
+        print_info("Select wallpaper refresh rate")
+        print_option("1", "Daily")
+        print_option("2", "Weekly")
+        print_option("3", "Monthly")
+        print_option("4", "Never")
+        refresh_rate = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+        rates = ["daily", "weekly", "monthly", "never"]
+        user_prefs.wallpaper_settings["refresh_rate"] = rates[int(refresh_rate) - 1]
+        print_success(f"Refresh rate set to {user_prefs.wallpaper_settings['refresh_rate']}")
+    
+    elif setting_choice == "7":
+        return
 
 def configure_advanced_options():
-    """
-    Display and manage advanced configuration options through an interactive menu.
-    
-    This function provides a user interface for modifying advanced options
-    including negative prompts, advanced settings categories, and other
-    specialized configuration options.
-    """
-    global user_prefs
-    print_section("Advanced Options")
-    print_info("Fine-tune the generation parameters:")
-    
-    while True:
-        print_option("1", "Style & Artistic Settings")
-        print_option("2", "Camera & Technical Settings")
-        print_option("3", "Lighting & Atmosphere")
-        print_option("4", "Composition & Environment")
-        print_option("5", "Color & Detail Settings")
-        print_option("6", "Show Current Settings")
-        print_option("7", "Return to previous menu")
+    while True:  # Advanced Options menu loop
+        print_section("Advanced Options")
+        print_option("1", "Genres")
+        print_option("2", "Styles")
+        print_option("3", "Moods")
+        print_option("4", "Aspect Ratio")
+        print_option("5", "Negative Prompt")
+        print_option("6", "Imagen Settings")
+        print_option("7", "Prompt Generation Settings")
+        print_option("8", "Style & Artistic Settings")
+        print_option("9", "Camera & Technical Settings")
+        print_option("10", "Output Quality Settings")
+        print_option("11", "Lighting & Atmosphere")
+        print_option("12", "Composition & Environment")
+        print_option("13", "Color & Detail Settings")
+        print_option("14", "View Current Settings")
+        print_option("15", "Customize All Parameters")
+        print_option("16", "Generate AI Preset")
+        print_option("17", "Reset to Default")
+        print_option("18", "Return")
         
-        advanced_choice = get_validated_input("Select option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+        advanced_choice = get_validated_input("Select option (1-18)", 
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"])
+        
+        if advanced_choice == "18":
+            break  # Return to previous menu
         
         if advanced_choice == "1":
-            manage_style_settings()
+            manage_genres()
+            
         elif advanced_choice == "2":
-            manage_camera_settings()
+            manage_styles()
+            
         elif advanced_choice == "3":
-            manage_lighting_settings()
+            manage_moods()
+            
         elif advanced_choice == "4":
-            manage_composition_settings()
+            change_aspect_ratio()
+            
         elif advanced_choice == "5":
-            manage_color_settings()
+            manage_negative_prompt()
+            
         elif advanced_choice == "6":
-            show_advanced_settings()
+            manage_imagen_settings()
+        
         elif advanced_choice == "7":
-            return
+            manage_prompt_generation_settings()
+            
+        elif advanced_choice == "8":  # Style & Artistic Settings
+            manage_style_settings()
+            
+        elif advanced_choice == "9":  # Camera & Technical Settings
+            manage_camera_settings()
+            
+        elif advanced_choice == "10":  # Output Quality Settings
+            manage_output_quality_settings()
+            
+        elif advanced_choice == "11":  # Lighting & Atmosphere
+            manage_lighting_settings()
+            
+        elif advanced_choice == "12":  # Composition & Environment
+            manage_composition_settings()
+            
+        elif advanced_choice == "13":  # Color & Detail Settings
+            manage_color_settings()
+            
+        elif advanced_choice == "14":
+            view_current_settings()
+            
+        elif advanced_choice == "15":
+            customize_all_parameters()
+            
+        elif advanced_choice == "16":
+            generate_ai_preset()
+            
+        elif advanced_choice == "17":
+            reset_to_default()
+
+def manage_prompt_generation_settings():
+    """Manage settings for prompt generation."""
+    # Check if prompt generator module is available
+    if not PROMPT_GENERATOR_AVAILABLE:
+        print_warning("Prompt generation settings are not available.")
+        print_info("The prompt_generator module could not be imported.")
+        input("Press Enter to return to the previous menu...")
+        return
+    
+    while True:  # Prompt Generation Settings menu loop
+        print_section("Prompt Generation Settings")
+        print_info("Choose how prompts are generated:")
+        print_option("1", "Generate or enhance prompts WITH user preferences")
+        print_option("2", "Generate or enhance prompts WITHOUT user preferences")
+        print_option("3", "Return to Advanced Options")
+        
+        choice = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+        
+        if choice == "3":
+            break  # Return to Advanced Options menu
+        
+        if choice == "1":
+            set_prompt_preferences(True)
+            print_success("Prompts will now be generated and enhanced using your preferences.")
+            break
+        
+        elif choice == "2":
+            set_prompt_preferences(False)
+            print_success("Prompts will now be generated and enhanced without using your preferences.")
+            print_info("This will create simple, generic prompts based only on the selected subject or tags.")
+            break
 
 def manage_style_settings():
-    """
-    Display and manage style settings through an interactive menu.
-    
-    This function provides a user interface for modifying various style-related
-    settings including artistic styles, visual treatments, and aesthetic preferences.
-    """
-    global user_prefs
-    # Ensure style_settings exists
-    if "style_settings" not in user_prefs.imagen_settings:
-        user_prefs.imagen_settings["style_settings"] = {
-            "art_movement": "Abstract Expressionism",
-            "post_processing": []
-        }
-    
-    print_section("Style & Artistic Settings")
-    print_info("Choose the artistic style and style-specific settings:")
-    
-    while True:
-        print_option("1", "Art Movement")
-        print_option("2", "Post-processing Effects")
-        print_option("3", "Return")
+    """Manage style-specific settings."""
+    while True:  # Style & Artistic Settings menu loop
+        print_section("Style & Artistic Settings")
+        print_option("1", "Style Selection")
+        print_option("2", "Art Movement")
+        print_option("3", "Post-Processing Effects")
+        print_option("b", "Return to Previous Menu")
         
-        style_choice = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+        style_choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
+        if style_choice == "b":
+            break  # Return to Style & Artistic Settings menu
         
-        if style_choice == "3":
-            return
-            
         if style_choice == "1":
-            print_info("Select art movement:")
-            print_option("1", "Abstract Expressionism")
-            print_option("2", "Impressionism")
-            print_option("3", "Surrealism")
-            print_option("4", "Minimalism")
-            print_option("5", "Cubism")
-            print_option("6", "Custom")
-            
-            movement_choice = get_validated_input("Select movement (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
-            if movement_choice == "6":
-                custom_movement = input("Enter custom art movement: ").strip()
-                if custom_movement:
-                    user_prefs.imagen_settings["style_settings"]["art_movement"] = custom_movement
-                    print_success(f"Custom art movement set to: {custom_movement}")
-            else:
+            while True:  # Style Selection submenu loop
+                print_info("Select style:")
+                print_option("1", "Traditional Art")
+                print_option("2", "Digital Art")
+                print_option("3", "Illustration")
+                print_option("4", "Random Style Mix")
+                print_option("5", "See More Styles")
+                print_option("6", "Custom Style")
+                print_option("b", "Return to Previous Menu")
+                
+                selection_choice = get_validated_input("Select style (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+                if selection_choice == "b":
+                    break  # Return to Style & Artistic Settings menu
+                
+                if selection_choice == "4":  # Random Style Mix
+                    style_mix = generate_random_style_mix()
+                    print_info(f"Generated random style mix: {style_mix}")
+                    confirm = get_validated_input("Use this style mix? (y/n)", ["y", "n"])
+                    if confirm == "y":
+                        user_prefs.preferred_styles = [style_mix]
+                        print_success(f"Style set to: {style_mix}")
+                        user_prefs.save_preferences()
+                    continue
+                
+                if selection_choice == "5":  # See More Styles
+                    print_info("Additional available styles:")
+                    additional_styles = [
+                        "Photography", "Pixel Art", "Watercolor", "Oil Painting", 
+                        "Sketch", "Cartoon", "Manga", "Anime", "3D Render", 
+                        "Concept Art", "Graffiti", "Minimalist", "Abstract", 
+                        "Impressionist", "Surrealist", "Pop Art", "Cyberpunk",
+                        "Steampunk", "Gothic", "Fantasy", "Sci-Fi"
+                    ]
+                    for i, style in enumerate(additional_styles, 1):
+                        print_option(str(i), style)
+                    
+                    print_option("b", "Back to Style Selection")
+                    
+                    more_choice = get_validated_input(
+                        f"Select style (1-{len(additional_styles)}, b)", 
+                        [str(i) for i in range(1, len(additional_styles) + 1)] + ["b"]
+                    )
+                    
+                    if more_choice == "b":
+                        continue  # Return to main style selection menu
+                    
+                    selected_style = additional_styles[int(more_choice) - 1].lower().replace(" ", "_")
+                    user_prefs.preferred_styles = [selected_style]
+                    print_success(f"Style set to {selected_style}")
+                    user_prefs.save_preferences()
+                    continue
+                
+                if selection_choice == "6":  # Custom Style
+                    custom_style = input("Enter custom style: ").strip()
+                    if custom_style:
+                        user_prefs.preferred_styles = [custom_style]
+                        print_success(f"Custom style set to: {custom_style}")
+                        user_prefs.save_preferences()
+                    continue
+                
+                styles = {
+                    "1": "traditional_art",
+                    "2": "digital_art",
+                    "3": "illustration"
+                }
+                
+                selected_style = styles[selection_choice]
+                user_prefs.preferred_styles = [selected_style]
+                print_success(f"Style set to {selected_style}")
+                user_prefs.save_preferences()
+        
+        elif style_choice == "2":
+            while True:  # Art Movement submenu loop
+                print_info("Select art movement:")
+                print_option("0", "None (No specific art movement)")
+                print_option("1", "Abstract Expressionism")
+                print_option("2", "Impressionism")
+                print_option("3", "Surrealism")
+                print_option("4", "Cubism")
+                print_option("5", "Pop Art")
+                print_option("6", "Custom Movement")
+                print_option("b", "Return to Previous Menu")
+                
+                movement_choice = get_validated_input("Select art movement (0-6, b)", ["0", "1", "2", "3", "4", "5", "6", "b"])
+                if movement_choice == "b":
+                    break  # Return to Style & Artistic menu
+                
+                if movement_choice == "0":
+                    user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = None
+                    print_success("Art movement set to None")
+                    user_prefs.save_preferences()
+                    continue
+                
+                if movement_choice == "6":
+                    custom_movement = input("Enter custom art movement: ").strip()
+                    if custom_movement:
+                        user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = custom_movement
+                        print_success(f"Custom art movement set to: {custom_movement}")
+                        user_prefs.save_preferences()
+                    continue
+                
                 movements = {
                     "1": "Abstract Expressionism",
                     "2": "Impressionism",
                     "3": "Surrealism",
-                    "4": "Minimalism",
-                    "5": "Cubism"
+                    "4": "Cubism",
+                    "5": "Pop Art"
                 }
                 
-                user_prefs.imagen_settings["style_settings"]["art_movement"] = movements[movement_choice]
+                user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = movements[movement_choice]
                 print_success(f"Art movement set to {movements[movement_choice]}")
+                user_prefs.save_preferences()
+        
+        elif style_choice == "3":
+            while True:  # Post-Processing Effects submenu loop
+                print_info("Select post-processing effects:")
+                print_option("1", "Bloom Effect")
+                print_option("2", "Vignette Effect")
+                print_option("3", "Color Grading")
+                print_option("4", "Depth of Field")
+                print_option("5", "Motion Blur")
+                print_option("6", "Film Grain")
+                print_option("7", "Lens Flare")
+                print_option("8", "Chromatic Aberration")
+                print_option("9", "Sharpening")
+                print_option("10", "Tone Mapping")
+                print_option("11", "HDR Effect")
+                print_option("12", "Light Leaks")
+                print_option("13", "No Post-Processing")
+                print_option("14", "Custom Effects")
+                print_option("b", "Return to Previous Menu")
                 
-        elif style_choice == "2":
-            print_info("Select post-processing effects (comma-separated):")
-            print_option("1", "Vintage")
-            print_option("2", "HDR")
-            print_option("3", "Film Grain")
-            print_option("4", "Color Grading")
-            print_option("5", "Custom")
-            print_option("6", "None/Clear")
-            
-            effects_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
-            if effects_choice == "5":
-                custom_effects = input("Enter custom effects (comma-separated): ").strip()
-                if custom_effects:
-                    user_prefs.imagen_settings["style_settings"]["post_processing"] = [e.strip() for e in custom_effects.split(",")]
-                    print_success(f"Custom effects set to: {custom_effects}")
-            elif effects_choice == "6":
-                user_prefs.imagen_settings["style_settings"]["post_processing"] = []
-                print_success("Post-processing effects cleared")
-            else:
+                effects_choice = get_validated_input("Select post-processing effects (1-14, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "b"])
+                if effects_choice == "b":
+                    break  # Return to Style & Artistic Settings menu
+                
+                if effects_choice == "13":
+                    user_prefs.imagen_settings["style_settings"]["post_processing"] = []
+                    print_success("Post-processing effects cleared")
+                    user_prefs.save_preferences()
+                    continue
+                
+                if effects_choice == "14":
+                    custom_effects = input("Enter custom post-processing effects (comma-separated): ").strip()
+                    if custom_effects:
+                        effects_list = [e.strip() for e in custom_effects.split(",")]
+                        user_prefs.imagen_settings["style_settings"]["post_processing"] = effects_list
+                        print_success(f"Custom post-processing effects set to: {', '.join(effects_list)}")
+                        user_prefs.save_preferences()
+                    continue
+                
                 effects = {
-                    "1": ["vintage"],
-                    "2": ["hdr"],
-                    "3": ["film_grain"],
-                    "4": ["color_grading"]
+                    "1": ["bloom"],
+                    "2": ["vignette"],
+                    "3": ["color_grading"],
+                    "4": ["depth_of_field"],
+                    "5": ["motion_blur"],
+                    "6": ["film_grain"],
+                    "7": ["lens_flare"],
+                    "8": ["chromatic_aberration"],
+                    "9": ["sharpening"],
+                    "10": ["tone_mapping"],
+                    "11": ["hdr"],
+                    "12": ["light_leaks"]
                 }
                 
                 user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
-                print_success(f"Post-processing effects set to {effects[effects_choice]}")
-        
-        user_prefs.save_preferences()
-
-# Additional helper functions would be implemented here
-# These functions would handle camera settings, lighting settings, etc.
-# For brevity, they are not included in this implementation
-def show_advanced_settings():
+                print_success(f"Post-processing effects set to {effects[effects_choice][0]}")
+                user_prefs.save_preferences()
+    
+def reset_all_settings_to_none():
     """
-    Display detailed information about advanced settings.
+    Reset all user preference settings to None (null).
     
-    This function shows a comprehensive overview of all advanced settings
-    categories and their current values.
+    This function sets all configurable settings in user_prefs to None,
+    effectively nullifying all settings while maintaining the structure.
     """
-    print_section("Current Advanced Settings")
+    global user_prefs
     
-    # Display style settings
-    style_settings = user_prefs.imagen_settings.get("style_settings", {})
-    if style_settings:
-        print_info("Style Settings:")
-        print_info(f"  Art Movement: {style_settings.get('art_movement', 'Not set')}")
-        post_processing = style_settings.get('post_processing', [])
-        print_info(f"  Post-processing: {', '.join(post_processing) if post_processing else 'None'}")
+    # Reset main preferences
+    user_prefs.preferred_genres = []
+    user_prefs.preferred_styles = []
+    user_prefs.preferred_moods = []
+    user_prefs.negative_prompts = []
     
-    # Display quality settings
-    quality_settings = user_prefs.imagen_settings.get("quality_settings", {})
-    if quality_settings:
-        print_info("\nQuality Settings:")
-        print_info(f"  Resolution: {quality_settings.get('resolution', 'Not set')}")
-        print_info(f"  Detail Level: {quality_settings.get('detail_level', 'Not set')}")
-        print_info(f"  Rendering Quality: {quality_settings.get('rendering_quality', 'Not set')}")
+    # Reset imagen settings - Camera settings
+    user_prefs.imagen_settings["camera_settings"] = {
+        "camera_model": None,
+        "lens_type": None,
+        "aperture": None,
+        "depth_of_field": None,
+        "special_lens": None,
+        "camera_brand": None,
+        "focal_length": None,
+        "sensor_type": None
+    }
     
-    # Display other categories of settings
-    camera_settings = user_prefs.imagen_settings.get("camera_settings", {})
-    if camera_settings:
-        print_info("\nCamera Settings:")
-        for key, value in camera_settings.items():
-            print_info(f"  {key}: {value}")
+    # Reset imagen settings - Style settings
+    user_prefs.imagen_settings["style_settings"] = {
+        "art_movement": None,
+        "post_processing": []
+    }
     
-    lighting_settings = user_prefs.imagen_settings.get("lighting_settings", {})
-    if lighting_settings:
-        print_info("\nLighting Settings:")
-        for key, value in lighting_settings.items():
-            if isinstance(value, list):
-                print_info(f"  {key}: {', '.join(value) if value else 'None'}")
-            else:
-                print_info(f"  {key}: {value}")
+    # Reset imagen settings - Lighting settings
+    user_prefs.imagen_settings["lighting_settings"] = {
+        "lighting_type": None,
+        "time_of_day": None,
+        "light_source": None,
+        "light_quality": None,
+        "artificial_sources": []
+    }
     
-    composition_settings = user_prefs.imagen_settings.get("composition_settings", {})
-    if composition_settings:
-        print_info("\nComposition Settings:")
-        for key, value in composition_settings.items():
-            print_info(f"  {key}: {value}")
+    # Reset imagen settings - Composition settings
+    user_prefs.imagen_settings["composition_settings"] = {
+        "technique": None,
+        "camera_angle": None,
+        "visual_flow": None,
+        "depth_layering": None
+    }
     
-    # Wait for user acknowledgment
-    input("\nPress Enter to continue...")
+    # Reset imagen settings - Environment settings
+    user_prefs.imagen_settings["environment_settings"] = {
+        "weather": None,
+        "season": None,
+        "atmospheric_effects": [],
+        "location_type": None
+    }
+    
+    # Reset imagen settings - Color settings
+    user_prefs.imagen_settings["color_settings"] = {
+        "color_scheme": None,
+        "palette_type": None,
+        "color_temperature": None
+    }
+    
+    # Reset imagen settings - Detail settings
+    user_prefs.imagen_settings["detail_settings"] = {
+        "texture_quality": None,
+        "special_effects": []
+    }
+    
+    # Reset imagen settings - Quality settings
+    user_prefs.imagen_settings["quality_settings"] = {
+        "resolution": "1920x1080",  # Keep a default resolution
+        "detail_level": None,
+        "rendering_quality": None
+    }
+    
+    # Reset other imagen settings
+    user_prefs.imagen_settings["negative_prompt"] = ""
+    
+    # Save the reset preferences
+    user_prefs.save_preferences()
+    
+    print_success("All settings have been reset to None (null).")
+    print_info("Your preferences have been updated and saved.")
 
-# Placeholder functions for the remaining settings categories that would be implemented later
-def manage_camera_settings(): 
-    print_info("Camera settings management not fully implemented yet")
-    input("Press Enter to continue...")
+def manage_camera_settings():
+    """Manage camera-specific settings."""
+    print_section("Camera & Technical Settings")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
+
+def manage_output_quality_settings():
+    """Manage output quality settings."""
+    print_section("Output Quality Settings")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
 
 def manage_lighting_settings():
-    print_info("Lighting settings management not fully implemented yet")
-    input("Press Enter to continue...")
+    """Manage lighting and atmosphere settings."""
+    print_section("Lighting & Atmosphere Settings")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
 
 def manage_composition_settings():
-    print_info("Composition settings management not fully implemented yet")
-    input("Press Enter to continue...")
+    """Manage composition and environment settings."""
+    print_section("Composition & Environment Settings")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
 
 def manage_color_settings():
-    print_info("Color settings management not fully implemented yet")
-    input("Press Enter to continue...") 
+    """Manage color and detail settings."""
+    print_section("Color & Detail Settings")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
+
+def view_current_settings():
+    """View all current settings."""
+    print_section("Current Settings")
+    print_info("Aspect Ratio: " + user_prefs.aspect_ratio)
+    
+    # Display preferred genres, styles, and moods
+    if user_prefs.preferred_genres:
+        print_info("Preferred Genres: " + ", ".join(user_prefs.preferred_genres))
+    else:
+        print_info("Preferred Genres: None")
+        
+    if user_prefs.preferred_styles:
+        print_info("Preferred Styles: " + ", ".join(user_prefs.preferred_styles))
+    else:
+        print_info("Preferred Styles: None")
+        
+    if user_prefs.preferred_moods:
+        print_info("Preferred Moods: " + ", ".join(user_prefs.preferred_moods))
+    else:
+        print_info("Preferred Moods: None")
+    
+    # Display negative prompt if set
+    negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
+    print_info("Negative Prompt: " + (negative_prompt if negative_prompt else "None"))
+    
+    # Display imagen settings (simplified)
+    print_info("\nImagen Settings:")
+    for category, settings in user_prefs.imagen_settings.items():
+        if isinstance(settings, dict) and settings:
+            print_info(f"  {category.replace('_', ' ').title()}:")
+            for key, value in settings.items():
+                if value:  # Only show non-empty values
+                    if isinstance(value, list):
+                        print_info(f"    {key.replace('_', ' ').title()}: {', '.join(value)}")
+                    else:
+                        print_info(f"    {key.replace('_', ' ').title()}: {value}")
+    
+    input("\nPress Enter to return to the previous menu...")
+    return
+
+def customize_all_parameters():
+    """Customize all generation parameters."""
+    print_section("Customize All Parameters")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
+
+def generate_ai_preset():
+    """Generate an AI-based preset."""
+    print_section("Generate AI Preset")
+    print_info("This feature is coming soon!")
+    input("Press Enter to return to the previous menu...")
+    return
+
+def reset_to_default():
+    """Reset all settings to default values."""
+    print_section("Reset to Default")
+    print_warning("This will reset all settings to their default values.")
+    confirmation = get_validated_input("Are you sure you want to proceed? (y/n)", ["y", "n"])
+    
+    if confirmation.lower() == "y":
+        # Initialize a new UserPreferences object
+        global user_prefs
+        user_prefs = UserPreferences()
+        
+        # Save the reset preferences
+        user_prefs.save_preferences()
+        
+        print_success("All settings have been reset to default values.")
+    else:
+        print_info("Reset cancelled.")
+    
+    return
+
+def change_aspect_ratio():
+    """Change the aspect ratio of generated wallpapers."""
+    print_section("Change Aspect Ratio")
+    print_info(f"Current aspect ratio: {user_prefs.aspect_ratio}")
+    
+    print_option("1", "16:9 (Widescreen)")
+    print_option("2", "16:10")
+    print_option("3", "4:3 (Standard)")
+    print_option("4", "21:9 (Ultrawide)")
+    print_option("5", "32:9 (Super Ultrawide)")
+    print_option("6", "1:1 (Square)")
+    print_option("7", "9:16 (Mobile Portrait)")
+    print_option("8", "Custom Aspect Ratio")
+    
+    choice = get_validated_input("Select aspect ratio (1-8)", ["1", "2", "3", "4", "5", "6", "7", "8"])
+    
+    aspect_ratios = {
+        "1": "16:9",
+        "2": "16:10",
+        "3": "4:3",
+        "4": "21:9",
+        "5": "32:9",
+        "6": "1:1",
+        "7": "9:16"
+    }
+    
+    if choice == "8":
+        custom_ratio = input("Enter custom aspect ratio (width:height): ").strip()
+        if re.match(r'^\d+:\d+$', custom_ratio):
+            user_prefs.aspect_ratio = custom_ratio
+            print_success(f"Aspect ratio set to {custom_ratio}")
+        else:
+            print_error("Invalid aspect ratio format. Please use width:height (e.g., 16:9)")
+            return
+    else:
+        user_prefs.aspect_ratio = aspect_ratios[choice]
+        print_success(f"Aspect ratio set to {aspect_ratios[choice]}")
+    
+    # Update resolution in quality settings based on the new aspect ratio
+    resolution = user_prefs.imagen_settings.get("quality_settings", {}).get("resolution", "1920x1080")
+    if resolution:
+        # Try to adjust resolution to match the new aspect ratio
+        width, height = map(int, resolution.split("x"))
+        if user_prefs.aspect_ratio == "16:9":
+            new_resolution = f"{width}x{int(width * 9 / 16)}"
+        elif user_prefs.aspect_ratio == "16:10":
+            new_resolution = f"{width}x{int(width * 10 / 16)}"
+        elif user_prefs.aspect_ratio == "4:3":
+            new_resolution = f"{width}x{int(width * 3 / 4)}"
+        elif user_prefs.aspect_ratio == "21:9":
+            new_resolution = f"{width}x{int(width * 9 / 21)}"
+        elif user_prefs.aspect_ratio == "32:9":
+            new_resolution = f"{width}x{int(width * 9 / 32)}"
+        elif user_prefs.aspect_ratio == "1:1":
+            new_resolution = f"{width}x{width}"
+        elif user_prefs.aspect_ratio == "9:16":
+            new_resolution = f"{width}x{int(width * 16 / 9)}"
+        else:
+            # For custom ratio, try to calculate
+            try:
+                w, h = map(int, user_prefs.aspect_ratio.split(":"))
+                new_resolution = f"{width}x{int(width * h / w)}"
+            except:
+                new_resolution = resolution  # keep original if calculation fails
+        
+        if "quality_settings" not in user_prefs.imagen_settings:
+            user_prefs.imagen_settings["quality_settings"] = {}
+        user_prefs.imagen_settings["quality_settings"]["resolution"] = new_resolution
+        print_info(f"Resolution updated to {new_resolution}")
+    
+    user_prefs.save_preferences()
+    return
+
+def manage_negative_prompt():
+    """Manage negative prompt settings."""
+    print_section("Negative Prompt Settings")
+    print_info("Negative prompts tell the AI what NOT to include in the image.")
+    
+    current_negative = user_prefs.imagen_settings.get("negative_prompt", "")
+    print_info(f"Current negative prompt: {current_negative if current_negative else 'None'}")
+    
+    print_option("1", "Set Custom Negative Prompt")
+    print_option("2", "Use Default Negative Prompt")
+    print_option("3", "Clear Negative Prompt")
+    print_option("4", "Return to Previous Menu")
+    
+    choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+    
+    if choice == "4":
+        return
+    
+    if choice == "1":
+        print_info("Enter your custom negative prompt (what you want to avoid in the image):")
+        custom_negative = input("> ").strip()
+        
+        if custom_negative:
+            user_prefs.imagen_settings["negative_prompt"] = custom_negative
+            print_success("Custom negative prompt set successfully.")
+        else:
+            print_warning("Empty input. Negative prompt not changed.")
+    
+    elif choice == "2":
+        default_negative = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        user_prefs.imagen_settings["negative_prompt"] = default_negative
+        print_success("Default negative prompt set successfully.")
+    
+    elif choice == "3":
+        user_prefs.imagen_settings["negative_prompt"] = ""
+        print_success("Negative prompt cleared.")
+    
+    user_prefs.save_preferences()
