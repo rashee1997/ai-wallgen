@@ -214,20 +214,32 @@ Critical Requirements:
   * Balance detail with style
 
 Output Format:
-Generate a single, detailed sentence that incorporates:
+Generate a single, detailed paragraph that incorporates:
 1. Main subject and action/state
 2. Style and artistic direction
 3. Camera and technical specifications
 4. Lighting and atmospheric conditions
 5. Composition and environmental context
 6. Color treatment and special effects
-7. Quality and detail specifications
+7. Quality and detail specifications - RESOLUTION ({resolution}) and ASPECT RATIO ({aspect_ratio}) MUST be explicitly included here
 8. Mood and emotional impact
+
+CRITICALLY IMPORTANT FORMAT RULES:
+- ALWAYS end the main description with "{resolution} resolution, {aspect_ratio} aspect ratio" before the negative prompt
+- Only AFTER the resolution and aspect ratio, add "Avoid: [negative elements]"
+- NEVER put resolution or aspect ratio in the negative prompt section
+- Follow this exact pattern: "[creative description], {resolution} resolution, {aspect_ratio} aspect ratio. Avoid: [unwanted elements]"
 
 The final prompt should read like a professional artist's or photographer's description, emphasizing the chosen style while maintaining clarity and focus. Ensure all technical specifications are accurate and appropriate for the chosen style. The prompt should be detailed but concise, focusing on the most important elements that will contribute to the final image quality."""
 
 # Custom prompt enhancement instructions
-CUSTOM_PROMPT_INSTRUCTIONS = """Enhance the following prompt for generating a high-quality wallpaper image. Consider the following specifications:
+CUSTOM_PROMPT_INSTRUCTIONS = """
+YOUR PRIMARY TASK IS TO ENHANCE THIS EXACT PROMPT: "{prompt}"
+
+IMPORTANT: The input prompt MUST remain the central subject and focus. DO NOT replace or rewrite the core concept. 
+You are only adding technical details and artistic specifications to the EXISTING prompt, not creating a new one.
+
+Enhance the above prompt for generating a high-quality wallpaper image by incorporating these technical specifications:
 
 Style & Artistic Settings:
 - Overall Style: {style}
@@ -271,10 +283,12 @@ Lighting & Atmosphere:
 Composition & Environment:
 - Technique: {composition}
 - Camera Angle: {camera_angle}
-- Perspective: {perspective}
+- Visual Flow: {visual_flow}
+- Depth Layering: {depth_layering}
 - Weather: {weather}
 - Season: {season}
 - Atmospheric Effects: {atmospheric_effects}
+- Location Type: {location_type}
 - For 3D Render:
   * Rule of thirds
   * Leading lines
@@ -308,36 +322,95 @@ Quality Settings:
   * Global illumination
 
 Critical Requirements:
-1. Maintain the core concept of the original prompt
-2. Incorporate all specified settings naturally
-3. Ensure technical accuracy
-4. Maintain artistic coherence
-5. Balance detail with style
-6. For 3D Render:
+1. YOU MUST KEEP THE ORIGINAL CONCEPT OF "{prompt}" INTACT - this is non-negotiable
+2. Your enhancement should ADD to the original prompt, never replace it
+3. If the original prompt describes a specific subject (like "niagara falls" or "mountain landscape"), that subject MUST be the focus
+4. Incorporate all specified settings naturally around the original subject
+5. Ensure technical accuracy
+6. Maintain artistic coherence
+7. Balance detail with style
+8. For 3D Render:
    - Keep the Pixar-style aesthetic
    - Maintain family-friendly appeal
    - Ensure smooth, polished look
    - Include emotional elements
    - Balance realism with stylization
 
+CRITICALLY IMPORTANT FORMAT RULES:
+1. The prompt MUST end with "{resolution} resolution, {aspect_ratio} aspect ratio" before any negative prompt
+2. The resolution and aspect ratio MUST be in the main description, NOT in the negative prompt
+3. The format should be: "[creative description], {resolution} resolution, {aspect_ratio} aspect ratio. Avoid: [negative elements]"
+4. NEVER include resolution or aspect ratio in the negative prompt section
+5. If you include "Avoid:" section, it MUST come AFTER the resolution and aspect ratio
+
 Output Format:
-Generate a single, detailed sentence that incorporates:
-1. Main subject and action/state
+Generate a single, detailed paragraph that incorporates:
+1. The EXACT SUBJECT from the original prompt as the main focus
 2. Style and artistic direction
 3. Camera and technical specifications
 4. Lighting and atmospheric conditions
 5. Composition and environmental context
 6. Color treatment and special effects
-7. Quality and detail specifications
-8. Mood and emotional impact
+7. End with "{resolution} resolution, {aspect_ratio} aspect ratio"
+8. After all that, include negative elements with "Avoid: [unwanted elements]"
 
-The final prompt should read like a professional 3D artist's description, emphasizing the Pixar-style while maintaining clarity and focus. Ensure all technical specifications are accurate and appropriate for the chosen style. The prompt should be detailed but concise, focusing on the most important elements that will contribute to the final image quality.
-
-Please enhance the following prompt while maintaining its core concept and incorporating these specifications:
-
-{prompt}
+The final prompt should read like a professional description that enhances "{prompt}" with technical details, while maintaining the original concept as the central focus.
 
 Output only the enhanced prompt without any additional explanations or formatting."""
+
+# Negative Prompt Instructions
+NEGATIVE_PROMPT_INSTRUCTIONS = """You are an expert in generating intelligent negative prompts for Imagen 3 image generation. Your task is to analyze the user's current preferences and generate appropriate negative prompts to improve image quality by excluding unwanted elements.
+
+Context Analysis:
+1. User's Current Preferences:
+   - Selected Style/Genre: {style_or_genre}
+   - Selected Mood: {mood}
+   - Art Movement: {art_movement}
+   - Special Requirements: {special_requirements}
+   - Selected Tags: {selected_tags}
+   - Quality Preferences: {quality_preferences}
+
+Negative Prompt Generation Guidelines:
+1. Style Compatibility:
+   - Exclude styles that conflict with the user's selected style
+   - Remove elements that would disrupt the artistic coherence
+   - Avoid mixing incompatible art movements
+
+2. Content Exclusions Based on Genre:
+   - For nature scenes: exclude urban elements, industrial objects, etc.
+   - For urban scenes: exclude excessive natural elements that don't belong
+   - For abstract art: exclude overly representational elements
+   - For minimalist styles: exclude cluttered or busy compositions
+
+3. Technical Quality Exclusions:
+   - Low quality, pixelated, blurry, noisy, or distorted elements
+   - Poor composition, bad framing, or unbalanced layout
+   - Inconsistent lighting or shadows
+   - Unrealistic proportions or perspectives (unless stylistically appropriate)
+
+4. Mood Consistency:
+   - Exclude emotional elements contrary to the selected mood
+   - Remove atmospheric conditions that conflict with the desired feeling
+   - Avoid color schemes that clash with the intended mood
+
+5. Smart Tag Analysis:
+   - Automatically exclude tags from opposite categories
+   - Identify potential visual conflicts between selected elements
+   - Suggest exclusions based on statistical patterns of successful images
+
+Output Format:
+Generate a comma-separated list of negative prompt elements organized by category:
+
+1. Style Exclusions: Elements that conflict with the chosen style
+2. Technical Quality: Elements that would reduce image quality
+3. Content Exclusions: Subject matter to avoid based on chosen genre
+4. Mood Conflicts: Elements that would disrupt the desired mood
+5. Visual Artifacts: Common AI generation issues to avoid
+
+The final negative prompt should be concise yet comprehensive, focusing on the most important elements to exclude based on the user's specific preferences while maintaining artistic coherence.
+
+Some common negative elements to always include:
+(ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, badly drawn face, extra fingers)"""
 
 # Text and Logo Generation Instructions
 TEXT_LOGO_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model, specializing in text and logo generation. Your task is to craft clear, focused prompts that will generate high-quality text and logos in images.
