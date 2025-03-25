@@ -67,7 +67,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("wallpaper_generator.log"),
+        logging.FileHandler("wallpaper_generator.log")
     ]
 )
 
@@ -1530,11 +1530,7 @@ def add_to_history(entry):
     history.add_entry(entry)
 
 def configure_logging(level=logging.INFO):
-    """Configure logging with the specified level.
-    
-    Args:
-        level: The logging level to use (default: logging.INFO)
-    """
+    """Configure logging with file and console handlers."""
     # Configure file handler
     file_handler = logging.FileHandler("wallpaper_generator.log")
     file_handler.setLevel(level)
