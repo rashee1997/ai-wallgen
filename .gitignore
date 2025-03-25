@@ -49,6 +49,7 @@ cache/
 prompt_cache/
 image_cache/
 genimage/
+generated_presets_cache.json
 
 # Keep empty directories
 !cache/.gitkeep
