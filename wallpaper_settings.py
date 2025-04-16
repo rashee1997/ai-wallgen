@@ -133,7 +133,9 @@ class UserPreferences:
         
         # Default wallpaper settings
         self.wallpaper_settings = {
-            "auto_set": False
+            "auto_set": False,
+            "skip_preview": False,  # Default to showing preview
+            "use_gui_preview": False  # Default to terminal preview
         }
         
         # Default aspect ratio
@@ -176,11 +178,11 @@ class UserPreferences:
                 
                 # Update fields from loaded data
                 if "preferred_genres" in data:
-                    self.preferred_genres = data["preferred_genres"]
+                    self.preferred_genres = list(dict.fromkeys(data["preferred_genres"]))
                 if "preferred_styles" in data:
-                    self.preferred_styles = data["preferred_styles"]
+                    self.preferred_styles = list(dict.fromkeys(data["preferred_styles"]))
                 if "preferred_moods" in data:
-                    self.preferred_moods = data["preferred_moods"]
+                    self.preferred_moods = list(dict.fromkeys(data["preferred_moods"]))
                 if "negative_prompts" in data:
                     self.negative_prompts = data["negative_prompts"]
                 if "imagen_settings" in data:
@@ -227,6 +229,11 @@ class UserPreferences:
         pref_file_path = os.path.join(script_dir, filename)
         
         try:
+            # Clean duplicates before saving
+            self.preferred_genres = list(dict.fromkeys(self.preferred_genres))
+            self.preferred_styles = list(dict.fromkeys(self.preferred_styles))
+            self.preferred_moods = list(dict.fromkeys(self.preferred_moods))
+            
             # Prepare data for serialization
             data = {
                 "preferred_genres": self.preferred_genres,
@@ -248,6 +255,9 @@ class UserPreferences:
             logging.debug(f"Preferred genres: {self.preferred_genres}")
             logging.debug(f"Preferred styles: {self.preferred_styles}")
             logging.debug(f"Preferred moods: {self.preferred_moods}")
+            
+            # Reload preferences after saving to update in-memory state
+            self.load_preferences(filename)
         except (IOError, OSError) as e:
             logging.error(f"Error saving preferences: {e}")
 
@@ -265,6 +275,30 @@ def initialize_settings() -> 'UserPreferences':
     """
     global user_prefs
     user_prefs = UserPreferences()
+
+    def add_style(style: str):
+        """Set preferred_styles to contain only the given style."""
+        if style:
+            user_prefs.preferred_styles = [style]
+            user_prefs.save_preferences()
+
+    def add_genre(genre: str):
+        """Set preferred_genres to contain only the given genre."""
+        if genre:
+            user_prefs.preferred_genres = [genre]
+            user_prefs.save_preferences()
+
+    def add_mood(mood: str):
+        """Set preferred_moods to contain only the given mood."""
+        if mood:
+            user_prefs.preferred_moods = [mood]
+            user_prefs.save_preferences()
+
+    # Attach utility functions to user_prefs for use elsewhere
+    user_prefs.add_style = add_style
+    user_prefs.add_genre = add_genre
+    user_prefs.add_mood = add_mood
+
     return user_prefs
 
 def get_preferences() -> 'UserPreferences':
@@ -703,16 +737,22 @@ def delete_preset() -> bool:
         return False
 
 # Settings import/export functions will be implemented here 
-def export_settings() -> str:
+def export_settings(user_prefs=None) -> str:
     """
     Export user settings to a JSON file.
     
-    This function saves the current user preferences and imagen settings to a
-    JSON file, creating a backup that can be later imported.
-    
+    Args:
+        user_prefs: Optional UserPreferences object. If not provided, uses global user_prefs.
+        
     Returns:
         str: The path to the exported settings file, or empty string if export failed
     """
+    if user_prefs is None:
+        user_prefs = globals().get('user_prefs')
+        if user_prefs is None:
+            print_error("No user preferences object available")
+            return ""
+    
     print_section("Export Settings")
     try:
         filename = get_validated_input("Enter filename for export (without extension)", allow_empty=False)
@@ -977,8 +1017,7 @@ def manage_genres():
                 if 0 <= genre_index < len(available_genres):
                     genre = available_genres[genre_index]
                     if genre not in user_prefs.preferred_genres:
-                        user_prefs.preferred_genres.append(genre)
-                        user_prefs.save_preferences()
+                        user_prefs.add_genre(genre)
                         print_success(f"\nAdded '{genre}' to preferred genres.")
                     else:
                         print_warning(f"\n'{genre}' is already in your preferred genres.")
@@ -1095,8 +1134,7 @@ def manage_styles():
             style = input("Enter style to add: ").strip()
             if style:
                 if style not in user_prefs.preferred_styles:
-                    user_prefs.preferred_styles.append(style)
-                    user_prefs.save_preferences()
+                    user_prefs.add_style(style)
                     print_success(f"Added '{style}' to preferred styles")
                 else:
                     print_warning(f"'{style}' is already in your preferred styles")
@@ -1132,8 +1170,7 @@ def manage_styles():
             add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
             if add_to_preferences == "y":
                 if style_mix not in user_prefs.preferred_styles:
-                    user_prefs.preferred_styles.append(style_mix)
-                    user_prefs.save_preferences()
+                    user_prefs.add_style(style_mix)
                     print_success(f"Added '{style_mix}' to preferred styles")
                 else:
                     print_warning(f"'{style_mix}' is already in your preferred styles")
@@ -1143,8 +1180,7 @@ def manage_styles():
             custom_style = input().strip()
             if custom_style:
                 if custom_style not in user_prefs.preferred_styles:
-                    user_prefs.preferred_styles.append(custom_style)
-                    user_prefs.save_preferences()
+                    user_prefs.add_style(custom_style)
                     print_success(f"Added custom style: {custom_style}")
                 else:
                     print_warning(f"'{custom_style}' is already in your preferred styles")
@@ -1152,8 +1188,7 @@ def manage_styles():
             # User selected a specific style from the list
             selected_style = style_options[int(style_choice) - 1]
             if selected_style not in user_prefs.preferred_styles:
-                user_prefs.preferred_styles.append(selected_style)
-                user_prefs.save_preferences()
+                user_prefs.add_style(selected_style)
                 print_success(f"Added '{selected_style}' to preferred styles")
             else:
                 print_warning(f"'{selected_style}' is already in your preferred styles")
@@ -1185,7 +1220,7 @@ def manage_moods():
         if action == "a":
             mood = input("Enter mood to add: ").strip()
             if mood in mood_options and mood not in user_prefs.preferred_moods:
-                user_prefs.preferred_moods.append(mood)
+                user_prefs.add_mood(mood)
                 print_success(f"Added mood: {mood}")
                 user_prefs.save_preferences()
             else:
@@ -1226,9 +1261,11 @@ def manage_wallpaper_settings():
         print_option("4", "Background color")
         print_option("5", "Multi-monitor mode")
         print_option("6", "Refresh rate")
+        print_option("7", "Preview before setting")
+        print_option("8", "Use graphical preview")
         print_option("b", "Back")
         
-        setting_choice = get_validated_input("Select an option (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+        setting_choice = get_validated_input("Select an option (1-8, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "b"])
         
         if setting_choice == "b":
             return
@@ -1322,6 +1359,28 @@ def manage_wallpaper_settings():
             rates = ["daily", "weekly", "monthly", "never"]
             user_prefs.wallpaper_settings["refresh_rate"] = rates[int(refresh_rate) - 1]
             print_success(f"Refresh rate set to {user_prefs.wallpaper_settings['refresh_rate']}")
+        
+        elif setting_choice == "7":
+            print_info("Enable or disable previewing images before setting as wallpaper")
+            print_option("1", "Always preview (recommended)")
+            print_option("2", "Skip preview")
+            preview_choice = get_validated_input("Select option (1-2)", ["1", "2"])
+            user_prefs.wallpaper_settings["skip_preview"] = (preview_choice == "2")
+            print_success(f"Preview before setting {'disabled' if user_prefs.wallpaper_settings['skip_preview'] else 'enabled'}")
+            
+            # For compatibility with command line arg
+            user_prefs.skip_preview = user_prefs.wallpaper_settings["skip_preview"]
+        
+        elif setting_choice == "8":
+            print_info("Enable or disable graphical preview with Tkinter window")
+            print_option("1", "Use graphical preview")
+            print_option("2", "Use terminal preview")
+            preview_choice = get_validated_input("Select option (1-2)", ["1", "2"])
+            user_prefs.wallpaper_settings["use_gui_preview"] = (preview_choice == "1")
+            print_success(f"Graphical preview {'enabled' if user_prefs.wallpaper_settings['use_gui_preview'] else 'disabled'}")
+            
+            # For compatibility with command line arg
+            user_prefs.use_gui_preview = user_prefs.wallpaper_settings["use_gui_preview"]
         
         user_prefs.save_preferences()
 
@@ -2831,7 +2890,19 @@ def reset_to_default():
             confirmation = get_validated_input("Are you sure you want to proceed? (y/n)", ["y", "n"])
             
             if confirmation.lower() == "y":
-                # Initialize a new UserPreferences object
+                # Delete the existing preferences file first
+                try:
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    pref_file_path = os.path.join(script_dir, "user_preferences.json")
+                    if os.path.exists(pref_file_path):
+                        os.remove(pref_file_path)
+                        logging.info(f"Deleted existing preferences file: {pref_file_path}")
+                except OSError as e:
+                    logging.error(f"Error deleting preferences file: {e}")
+                    print_error(f"Could not delete existing preferences file: {e}")
+                    # Continue anyway, maybe it wasn't there
+
+                # Initialize a new UserPreferences object (will now use defaults)
                 global user_prefs
                 user_prefs = UserPreferences()
                 

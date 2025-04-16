@@ -48,7 +48,7 @@ except ImportError:
 prompt_cache = {}
 
 # Set default Gemini model
-gemini_model_name = "gemini-2.0-flash"
+gemini_model_name = "gemini-2.5-pro-preview-03-25"
 
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
@@ -392,7 +392,7 @@ Your response must follow this exact format:
                 
             try:
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
                 response = model.generate_content(instructions)
 
                 if response.parts:
@@ -781,7 +781,7 @@ Your response must follow this exact format:
             
         try:
             genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
             response = model.generate_content(enhancement_instructions)
 
             if response.parts:

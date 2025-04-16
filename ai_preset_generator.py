@@ -143,7 +143,7 @@ def generate_ai_preset(user_prefs: UserPreferences) -> bool:
     try:
         # Configure Gemini API
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
         
         # Decide whether to use mixed styles (50% chance)
         use_mixed_styles = random.choice([True, False])

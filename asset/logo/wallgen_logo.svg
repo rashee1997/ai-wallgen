@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="frameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A5298"/>
+      <stop offset="50%" stop-color="#8A2BE2"/>
+      <stop offset="100%" stop-color="#FF7F50"/>
+    </linearGradient>
+    <linearGradient id="aiGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#61DAFB" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2A5298" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F1624"/>
+      <stop offset="100%" stop-color="#1A1A2E"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="40" y="40" width="160" height="120" rx="8" fill="url(#bgGradient)"/>
+  
+  <!-- Minimalist W shape that doubles as a frame/window -->
+  <path d="M40,40 L120,60 L200,40 L200,160 L120,140 L40,160 Z" 
+        fill="none" stroke="url(#frameGradient)" stroke-width="6" stroke-linejoin="round"/>
+  
+  <!-- Simplified landscape line (minimalist mountain) -->
+  <path d="M60,100 L90,70 L120,90 L150,60 L180,95" 
+        fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- AI generation concept - circles with connecting lines -->
+  <circle cx="80" cy="120" r="5" fill="#61DAFB" opacity="0.8">
+    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="120" cy="110" r="5" fill="#61DAFB" opacity="0.8">
+    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="2.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="160" cy="125" r="5" fill="#61DAFB" opacity="0.8">
+    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- AI node connections (minimal) -->
+  <line x1="80" y1="120" x2="120" y2="110" stroke="#61DAFB" stroke-width="1.5" opacity="0.5"/>
+  <line x1="120" y1="110" x2="160" y2="125" stroke="#61DAFB" stroke-width="1.5" opacity="0.5"/>
+  
+  <!-- Generation line (single, minimal) -->
+  <line x1="60" y1="140" x2="180" y2="140" stroke="#61DAFB" stroke-width="1" stroke-dasharray="3,3" opacity="0.7"/>
+  
+  <!-- Logo text (simplified) -->
+  <text x="120" y="190" font-family="Arial, sans-serif" font-size="20" font-weight="bold" 
+        text-anchor="middle" fill="white">AI Wallgen</text>
+  <text x="76" y="190" font-family="Arial, sans-serif" font-size="20" font-weight="bold" 
+        text-anchor="middle" fill="#61DAFB">AI</text>
+</svg> 

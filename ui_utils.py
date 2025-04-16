@@ -21,7 +21,20 @@ import os
 import sys
 import time
 import threading
+import platform  # Added for OS detection
 from typing import List, Optional, Any, Dict, Union, Callable
+
+# Imports for interactive input
+if platform.system() != "Windows":
+    try:
+        import tty
+        import termios
+        UNIX_INTERACTIVE_INPUT = True
+    except ImportError:
+        UNIX_INTERACTIVE_INPUT = False
+else:
+    # Potentially add msvcrt for Windows later if needed
+    UNIX_INTERACTIVE_INPUT = False
 
 # Third-party imports (with fallback handling)
 try:
@@ -208,15 +221,106 @@ def print_prompt(text: str) -> None:
         >>> print_prompt("Enter your name")
         > Enter your name
     """
+    # This function is now less relevant as the prompt is printed within get_interactive_input
+    # Keeping it for potential other uses or direct calls.
     print_colored(f"> {text}", Fore.MAGENTA, Style.BRIGHT, end=" ")
 
-def get_validated_input(prompt: str, options: Optional[List[str]] = None, 
+# Helper for Unix interactive input
+def _read_char_unix() -> str:
+    """Reads a single character from stdin on Unix systems."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+        # Handle multi-byte sequences for arrow keys etc.
+        if ch == '\x1b':  # Escape character
+            next1 = sys.stdin.read(1)
+            if next1 == '[':
+                next2 = sys.stdin.read(1)
+                if next2 == 'D': return "ARROW_LEFT"
+                if next2 == 'C': return "ARROW_RIGHT"
+                # Add other arrow keys or special keys if needed (e.g., 'A' for UP, 'B' for DOWN)
+                # For now, just return the sequence if not left/right
+                return ch + next1 + next2
+            # Return other escape sequences as is
+            return ch + next1
+        elif ch == '\x7f' or ch == '\b': # Backspace (check common codes)
+             return "BACKSPACE"
+        elif ch == '\r' or ch == '\n': # Enter key
+             return "ENTER"
+        elif ch == '\x03': # Ctrl+C
+             raise KeyboardInterrupt
+        # Add other special key handling here if needed
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch # Return regular character
+
+def get_interactive_input(prompt_text: str) -> str:
+    """Gets user input interactively, allowing cursor movement and backspace."""
+    if not UNIX_INTERACTIVE_INPUT or not sys.stdin.isatty():
+        # Fallback to standard input if not a TTY or not Unix
+        return input().strip()
+
+    # Print the prompt only once at the beginning
+    prompt_display = f"> {prompt_text} "
+    print_colored(prompt_display, Fore.MAGENTA, Style.BRIGHT, end="")
+    sys.stdout.flush()
+    prompt_len = len(prompt_display) # Store length for cursor calculations
+
+    buffer = []
+    cursor_pos = 0
+
+    while True:
+        char = _read_char_unix()
+
+        if char == "ENTER":
+            print() # Move to the next line after input
+            break
+        elif char == "BACKSPACE":
+            if cursor_pos > 0:
+                buffer.pop(cursor_pos - 1)
+                cursor_pos -= 1
+                # Redraw: Move cursor to start of input area, clear line, write buffer, reposition cursor
+                sys.stdout.write('\r' + '\033[C' * prompt_len) # Move after prompt
+                sys.stdout.write('\033[K') # Clear from cursor to end of line
+                sys.stdout.write("".join(buffer)) # Write the current buffer
+                # Reposition cursor correctly within the buffer
+                sys.stdout.write('\r' + '\033[C' * (prompt_len + cursor_pos))
+                sys.stdout.flush()
+        elif char == "ARROW_LEFT":
+            if cursor_pos > 0:
+                cursor_pos -= 1
+                sys.stdout.write('\033[D') # ANSI code to move cursor left
+                sys.stdout.flush()
+        elif char == "ARROW_RIGHT":
+            if cursor_pos < len(buffer):
+                cursor_pos += 1
+                sys.stdout.write('\033[C') # ANSI code to move cursor right
+                sys.stdout.flush()
+        elif isinstance(char, str) and not char.startswith('\x1b') and char.isprintable(): # Regular printable character
+            buffer.insert(cursor_pos, char)
+            cursor_pos += 1
+            # Redraw: Move cursor to start of input area, clear line, write buffer, reposition cursor
+            sys.stdout.write('\r' + '\033[C' * prompt_len) # Move after prompt
+            sys.stdout.write('\033[K') # Clear from cursor to end of line
+            sys.stdout.write("".join(buffer)) # Write the current buffer
+            # Reposition cursor correctly within the buffer
+            sys.stdout.write('\r' + '\033[C' * (prompt_len + cursor_pos))
+            sys.stdout.flush()
+        # Ignore other non-printable characters or unhandled sequences for now
+
+    return "".join(buffer)
+
+
+def get_validated_input(prompt: str, options: Optional[List[str]] = None,
                         default: Optional[str] = None, allow_empty: bool = False) -> str:
     """
-    Get and validate user input against a set of allowed options.
+    Get and validate user input against a set of allowed options, using interactive input.
     
-    This function prompts the user for input and validates it against a list of
-    allowed options. It will continue prompting until valid input is received.
+    This function prompts the user for input using an interactive line editor
+    (if supported) and validates it against a list of allowed options.
+    It will continue prompting until valid input is received.
     
     Args:
         prompt (str): The prompt to display to the user
@@ -234,13 +338,20 @@ def get_validated_input(prompt: str, options: Optional[List[str]] = None,
     
     Example:
         >>> choice = get_validated_input("Select option", ["1", "2", "3", "q"])
-        > Select option 1
-        # Returns "1"
+        > Select option [cursor here]
+        # Returns validated input
     """
     while True:
-        print_prompt(prompt)
-        user_input = input().strip()
-        
+        # Use the new interactive input function
+        # Note: print_prompt is now called inside get_interactive_input
+        try:
+            user_input = get_interactive_input(prompt)
+        except KeyboardInterrupt:
+             # Ensure the interrupt propagates up to the main signal handler
+             # The finally block in _read_char_unix will restore terminal settings
+             print() # Print a newline to avoid messing up terminal line
+             raise
+
         # Handle empty input
         if not user_input:
             if default is not None:
@@ -250,12 +361,12 @@ def get_validated_input(prompt: str, options: Optional[List[str]] = None,
             else:
                 print_warning("Input cannot be empty. Please try again.")
                 continue
-        
+
         # Validate against options if provided
         if options is not None and user_input not in options:
             print_warning(f"Invalid input. Please enter one of: {', '.join(options)}")
             continue
-        
+
         return user_input
 
 def show_spinner(message: str, duration: float = 2) -> None:
