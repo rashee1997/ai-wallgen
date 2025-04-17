@@ -256,60 +256,133 @@ def _read_char_unix() -> str:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch # Return regular character
 
+def _calculate_physical_pos(logical_pos: int, prompt_len: int, terminal_width: int) -> tuple[int, int]:
+    """
+    Calculates the physical (row, col) on screen for a logical cursor position
+    relative to the start of the prompt line. Assumes prompt doesn't wrap.
+    """
+    # Treat prompt and buffer as one continuous string for wrapping calculation
+    # Add prompt_len to logical_pos to get position relative to start of the line
+    effective_pos = prompt_len + logical_pos
+    # Calculate 0-based row relative to the prompt line
+    row = effective_pos // terminal_width
+    # Calculate 0-based column
+    col = effective_pos % terminal_width
+    return row, col
+
 def get_interactive_input(prompt_text: str) -> str:
     """Gets user input interactively, allowing cursor movement and backspace."""
     if not UNIX_INTERACTIVE_INPUT or not sys.stdin.isatty():
         # Fallback to standard input if not a TTY or not Unix
         return input().strip()
 
-    # Print the prompt only once at the beginning
-    prompt_display = f"> {prompt_text} "
-    print_colored(prompt_display, Fore.MAGENTA, Style.BRIGHT, end="")
-    sys.stdout.flush()
-    prompt_len = len(prompt_display) # Store length for cursor calculations
+    try:
+        # Get terminal width, default if error
+        try:
+            terminal_width = os.get_terminal_size().columns
+        except (AttributeError, OSError):
+            terminal_width = 80 # Default width
 
-    buffer = []
-    cursor_pos = 0
+        # Print the prompt only once at the beginning
+        prompt_display = f"> {prompt_text} "
+        print_colored(prompt_display, Fore.MAGENTA, Style.BRIGHT, end="")
+        sys.stdout.flush()
+        prompt_len = len(prompt_display) # Store length for cursor calculations
 
-    while True:
-        char = _read_char_unix()
+        buffer = []
+        cursor_pos = 0 # Logical cursor position within buffer
 
-        if char == "ENTER":
-            print() # Move to the next line after input
-            break
-        elif char == "BACKSPACE":
-            if cursor_pos > 0:
-                buffer.pop(cursor_pos - 1)
-                cursor_pos -= 1
-                # Redraw: Move cursor to start of input area, clear line, write buffer, reposition cursor
-                sys.stdout.write('\r' + '\033[C' * prompt_len) # Move after prompt
-                sys.stdout.write('\033[K') # Clear from cursor to end of line
-                sys.stdout.write("".join(buffer)) # Write the current buffer
-                # Reposition cursor correctly within the buffer
-                sys.stdout.write('\r' + '\033[C' * (prompt_len + cursor_pos))
+        # Calculate initial physical position (start of input area)
+        start_row, start_col = _calculate_physical_pos(-1, prompt_len, terminal_width) # Position before first char
+
+        while True:
+            # Calculate current physical position before reading next char
+            current_row, current_col = _calculate_physical_pos(cursor_pos, prompt_len, terminal_width)
+
+            char = _read_char_unix()
+
+            if char == "ENTER":
+                # Move cursor to the end of the buffer physically before printing newline
+                end_row, end_col = _calculate_physical_pos(len(buffer), prompt_len, terminal_width)
+                row_diff = end_row - current_row
+                if row_diff > 0:
+                    sys.stdout.write(f'\033[{row_diff}B') # Move down
+                sys.stdout.write('\r') # Go to start of line
+                sys.stdout.write(f'\033[{end_col}C') # Move to final column
+                print() # Newline
                 sys.stdout.flush()
-        elif char == "ARROW_LEFT":
-            if cursor_pos > 0:
-                cursor_pos -= 1
-                sys.stdout.write('\033[D') # ANSI code to move cursor left
-                sys.stdout.flush()
-        elif char == "ARROW_RIGHT":
-            if cursor_pos < len(buffer):
-                cursor_pos += 1
-                sys.stdout.write('\033[C') # ANSI code to move cursor right
-                sys.stdout.flush()
-        elif isinstance(char, str) and not char.startswith('\x1b') and char.isprintable(): # Regular printable character
-            buffer.insert(cursor_pos, char)
-            cursor_pos += 1
-            # Redraw: Move cursor to start of input area, clear line, write buffer, reposition cursor
-            sys.stdout.write('\r' + '\033[C' * prompt_len) # Move after prompt
-            sys.stdout.write('\033[K') # Clear from cursor to end of line
-            sys.stdout.write("".join(buffer)) # Write the current buffer
-            # Reposition cursor correctly within the buffer
-            sys.stdout.write('\r' + '\033[C' * (prompt_len + cursor_pos))
-            sys.stdout.flush()
-        # Ignore other non-printable characters or unhandled sequences for now
+                break
 
+            elif char == "BACKSPACE" or char == "ARROW_LEFT" or char == "ARROW_RIGHT" or (isinstance(char, str) and not char.startswith('\x1b') and char.isprintable()):
+                # --- Common Redraw/Movement Logic ---
+                old_buffer_len = len(buffer)
+                old_cursor_pos = cursor_pos
+
+                # 1. Update buffer and logical cursor position
+                if char == "BACKSPACE":
+                    if cursor_pos > 0:
+                        buffer.pop(cursor_pos - 1)
+                        cursor_pos -= 1
+                    else: continue # No change
+                elif char == "ARROW_LEFT":
+                    if cursor_pos > 0:
+                        cursor_pos -= 1
+                    else: continue # No change
+                elif char == "ARROW_RIGHT":
+                    if cursor_pos < len(buffer):
+                        cursor_pos += 1
+                    else: continue # No change
+                else: # Printable character
+                    buffer.insert(cursor_pos, char)
+                    cursor_pos += 1
+
+                # 2. Calculate physical positions
+                # Position of the start of the input area (relative to prompt line)
+                input_start_row, input_start_col = _calculate_physical_pos(0, prompt_len, terminal_width)
+                # Target physical position for the cursor after the edit
+                target_row, target_col = _calculate_physical_pos(cursor_pos, prompt_len, terminal_width)
+                # Physical position at the end of the *old* buffer content
+                old_end_row, old_end_col = _calculate_physical_pos(old_buffer_len, prompt_len, terminal_width)
+
+                # 3. Move cursor from current physical position back to the start of the input area
+                row_diff = current_row - input_start_row
+                if row_diff > 0:
+                    sys.stdout.write(f'\033[{row_diff}A') # Move cursor up
+                sys.stdout.write('\r') # Go to beginning of line
+                sys.stdout.write(f'\033[{input_start_col}C') # Move cursor to input start column
+
+                # 4. Clear screen from cursor down and rewrite prompt + buffer
+                sys.stdout.write('\033[J') # Clear Down
+                # No need to reprint prompt as we started cursor after it
+                sys.stdout.write("".join(buffer))
+                sys.stdout.flush()
+
+                # 5. Calculate physical position at the end of the *new* buffer content
+                new_end_row, new_end_col = _calculate_physical_pos(len(buffer), prompt_len, terminal_width)
+
+                # 6. Move cursor from current position (end of new buffer) to target physical position
+                # Calculate relative moves needed
+                row_diff_final = new_end_row - target_row
+                col_diff_final = new_end_col - target_col # Not directly used, move line by line
+
+                if row_diff_final > 0:
+                    sys.stdout.write(f'\033[{row_diff_final}A') # Move cursor up
+                sys.stdout.write('\r') # Go to beginning of target line
+                sys.stdout.write(f'\033[{target_col}C') # Move cursor to target column
+                sys.stdout.flush()
+
+            # Ignore other non-printable characters or unhandled sequences for now
+
+    except Exception as e:
+        # Attempt to restore terminal settings on error
+        # This might require saving/restoring original termios settings if needed
+        print_error(f"Input error: {e}")
+        # Fallback or re-raise depending on desired behavior
+        return "".join(buffer) # Return whatever was buffered
+
+    # Note: Original termios settings should ideally be restored here in a finally block
+    # if tty.setraw was used directly or if more settings were changed.
+    # The _read_char_unix function handles restoring settings after each char read.
     return "".join(buffer)
 
 
@@ -344,13 +417,8 @@ def get_validated_input(prompt: str, options: Optional[List[str]] = None,
     while True:
         # Use the new interactive input function
         # Note: print_prompt is now called inside get_interactive_input
-        try:
-            user_input = get_interactive_input(prompt)
-        except KeyboardInterrupt:
-             # Ensure the interrupt propagates up to the main signal handler
-             # The finally block in _read_char_unix will restore terminal settings
-             print() # Print a newline to avoid messing up terminal line
-             raise
+        # Note: print_prompt is called inside get_interactive_input
+        user_input = get_interactive_input(prompt) # Let KeyboardInterrupt propagate
 
         # Handle empty input
         if not user_input:

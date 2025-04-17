@@ -103,6 +103,20 @@ class UserPreferences:
         last_preset (str): Name of the last loaded preset, if any
         aspect_ratio (str): The aspect ratio of the wallpaper
     """
+    # Default style categories
+    style_categories = {
+        "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism",
+                          "gothic", "impressionism", "oil_painting", "pastel",
+                          "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
+        "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure",
+                      "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric",
+                      "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
+                      "stained_glass", "steampunk", "surrealism", "vaporwave"],
+        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti",
+                       "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art",
+                       "pointillism", "pop_art", "ukiyo_e"]
+    }
+
     def __init__(self):
         """
         Initialize user preferences with minimal default values.
@@ -122,7 +136,9 @@ class UserPreferences:
             "seed": None,
             "negative_prompt": "",
             "quality_settings": {},
-            "style_settings": {},
+            "style_settings": {
+                "style_categories": self.style_categories.copy()  # Initialize with default categories
+            },
             "camera_settings": {},
             "lighting_settings": {},
             "composition_settings": {},
@@ -134,8 +150,7 @@ class UserPreferences:
         # Default wallpaper settings
         self.wallpaper_settings = {
             "auto_set": False,
-            "skip_preview": False,  # Default to showing preview
-            "use_gui_preview": False  # Default to terminal preview
+            "skip_preview": False  # Default to showing preview
         }
         
         # Default aspect ratio
@@ -314,6 +329,26 @@ def get_preferences() -> 'UserPreferences':
     return user_prefs
 
 # Helper functions
+def display_menu_options(options: List[str]) -> str:
+    """
+    Display a menu of options and get user selection.
+
+    Args:
+        options: List of options to display
+
+    Returns:
+        str: Selected option number or 'b' for back
+    """
+    for i, option in enumerate(options, 1):
+        print_option(str(i), option)
+    print_option("b", "Back")
+    
+    valid_choices = ["b"] + [str(i) for i in range(1, len(options) + 1)]
+    return get_validated_input(
+        f"Select option (1-{len(options)}, b)",
+        valid_choices
+    )
+
 def load_last_genre(filename: str = "last_genre.json") -> Optional[str]:
     """
     Load the most recently used genre from a file.
@@ -356,7 +391,7 @@ def save_last_genre(genre: str, filename: str = "last_genre.json") -> None:
     except Exception as e:
         logging.error(f"Error saving last genre to {filepath}: {e}")
 
-def generate_random_style_mix():
+def generate_random_style_mix() -> str:
     """
     Generate a random mix of artistic styles.
     
@@ -366,36 +401,18 @@ def generate_random_style_mix():
     Returns:
         str: A string containing a combination of artistic styles, joined with " + "
     """
-    # Check if user has custom style categories in preferences
-    settings = user_prefs.imagen_settings
-    style_settings = settings.get("style_settings", {})
-    custom_style_categories = style_settings.get("style_categories", {})
-    
-    # Define default style categories to use if no custom categories available
-    default_style_categories = {
-            "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
-                               "gothic", "impressionism", "oil_painting", "pastel", 
-                               "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
-            "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
-                           "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
-                           "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
-                           "stained_glass", "steampunk", "surrealism", "vaporwave"],
-            "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
-                            "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
-                            "pointillism", "pop_art", "ukiyo_e"]
-        }
-    
-    # Use custom categories if available, otherwise use the default ones
-    categories_to_use = custom_style_categories if custom_style_categories else default_style_categories
+    global user_prefs
+    style_settings = user_prefs.imagen_settings.get("style_settings", {})
+    style_categories = style_settings.get("style_categories", user_prefs.style_categories)
     
     # Select a random category
-    category = random.choice(list(categories_to_use.keys()))
+    category = random.choice(list(style_categories.keys()))
+    
     # Select 2-3 compatible styles from the same category
-    num_styles = random.randint(2, 3)
-    available_styles = categories_to_use[category]
-    if len(available_styles) < num_styles:
-        num_styles = len(available_styles)
+    available_styles = style_categories[category]
+    num_styles = min(random.randint(2, 3), len(available_styles))
     selected_styles = random.sample(available_styles, num_styles)
+    
     return " + ".join(selected_styles)
 
 # Settings management functions will be implemented here
@@ -407,28 +424,40 @@ def manage_preferences():
     to select which category to manage. It then delegates to the appropriate
     function for that category.
     """
+    menu_options: List[str] = [
+        "Wallpaper Settings",
+        "Advanced Options",
+        "Reset All Settings to None"
+    ]
+
     while True:
         print_section("Manage Preferences")
-        print_option("1", "Wallpaper Settings")
-        print_option("2", "Advanced Options")
-        print_option("3", "Reset All Settings to None")
-        print_option("b", "Back")
-        
-        choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
-        
-        if choice == "1":
-            manage_wallpaper_settings()
-        elif choice == "2":
-            configure_advanced_options()
-        elif choice == "3":
-            # Confirm before resetting all settings to None
-            confirm = get_validated_input("Are you sure you want to reset ALL settings to None? This cannot be undone. (y/n)", ["y", "n"])
-            if confirm.lower() == "y":
-                reset_all_settings_to_none()
-            else:
-                print_info("Reset cancelled.")
-        elif choice == "b":
+        choice: str = display_menu_options(menu_options)
+        if choice == "_INTERRUPTED_":
+            return # Exit preference management if interrupted
+
+        if choice == "b":
             return
+
+        handlers = {
+            "1": manage_wallpaper_settings,
+            "2": configure_advanced_options,
+            "3": lambda: confirm_and_reset()
+        }
+
+        if choice in handlers:
+            handlers[choice]()
+
+def confirm_and_reset():
+    """Helper function to handle reset confirmation."""
+    confirm = get_validated_input(
+        "Are you sure you want to reset ALL settings to None? This cannot be undone. (y/n)",
+        ["y", "n"]
+    )
+    if confirm.lower() == "y":
+        reset_all_settings_to_none()
+    else:
+        print_info("Reset cancelled.")
 
 def manage_presets():
     """
@@ -456,173 +485,216 @@ def manage_presets():
         
         choice = get_validated_input("Select option (1-4, b)", ["1", "2", "3", "4", "b"])
         
-        if choice == "1":
-            # Get preset name from user
-            preset_name = get_validated_input("Enter preset name (or 'b' to go back)", allow_empty=False)
-            if preset_name.lower() == 'b':
-                continue
-                
-            # Validate preset name
-            if not preset_name.strip() or any(c in r'\/:*?"<>|' for c in preset_name):
-                print_error("Invalid preset name. Please avoid special characters.")
-                continue
-                
-            # Check if preset already exists
-            if os.path.exists(os.path.join("presets", f"{preset_name}.json")):
-                confirm = get_validated_input(f"Preset '{preset_name}' already exists. Overwrite? (y/n)", ["y", "n"])
-                if confirm.lower() != "y":
-                    continue
-            
-            try:
-                # Collect current settings
-                current_settings = {
-                    "imagen_settings": user_prefs.imagen_settings if hasattr(user_prefs, 'imagen_settings') else {},
-                    "wallpaper_settings": user_prefs.wallpaper_settings if hasattr(user_prefs, 'wallpaper_settings') else {},
-                    "metadata": {
-                        "created_at": datetime.now().isoformat(),
-                        "description": "User preset"
-                    }
-                }
-                
-                # Save the preset
-                if save_preset(current_settings, preset_name):
-                    print_success(f"Preset '{preset_name}' saved successfully")
-                    user_prefs.last_preset = preset_name
-                    user_prefs.save_preferences()
-                else:
-                    print_error("Failed to save preset")
-                    
-            except Exception as e:
-                print_error(f"Error preparing preset data: {e}")
-            
-        elif choice == "2":
-            # Load preset
-            result = load_preset()
-            if result:
-                settings, preset_name = result  # Unpack the returned tuple
-                try:
-                    print_section("Load Settings")
-                    print_option("1", "Replace current settings with preset")
-                    print_option("2", "Merge preset with current settings")
-                    print_option("b", "Back")
-                    
-                    load_choice = get_validated_input("Select option (1-2 or b)", ["1", "2", "b"])
-                    if load_choice == "b":
-                        continue
-                    
-                    if load_choice == "1":
-                        # Replace settings completely
-                        if "imagen_settings" in settings and hasattr(user_prefs, 'imagen_settings'):
-                            user_prefs.imagen_settings = settings["imagen_settings"].copy()
-                        if "wallpaper_settings" in settings and hasattr(user_prefs, 'wallpaper_settings'):
-                            user_prefs.wallpaper_settings = settings["wallpaper_settings"].copy()
-                        print_success("Settings replaced with preset")
-                    else:
-                        # Merge settings (update existing)
-                        if "imagen_settings" in settings and hasattr(user_prefs, 'imagen_settings'):
-                            user_prefs.imagen_settings.update(settings["imagen_settings"])
-                        if "wallpaper_settings" in settings and hasattr(user_prefs, 'wallpaper_settings'):
-                            user_prefs.wallpaper_settings.update(settings["wallpaper_settings"])
-                        print_success("Settings merged with preset")
-                    
-                    # Update current preset name
-                    user_prefs.last_preset = preset_name
-                    user_prefs.save_preferences()
-                    
-                except Exception as e:
-                    print_error(f"Error applying preset settings: {e}")
-            
-        elif choice == "3":
-            delete_preset()
-            # If deleted preset was current, clear current preset
-            if current_preset and not os.path.exists(os.path.join("presets", f"{current_preset}.json")):
-                user_prefs.last_preset = None
-                user_prefs.save_preferences()
-            
-        elif choice == "4":
-            # View current preset details
-            if not current_preset:
-                print_warning("No preset currently loaded")
-                input("\nPress Enter to continue...")
-                continue
-                
-            print_section(f"Current Preset: {current_preset}")
-            try:
-                preset_file = os.path.join("presets", f"{current_preset}.json")
-                if os.path.exists(preset_file):
-                    with open(preset_file) as f:
-                        settings = json.load(f)
-                        
-                    # Display metadata if available
-                    if "metadata" in settings:
-                        print_info("Metadata:")
-                        for key, value in settings["metadata"].items():
-                            print_info(f"  {key}: {value}")
-                        print()
-                        
-                    # Display imagen settings
-                    if "imagen_settings" in settings:
-                        print_info("Imagen Settings:")
-                        for key, value in settings["imagen_settings"].items():
-                            if isinstance(value, dict):
-                                print_info(f"  {key}:")
-                                for k, v in value.items():
-                                    print_info(f"    {k}: {v}")
-                            else:
-                                print_info(f"  {key}: {value}")
-                        print()
-                        
-                    # Display wallpaper settings
-                    if "wallpaper_settings" in settings:
-                        print_info("Wallpaper Settings:")
-                        for key, value in settings["wallpaper_settings"].items():
-                            print_info(f"  {key}: {value}")
-                    
-                    input("\nPress Enter to continue...")
-                else:
-                    print_error(f"Preset file not found: {preset_file}")
-            except Exception as e:
-                print_error(f"Error reading preset details: {e}")
-            
-        elif choice == "b":
+        if choice == "b":
             return
 
-def load_preset() -> Union[Tuple[Dict[str, Any], str], None]:
+        handlers = {
+            "1": save_current_preset,
+            "2": handle_load_preset,
+            "3": handle_delete_preset,
+            "4": view_preset_details
+        }
+
+        if choice in handlers:
+            handlers[choice]()
+
+def save_current_preset():
+    """Helper function to handle saving current settings as preset."""
+    preset_name = get_validated_input("Enter preset name (or 'b' to go back)", allow_empty=False)
+    if preset_name.lower() == 'b':
+        return
+
+    # Validate preset name
+    if not preset_name.strip() or any(c in r'\/:*?"<>|' for c in preset_name):
+        print_error("Invalid preset name. Please avoid special characters.")
+        return
+
+    # Check if preset already exists
+    if os.path.exists(os.path.join("presets", f"{preset_name}.json")):
+        confirm = get_validated_input(f"Preset '{preset_name}' already exists. Overwrite? (y/n)", ["y", "n"])
+        if confirm.lower() != "y":
+            return
+
+    try:
+        # Collect current settings
+        current_settings = {
+            "imagen_settings": user_prefs.imagen_settings if hasattr(user_prefs, 'imagen_settings') else {},
+            "wallpaper_settings": user_prefs.wallpaper_settings if hasattr(user_prefs, 'wallpaper_settings') else {},
+            "metadata": {
+                "created_at": datetime.now().isoformat(),
+                "description": "User preset"
+            }
+        }
+
+        # Save the preset
+        if save_preset(current_settings, preset_name):
+            print_success(f"Preset '{preset_name}' saved successfully")
+            user_prefs.last_preset = preset_name
+            user_prefs.save_preferences()
+        else:
+            print_error("Failed to save preset")
+
+    except Exception as e:
+        print_error(f"Error preparing preset data: {e}")
+
+def handle_load_preset():
+    """Helper function to handle loading a preset."""
+    result = load_preset()
+    if not result:
+        return
+
+    settings, preset_name = result  # Unpack the returned tuple
+    try:
+        print_section("Load Settings")
+        load_options: List[str] = ["Replace current settings with preset", "Merge preset with current settings"]
+        load_choice: str = display_menu_options(load_options)
+        if load_choice == "_INTERRUPTED_":
+            return # Exit preset loading if interrupted
+
+        if load_choice == "b":
+            return
+
+        if load_choice == "1":  # Replace
+            _apply_preset_settings(settings, replace=True)
+            print_success("Settings replaced with preset")
+        elif load_choice == "2":  # Merge
+            _apply_preset_settings(settings, replace=False)
+            print_success("Settings merged with preset")
+
+        user_prefs.last_preset = preset_name
+        user_prefs.save_preferences()
+
+    except Exception as e:
+        print_error(f"Error applying preset settings: {e}")
+
+def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bool:
     """
-    Load a preset from a file and apply it to the current user preferences.
+    Helper function to apply preset settings.
     
-    This function displays available presets, allows the user to select one,
-    and then applies the selected preset either by replacing or merging with
-    the current settings.
+    Args:
+        settings: Dictionary containing settings to apply
+        replace: If True, replace existing settings; if False, merge with existing
     
     Returns:
-        Union[Tuple[Dict[str, Any], str], None]: A tuple of (settings, preset_name) if successful,
+        bool: True if settings were applied successfully, False otherwise
+    """
+    try:
+        for setting_type in ['imagen_settings', 'wallpaper_settings']:
+            if setting_type in settings and hasattr(user_prefs, setting_type):
+                current_settings = getattr(user_prefs, setting_type)
+                if replace:
+                    setattr(user_prefs, setting_type, settings[setting_type].copy())
+                else:
+                    if isinstance(current_settings, dict) and isinstance(settings[setting_type], dict):
+                        current_settings.update(settings[setting_type])
+                    else:
+                        setattr(user_prefs, setting_type, settings[setting_type])
+        return True
+    except Exception as e:
+        logging.error(f"Error applying preset settings: {e}")
+        return False
+
+def handle_delete_preset():
+    """Helper function to handle deleting a preset."""
+    current_preset = getattr(user_prefs, 'last_preset', None)
+    if delete_preset():
+        if current_preset and not os.path.exists(os.path.join("presets", f"{current_preset}.json")):
+            user_prefs.last_preset = None
+            user_prefs.save_preferences()
+
+def _display_settings_section(settings: Dict[str, Any], section: str, title: str, indent: int = 0) -> None:
+    """
+    Helper function to display a section of settings recursively.
+    
+    Args:
+        settings: Dictionary containing settings
+        section: Name of the section to display
+        title: Title to display for the section
+        indent: Current indentation level (default: 0)
+    """
+    if section not in settings:
+        return
+        
+    data = settings[section]
+    print_info(f"\n{'  ' * indent}{title}:")
+    
+    if not isinstance(data, dict):
+        print_info(f"{'  ' * (indent + 1)}{data}")
+        return
+        
+    for key, value in data.items():
+        if isinstance(value, dict):
+            _display_settings_section({key: value}, key, key, indent + 1)
+        else:
+            print_info(f"{'  ' * (indent + 1)}{key}: {value}")
+
+def view_preset_details():
+    """Helper function to view current preset details."""
+    current_preset = getattr(user_prefs, 'last_preset', None)
+    if not current_preset:
+        print_warning("No preset currently loaded")
+        input("\nPress Enter to continue...")
+        return
+
+    try:
+        preset_file = os.path.join("presets", f"{current_preset}.json")
+        if not os.path.exists(preset_file):
+            print_error(f"Preset file not found: {preset_file}")
+            return
+
+        with open(preset_file) as f:
+            settings = json.load(f)
+
+        # Display preset information
+        print_section(f"Current Preset: {current_preset}")
+        _display_settings_section(settings, "metadata", "Metadata")
+        _display_settings_section(settings, "imagen_settings", "Imagen Settings")
+        _display_settings_section(settings, "wallpaper_settings", "Wallpaper Settings")
+        
+        input("\nPress Enter to continue...")
+    except Exception as e:
+        print_error(f"Error reading preset details: {e}")
+
+def load_preset() -> Optional[Tuple[Dict[str, Any], str]]:
+    """
+    Load a preset from a file.
+    
+    Returns:
+        Optional[Tuple[Dict[str, Any], str]]: A tuple of (settings, preset_name) if successful,
         None if no presets found or user cancels
     """
-    if not os.path.exists("presets"):
-        os.makedirs("presets")
-    
-    presets = [f for f in os.listdir("presets") if f.endswith(".json")]
-    if not presets:
-        print_warning("No saved presets found")
-        return None
-    
-    print_section("Available Presets")
-    for i, preset in enumerate(presets, 1):
-        print_option(str(i), preset.replace(".json", ""))
-    print_option("b", "Back")
-    
-    choice = get_validated_input("Select preset to load", ["b"] + [str(i) for i in range(1, len(presets) + 1)])
-    if choice == "b":
-        return None
-    
-    preset_file = presets[int(choice) - 1]
-    preset_name = os.path.splitext(preset_file)[0]
-    
     try:
-        with open(os.path.join("presets", preset_file)) as f:
+        # Ensure presets directory exists
+        os.makedirs("presets", exist_ok=True)
+        
+        # Get list of presets
+        presets = [f for f in os.listdir("presets") if f.endswith(".json")]
+        if not presets:
+            print_warning("No saved presets found")
+            return None
+
+        # Show preset options
+        print_section("Available Presets")
+        for i, preset in enumerate(presets, 1):
+            print_option(str(i), preset.replace(".json", ""))
+        print_option("b", "Back")
+
+        # Get user choice
+        valid_choices = ["b"] + [str(i) for i in range(1, len(presets) + 1)]
+        choice = get_validated_input("Select preset to load", valid_choices)
+        if choice == "b":
+            return None
+
+        # Load selected preset
+        preset_file = presets[int(choice) - 1]
+        preset_path = os.path.join("presets", preset_file)
+        preset_name = os.path.splitext(preset_file)[0]
+
+        with open(preset_path) as f:
             settings = json.load(f)
+        
         return settings, preset_name
+
     except Exception as e:
         print_error(f"Error loading preset: {e}")
         return None
@@ -632,63 +704,58 @@ def save_preset(settings: Dict[str, Any], name: str) -> bool:
     Save the current settings as a preset.
     
     This function takes the current settings and saves them to a file in the
-    presets directory with the given name.
+    presets directory with the given name, using a temporary file and atomic
+    rename for safety.
     
     Args:
-        settings (Dict[str, Any]): The settings to save
-        name (str): The name to give the preset
+        settings: Dictionary containing settings to save
+        name: Name to give the preset
     
     Returns:
-        bool: True if the preset was successfully saved, False otherwise
+        bool: True if preset was successfully saved, False otherwise
     
     Raises:
-        ValueError: If the preset name is empty or contains invalid characters
+        ValueError: If preset name is empty or contains invalid characters
     """
     if not name or not name.strip():
         raise ValueError("Preset name cannot be empty")
     
-    if not os.path.exists("presets"):
-        try:
-            os.makedirs("presets")
-            print_info("Created presets directory")
-        except Exception as e:
-            print_error(f"Error creating presets directory: {e}")
-            return False
-    
-    filename = f"{name}.json"
-    temp_file = os.path.join("presets", f"{filename}.tmp")
-    final_file = os.path.join("presets", filename)
-    
-    print_info(f"Saving preset to {final_file}")
-    
     try:
-        # First write to a temporary file
+        # Ensure presets directory exists
+        os.makedirs("presets", exist_ok=True)
+
+        # Set up file paths
+        filename = f"{name}.json"
+        temp_file = os.path.join("presets", f"{filename}.tmp")
+        final_file = os.path.join("presets", filename)
+        backup_file = os.path.join("presets", f"{filename}.bak")
+        
+        print_info(f"Saving preset to {final_file}")
+        
+        # Write settings to temporary file
         with open(temp_file, "w") as f:
             json.dump(settings, f, indent=4)
             f.flush()
             os.fsync(f.fileno())  # Ensure data is written to disk
-            
-        print_info("Temporary file written successfully")
-            
-        # If successful, rename to final filename (atomic operation)
+        
+        # Backup existing preset if it exists
         if os.path.exists(final_file):
-            backup_file = os.path.join("presets", f"{filename}.bak")
             if os.path.exists(backup_file):
                 os.remove(backup_file)
-                print_info("Removed old backup file")
             os.rename(final_file, backup_file)
             print_info("Created backup of existing preset")
-            
+        
+        # Atomically rename temporary file to final name
         os.rename(temp_file, final_file)
-        print_info("Renamed temporary file to final preset file")
+        print_info("Preset saved successfully")
         return True
         
     except Exception as e:
         print_error(f"Error saving preset: {e}")
+        # Clean up temporary file if it exists
         if os.path.exists(temp_file):
             try:
                 os.remove(temp_file)
-                print_info("Cleaned up temporary file after error")
             except:
                 pass
         return False
@@ -697,43 +764,65 @@ def delete_preset() -> bool:
     """
     Delete a preset file.
     
-    This function displays available presets, allows the user to select one,
-    and then deletes the selected preset file after confirmation.
+    Displays available presets and allows user to select one for deletion.
+    Creates a backup before deletion and handles errors gracefully.
     
     Returns:
-        bool: True if a preset was successfully deleted, False otherwise
+        bool: True if preset was successfully deleted, False otherwise
     """
-    if not os.path.exists("presets"):
-        os.makedirs("presets")
-    
-    presets = [f for f in os.listdir("presets") if f.endswith(".json")]
-    if not presets:
-        print_warning("No saved presets found")
-        return False
-    
-    print_section("Available Presets")
-    for i, preset in enumerate(presets, 1):
-        print_option(str(i), preset.replace(".json", ""))
-    print_option("b", "Back")
-    
-    choice = get_validated_input("Select preset to delete", ["b"] + [str(i) for i in range(1, len(presets) + 1)])
-    if choice == "b":
-        return False
-    
-    preset_file = presets[int(choice) - 1]
-    preset_name = os.path.splitext(preset_file)[0]
-    
-    confirm = get_validated_input(f"Are you sure you want to delete preset '{preset_name}'? (y/n)", ["y", "n"])
-    if confirm.lower() != "y":
-        print_info("Deletion cancelled")
-        return False
-    
     try:
-        os.remove(os.path.join("presets", preset_file))
-        print_success(f"Preset '{preset_name}' deleted")
+        # Ensure presets directory exists
+        os.makedirs("presets", exist_ok=True)
+
+        # Get list of presets
+        presets = [f for f in os.listdir("presets") if f.endswith(".json")]
+        if not presets:
+            print_warning("No saved presets found")
+            return False
+
+        # Display preset options
+        print_section("Available Presets")
+        for i, preset in enumerate(presets, 1):
+            print_option(str(i), preset.replace(".json", ""))
+        print_option("b", "Back")
+
+        # Get user choice
+        valid_choices = ["b"] + [str(i) for i in range(1, len(presets) + 1)]
+        choice = get_validated_input("Select preset to delete", valid_choices)
+        if choice == "b":
+            return False
+
+        # Get preset file paths
+        preset_file = presets[int(choice) - 1]
+        preset_path = os.path.join("presets", preset_file)
+        backup_path = os.path.join("presets", f"{preset_file}.bak")
+        preset_name = os.path.splitext(preset_file)[0]
+
+        # Confirm deletion
+        confirm = get_validated_input(
+            f"Are you sure you want to delete preset '{preset_name}'? (y/n)",
+            ["y", "n"]
+        )
+        if confirm.lower() != "y":
+            print_info("Deletion cancelled")
+            return False
+
+        # Create backup and delete file
+        shutil.copy2(preset_path, backup_path)
+        os.remove(preset_path)
+        print_success(f"Preset '{preset_name}' deleted (backup created)")
         return True
+
     except Exception as e:
-        print_error(f"Error deleting preset: {e}")
+        print_error(f"Error in delete_preset: {e}")
+        # Try to restore from backup if it exists
+        if 'backup_path' in locals() and 'preset_path' in locals():
+            if os.path.exists(backup_path) and not os.path.exists(preset_path):
+                try:
+                    shutil.move(backup_path, preset_path)
+                    print_info("Restored preset from backup after error")
+                except Exception:
+                    pass
         return False
 
 # Settings import/export functions will be implemented here 
@@ -741,35 +830,70 @@ def export_settings(user_prefs=None) -> str:
     """
     Export user settings to a JSON file.
     
+    Creates a temporary file and uses atomic rename for safety.
+    Includes backup handling if a file with the same name exists.
+    
     Args:
         user_prefs: Optional UserPreferences object. If not provided, uses global user_prefs.
         
     Returns:
         str: The path to the exported settings file, or empty string if export failed
     """
-    if user_prefs is None:
-        user_prefs = globals().get('user_prefs')
-        if user_prefs is None:
-            print_error("No user preferences object available")
-            return ""
-    
-    print_section("Export Settings")
     try:
+        # Get user preferences object
+        if user_prefs is None:
+            user_prefs = globals().get('user_prefs')
+            if user_prefs is None:
+                print_error("No user preferences object available")
+                return ""
+
+        # Create exports directory if it doesn't exist
+        os.makedirs("exports", exist_ok=True)
+
+        # Get filename from user
+        print_section("Export Settings")
         filename = get_validated_input("Enter filename for export (without extension)", allow_empty=False)
-        filename = f"{filename}.json"
-        
+        if not filename:
+            return ""
+
+        # Set up file paths
+        final_path = os.path.join("exports", f"{filename}.json")
+        temp_path = os.path.join("exports", f"{filename}.json.tmp")
+        backup_path = os.path.join("exports", f"{filename}.json.bak")
+
+        # Prepare settings data
         settings = {
             "preferences": user_prefs.__dict__,
             "imagen_settings": user_prefs.imagen_settings,
-            "export_date": datetime.now().isoformat()
+            "export_date": datetime.now().isoformat(),
+            "version": "1.0"  # Add version for future compatibility
         }
-        
-        with open(filename, "w") as f:
+
+        # Write to temporary file first
+        with open(temp_path, "w") as f:
             json.dump(settings, f, indent=4)
-        print_success(f"Settings exported to {filename}")
-        return filename
+            f.flush()
+            os.fsync(f.fileno())
+
+        # Backup existing file if it exists
+        if os.path.exists(final_path):
+            if os.path.exists(backup_path):
+                os.remove(backup_path)
+            shutil.copy2(final_path, backup_path)
+            print_info(f"Created backup of existing file: {backup_path}")
+
+        # Atomic rename to final filename
+        os.replace(temp_path, final_path)
+        print_success(f"Settings exported to {final_path}")
+        return final_path
+
     except Exception as e:
         print_error(f"Error exporting settings: {e}")
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except:
+                pass
         return ""
 
 def import_settings() -> bool:
@@ -778,10 +902,98 @@ def import_settings() -> bool:
     
     This function loads user preferences and imagen settings from a previously
     exported JSON file and applies them to the current user preferences.
+    Creates a backup of current settings before import and supports rollback
+    on failure.
     
     Returns:
         bool: True if settings were successfully imported, False otherwise
     """
+    try:
+        global user_prefs
+        if user_prefs is None:
+            print_error("No user preferences object available")
+            return False
+
+        # Create backup of current settings
+        backup_settings = {
+            "preferences": user_prefs.__dict__.copy(),
+            "imagen_settings": user_prefs.imagen_settings.copy(),
+            "backup_date": datetime.now().isoformat()
+        }
+
+        # Ensure exports directory exists
+        os.makedirs("exports", exist_ok=True)
+
+        # List available export files
+        print_section("Import Settings")
+        exports = [f for f in os.listdir("exports") if f.endswith(".json") and not f.endswith((".tmp", ".bak"))]
+        
+        if not exports:
+            print_warning("No exported settings files found in exports directory")
+            return False
+
+        # Display available exports
+        for i, export in enumerate(exports, 1):
+            print_option(str(i), export)
+        print_option("b", "Back")
+
+        # Get user choice
+        valid_choices = ["b"] + [str(i) for i in range(1, len(exports) + 1)]
+        choice = get_validated_input("Select settings file to import", valid_choices)
+        if choice == "b":
+            return False
+
+        # Load and validate selected file
+        import_file = exports[int(choice) - 1]
+        import_path = os.path.join("exports", import_file)
+        
+        with open(import_path) as f:
+            settings = json.load(f)
+
+        # Validate settings structure
+        required_keys = {"preferences", "imagen_settings"}
+        if not all(key in settings for key in required_keys):
+            print_error("Invalid settings file format")
+            return False
+
+        # Ask user about import mode
+        print_section("Import Mode")
+        print_option("1", "Replace all current settings")
+        print_option("2", "Merge with current settings")
+        print_option("b", "Back")
+
+        mode = get_validated_input("Select import mode", ["1", "2", "b"])
+        if mode == "_INTERRUPTED_":
+            return False # Indicate cancellation
+        if mode == "b":
+            return False
+
+        # Apply settings based on mode
+        try:
+            if mode == "1":  # Replace
+                user_prefs.__dict__.update(settings["preferences"])
+                user_prefs.imagen_settings = settings["imagen_settings"]
+            else:  # Merge
+                user_prefs.__dict__.update(settings["preferences"])
+                user_prefs.imagen_settings.update(settings["imagen_settings"])
+
+            # Save the imported settings
+            user_prefs.save_preferences()
+            print_success("Settings imported successfully")
+            return True
+
+        except Exception as e:
+            print_error(f"Error applying settings: {e}")
+            # Restore from backup
+            user_prefs.__dict__.update(backup_settings["preferences"])
+            user_prefs.imagen_settings = backup_settings["imagen_settings"]
+            user_prefs.save_preferences()
+            print_info("Settings restored from backup after import failure")
+            return False
+
+    except Exception as e:
+        print_error(f"Error during import: {e}")
+        return False
     print_section("Import Settings")
     try:
         filename = get_validated_input("Enter filename to import (with extension)", allow_empty=False)
@@ -904,8 +1116,13 @@ def manage_imagen_settings():
             print_option("2", "2 images")
             print_option("3", "3 images")
             print_option("4", "4 images")
+            print_option("b", "Back")
             
-            num_choice = get_validated_input("Select number of images (1-4)", ["1", "2", "3", "4"])
+            num_choice = get_validated_input("Select number of images (1-4, b)", ["1", "2", "3", "4", "b"])
+            if num_choice == "_INTERRUPTED_":
+                continue
+            if num_choice == "b":
+                continue
             user_prefs.imagen_settings["number_of_images"] = int(num_choice)
             print_success(f"Number of images set to {num_choice}")
             user_prefs.save_preferences()
@@ -916,10 +1133,15 @@ def manage_imagen_settings():
             print_info("Setting a specific seed allows you to reproduce the same image style.")
             print_option("1", "Use Random Seed (None)")
             print_option("2", "Set Specific Seed")
+            print_option("b", "Back")
             
-            seed_choice = get_validated_input("Select option (1-2)", ["1", "2"])
+            seed_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+            if seed_choice == "_INTERRUPTED_":
+                continue
             
-            if seed_choice == "1":
+            if seed_choice == "b":
+                continue
+            elif seed_choice == "1":
                 user_prefs.imagen_settings["seed"] = None
                 print_success("Seed set to Random (None)")
                 user_prefs.save_preferences()
@@ -941,8 +1163,13 @@ def manage_imagen_settings():
             print_info("Select Imagen model version:")
             print_option("1", "imagen-3.0-generate-002 (Default)")
             print_option("2", "imagen-3.0-generate-001 (Legacy)")
+            print_option("b", "Back")
             
-            model_choice = get_validated_input("Select model version (1-2)", ["1", "2"])
+            model_choice = get_validated_input("Select model version (1-2, b)", ["1", "2", "b"])
+            if model_choice == "_INTERRUPTED_":
+                continue
+            if model_choice == "b":
+                continue
             models = {
                 "1": "imagen-3.0-generate-002",
                 "2": "imagen-3.0-generate-001"
@@ -1001,7 +1228,9 @@ def manage_genres():
         print_option("b", "Back")
         
         choice = get_validated_input("\nEnter your choice (1-3, b): ", ["1", "2", "3", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            return # Exit genre management
+
         if choice == "b":
             return
             
@@ -1079,19 +1308,7 @@ def manage_styles():
                        "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
                        "vaporwave", "watercolor", "woodcut"]
         
-        # Group styles by compatibility for random mixing
-        style_categories = {
-            "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism", 
-                               "gothic", "impressionism", "oil_painting", "pastel", 
-                               "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
-            "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure", 
-                           "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric", 
-                           "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
-                           "stained_glass", "steampunk", "surrealism", "vaporwave"],
-            "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
-                            "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
-                            "pointillism", "pop_art", "ukiyo_e"]
-        }
+        style_categories = user_prefs.style_categories
         
         def generate_random_style_mix():
             # Check if user has custom style categories in preferences
@@ -1125,9 +1342,11 @@ def manage_styles():
         print_option("c", "Clear all")
         print_option("b", "Back")
         
-        style_choice = get_validated_input("Select an option", 
+        style_choice = get_validated_input("Select an option",
                                           [str(i) for i in range(1, len(style_options) + 3)] + ["a", "r", "c", "b"])
-        
+        if style_choice == "_INTERRUPTED_":
+            return # Exit style management
+
         if style_choice == "b":
             return
         elif style_choice == "a":
@@ -1207,49 +1426,26 @@ def manage_moods():
         for i, mood in enumerate(mood_options, 1):
             print_option(str(i), mood)
         
-        print_option("a", "Add mood")
-        print_option("r", "Remove mood")
-        print_option("c", "Clear all")
         print_option("b", "Back")
         
-        action = get_validated_input("Select action", ["a", "r", "c", "b"] + [str(i) for i in range(1, len(mood_options) + 1)])
-        
+        action = get_validated_input(f"Select mood (1-{len(mood_options)}, b)", ["b"] + [str(i) for i in range(1, len(mood_options) + 1)])
+        if action == "_INTERRUPTED_":
+            continue # Go back to the Manage Moods menu loop
+
         if action == "b":
             return
             
-        if action == "a":
-            mood = input("Enter mood to add: ").strip()
-            if mood in mood_options and mood not in user_prefs.preferred_moods:
-                user_prefs.add_mood(mood)
-                print_success(f"Added mood: {mood}")
-                user_prefs.save_preferences()
-            else:
-                print_warning("Invalid mood or already in preferences")
-        elif action == "r":
-            if user_prefs.preferred_moods:
-                print_info("Select mood to remove:")
-                for i, mood in enumerate(user_prefs.preferred_moods, 1):
-                    print_option(str(i), mood)
-                idx = int(get_validated_input("Enter number", [str(i) for i in range(1, len(user_prefs.preferred_moods) + 1)])) - 1
-                removed = user_prefs.preferred_moods.pop(idx)
-                print_success(f"Removed mood: {removed}")
-                user_prefs.save_preferences()
-            else:
-                print_warning("No moods to remove")
-        elif action == "c":
-            user_prefs.preferred_moods.clear()
-            print_success("Cleared all moods")
-            user_prefs.save_preferences()
+        # Action is a number corresponding to a mood
+        idx = int(action) - 1
+        if 0 <= idx < len(mood_options):
+            mood = mood_options[idx]
+            # Use add_mood to replace the existing mood
+            user_prefs.add_mood(mood)
+            print_success(f"Set preferred mood to: {mood}")
+            # add_mood already calls save_preferences, no need to call it again here
         else:
-            idx = int(action) - 1
-            if 0 <= idx < len(mood_options):
-                mood = mood_options[idx]
-                if mood not in user_prefs.preferred_moods:
-                    user_prefs.preferred_moods.append(mood)
-                    print_success(f"Added mood: {mood}")
-                    user_prefs.save_preferences()
-                else:
-                    print_warning("Mood already in preferences")
+            # This case should ideally not be reached due to get_validated_input
+            print_error("Invalid selection.")
 
 def manage_wallpaper_settings():
     """Manage wallpaper-specific settings."""
@@ -1262,10 +1458,9 @@ def manage_wallpaper_settings():
         print_option("5", "Multi-monitor mode")
         print_option("6", "Refresh rate")
         print_option("7", "Preview before setting")
-        print_option("8", "Use graphical preview")
         print_option("b", "Back")
         
-        setting_choice = get_validated_input("Select an option (1-8, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "b"])
+        setting_choice = get_validated_input("Select an option (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
         
         if setting_choice == "b":
             return
@@ -1274,7 +1469,12 @@ def manage_wallpaper_settings():
             print_info("Enable or disable automatic wallpaper setting")
             print_option("1", "Enable")
             print_option("2", "Disable")
-            auto_set = get_validated_input("Select option (1-2)", ["1", "2"])
+            print_option("b", "Back")
+            auto_set = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+            if auto_set == "_INTERRUPTED_":
+                continue
+            if auto_set == "b":
+                continue
             user_prefs.wallpaper_settings["auto_set"] = (auto_set == "1")
             print_success(f"Auto-set wallpaper {'enabled' if user_prefs.wallpaper_settings['auto_set'] else 'disabled'}")
         
@@ -1286,9 +1486,14 @@ def manage_wallpaper_settings():
             print_option("4", "60 days")
             print_option("5", "90 days")
             print_option("6", "Custom duration")
-            duration_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+            print_option("b", "Back")
+            duration_choice = get_validated_input("Select option (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if duration_choice == "_INTERRUPTED_":
+                continue
             
-            if duration_choice == "6":
+            if duration_choice == "b":
+                continue
+            elif duration_choice == "6":
                 while True:
                     try:
                         days = int(input("Enter number of days (1-365): "))
@@ -1311,7 +1516,12 @@ def manage_wallpaper_settings():
             print_option("2", "Fit")
             print_option("3", "Fill")
             print_option("4", "Stretch")
-            fit_mode = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+            print_option("b", "Back")
+            fit_mode = get_validated_input("Select option (1-4, b)", ["1", "2", "3", "4", "b"])
+            if fit_mode == "_INTERRUPTED_":
+                continue
+            if fit_mode == "b":
+                continue
             modes = ["center", "fit", "fill", "stretch"]
             user_prefs.wallpaper_settings["fit_mode"] = modes[int(fit_mode) - 1]
             print_success(f"Fit mode set to {user_prefs.wallpaper_settings['fit_mode']}")
@@ -1321,9 +1531,14 @@ def manage_wallpaper_settings():
             print_option("1", "Black")
             print_option("2", "White")
             print_option("3", "Custom color")
-            color_choice = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+            print_option("b", "Back")
+            color_choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
+            if color_choice == "_INTERRUPTED_":
+                continue
             
-            if color_choice == "1":
+            if color_choice == "b":
+                continue
+            elif color_choice == "1":
                 user_prefs.wallpaper_settings["background_color"] = "#000000"
                 print_success("Background color set to black")
             elif color_choice == "2":
@@ -1344,7 +1559,12 @@ def manage_wallpaper_settings():
             print_option("1", "Mirror (same wallpaper on all monitors)")
             print_option("2", "Extend (different wallpapers)")
             print_option("3", "Individual (customize per monitor)")
-            monitor_mode = get_validated_input("Select option (1-3)", ["1", "2", "3"])
+            print_option("b", "Back")
+            monitor_mode = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
+            if monitor_mode == "_INTERRUPTED_":
+                continue
+            if monitor_mode == "b":
+                continue
             modes = ["mirror", "extend", "individual"]
             user_prefs.wallpaper_settings["multi_monitor"] = modes[int(monitor_mode) - 1]
             print_success(f"Multi-monitor mode set to {user_prefs.wallpaper_settings['multi_monitor']}")
@@ -1355,7 +1575,12 @@ def manage_wallpaper_settings():
             print_option("2", "Weekly")
             print_option("3", "Monthly")
             print_option("4", "Never")
-            refresh_rate = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
+            print_option("b", "Back")
+            refresh_rate = get_validated_input("Select option (1-4, b)", ["1", "2", "3", "4", "b"])
+            if refresh_rate == "_INTERRUPTED_":
+                continue
+            if refresh_rate == "b":
+                continue
             rates = ["daily", "weekly", "monthly", "never"]
             user_prefs.wallpaper_settings["refresh_rate"] = rates[int(refresh_rate) - 1]
             print_success(f"Refresh rate set to {user_prefs.wallpaper_settings['refresh_rate']}")
@@ -1364,7 +1589,12 @@ def manage_wallpaper_settings():
             print_info("Enable or disable previewing images before setting as wallpaper")
             print_option("1", "Always preview (recommended)")
             print_option("2", "Skip preview")
-            preview_choice = get_validated_input("Select option (1-2)", ["1", "2"])
+            print_option("b", "Back")
+            preview_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+            if preview_choice == "_INTERRUPTED_":
+                continue
+            if preview_choice == "b":
+                continue
             user_prefs.wallpaper_settings["skip_preview"] = (preview_choice == "2")
             print_success(f"Preview before setting {'disabled' if user_prefs.wallpaper_settings['skip_preview'] else 'enabled'}")
             
@@ -1372,15 +1602,18 @@ def manage_wallpaper_settings():
             user_prefs.skip_preview = user_prefs.wallpaper_settings["skip_preview"]
         
         elif setting_choice == "8":
-            print_info("Enable or disable graphical preview with Tkinter window")
-            print_option("1", "Use graphical preview")
-            print_option("2", "Use terminal preview")
-            preview_choice = get_validated_input("Select option (1-2)", ["1", "2"])
-            user_prefs.wallpaper_settings["use_gui_preview"] = (preview_choice == "1")
-            print_success(f"Graphical preview {'enabled' if user_prefs.wallpaper_settings['use_gui_preview'] else 'disabled'}")
-            
-            # For compatibility with command line arg
-            user_prefs.use_gui_preview = user_prefs.wallpaper_settings["use_gui_preview"]
+            print_info("Toggle preview functionality")
+            print_option("1", "Enable preview")
+            print_option("2", "Disable preview")
+            print_option("b", "Back")
+            preview_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+            if preview_choice == "_INTERRUPTED_":
+                continue
+            if preview_choice == "b":
+                continue
+            skip_preview = (preview_choice == "2")
+            user_prefs.wallpaper_settings["skip_preview"] = skip_preview
+            print_success(f"Preview {'disabled' if skip_preview else 'enabled'}")
         
         user_prefs.save_preferences()
 
@@ -1406,9 +1639,11 @@ def configure_advanced_options():
         print_option("17", "Reset to Default")
         print_option("b", "Back")
         
-        advanced_choice = get_validated_input("Select option (1-17, b)", 
+        advanced_choice = get_validated_input("Select option (1-17, b)",
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "b"])
-        
+        if advanced_choice == "_INTERRUPTED_":
+            break # Exit advanced options loop
+
         if advanced_choice == "b":
             break  # Return to previous menu
         
@@ -1480,7 +1715,9 @@ def manage_prompt_generation_settings():
         print_option("b", "Back")
         
         choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            break # Exit prompt generation settings loop
+
         if choice == "b":
             break  # Return to Advanced Options menu
         
@@ -1505,6 +1742,8 @@ def manage_style_settings():
         print_option("b", "Back")
         
         style_choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
+        if style_choice == "_INTERRUPTED_":
+            break # Exit style settings loop
         if style_choice == "b":
             break  # Return to Style & Artistic Settings menu
         
@@ -1778,7 +2017,9 @@ def manage_camera_settings():
         print_option("b", "Back")
         
         choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            return # Exit camera settings
+
         if choice == "b":
             return
             
@@ -1789,9 +2030,14 @@ def manage_camera_settings():
             print_option("3", "Medium Format")
             print_option("4", "Film Camera")
             print_option("5", "Custom Model")
+            print_option("b", "Back")
             
-            model_choice = get_validated_input("Select camera model (1-5)", ["1", "2", "3", "4", "5"])
-            
+            model_choice = get_validated_input("Select camera model (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+            if model_choice == "_INTERRUPTED_":
+                continue
+
+            if model_choice == "b":
+                continue
             models = {
                 "1": "dslr",
                 "2": "mirrorless",
@@ -1818,9 +2064,14 @@ def manage_camera_settings():
             print_option("4", "Macro")
             print_option("5", "Fish Eye")
             print_option("6", "Custom Lens")
+            print_option("b", "Back")
             
-            lens_choice = get_validated_input("Select lens type (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            lens_choice = get_validated_input("Select lens type (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if lens_choice == "_INTERRUPTED_":
+                continue
+
+            if lens_choice == "b":
+                continue
             lenses = {
                 "1": "wide_angle",
                 "2": "standard",
@@ -1848,9 +2099,14 @@ def manage_camera_settings():
             print_option("4", "f/8 (Deep depth of field)")
             print_option("5", "f/16 (Very deep depth of field)")
             print_option("6", "Custom Aperture")
+            print_option("b", "Back")
             
-            aperture_choice = get_validated_input("Select aperture (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            aperture_choice = get_validated_input("Select aperture (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if aperture_choice == "_INTERRUPTED_":
+                continue
+
+            if aperture_choice == "b":
+                continue
             apertures = {
                 "1": "f/1.4",
                 "2": "f/2.8",
@@ -1878,9 +2134,14 @@ def manage_camera_settings():
             print_option("4", "Deep")
             print_option("5", "Very Deep")
             print_option("6", "Custom Setting")
+            print_option("b", "Back")
             
-            dof_choice = get_validated_input("Select depth of field (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            dof_choice = get_validated_input("Select depth of field (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if dof_choice == "_INTERRUPTED_":
+                continue
+
+            if dof_choice == "b":
+                continue
             dof_settings = {
                 "1": "very_shallow",
                 "2": "shallow",
@@ -1909,9 +2170,14 @@ def manage_camera_settings():
             print_option("5", "Chromatic Aberration")
             print_option("6", "Custom Effect")
             print_option("7", "No Special Effects")
+            print_option("b", "Back")
             
-            effect_choice = get_validated_input("Select special effect (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
-            
+            effect_choice = get_validated_input("Select special effect (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
+            if effect_choice == "_INTERRUPTED_":
+                continue
+
+            if effect_choice == "b":
+                continue
             effects = {
                 "1": "bokeh",
                 "2": "lens_flare",
@@ -1944,7 +2210,9 @@ def manage_output_quality_settings():
         print_option("b", "Back")
         
         choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            return # Exit output quality settings
+
         if choice == "b":
             return
             
@@ -1956,9 +2224,14 @@ def manage_output_quality_settings():
             print_option("4", "4K (3840x2160)")
             print_option("5", "8K (7680x4320)")
             print_option("6", "Custom Resolution")
+            print_option("b", "Back")
             
-            res_choice = get_validated_input("Select resolution (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            res_choice = get_validated_input("Select resolution (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if res_choice == "_INTERRUPTED_":
+                continue
+
+            if res_choice == "b":
+                continue
             resolutions = {
                 "1": "1280x720",
                 "2": "1920x1080",
@@ -1989,9 +2262,14 @@ def manage_output_quality_settings():
             print_option("3", "High")
             print_option("4", "Ultra")
             print_option("5", "None")
+            print_option("b", "Back")
             
-            detail_choice = get_validated_input("Select detail level (1-5)", ["1", "2", "3", "4", "5"])
-            
+            detail_choice = get_validated_input("Select detail level (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+            if detail_choice == "_INTERRUPTED_":
+                continue
+
+            if detail_choice == "b":
+                continue
             detail_levels = {
                 "1": "low",
                 "2": "medium",
@@ -2011,9 +2289,14 @@ def manage_output_quality_settings():
             print_option("3", "High")
             print_option("4", "Maximum")
             print_option("5", "None")
+            print_option("b", "Back")
             
-            quality_choice = get_validated_input("Select rendering quality (1-5)", ["1", "2", "3", "4", "5"])
-            
+            quality_choice = get_validated_input("Select rendering quality (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+            if quality_choice == "_INTERRUPTED_":
+                continue
+
+            if quality_choice == "b":
+                continue
             quality_levels = {
                 "1": "draft",
                 "2": "standard",
@@ -2038,7 +2321,9 @@ def manage_lighting_settings():
         print_option("b", "Back")
         
         choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            return # Exit lighting settings
+
         if choice == "b":
             return
             
@@ -2050,9 +2335,14 @@ def manage_lighting_settings():
             print_option("4", "Dramatic")
             print_option("5", "Ambient")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            type_choice = get_validated_input("Select lighting type (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            type_choice = get_validated_input("Select lighting type (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if type_choice == "_INTERRUPTED_":
+                continue
+
+            if type_choice == "b":
+                continue
             lighting_types = {
                 "1": "natural",
                 "2": "artificial",
@@ -2082,9 +2372,14 @@ def manage_lighting_settings():
             print_option("6", "Dusk")
             print_option("7", "Night")
             print_option("8", "Custom")
+            print_option("b", "Back")
             
-            time_choice = get_validated_input("Select time of day (1-8)", ["1", "2", "3", "4", "5", "6", "7", "8"])
-            
+            time_choice = get_validated_input("Select time of day (1-8, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "b"])
+            if time_choice == "_INTERRUPTED_":
+                continue
+
+            if time_choice == "b":
+                continue
             times = {
                 "1": "dawn",
                 "2": "morning",
@@ -2114,9 +2409,14 @@ def manage_lighting_settings():
             print_option("4", "Electric")
             print_option("5", "Multiple Sources")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            source_choice = get_validated_input("Select light source (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            source_choice = get_validated_input("Select light source (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if source_choice == "_INTERRUPTED_":
+                continue
+
+            if source_choice == "b":
+                continue
             sources = {
                 "1": "sun",
                 "2": "moon",
@@ -2144,9 +2444,14 @@ def manage_lighting_settings():
             print_option("4", "Directional")
             print_option("5", "Atmospheric")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            quality_choice = get_validated_input("Select light quality (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
+            quality_choice = get_validated_input("Select light quality (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if quality_choice == "_INTERRUPTED_":
+                continue
+
+            if quality_choice == "b":
+                continue
             qualities = {
                 "1": "soft",
                 "2": "hard",
@@ -2183,7 +2488,9 @@ def manage_lighting_settings():
                 print_option("b", "Back")
                 
                 source_choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
-                
+                if source_choice == "_INTERRUPTED_":
+                    break # Exit artificial sources loop
+
                 if source_choice == "b":
                     break
                     
@@ -2272,9 +2579,12 @@ def manage_composition_settings():
             print_option("4", "Leading Lines")
             print_option("5", "Framing")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            technique_choice = get_validated_input("Select technique (1-6)", ["1", "2", "3", "4", "5", "6"])
+            technique_choice = get_validated_input("Select technique (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
             
+            if technique_choice == "b":
+                continue
             techniques = {
                 "1": "rule_of_thirds",
                 "2": "golden_ratio",
@@ -2302,9 +2612,12 @@ def manage_composition_settings():
             print_option("4", "Bird's Eye")
             print_option("5", "Dutch Angle")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            angle_choice = get_validated_input("Select camera angle (1-6)", ["1", "2", "3", "4", "5", "6"])
+            angle_choice = get_validated_input("Select camera angle (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
             
+            if angle_choice == "b":
+                continue
             angles = {
                 "1": "eye_level",
                 "2": "low_angle",
@@ -2332,9 +2645,12 @@ def manage_composition_settings():
             print_option("4", "Triangular")
             print_option("5", "Z-Pattern")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            flow_choice = get_validated_input("Select visual flow (1-6)", ["1", "2", "3", "4", "5", "6"])
+            flow_choice = get_validated_input("Select visual flow (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
             
+            if flow_choice == "b":
+                continue
             flows = {
                 "1": "linear",
                 "2": "circular",
@@ -2362,9 +2678,12 @@ def manage_composition_settings():
             print_option("4", "Multi-Layer")
             print_option("5", "Flat")
             print_option("6", "Custom")
+            print_option("b", "Back")
             
-            depth_choice = get_validated_input("Select depth layering (1-6)", ["1", "2", "3", "4", "5", "6"])
+            depth_choice = get_validated_input("Select depth layering (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
             
+            if depth_choice == "b":
+                continue
             depths = {
                 "1": "foreground_focus",
                 "2": "middle_ground_focus",
@@ -2394,7 +2713,9 @@ def manage_composition_settings():
                 print_option("b", "Back")
                 
                 env_choice = get_validated_input("Select option (1-4, b)", ["1", "2", "3", "4", "b"])
-                
+                if env_choice == "_INTERRUPTED_":
+                    break # Exit environment settings loop
+
                 if env_choice == "b":
                     break
                     
@@ -2407,9 +2728,12 @@ def manage_composition_settings():
                     print_option("5", "Snowy")
                     print_option("6", "Foggy")
                     print_option("7", "Custom")
+                    print_option("b", "Back")
                     
-                    weather_choice = get_validated_input("Select weather (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                    weather_choice = get_validated_input("Select weather (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
                     
+                    if weather_choice == "b":
+                        continue
                     weather_types = {
                         "1": "clear",
                         "2": "cloudy",
@@ -2437,9 +2761,12 @@ def manage_composition_settings():
                     print_option("3", "Autumn")
                     print_option("4", "Winter")
                     print_option("5", "Custom")
+                    print_option("b", "Back")
                     
-                    season_choice = get_validated_input("Select season (1-5)", ["1", "2", "3", "4", "5"])
+                    season_choice = get_validated_input("Select season (1-5, b)", ["1", "2", "3", "4", "5", "b"])
                     
+                    if season_choice == "b":
+                        continue
                     seasons = {
                         "1": "spring",
                         "2": "summer",
@@ -2549,9 +2876,12 @@ def manage_composition_settings():
                     print_option("5", "Underwater")
                     print_option("6", "Space")
                     print_option("7", "Custom")
+                    print_option("b", "Back")
                     
-                    location_choice = get_validated_input("Select location type (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
+                    location_choice = get_validated_input("Select location type (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
                     
+                    if location_choice == "b":
+                        continue
                     locations = {
                         "1": "indoor",
                         "2": "outdoor",
@@ -2597,9 +2927,17 @@ def manage_color_settings():
             print_option("5", "Split Complementary")
             print_option("6", "Tetradic")
             print_option("7", "Custom")
+            print_option("b", "Back")
             
-            scheme_choice = get_validated_input("Select color scheme (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
-            
+            try:
+                scheme_choice = get_validated_input("Select color scheme (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
+            except KeyboardInterrupt:
+                print_info("\nOperation cancelled.") # Optional: inform user
+                continue # Go back to the Color & Detail Settings menu
+
+            if scheme_choice == "b":
+                continue # Go back to the Color & Detail Settings menu
+
             schemes = {
                 "1": "monochromatic",
                 "2": "complementary",
@@ -2629,9 +2967,17 @@ def manage_color_settings():
             print_option("5", "Vibrant")
             print_option("6", "Muted")
             print_option("7", "Custom")
+            print_option("b", "Back")
             
-            palette_choice = get_validated_input("Select palette type (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
-            
+            try:
+                palette_choice = get_validated_input("Select palette type (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
+            except KeyboardInterrupt:
+                print_info("\nOperation cancelled.") # Optional: inform user
+                continue # Go back to the Color & Detail Settings menu
+
+            if palette_choice == "b":
+                continue # Go back to the Color & Detail Settings menu
+
             palettes = {
                 "1": "warm",
                 "2": "cool",
@@ -2659,9 +3005,13 @@ def manage_color_settings():
             print_option("3", "Neutral")
             print_option("4", "Mixed")
             print_option("5", "Custom")
+            print_option("b", "Back")
             
-            temp_choice = get_validated_input("Select color temperature (1-5)", ["1", "2", "3", "4", "5"])
+            temp_choice = get_validated_input("Select color temperature (1-5, b)", ["1", "2", "3", "4", "5", "b"])
             
+            if temp_choice == "b":
+                continue # Go back to the Color & Detail Settings menu
+
             temperatures = {
                 "1": "warm",
                 "2": "cool",
@@ -2687,9 +3037,13 @@ def manage_color_settings():
             print_option("3", "Coarse")
             print_option("4", "None")
             print_option("5", "Custom")
+            print_option("b", "Back")
             
-            detail_choice = get_validated_input("Select detail level (1-5)", ["1", "2", "3", "4", "5"])
+            detail_choice = get_validated_input("Select detail level (1-5, b)", ["1", "2", "3", "4", "5", "b"])
             
+            if detail_choice == "b":
+                continue # Go back to the Color & Detail Settings menu
+
             detail_levels = {
                 "1": "fine",
                 "2": "medium",
@@ -2715,9 +3069,15 @@ def manage_color_settings():
             print_option("3", "Low")
             print_option("4", "None")
             print_option("5", "Custom")
+            print_option("b", "Back")
             
-            texture_choice = get_validated_input("Select texture quality (1-5)", ["1", "2", "3", "4", "5"])
-            
+            texture_choice = get_validated_input("Select texture quality (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+            if texture_choice == "_INTERRUPTED_":
+                continue
+
+            if texture_choice == "b":
+                continue # Go back to the Color & Detail Settings menu
+
             texture_qualities = {
                 "1": "high",
                 "2": "medium",
@@ -2817,61 +3177,55 @@ def customize_all_parameters():
             manage_negative_prompt()
 
 def generate_ai_preset():
-    """Generate an AI-based preset."""
+    """Generate an AI-based preset using Gemini."""
     while True:
         print_section("Generate AI Preset")
         
-        print_option("1", "Generate New AI Preset")
-        print_option("2", "Generate Random Preset (Fallback)")
+        print_option("1", "Generate New AI Preset using Gemini")
+        # Removed option 2 (Fallback)
         print_option("b", "Back")
         
-        choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+        choice = get_validated_input("Select option (1, b)", ["1", "b"]) # Updated validation
         
         if choice == "b":
             return
             
         if choice == "1":
             try:
+                # Ensure ai_preset_generator is importable
                 from ai_preset_generator import generate_ai_preset as ai_gen_preset
-                print_info("Generating AI preset...")
-                preset = ai_gen_preset(user_prefs)
-                if preset:
-                    print_success("AI preset generated successfully!")
-                    user_prefs.save_preferences()
-                else:
-                    print_warning("Failed to generate AI preset.")
-            except ImportError:
-                print_warning("AI preset generator module not found.")
-                print_info("Please install the required package:")
-                print_info("pip install google-generativeai")
-                install_choice = get_validated_input("Would you like to install the package now? (y/n)", ["y", "n"])
-                if install_choice.lower() == "y":
-                    try:
-                        import subprocess
-                        subprocess.check_call([sys.executable, "-m", "pip", "install", "google-generativeai"])
-                        print_success("Package installed successfully!")
-                        print_info("Please restart the application to use AI preset generation.")
-                    except subprocess.CalledProcessError as e:
-                        print_error(f"Failed to install package: {e}")
-            except Exception as e:
-                print_error(f"Error generating AI preset: {e}")
-        
-        elif choice == "2":
-            try:
-                # Fallback to random preset
-                from ai_preset_generator import generate_random_preset
-                print_info("Generating random preset...")
-                preset = generate_random_preset()
-                if preset:
-                    user_prefs.imagen_settings.update(preset)
-                    user_prefs.save_preferences()
-                    print_success("Random preset applied successfully!")
-                else:
-                    print_error("Failed to generate random preset.")
-            except Exception as e:
-                print_error(f"Error generating random preset: {e}")
                 
-        input("\nPress Enter to continue...")
+                print_info("Attempting to generate AI preset (this may take a moment)...")
+                
+                # Call the modified generator function from ai_preset_generator.py
+                # It now returns: path (str) if saved, None if discarded, False if failed
+                result = ai_gen_preset(user_prefs)
+                
+                # Handle the new return types
+                if isinstance(result, str):
+                    # Preset was generated and saved by the user
+                    print_success(f"AI preset generated and saved successfully!")
+                    print_info(f"Saved to: {result}")
+                    # No need to save user_prefs here anymore, as the preset is saved as a file
+                elif result is None:
+                    # Preset was generated but user chose not to save
+                    print_info("AI preset generated but discarded by user.")
+                else: # result is False
+                    # Preset generation failed (API error, uniqueness issue, etc.)
+                    print_warning("Failed to generate AI preset. See logs or previous messages for details.")
+                    
+            except ImportError:
+                print_warning("AI preset generator module (ai_preset_generator.py) not found or google-generativeai is not installed.")
+                print_info("Please ensure the file exists and run: pip install google-generativeai")
+                # Optional: Add automatic installation prompt back if desired
+            except Exception as e:
+                # Catch any other unexpected errors during the process
+                print_error(f"An unexpected error occurred during AI preset generation: {e}")
+                logging.exception("Error in wallpaper_settings.generate_ai_preset wrapper") # Log traceback
+
+        # Removed elif choice == "2" block entirely
+                
+        input("\nPress Enter to return to the AI Preset menu...") # Keep user in the menu
 
 def reset_to_default():
     """Reset all settings to default values."""
@@ -2972,7 +3326,9 @@ def manage_negative_prompt():
         print_option("b", "Back")
         
         choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
-        
+        if choice == "_INTERRUPTED_":
+            return # Exit manage negative prompt
+
         if choice == "b":
             return
         

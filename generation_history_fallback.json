@@ -1,0 +1,41 @@
+[
+    {
+        "date": "2025-04-16T09:00:55.194030",
+        "prompt": "an enchanting multi-layered paper craft landscape depicting towering, angular-cut paper mountains with visible textured scoring, receding into the distance against a soft blue paper sky adorned with layered white paper clouds, featuring a foreground detailed with individually cut and folded green paper pine trees and deciduous trees bordering a rippling blue paper river that winds through the scene, all elements meticulously assembled with visible edges and depth, bathed in gentle, diffused daylight that highlights the tactile paper textures and creates soft shadows between layers, conveying a serene and charming handcrafted world with a deep depth of field, . 1920x1080 resolution, 16:9 aspect ratio. Avoid: ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy, photorealistic, photograph, 3d render",
+        "enhanced_prompt": "an enchanting multi-layered paper craft landscape depicting towering, angular-cut paper mountains with visible textured scoring, receding into the distance against a soft blue paper sky adorned with layered white paper clouds, featuring a foreground detailed with individually cut and folded green paper pine trees and deciduous trees bordering a rippling blue paper river that winds through the scene, all elements meticulously assembled with visible edges and depth, bathed in gentle, diffused daylight that highlights the tactile paper textures and creates soft shadows between layers, conveying a serene and charming handcrafted world with a deep depth of field, . 1920x1080 resolution, 16:9 aspect ratio. Avoid: ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy, photorealistic, photograph, 3d render",
+        "gemini_prompt": "an enchanting multi-layered paper craft landscape depicting towering, angular-cut paper mountains with visible textured scoring, receding into the distance against a soft blue paper sky adorned with layered white paper clouds, featuring a foreground detailed with individually cut and folded green paper pine trees and deciduous trees bordering a rippling blue paper river that winds through the scene, all elements meticulously assembled with visible edges and depth, bathed in gentle, diffused daylight that highlights the tactile paper textures and creates soft shadows between layers, conveying a serene and charming handcrafted world with a deep depth of field, . 1920x1080 resolution, 16:9 aspect ratio. Avoid: ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy, photorealistic, photograph, 3d render",
+        "image_filename": "paper_craft_landscape_e08e6074.png",
+        "settings": {
+            "user_preferences": {
+                "preferred_genres": [],
+                "preferred_styles": [
+                    "paper craft"
+                ],
+                "preferred_moods": [],
+                "negative_prompts": [],
+                "imagen_settings": {
+                    "number_of_images": 1,
+                    "seed": null,
+                    "negative_prompt": "",
+                    "quality_settings": {
+                        "resolution": "1920x1080"
+                    },
+                    "style_settings": {},
+                    "camera_settings": {
+                        "depth_of_field": "deep"
+                    },
+                    "lighting_settings": {},
+                    "composition_settings": {},
+                    "environment_settings": {},
+                    "color_settings": {},
+                    "detail_settings": {}
+                },
+                "wallpaper_settings": {
+                    "auto_set": false,
+                    "skip_preview": false,
+                    "use_gui_preview": false
+                },
+                "aspect_ratio": "16:9",
+                "history_file": "/home/rasheedh/wallgen/generation_history.json",
+                "last_preset": null,
+                "add_style": 

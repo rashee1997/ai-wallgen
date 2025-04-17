@@ -10,7 +10,7 @@ import json
 import logging
 import random
 import hashlib
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union # <-- Add Union
 
 # Import Gemini API
 try:
@@ -122,426 +122,234 @@ def is_preset_unique(preset_data: Dict[str, Any]) -> bool:
     cached_presets = load_cached_presets()
     return preset_hash not in cached_presets
 
-def generate_ai_preset(user_prefs: UserPreferences) -> bool:
+# Modify the return type hint and docstring
+def generate_ai_preset(user_prefs: UserPreferences) -> Union[str, bool, None]: # <-- Modified return type
     """
     Generate a random preset with coherent settings using Gemini AI.
-    
+
     This function uses Gemini to create a set of preferences that are coherent
     and stylistically matched, rather than just randomly selecting values.
-    
+
     Args:
-        user_prefs: The UserPreferences object to update with AI-generated settings
-        
+        user_prefs: The UserPreferences object (used for context, not modified directly)
+
     Returns:
-        bool: True if successful, False otherwise
+        Union[str, bool, None]:
+            - str: The path to the saved preset file if saved by the user.
+            - None: If the preset was generated but the user chose not to save it.
+            - False: If generation failed (API error, no unique preset found).
     """
     api_key = get_gemini_api_key()
     if not api_key:
         logging.error("No Gemini API key found. Please set GEMINI_API_KEY environment variable or add it to config.json")
+        print("Error: Gemini API key not configured.") # User-facing message
         return False
-        
+
     try:
         # Configure Gemini API
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
-        
-        # Decide whether to use mixed styles (50% chance)
-        use_mixed_styles = random.choice([True, False])
-        
-        # If using mixed styles, generate them now
-        mixed_style = None
-        if use_mixed_styles:
-            mixed_style = generate_random_style_mix()
-            logging.info(f"Using mixed style: {mixed_style}")
-        
+        # Ensure the model name is correct, adjust if needed based on availability
+        try:
+            # Using flash for potentially faster/cheaper generation, consider making this configurable
+            model = genai.GenerativeModel('gemini-1.5-flash')
+        except Exception as model_err:
+            logging.error(f"Failed to initialize Gemini model: {model_err}")
+            print(f"Error: Could not initialize AI model. Please check configuration and model availability.")
+            return False
+
+        # Decide whether to use mixed styles (50% chance) - Removed as prompt now handles single style selection
+        # use_mixed_styles = random.choice([True, False])
+        # mixed_style = None
+        # if use_mixed_styles:
+        #     mixed_style = generate_random_style_mix()
+        #     logging.info(f"Using mixed style: {mixed_style}")
+
         # Create the request for a coherent set of preferences
+        # Updated prompt for clarity and to request "None" for inapplicable fields
         prompt = """
         Generate a random but coherent set of wallpaper generation preferences. Create settings that would work well together artistically.
         The output should be valid JSON format with the following structure:
         {
-            "preset_name": "[a creative name for this preset]",
-            "genres": [list of 1 genres that work well together],
+            "preset_name": "[a creative name for this preset, e.g., 'Cyberpunk Sunset' or 'Minimalist Forest']",
+            # "genres" field removed as requested
             "styles": [list of 1 artistic style],
-            "moods": [list of 1 moods that fit with the genres and styles],
+            "moods": [list of 1 mood],
             "imagen_settings": {
                 "style_settings": {
-                    "art_movement": "[a fitting art movement]",
+                    "art_movement": "[a fitting art movement or 'None']",
                     "post_processing": [list of 0-1 post-processing effects]
                 },
                 "camera_settings": {
-                    "camera_model": "[appropriate camera model]",
-                    "lens_type": "[appropriate lens type]",
-                    "aperture": "[appropriate aperture setting]",
-                    "depth_of_field": "[appropriate depth setting]"
+                    "camera_model": "[appropriate camera model or 'None']",
+                    "lens_type": "[appropriate lens type or 'None']",
+                    "aperture": "[appropriate aperture setting or 'None']",
+                    "depth_of_field": "[appropriate depth setting or 'None']"
                 },
                 "lighting_settings": {
-                    "lighting_type": "[appropriate lighting type]",
-                    "time_of_day": "[appropriate time of day]",
-                    "light_quality": "[appropriate light quality]"
+                    "lighting_type": "[appropriate lighting type or 'None']",
+                    "time_of_day": "[appropriate time of day or 'None']",
+                    "light_quality": "[appropriate light quality or 'None']"
                 },
                 "composition_settings": {
-                    "technique": "[appropriate composition technique]",
-                    "camera_angle": "[appropriate camera angle]"
+                    "technique": "[appropriate composition technique or 'None']",
+                    "camera_angle": "[appropriate camera angle or 'None']"
                 },
                 "color_settings": {
-                    "color_scheme": "[appropriate color scheme]",
-                    "palette_type": "[appropriate palette type]",
-                    "color_temperature": "[appropriate color temperature]"
+                    "color_scheme": "[appropriate color scheme or 'None']",
+                    "palette_type": "[appropriate palette type or 'None']",
+                    "color_temperature": "[appropriate color temperature or 'None']"
                 }
             },
             "aspect_ratio": "[choose ONLY from these specific values: 16:9, 4:3, 1:1, or 9:16]"
         }
-        
-        Choose 1 from these genre options:
-        ["Nature & Landscapes", "Mountains & Peaks", "Forests & Woods", "Desert & Dunes", "Waterfalls & Rivers", "Urban & Architecture", "Modern Cityscapes", "Space & Cosmos", "Sea & Ocean", "Fantasy Landscapes", "Abstract & 3D"]
-        """
-        
-        # If using a mixed style, tell Gemini to use it
-        if mixed_style:
-            prompt += f"""
-        
-        For the "styles" field, use exactly this value:
-        ["{mixed_style}"]
-        """
-        else:
-            prompt += """
-        
+
+        # Genre options removed as requested
+
         Choose 1 from these style options:
         ["traditional_art", "digital_art", "abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", "cinematic", "comic_book", "cyberpunk", "divisionism", "double_exposure", "expressionism", "fantasy", "futurism", "glitch_art", "gothic", "graffiti", "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", "line_art", "low_poly", "manga", "minimalist", "oil_painting", "paper_cut", "pastel", "pencil_sketch", "pixel_art", "pointillism", "pop_art", "realism", "retrowave", "sci_fi", "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", "vaporwave", "watercolor", "woodcut"]
-        """
-        
-        prompt += """
         
         Choose 1 from these mood options:
         ["peaceful", "serene", "tranquil", "calm", "relaxing", "soothing", "energetic", "vibrant", "dynamic", "exciting", "dramatic", "intense", "mysterious", "enigmatic", "cryptic", "eerie", "romantic", "passionate", "tender", "joyful", "cheerful", "happy", "playful", "whimsical", "dreamy", "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"]
-        
-        Ensure all settings are coherent and artistically compatible.
+
+        Ensure all settings are coherent and artistically compatible. Use "None" (as a string) for settings where no specific value is appropriate for the generated theme.
         """
-        
+
+        # Removed mixed style logic from prompt generation
+
         # Try up to 3 times to generate a unique preset
         for attempt in range(3):
             # Get the response
-            response = model.generate_content(contents=prompt)
-            
-            if response:
+            try:
+                response = model.generate_content(contents=prompt)
+            except Exception as api_err:
+                 logging.error(f"Error during Gemini API call: {api_err}")
+                 print(f"Error: Failed to communicate with AI service ({api_err}).")
+                 return False # Treat API errors as failure
+
+            if response and response.text:
                 # Extract the JSON from the response
                 response_text = response.text.strip()
-                
-                # Find JSON content (in case there's any extra text)
                 import re
-                json_match = re.search(r'({[\s\S]*})', response_text)
+                # Handle optional markdown code block ```json ... ```
+                json_match = re.search(r'```json\s*({[\s\S]*?})\s*```|({[\s\S]*})', response_text)
+
                 if json_match:
-                    json_content = json_match.group(1)
-                    preset_data = json.loads(json_content)
-                    
+                    json_content = json_match.group(1) or json_match.group(2) # Get content from either group
+                    try:
+                        preset_data = json.loads(json_content)
+                        # Basic validation of structure
+                        if not isinstance(preset_data, dict) or "preset_name" not in preset_data:
+                             raise json.JSONDecodeError("Missing required fields", json_content, 0)
+                    except json.JSONDecodeError as json_err:
+                        logging.error(f"Failed to decode JSON from Gemini response: {json_err}\nResponse: {json_content}")
+                        if attempt < 2:
+                            print("Warning: Received invalid data format from AI, retrying...")
+                            continue # Go to next attempt
+                        else:
+                            print("Error: Received invalid data format from AI service after multiple attempts.")
+                            return False
+
                     # Check if this preset is unique compared to previous ones
                     if is_preset_unique(preset_data):
-                        # Apply the generated preset to user preferences
-                        preset_name = preset_data.get("preset_name", "AI Generated Preset")
-                        print(f"Applying AI-generated preset: {preset_name}")
-                        
-                        # Save this preset to cache so we don't generate it again
-                        save_preset_to_cache(preset_data)
-                        
-                        # Reset existing values first to prevent accumulation
-                        user_prefs.preferred_genres = []
-                        user_prefs.preferred_styles = []
-                        user_prefs.preferred_moods = []
-                        
-                        # Reset imagen settings to minimal defaults (preserving essential structure)
-                        user_prefs.imagen_settings = {
-                            "number_of_images": 1,
-                            "seed": None,
-                            "negative_prompt": "",
-                            "quality_settings": {},
-                            "style_settings": {},
-                            "camera_settings": {},
-                            "lighting_settings": {},
-                            "composition_settings": {},
-                            "environment_settings": {},
-                            "color_settings": {},
-                            "detail_settings": {}
-                        }
-                        
-                        # Reset wallpaper settings
-                        user_prefs.wallpaper_settings = {"auto_set": False}
-                        
-                        # Update user preferences
-                        user_prefs.preferred_genres = preset_data.get("genres", [])[:1]  # Take only first item
-                        
-                        # For styles, ensure it's a single string (even if it's a mixed style)
-                        styles = preset_data.get("styles", [])
-                        user_prefs.preferred_styles = styles[:1] if styles else []
-                        
-                        user_prefs.preferred_moods = preset_data.get("moods", [])[:1]  # Take only first item
-                        
-                        # Validate aspect ratio - only use supported values
-                        aspect_ratio = preset_data.get("aspect_ratio", "16:9")
-                        valid_ratios = ["16:9", "4:3", "1:1", "9:16"]
-                        if aspect_ratio not in valid_ratios:
-                            print(f"Warning: Generated aspect ratio '{aspect_ratio}' is not supported. Using default 16:9 instead.")
-                            aspect_ratio = "16:9"
-                        user_prefs.aspect_ratio = aspect_ratio
-                        
-                        # Update imagen settings
-                        imagen_settings = preset_data.get("imagen_settings", {})
-                        
-                        # Quality Settings - with more complete information
-                        quality_settings = imagen_settings.get("quality_settings", {})
-                        user_prefs.imagen_settings["quality_settings"] = {
-                            "resolution": quality_settings.get("resolution", "1920x1080"),
-                            "detail_level": quality_settings.get("detail_level", "high"),
-                            "rendering_quality": quality_settings.get("rendering_quality", "high")
-                        }
-                        
-                        # Style settings
-                        style_settings = imagen_settings.get("style_settings", {})
-                        
-                        # Only add style_categories if they don't already exist in user preferences
-                        # or if we're using a mixed style that needs them
-                        if mixed_style or "style_categories" not in user_prefs.imagen_settings.get("style_settings", {}):
-                            user_prefs.imagen_settings["style_settings"] = {
-                                "art_movement": style_settings.get("art_movement"),
-                                "post_processing": style_settings.get("post_processing", []),
-                                # Include style categories for mixed style functionality
-                                "style_categories": DEFAULT_STYLE_CATEGORIES
-                            }
+                        preset_name = preset_data.get("preset_name", "Unnamed AI Preset")
+                        print(f"\n--- AI Generated Preset: '{preset_name}' ---")
+                        # Display the generated preset details nicely
+                        try:
+                            print(json.dumps(preset_data, indent=2))
+                        except Exception: # Catch potential errors during printing complex data
+                            print("[Could not display full preset details]")
+                        print("------------------------------------------")
+
+                        # --- MODIFICATION START: User confirmation and saving ---
+                        # Ask user for confirmation
+                        while True:
+                            confirm = input(f"Save this generated preset? (Y/N): ").strip().lower()
+                            if confirm in ['y', 'n']:
+                                break
+                            print("Invalid input. Please enter 'Y' or 'N'.")
+
+                        if confirm == 'y':
+                            # Ask for preset name
+                            while True:
+                                save_name = input("Enter a name for this preset (alphanumeric, spaces, hyphens allowed): ").strip()
+                                # Basic validation for filename safety
+                                if re.match(r"^[a-zA-Z0-9 _-]+$", save_name) and save_name:
+                                    break
+                                print("Invalid name. Please use only letters, numbers, spaces, or hyphens.")
+
+                            # Define presets directory and ensure it exists
+                            presets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "presets")
+                            os.makedirs(presets_dir, exist_ok=True)
+
+                            # Construct file path
+                            preset_filename = f"{save_name}.json"
+                            preset_filepath = os.path.join(presets_dir, preset_filename)
+
+                            # Check for existing file
+                            if os.path.exists(preset_filepath):
+                                overwrite = input(f"Preset '{save_name}' already exists. Overwrite? (Y/N): ").strip().lower()
+                                if overwrite != 'y':
+                                    print("Preset not saved.")
+                                    return None # User chose not to overwrite
+
+                            # Save the preset data (the dictionary) to the file
+                            try:
+                                with open(preset_filepath, 'w') as f:
+                                    json.dump(preset_data, f, indent=4)
+                                print(f"Preset '{save_name}' saved successfully to {preset_filepath}")
+
+                                # Save this preset to cache so we don't generate it again
+                                save_preset_to_cache(preset_data)
+                                return preset_filepath # Return the path on successful save
+                            except IOError as e:
+                                logging.error(f"Error saving preset file {preset_filepath}: {e}")
+                                print(f"Error: Could not save preset file. Check permissions.")
+                                return False # Indicate failure
+
                         else:
-                            # Don't include style_categories if they already exist
-                            user_prefs.imagen_settings["style_settings"] = {
-                                "art_movement": style_settings.get("art_movement"),
-                                "post_processing": style_settings.get("post_processing", [])
-                            }
-                        
-                        # Camera settings - with more complete information
-                        camera_settings = imagen_settings.get("camera_settings", {})
-                        user_prefs.imagen_settings["camera_settings"] = {
-                            "camera_model": camera_settings.get("camera_model"),
-                            "lens_type": camera_settings.get("lens_type"),
-                            "aperture": camera_settings.get("aperture"),
-                            "depth_of_field": camera_settings.get("depth_of_field"),
-                            "special_lens": camera_settings.get("special_lens", None),
-                            "camera_brand": camera_settings.get("camera_brand", None),
-                            "focal_length": camera_settings.get("focal_length", None),
-                            "sensor_type": camera_settings.get("sensor_type", None)
-                        }
-                        
-                        # Lighting settings - with more complete information
-                        lighting_settings = imagen_settings.get("lighting_settings", {})
-                        user_prefs.imagen_settings["lighting_settings"] = {
-                            "lighting_type": lighting_settings.get("lighting_type"),
-                            "time_of_day": lighting_settings.get("time_of_day"),
-                            "light_quality": lighting_settings.get("light_quality"),
-                            "light_source": lighting_settings.get("light_source", None),
-                            "artificial_sources": lighting_settings.get("artificial_sources", [])
-                        }
-                        
-                        # Composition settings - with more complete information
-                        composition_settings = imagen_settings.get("composition_settings", {})
-                        user_prefs.imagen_settings["composition_settings"] = {
-                            "technique": composition_settings.get("technique"),
-                            "camera_angle": composition_settings.get("camera_angle"),
-                            "visual_flow": composition_settings.get("visual_flow", None),
-                            "depth_layering": composition_settings.get("depth_layering", None)
-                        }
-                        
-                        # Environment settings - more complete
-                        environment_settings = imagen_settings.get("environment_settings", {})
-                        user_prefs.imagen_settings["environment_settings"] = {
-                            "weather": environment_settings.get("weather", None),
-                            "season": environment_settings.get("season", None),
-                            "atmospheric_effects": environment_settings.get("atmospheric_effects", []),
-                            "location_type": environment_settings.get("location_type", None)
-                        }
-                        
-                        # Color settings - more complete
-                        color_settings = imagen_settings.get("color_settings", {})
-                        user_prefs.imagen_settings["color_settings"] = {
-                            "color_scheme": color_settings.get("color_scheme"),
-                            "palette_type": color_settings.get("palette_type"),
-                            "color_temperature": color_settings.get("color_temperature")
-                        }
-                        
-                        # Detail settings - more complete
-                        detail_settings = imagen_settings.get("detail_settings", {})
-                        user_prefs.imagen_settings["detail_settings"] = {
-                            "texture_quality": detail_settings.get("texture_quality", None),
-                            "special_effects": detail_settings.get("special_effects", [])
-                        }
-                        
-                        # Add a default negative prompt if none exists
-                        if "negative_prompt" not in user_prefs.imagen_settings or not user_prefs.imagen_settings["negative_prompt"]:
-                            user_prefs.imagen_settings["negative_prompt"] = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
-                        
-                        # Save the preferences
-                        user_prefs.save_preferences()
-                        
-                        return True
+                            print("Preset discarded.")
+                            # Don't save to cache if discarded
+                            return None # Return None if user chose not to save
+                        # --- MODIFICATION END ---
+
                     else:
                         logging.info(f"Generated preset was not unique, trying again (attempt {attempt+1}/3)")
                         # Continue to the next attempt
                 else:
-                    logging.error("Could not extract JSON from Gemini response")
-                    return False
+                    logging.error(f"Could not extract JSON from Gemini response. Response: {response_text}")
+                    if attempt < 2:
+                        print("Warning: Received unexpected data from AI, retrying...")
+                    else:
+                        print("Error: Failed to get valid data from AI after multiple attempts.")
+                        return False # Failed after retries
             else:
-                logging.error("Empty response from Gemini")
-                return False
-                
+                # Handle cases where response exists but response.text is None or empty
+                err_msg = f"Empty or invalid response text from Gemini (Attempt {attempt+1}/3)."
+                if hasattr(response, 'prompt_feedback') and response.prompt_feedback:
+                     err_msg += f" Feedback: {response.prompt_feedback}"
+                logging.error(err_msg)
+
+                if attempt < 2:
+                    print("Warning: Received empty response from AI, retrying...")
+                else:
+                    print("Error: Failed to get response from AI after multiple attempts.")
+                    # Check for specific blocking reason if available
+                    if hasattr(response, 'prompt_feedback') and response.prompt_feedback.block_reason:
+                         print(f"Reason: Request blocked due to {response.prompt_feedback.block_reason.name}")
+                    return False # Failed after retries
+
         # If we get here, we failed to generate a unique preset after 3 attempts
         logging.warning("Could not generate a unique preset after 3 attempts")
-        print("Generating a preset with random style mix as fallback...")
-        
-        # Fallback to a simple preset with random style mix
-        fallback_preset = {
-            "preset_name": f"Random Mix Preset {random.randint(1, 1000)}",
-            "genres": [random.choice(["Nature & Landscapes", "Space & Cosmos", "Urban & Architecture", "Fantasy Landscapes"])],
-            "styles": [generate_random_style_mix()],  # This always generates a mixed style
-            "moods": [random.choice(["peaceful", "mysterious", "dramatic", "energetic", "dreamy"])],
-            "aspect_ratio": random.choice(["16:9", "4:3", "1:1", "9:16"]),
-            "imagen_settings": {
-                "quality_settings": {
-                    "resolution": "1920x1080",
-                    "detail_level": "high",
-                    "rendering_quality": "high"
-                },
-                "style_settings": {
-                    "art_movement": random.choice(["Impressionism", "Surrealism", "Abstract Expressionism", "Pop Art", "Minimalism"]),
-                    "post_processing": random.sample(["film grain", "color grading", "vintage", "HDR"], k=random.randint(0, 2))
-                },
-                "camera_settings": {
-                    "camera_model": random.choice(["Canon EOS R5", "Sony A7R IV", "Hasselblad X1D", "Fujifilm GFX", None]),
-                    "lens_type": random.choice(["wide angle", "standard", "telephoto", "macro", None]),
-                    "aperture": random.choice(["f/1.8", "f/2.8", "f/4", "f/8", None]),
-                    "depth_of_field": random.choice(["shallow", "medium", "deep", None])
-                },
-                "lighting_settings": {
-                    "lighting_type": random.choice(["natural", "studio", "dramatic", "ambient", None]),
-                    "time_of_day": random.choice(["golden hour", "blue hour", "midday", "sunset", "twilight", None]),
-                    "light_quality": random.choice(["soft", "hard", "diffused", "directional", None])
-                },
-                "composition_settings": {
-                    "technique": random.choice(["rule of thirds", "golden ratio", "symmetry", "leading lines", None]),
-                    "camera_angle": random.choice(["eye level", "low angle", "high angle", "bird's eye", None])
-                },
-                "color_settings": {
-                    "color_scheme": random.choice(["analogous", "complementary", "monochromatic", "triadic", None]),
-                    "palette_type": random.choice(["vibrant", "muted", "pastel", "dark", None]),
-                    "color_temperature": random.choice(["warm", "cool", "neutral", None])
-                }
-            }
-        }
-        
-        # Reset existing values first to prevent accumulation
-        user_prefs.preferred_genres = []
-        user_prefs.preferred_styles = []
-        user_prefs.preferred_moods = []
-        
-        # Reset imagen settings to minimal defaults (preserving essential structure)
-        user_prefs.imagen_settings = {
-            "number_of_images": 1,
-            "seed": None,
-            "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy",
-            "quality_settings": {},
-            "style_settings": {},
-            "camera_settings": {},
-            "lighting_settings": {},
-            "composition_settings": {},
-            "environment_settings": {},
-            "color_settings": {},
-            "detail_settings": {}
-        }
-        
-        # Since fallback always uses a mixed style, we need to add style_categories
-        user_prefs.imagen_settings["style_settings"] = {
-            "style_categories": DEFAULT_STYLE_CATEGORIES
-        }
-        
-        # Reset wallpaper settings
-        user_prefs.wallpaper_settings = {"auto_set": False}
-        
-        # Update user preferences with fallback
-        user_prefs.preferred_genres = fallback_preset["genres"][:1]  # Take only first item
-        user_prefs.preferred_styles = fallback_preset["styles"][:1]  # Take only first item
-        user_prefs.preferred_moods = fallback_preset["moods"][:1]    # Take only first item
-        user_prefs.aspect_ratio = fallback_preset["aspect_ratio"]
-        
-        # Update all imagen settings from the fallback preset
-        imagen_settings = fallback_preset.get("imagen_settings", {})
-        
-        # Quality Settings
-        quality_settings = imagen_settings.get("quality_settings", {})
-        user_prefs.imagen_settings["quality_settings"] = {
-            "resolution": quality_settings.get("resolution", "1920x1080"),
-            "detail_level": quality_settings.get("detail_level", "high"),
-            "rendering_quality": quality_settings.get("rendering_quality", "high")
-        }
-        
-        # Style settings - already set with style_categories above, now add more
-        style_settings = imagen_settings.get("style_settings", {})
-        user_prefs.imagen_settings["style_settings"]["art_movement"] = style_settings.get("art_movement")
-        user_prefs.imagen_settings["style_settings"]["post_processing"] = style_settings.get("post_processing", [])
-        
-        # Camera settings
-        camera_settings = imagen_settings.get("camera_settings", {})
-        user_prefs.imagen_settings["camera_settings"] = {
-            "camera_model": camera_settings.get("camera_model"),
-            "lens_type": camera_settings.get("lens_type"),
-            "aperture": camera_settings.get("aperture"),
-            "depth_of_field": camera_settings.get("depth_of_field"),
-            "special_lens": camera_settings.get("special_lens", None),
-            "camera_brand": camera_settings.get("camera_brand", None),
-            "focal_length": camera_settings.get("focal_length", None),
-            "sensor_type": camera_settings.get("sensor_type", None)
-        }
-        
-        # Lighting settings
-        lighting_settings = imagen_settings.get("lighting_settings", {})
-        user_prefs.imagen_settings["lighting_settings"] = {
-            "lighting_type": lighting_settings.get("lighting_type"),
-            "time_of_day": lighting_settings.get("time_of_day"),
-            "light_quality": lighting_settings.get("light_quality"),
-            "light_source": lighting_settings.get("light_source", None),
-            "artificial_sources": lighting_settings.get("artificial_sources", [])
-        }
-        
-        # Composition settings
-        composition_settings = imagen_settings.get("composition_settings", {})
-        user_prefs.imagen_settings["composition_settings"] = {
-            "technique": composition_settings.get("technique"),
-            "camera_angle": composition_settings.get("camera_angle"),
-            "visual_flow": composition_settings.get("visual_flow", None),
-            "depth_layering": composition_settings.get("depth_layering", None)
-        }
-        
-        # Environment settings - basic default values
-        user_prefs.imagen_settings["environment_settings"] = {
-            "weather": None,
-            "season": None,
-            "atmospheric_effects": [],
-            "location_type": None
-        }
-        
-        # Color settings
-        color_settings = imagen_settings.get("color_settings", {})
-        user_prefs.imagen_settings["color_settings"] = {
-            "color_scheme": color_settings.get("color_scheme"),
-            "palette_type": color_settings.get("palette_type"),
-            "color_temperature": color_settings.get("color_temperature")
-        }
-        
-        # Detail settings - basic defaults
-        user_prefs.imagen_settings["detail_settings"] = {
-            "texture_quality": None,
-            "special_effects": []
-        }
-        
-        # Save the preferences
-        user_prefs.save_preferences()
-        
-        return True
-            
+        print("Failed to generate a unique AI preset after multiple attempts.")
+        return False # Indicate failure
+
+    except genai.types.generation_types.BlockedPromptException as e:
+        logging.error(f"Gemini prompt blocked: {e}")
+        print(f"Error: AI generation request was blocked. Please try different settings or check content policies. Details: {e}")
+        return False
     except Exception as e:
-        logging.error(f"Error generating AI preset: {e}")
+        logging.exception(f"An unexpected error occurred during AI preset generation: {e}") # Log full traceback
+        print(f"An unexpected error occurred: {e}")
         return False
 
 if __name__ == "__main__":
@@ -553,7 +361,19 @@ if __name__ == "__main__":
     if user_prefs is None:
         user_prefs = initialize_settings()
         
-    if generate_ai_preset(user_prefs):
-        print("Successfully generated and applied AI preset")
-    else:
-        print("Failed to generate AI preset") 
+    # Test the modified function
+    result = generate_ai_preset(user_prefs)
+    
+    # Handle the new return types from the modified function
+    if isinstance(result, str):
+        print(f"\nTest successful: Preset saved to {result}")
+    elif result is None:
+        print("\nTest successful: Preset generated but discarded by user.")
+    else: # result is False
+        print("\nTest failed: Preset generation failed.")
+    if isinstance(result, str):
+        print(f"\nTest successful: Preset saved to {result}")
+    elif result is None:
+        print("\nTest successful: Preset generated but discarded by user.")
+    else: # result is False
+        print("\nTest failed: Preset generation failed.")

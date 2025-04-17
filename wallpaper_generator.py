@@ -56,7 +56,6 @@ from prompt_generator import (
     enforce_prompt_format, select_random_tags, generate_random_style_mix,
     set_prompt_preferences, use_user_preferences, SimplePrefs
 )
-from terminal_image_preview import terminal_preview_menu
 from tkinter_preview import preview_image_gui
 
 # Configure logging
@@ -1399,9 +1398,6 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         # Check both direct attribute and wallpaper_settings for backward compatibility
         skip_preview = getattr(user_prefs, 'skip_preview', False) or user_prefs.wallpaper_settings.get('skip_preview', False)
         
-        # Check if GUI preview should be used
-        use_gui_preview = getattr(user_prefs, 'use_gui_preview', False) or user_prefs.wallpaper_settings.get('use_gui_preview', False)
-        
         if skip_preview:
             print_info("Preview skipped. Applying wallpaper directly...")
             logging.info("Image preview skipped due to user preference")
@@ -1410,25 +1406,18 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             print_info("Preview your new wallpaper before setting it...")
             logging.info(f"Previewing wallpaper with path: {cache_path}")
             
-            # Use GUI or terminal preview based on settings
-            if use_gui_preview:
-                try:
-                    # Try to use GUI preview
-                    set_wallpaper_confirmed = preview_image_gui(cache_path, set_wallpaper)
-                    if set_wallpaper_confirmed:
-                        # The GUI has already set the wallpaper, so we can return
-                        print_success("Wallpaper successfully applied!")
-                        print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
-                        logging.info(f"Wallpaper successfully set to: {cache_path}")
-                        return True
-                except Exception as e:
-                    print_warning(f"GUI preview failed, falling back to terminal preview: {e}")
-                    logging.warning(f"GUI preview failed: {e}")
-                    # Fall back to terminal preview
-                    set_wallpaper_confirmed = terminal_preview_menu(cache_path)
-            else:
-                # Use standard terminal preview
-                set_wallpaper_confirmed = terminal_preview_menu(cache_path)
+            try:
+                set_wallpaper_confirmed = preview_image_gui(cache_path, set_wallpaper)
+                if set_wallpaper_confirmed:
+                    # The GUI has already set the wallpaper, so we can return
+                    print_success("Wallpaper successfully applied!")
+                    print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+                    logging.info(f"Wallpaper successfully set to: {cache_path}")
+                    return True
+            except Exception as e:
+                print_error(f"GUI preview failed: {e}")
+                print_info("Please check that your system supports GUI preview")
+                set_wallpaper_confirmed = False
             
             if set_wallpaper_confirmed:
                 logging.info("User confirmed to set the wallpaper after preview")
@@ -1585,12 +1574,7 @@ def main():
     # Also update wallpaper_settings for consistency
     user_prefs.wallpaper_settings['skip_preview'] = user_prefs.skip_preview
     
-    # Store whether to use GUI preview
-    user_prefs.use_gui_preview = args.gui_preview if hasattr(args, 'gui_preview') else False
-    user_prefs.wallpaper_settings['use_gui_preview'] = user_prefs.use_gui_preview
-    
-    # Import terminal image preview functionality
-    from terminal_image_preview import terminal_preview_menu
+    # Import preview functionality
     from tkinter_preview import preview_image_gui
     
     # List and preview images if requested
@@ -1631,8 +1615,8 @@ def main():
             image_path = os.path.join(genimage_dir, image_files[int(choice) - 1])
             print_info(f"Previewing image: {image_files[int(choice) - 1]}")
             
-            # Use terminal_preview_menu to show the image
-            result = terminal_preview_menu(image_path)
+            # Use GUI preview
+            result = preview_image_gui(image_path, set_wallpaper)
             
             # If user chooses to set as wallpaper, do so
             if result:
@@ -1668,26 +1652,10 @@ def main():
             
             print_info(f"Previewing latest image: {latest_image}")
             
-            # Check if GUI preview should be used
-            use_gui_preview = user_prefs.wallpaper_settings.get('use_gui_preview', False)
-            
-            if use_gui_preview or args.gui_preview:
-                # Use GUI preview
-                result = preview_image_gui(image_path, set_wallpaper)
-                if result:
-                    print_success("Wallpaper set successfully!")
-                return
-            else:
-                # Use terminal preview menu
-                result = terminal_preview_menu(image_path)
-                
-                # If user chooses to set as wallpaper, do so
-                if result:
-                    print_info(f"Setting image as wallpaper: {image_path}")
-                    if set_wallpaper(image_path):
-                        print_success("Wallpaper set successfully!")
-                    else:
-                        print_error("Failed to set wallpaper")
+            # Preview image with GUI
+            result = preview_image_gui(image_path, set_wallpaper)
+            if result:
+                print_success("Wallpaper set successfully!")
             
         except (FileNotFoundError, IndexError) as e:
             print_error(f"Error accessing latest image: {e}")
@@ -1706,26 +1674,10 @@ def main():
             print_error(f"Image file not found: {image_path}")
             return
         
-        # Check if GUI preview should be used
-        use_gui_preview = user_prefs.wallpaper_settings.get('use_gui_preview', False)
-        
-        if use_gui_preview or args.gui_preview:
-            # Use GUI preview
-            result = preview_image_gui(image_path, set_wallpaper)
-            if result:
-                print_success("Wallpaper set successfully!")
-            return
-        else:
-            # Use terminal preview menu
-            result = terminal_preview_menu(image_path)
-            
-            # If user chooses to set as wallpaper, do so
-            if result:
-                print_info(f"Setting image as wallpaper: {image_path}")
-                if set_wallpaper(image_path):
-                    print_success("Wallpaper set successfully!")
-                else:
-                    print_error("Failed to set wallpaper")
+        # Preview image with GUI
+        result = preview_image_gui(image_path, set_wallpaper)
+        if result:
+            print_success("Wallpaper set successfully!")
         return
     
     # Check for command-line specific operations
@@ -1804,11 +1756,9 @@ def run_main_menu():
         print_option("4", "View Generation History")
         print_option("5", "Exit - Save and exit")
         print_option("6", "Preview Recent Images")
-        print_option("10", "Toggle image preview")
-        print_option("11", "Toggle graphical preview")
         
         try:
-            choice = get_validated_input("Select an option (1-11)", ["1", "2", "3", "4", "5", "6", "10", "11"])
+            choice = get_validated_input("Select an option (1-6)", ["1", "2", "3", "4", "5", "6"])
         except KeyboardInterrupt:
             print_info("\nSaving preferences before exit...")
             user_prefs.save_preferences()
@@ -1936,20 +1886,6 @@ def run_main_menu():
             user_prefs.save_preferences()
             print_success("Goodbye!")
             break
-        elif choice == "10":
-            # Toggle image preview
-            user_prefs.skip_preview = not getattr(user_prefs, 'skip_preview', False)
-            # Also update wallpaper_settings for consistency
-            user_prefs.wallpaper_settings['skip_preview'] = user_prefs.skip_preview
-            print_success(f"Image preview {'disabled' if user_prefs.skip_preview else 'enabled'}")
-            user_prefs.save_preferences() # Save immediately after toggle
-        elif choice == "11":
-            # Toggle graphical preview
-            user_prefs.use_gui_preview = not getattr(user_prefs, 'use_gui_preview', False)
-            # Also update wallpaper_settings for consistency
-            user_prefs.wallpaper_settings['use_gui_preview'] = user_prefs.use_gui_preview
-            print_success(f"Graphical preview {'enabled' if user_prefs.use_gui_preview else 'disabled'}")
-            user_prefs.save_preferences() # Save immediately after toggle
         elif choice == "6":
             # Preview recent images
             preview_recent_images()
@@ -1975,10 +1911,9 @@ def parse_arguments():
     parser.add_argument("--no-generate", action="store_true", help="Don't generate the image, just show the prompt")
     parser.add_argument("--no-preset", action="store_true", help="Skip loading the last preset on startup")
     parser.add_argument("--skip-preview", action="store_true", help="Skip the image preview and set wallpaper directly")
-    parser.add_argument("--preview-image", help="Preview an image in the terminal without setting as wallpaper")
+    parser.add_argument("--preview-image", help="Preview an image using the GUI without setting as wallpaper")
     parser.add_argument("--preview-latest", action="store_true", help="Preview the latest generated image without setting as wallpaper")
     parser.add_argument("--list-images", action="store_true", help="List all generated images and preview one by number")
-    parser.add_argument("--gui-preview", action="store_true", help="Use the graphical Tkinter window for image previews")
     return parser.parse_args()
 
 def load_user_preferences():
@@ -2032,25 +1967,10 @@ def preview_recent_images():
                 image_path = os.path.join(genimage_dir, display_files[int(choice) - 1])
                 print_info(f"Previewing image: {display_files[int(choice) - 1]}")
                 
-                # Check if GUI preview should be used
-                use_gui_preview = user_prefs.wallpaper_settings.get('use_gui_preview', False)
-                
-                if use_gui_preview:
-                    # Use GUI preview
-                    result = preview_image_gui(image_path, set_wallpaper)
-                    if result:
-                        print_success("Wallpaper set successfully!")
-                else:
-                    # Use terminal preview menu
-                    result = terminal_preview_menu(image_path)
-                    
-                    # If user chooses to set as wallpaper, do so
-                    if result:
-                        print_info(f"Setting image as wallpaper: {image_path}")
-                        if set_wallpaper(image_path):
-                            print_success("Wallpaper set successfully!")
-                        else:
-                            print_error("Failed to set wallpaper")
+                # Preview image with GUI
+                result = preview_image_gui(image_path, set_wallpaper)
+                if result:
+                    print_success("Wallpaper set successfully!")
                 
                 # After viewing one image, we allow picking another or returning to menu
                 print_section("Recent Generated Images")
