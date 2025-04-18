@@ -10,6 +10,7 @@ import json
 import logging
 import random
 import hashlib
+import sys
 from typing import Dict, Any, List, Optional, Union # <-- Add Union
 
 # Import Gemini API
@@ -150,8 +151,7 @@ def generate_ai_preset(user_prefs: UserPreferences) -> Union[str, bool, None]: #
         genai.configure(api_key=api_key)
         # Ensure the model name is correct, adjust if needed based on availability
         try:
-            # Using flash for potentially faster/cheaper generation, consider making this configurable
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
         except Exception as model_err:
             logging.error(f"Failed to initialize Gemini model: {model_err}")
             print(f"Error: Could not initialize AI model. Please check configuration and model availability.")
@@ -166,52 +166,113 @@ def generate_ai_preset(user_prefs: UserPreferences) -> Union[str, bool, None]: #
 
         # Create the request for a coherent set of preferences
         # Updated prompt for clarity and to request "None" for inapplicable fields
-        prompt = """
-        Generate a random but coherent set of wallpaper generation preferences. Create settings that would work well together artistically.
-        The output should be valid JSON format with the following structure:
-        {
-            "preset_name": "[a creative name for this preset, e.g., 'Cyberpunk Sunset' or 'Minimalist Forest']",
-            # "genres" field removed as requested
-            "styles": [list of 1 artistic style],
-            "moods": [list of 1 mood],
-            "imagen_settings": {
-                "style_settings": {
-                    "art_movement": "[a fitting art movement or 'None']",
-                    "post_processing": [list of 0-1 post-processing effects]
-                },
-                "camera_settings": {
-                    "camera_model": "[appropriate camera model or 'None']",
-                    "lens_type": "[appropriate lens type or 'None']",
-                    "aperture": "[appropriate aperture setting or 'None']",
-                    "depth_of_field": "[appropriate depth setting or 'None']"
-                },
-                "lighting_settings": {
-                    "lighting_type": "[appropriate lighting type or 'None']",
-                    "time_of_day": "[appropriate time of day or 'None']",
-                    "light_quality": "[appropriate light quality or 'None']"
-                },
-                "composition_settings": {
-                    "technique": "[appropriate composition technique or 'None']",
-                    "camera_angle": "[appropriate camera angle or 'None']"
-                },
-                "color_settings": {
-                    "color_scheme": "[appropriate color scheme or 'None']",
-                    "palette_type": "[appropriate palette type or 'None']",
-                    "color_temperature": "[appropriate color temperature or 'None']"
-                }
+        # Add random timestamp to make each request unique
+        import time
+        timestamp = int(time.time())
+        
+        # Define historically accurate style categories and their elements
+        style_categories = {
+            "classical_art": {
+                "period": "15th-19th Century Traditional Art",
+                "styles": ["oil_painting", "watercolor", "charcoal", "pencil_sketch"],
+                "moods": ["serene", "contemplative", "romantic", "peaceful"],
+                "art_movements": ["Renaissance", "Baroque", "Romanticism", "Realism"],
+                "lighting": ["Natural light", "Chiaroscuro", "Golden hour", "Soft diffused"],
+                "color_schemes": ["Earth tones", "Rich jewel tones", "Muted naturals", "Venetian palette"]
             },
-            "aspect_ratio": "[choose ONLY from these specific values: 16:9, 4:3, 1:1, or 9:16]"
+            "asian_traditional": {
+                "period": "Traditional East Asian Art",
+                "styles": ["ink_drawing", "woodcut", "ukiyo_e"],
+                "moods": ["tranquil", "philosophical", "contemplative", "peaceful"],
+                "art_movements": ["Literati painting", "Ukiyo-e", "Sumi-e"],
+                "lighting": ["Atmospheric", "Misty", "Dawn light", "Dusk light"],
+                "color_schemes": ["Ink wash", "Limited palette", "Natural pigments"]
+            },
+            "modern_art": {
+                "period": "20th Century Modern Art",
+                "styles": ["abstract", "expressionism", "minimalist", "pop_art"],
+                "moods": ["dynamic", "contemplative", "energetic", "dramatic"],
+                "art_movements": ["Abstract Expressionism", "Minimalism", "Bauhaus", "De Stijl"],
+                "lighting": ["Studio lighting", "High contrast", "Geometric shadows"],
+                "color_schemes": ["Primary colors", "Monochromatic", "Color field", "Geometric"]
+            },
+            "digital_age": {
+                "period": "Contemporary Digital Art",
+                "styles": ["digital_art", "cyberpunk", "retrowave", "low_poly"],
+                "moods": ["energetic", "mysterious", "dynamic", "futuristic"],
+                "art_movements": ["Digital Minimalism", "Vaporwave", "Neo-cyberpunk"],
+                "lighting": ["Neon", "Volumetric", "Ray traced", "Ambient occlusion"],
+                "color_schemes": ["Synthwave palette", "RGB aesthetics", "Duotone", "Gradient"]
+            }
         }
 
-        # Genre options removed as requested
+        # Select a random art period/category
+        category_name = random.choice(list(style_categories.keys()))
+        category = style_categories[category_name]
 
-        Choose 1 from these style options:
+        prompt = f"""
+        Generate a HISTORICALLY ACCURATE and ARTISTICALLY COHERENT set of wallpaper preferences.
+        Focus on creating an authentic representation of {category['period']}.
+        Use this random seed for inspiration: {timestamp}
+
+        HISTORICAL CONTEXT:
+        You are creating art in the style and tradition of {category['period']}.
+        All elements must be historically appropriate for this period and tradition.
+        
+        AVAILABLE ELEMENTS (choose only from these period-appropriate options):
+        - Artistic Styles: {', '.join(category['styles'])}
+        - Cultural Moods: {', '.join(category['moods'])}
+        - Art Movements: {', '.join(category['art_movements'])}
+        - Period Lighting: {', '.join(category['lighting'])}
+        - Historical Color Schemes: {', '.join(category['color_schemes'])}
+
+        IMPORTANT RULES:
+        1. ONLY use elements from the lists above
+        2. ALL choices must be historically accurate to {category['period']}
+        3. Create a preset name that reflects the specific period and style
+        4. Ensure lighting and color choices match historical techniques
+
+        The output should be valid JSON format with the following structure:
+        {{
+            "preset_name": "[create an evocative, unique name that captures the essence of the combination]",
+            "styles": [pick 1 style from the list below, but interpret it in an unexpected way],
+            "moods": [pick 1 mood that creates an interesting tension or harmony with the style],
+            "imagen_settings": {{
+                "style_settings": {{
+                    "art_movement": "[pick an art movement that adds depth to the style, or 'None']",
+                    "post_processing": [0-1 creative post-processing effects that enhance the concept]
+                }},
+                "camera_settings": {{
+                    "camera_model": "[pick a camera that adds character, or 'None']",
+                    "lens_type": "[choose a lens that creates a unique perspective, or 'None']",
+                    "aperture": "[select an aperture that supports the mood, or 'None']",
+                    "depth_of_field": "[pick a setting that enhances the composition, or 'None']"
+                }},
+                "lighting_settings": {{
+                    "lighting_type": "[choose lighting that creates atmosphere, or 'None']",
+                    "time_of_day": "[select a time that adds drama or subtlety, or 'None']",
+                    "light_quality": "[pick quality that reinforces the mood, or 'None']"
+                }},
+                "composition_settings": {{
+                    "technique": "[select a technique that adds visual interest, or 'None']",
+                    "camera_angle": "[choose an angle that creates impact, or 'None']"
+                }},
+                "color_settings": {{
+                    "color_scheme": "[pick a scheme that complements or contrasts effectively, or 'None']",
+                    "palette_type": "[select a palette that enhances the theme, or 'None']",
+                    "color_temperature": "[choose temperature that adds emotion, or 'None']"
+                }}
+            }},
+            "aspect_ratio": "[choose from: 16:9, 4:3, 1:1, or 9:16 based on composition]"
+        }}
+
+        Style options (pick 1 and interpret creatively):
         ["traditional_art", "digital_art", "abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", "cinematic", "comic_book", "cyberpunk", "divisionism", "double_exposure", "expressionism", "fantasy", "futurism", "glitch_art", "gothic", "graffiti", "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", "line_art", "low_poly", "manga", "minimalist", "oil_painting", "paper_cut", "pastel", "pencil_sketch", "pixel_art", "pointillism", "pop_art", "realism", "retrowave", "sci_fi", "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", "vaporwave", "watercolor", "woodcut"]
         
-        Choose 1 from these mood options:
+        Mood options (pick 1 that creates interesting dynamics):
         ["peaceful", "serene", "tranquil", "calm", "relaxing", "soothing", "energetic", "vibrant", "dynamic", "exciting", "dramatic", "intense", "mysterious", "enigmatic", "cryptic", "eerie", "romantic", "passionate", "tender", "joyful", "cheerful", "happy", "playful", "whimsical", "dreamy", "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"]
 
-        Ensure all settings are coherent and artistically compatible. Use "None" (as a string) for settings where no specific value is appropriate for the generated theme.
+        Focus on creating SURPRISING and INNOVATIVE combinations that still work together artistically. Use "None" for settings that don't fit your vision, but make bold choices where they enhance the concept.
         """
 
         # Removed mixed style logic from prompt generation
@@ -269,13 +330,12 @@ def generate_ai_preset(user_prefs: UserPreferences) -> Union[str, bool, None]: #
                             print("Invalid input. Please enter 'Y' or 'N'.")
 
                         if confirm == 'y':
-                            # Ask for preset name
-                            while True:
-                                save_name = input("Enter a name for this preset (alphanumeric, spaces, hyphens allowed): ").strip()
-                                # Basic validation for filename safety
-                                if re.match(r"^[a-zA-Z0-9 _-]+$", save_name) and save_name:
-                                    break
-                                print("Invalid name. Please use only letters, numbers, spaces, or hyphens.")
+                            # Use the AI-generated preset name
+                            save_name = preset_data.get("preset_name", "Unnamed AI Preset")
+                            # Clean up name for file system
+                            save_name = re.sub(r'[^a-zA-Z0-9 _-]', '', save_name).strip()
+                            if not save_name:
+                                save_name = "unnamed-preset"
 
                             # Define presets directory and ensure it exists
                             presets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "presets")
@@ -352,28 +412,101 @@ def generate_ai_preset(user_prefs: UserPreferences) -> Union[str, bool, None]: #
         print(f"An unexpected error occurred: {e}")
         return False
 
+def main():
+    """Main entry point for CLI usage of the AI preset generator."""
+    import argparse
+    from wallpaper_settings import get_preferences, initialize_settings, load_preset, save_preset, delete_preset
+
+    parser = argparse.ArgumentParser(description='Generate and manage AI presets for wallpaper generation')
+    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+
+    # Generate preset command
+    gen_parser = subparsers.add_parser('generate', help='Generate a new preset')
+    gen_parser.add_argument('--auto-save', action='store_true', help='Automatically save the preset')
+
+    # List presets command
+    subparsers.add_parser('list', help='List all available presets')
+
+    # Load preset command
+    load_parser = subparsers.add_parser('load', help='Load and display a preset')
+    load_parser.add_argument('name', help='Name of the preset to load')
+
+    # Delete preset command
+    del_parser = subparsers.add_parser('delete', help='Delete a preset')
+    del_parser.add_argument('name', help='Name of the preset to delete')
+
+    args = parser.parse_args()
+    user_prefs = initialize_settings()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    if args.command == 'generate':
+        result = generate_ai_preset(user_prefs)
+        if isinstance(result, str):
+            print(f"Preset saved to: {result}")
+        elif result is None:
+            print("Preset generated but not saved")
+        else:
+            print("Failed to generate preset")
+            sys.exit(1)
+
+    elif args.command == 'list':
+        # List all presets in the presets directory
+        presets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "presets")
+        if os.path.exists(presets_dir):
+            presets = [f[:-5] for f in os.listdir(presets_dir) if f.endswith('.json')]
+            if presets:
+                print("\nAvailable presets:")
+                for preset in sorted(presets):
+                    print(f"  {preset}")
+            else:
+                print("No presets found")
+        else:
+            print("No presets directory found")
+
+    elif args.command == 'load':
+        preset_path = os.path.join('presets', f"{args.name}.json")
+        if os.path.exists(preset_path):
+            try:
+                with open(preset_path, 'r') as f:
+                    preset_data = json.load(f)
+                print("\nPreset contents:")
+                print(json.dumps(preset_data, indent=2))
+                
+                # Apply the preset settings to user preferences
+                if preset_data.get("styles"):
+                    user_prefs.preferred_styles = preset_data["styles"]
+                if preset_data.get("moods"):
+                    user_prefs.preferred_moods = preset_data["moods"]
+                if preset_data.get("imagen_settings"):
+                    user_prefs.imagen_settings.update(preset_data["imagen_settings"])
+                if preset_data.get("aspect_ratio"):
+                    user_prefs.aspect_ratio = preset_data["aspect_ratio"]
+                
+                # Save the updated preferences
+                user_prefs.save_preferences()
+                print("Preset applied and saved to user preferences")
+            except Exception as e:
+                print(f"Error loading preset: {e}")
+                sys.exit(1)
+        else:
+            print(f"Preset '{args.name}' not found")
+            sys.exit(1)
+
+    elif args.command == 'delete':
+        preset_path = os.path.join('presets', f"{args.name}.json")
+        if os.path.exists(preset_path):
+            try:
+                os.remove(preset_path)
+                print(f"Preset '{args.name}' deleted successfully")
+            except Exception as e:
+                print(f"Error deleting preset: {e}")
+                sys.exit(1)
+        else:
+            print(f"Preset '{args.name}' not found")
+            sys.exit(1)
+
 if __name__ == "__main__":
-    # For testing
-    from wallpaper_settings import get_preferences, initialize_settings
-    
-    # Make sure preferences are initialized
-    user_prefs = get_preferences()
-    if user_prefs is None:
-        user_prefs = initialize_settings()
-        
-    # Test the modified function
-    result = generate_ai_preset(user_prefs)
-    
-    # Handle the new return types from the modified function
-    if isinstance(result, str):
-        print(f"\nTest successful: Preset saved to {result}")
-    elif result is None:
-        print("\nTest successful: Preset generated but discarded by user.")
-    else: # result is False
-        print("\nTest failed: Preset generation failed.")
-    if isinstance(result, str):
-        print(f"\nTest successful: Preset saved to {result}")
-    elif result is None:
-        print("\nTest successful: Preset generated but discarded by user.")
-    else: # result is False
-        print("\nTest failed: Preset generation failed.")
+    main()

@@ -103,19 +103,7 @@ class UserPreferences:
         last_preset (str): Name of the last loaded preset, if any
         aspect_ratio (str): The aspect ratio of the wallpaper
     """
-    # Default style categories
-    style_categories = {
-        "traditional_art": ["art_deco", "art_nouveau", "charcoal", "expressionism",
-                          "gothic", "impressionism", "oil_painting", "pastel",
-                          "pencil_sketch", "realism", "sketch", "watercolor", "woodcut"],
-        "digital_art": ["abstract", "cinematic", "cyberpunk", "digital_art", "double_exposure",
-                      "fantasy", "futurism", "glitch_art", "hyperrealism", "isometric",
-                      "landscape", "low_poly", "minimalist", "retrowave", "sci_fi",
-                      "stained_glass", "steampunk", "surrealism", "vaporwave"],
-        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti",
-                       "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art",
-                       "pointillism", "pop_art", "ukiyo_e"]
-    }
+    # No predefined style categories as they are not used for prompt generation
 
     def __init__(self):
         """
@@ -137,7 +125,9 @@ class UserPreferences:
             "negative_prompt": "",
             "quality_settings": {},
             "style_settings": {
-                "style_categories": self.style_categories.copy()  # Initialize with default categories
+                # Don't initialize with style_categories to keep them out of preferences
+                "art_movement": None,
+                "post_processing": []
             },
             "camera_settings": {},
             "lighting_settings": {},
@@ -401,9 +391,8 @@ def generate_random_style_mix() -> str:
     Returns:
         str: A string containing a combination of artistic styles, joined with " + "
     """
-    global user_prefs
-    style_settings = user_prefs.imagen_settings.get("style_settings", {})
-    style_categories = style_settings.get("style_categories", user_prefs.style_categories)
+    # Use the class-level style categories directly
+    style_categories = UserPreferences.style_categories
     
     # Select a random category
     category = random.choice(list(style_categories.keys()))
@@ -1290,127 +1279,129 @@ def manage_genres():
 
 def manage_styles():
     """Manage user's preferred styles for wallpaper generation."""
+    import sys
     while True:
-        print_section("Manage Styles")
-        print_info("Current preferred styles:")
-        for style in user_prefs.preferred_styles:
-            print_info(f"- {style}")
-        
-        print_info("\nAvailable styles:")
-        style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
-                       "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
-                       "digital_art", "divisionism", "double_exposure", "expressionism", 
-                       "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
-                       "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
-                       "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
-                       "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
-                       "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
-                       "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
-                       "vaporwave", "watercolor", "woodcut"]
-        
-        style_categories = user_prefs.style_categories
-        
-        def generate_random_style_mix():
-            # Check if user has custom style categories in preferences
-            settings = user_prefs.imagen_settings
-            style_settings = settings.get("style_settings", {})
-            custom_style_categories = style_settings.get("style_categories", {})
+        try:
+            print_section("Manage Styles")
+            print_info("Current preferred styles:")
+            for style in user_prefs.preferred_styles:
+                print_info(f"- {style}")
             
-            # Define default style categories to use if no custom categories available
-            default_style_categories = style_categories
+            print_info("\nAvailable styles:")
+            style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
+                           "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
+                           "digital_art", "divisionism", "double_exposure", "expressionism", 
+                           "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
+                           "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
+                           "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
+                           "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
+                           "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
+                           "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
+                           "vaporwave", "watercolor", "woodcut"]
             
-            # Use custom categories if available, otherwise use the default ones
-            categories_to_use = custom_style_categories if custom_style_categories else default_style_categories
+            # We can just call the global generate_random_style_mix function
+            # which already uses UserPreferences.style_categories
             
-            # Select a random category
-            category = random.choice(list(categories_to_use.keys()))
-            # Select 2-3 compatible styles from the same category
-            num_styles = random.randint(2, 3)
-            available_styles = categories_to_use[category]
-            if len(available_styles) < num_styles:
-                num_styles = len(available_styles)
-            selected_styles = random.sample(available_styles, num_styles)
-            return " + ".join(selected_styles)
-        
-        for i, style in enumerate(style_options, 1):
-            print_option(str(i), style)
-        
-        print_option(str(len(style_options) + 1), "Random Style Mix (combines 2-3 compatible styles)")
-        print_option(str(len(style_options) + 2), "Custom Style")
-        print_option("a", "Add style")
-        print_option("r", "Remove style")
-        print_option("c", "Clear all")
-        print_option("b", "Back")
-        
-        style_choice = get_validated_input("Select an option",
-                                          [str(i) for i in range(1, len(style_options) + 3)] + ["a", "r", "c", "b"])
-        if style_choice == "_INTERRUPTED_":
-            return # Exit style management
-
-        if style_choice == "b":
-            return
-        elif style_choice == "a":
-            style = input("Enter style to add: ").strip()
-            if style:
-                if style not in user_prefs.preferred_styles:
-                    user_prefs.add_style(style)
-                    print_success(f"Added '{style}' to preferred styles")
-                else:
-                    print_warning(f"'{style}' is already in your preferred styles")
-        elif style_choice == "r":
-            if not user_prefs.preferred_styles:
-                print_warning("You don't have any preferred styles to remove")
-                continue
-            
-            print_info("Select style to remove:")
-            for i, style in enumerate(user_prefs.preferred_styles, 1):
+            for i, style in enumerate(style_options, 1):
                 print_option(str(i), style)
             
-            remove_choice = get_validated_input("Select style to remove (or 'c' to cancel)", 
-                                               [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)] + ["c"])
+            print_option(str(len(style_options) + 1), "Random Style Mix (combines 2-3 compatible styles)")
+            print_option(str(len(style_options) + 2), "AI-Generated Style")
+            print_option(str(len(style_options) + 3), "Custom Style")
+            print_option("a", "Add style")
+            print_option("r", "Remove style")
+            print_option("c", "Clear all")
+            print_option("b", "Back")
             
-            if remove_choice == "c":
-                continue
-            
-            style_to_remove = user_prefs.preferred_styles[int(remove_choice) - 1]
-            user_prefs.preferred_styles.remove(style_to_remove)
-            user_prefs.save_preferences()
-            print_success(f"Removed '{style_to_remove}' from preferred styles")
-        elif style_choice == "c":
-            confirm = get_validated_input("Are you sure you want to clear all styles? (y/n)", ["y", "n"])
-            if confirm == "y":
-                user_prefs.preferred_styles.clear()
+            style_choice = get_validated_input("Select an option",
+                                              [str(i) for i in range(1, len(style_options) + 3)] + ["a", "r", "c", "b"])
+            if style_choice == "_INTERRUPTED_":
+                return # Exit style management
+
+            if style_choice == "b":
+                return
+            elif style_choice == "a":
+                style = input("Enter style to add: ").strip()
+                if style:
+                    if style not in user_prefs.preferred_styles:
+                        user_prefs.add_style(style)
+                        print_success(f"Added '{style}' to preferred styles")
+                    else:
+                        print_warning(f"'{style}' is already in your preferred styles")
+            elif style_choice == "r":
+                if not user_prefs.preferred_styles:
+                    print_warning("You don't have any preferred styles to remove")
+                    continue
+                
+                print_info("Select style to remove:")
+                for i, style in enumerate(user_prefs.preferred_styles, 1):
+                    print_option(str(i), style)
+                
+                remove_choice = get_validated_input("Select style to remove (or 'c' to cancel)", 
+                                                   [str(i) for i in range(1, len(user_prefs.preferred_styles) + 1)] + ["c"])
+                
+                if remove_choice == "c":
+                    continue
+                
+                style_to_remove = user_prefs.preferred_styles[int(remove_choice) - 1]
+                user_prefs.preferred_styles.remove(style_to_remove)
                 user_prefs.save_preferences()
-                print_success("Cleared all preferred styles")
-        elif style_choice == str(len(style_options) + 1):
-            # Random style mix option
-            style_mix = generate_random_style_mix()
-            print_info(f"Generated random style mix: {style_mix}")
-            add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
-            if add_to_preferences == "y":
-                if style_mix not in user_prefs.preferred_styles:
-                    user_prefs.add_style(style_mix)
-                    print_success(f"Added '{style_mix}' to preferred styles")
-                else:
-                    print_warning(f"'{style_mix}' is already in your preferred styles")
-        elif style_choice == str(len(style_options) + 2):
-            # Simple custom style option
-            print_info("Enter your custom style (e.g., 'mix of water colour and pastel paint')")
-            custom_style = input().strip()
-            if custom_style:
-                if custom_style not in user_prefs.preferred_styles:
-                    user_prefs.add_style(custom_style)
-                    print_success(f"Added custom style: {custom_style}")
-                else:
-                    print_warning(f"'{custom_style}' is already in your preferred styles")
-        else:
-            # User selected a specific style from the list
-            selected_style = style_options[int(style_choice) - 1]
-            if selected_style not in user_prefs.preferred_styles:
-                user_prefs.add_style(selected_style)
-                print_success(f"Added '{selected_style}' to preferred styles")
+                print_success(f"Removed '{style_to_remove}' from preferred styles")
+            elif style_choice == "c":
+                confirm = get_validated_input("Are you sure you want to clear all styles? (y/n)", ["y", "n"])
+                if confirm == "y":
+                    user_prefs.preferred_styles.clear()
+                    user_prefs.save_preferences()
+                    print_success("Cleared all preferred styles")
+            elif style_choice == str(len(style_options) + 1):
+                # Random style mix option
+                style_mix = generate_random_style_mix()
+                print_info(f"Generated random style mix: {style_mix}")
+                add_to_preferences = get_validated_input("Add this mix to your preferred styles? (y/n)", ["y", "n"])
+                if add_to_preferences == "y":
+                    if style_mix not in user_prefs.preferred_styles:
+                        user_prefs.add_style(style_mix)
+                        print_success(f"Added '{style_mix}' to preferred styles")
+                    else:
+                        print_warning(f"'{style_mix}' is already in your preferred styles")
+            elif style_choice == str(len(style_options) + 2):
+                # AI-Generated Style option
+                try:
+                    from ai_style_generator import handle_style_generation, initialize_gemini
+                    if "GEMINI_API_KEY" in os.environ:
+                        initialize_gemini(os.environ["GEMINI_API_KEY"])
+                        handle_style_generation(user_prefs)
+                    else:
+                        print_error("Gemini API key not found. Please set GEMINI_API_KEY environment variable.")
+                except ImportError:
+                    print_error("AI style generation requires google-generativeai package.")
+                    print_info("Install with: pip install google-generativeai")
+                continue
+                
+            elif style_choice == str(len(style_options) + 3):
+                # Custom style option
+                print_info("Enter your custom style (e.g., 'mix of water colour and pastel paint')")
+                custom_style = input().strip()
+                if custom_style:
+                    if custom_style not in user_prefs.preferred_styles:
+                        user_prefs.add_style(custom_style)
+                        print_success(f"Added custom style: {custom_style}")
+                    else:
+                        print_warning(f"'{custom_style}' is already in your preferred styles")
             else:
-                print_warning(f"'{selected_style}' is already in your preferred styles")
+                # User selected a specific style from the list
+                selected_style = style_options[int(style_choice) - 1]
+                if selected_style not in user_prefs.preferred_styles:
+                    user_prefs.add_style(selected_style)
+                    print_success(f"Added '{selected_style}' to preferred styles")
+                else:
+                    print_warning(f"'{selected_style}' is already in your preferred styles")
+        except KeyboardInterrupt:
+            print("\nKeyboard interrupt detected. Exiting style management.")
+            return
+        except Exception as e:
+            print_error(f"An error occurred: {e}")
+            return
 
 def manage_moods():
     """Manage user's preferred moods for wallpaper generation."""

@@ -1000,48 +1000,38 @@ class GenerationHistory:
 generation_history = GenerationHistory()
 
 def generate_random_style_mix():
-    """Generate a random style mix from compatible styles in user preferences."""
-    # Get user preferred style categories from preferences
+    """Generate a random style mix using either AI or predefined categories."""
+    # First try using AI style generation if available
+    try:
+        from ai_style_generator import generate_random_style
+        if GEMINI_API_KEY:
+            ai_style = generate_random_style()
+            if ai_style:
+                return ai_style
+    except (ImportError, Exception) as e:
+        logging.debug(f"AI style generation not available: {e}")
+    
+    # Fallback to predefined categories
     settings = user_prefs.imagen_settings
     style_settings = settings.get("style_settings", {})
     
-    # Define default style categories if needed
-    default_style_categories = {
-        "photographic": ["cinematic", "documentary", "film_grain", "polaroid", 
-                      "analog_film", "lomography", "long_exposure"],
-        "artistic": ["abstract", "impressionism", "expressionism", "cubism", 
-                     "minimalism", "watercolor", "oil_painting", "acrylic", 
-                     "stained_glass", "steampunk", "surrealism", "vaporwave"],
-        "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti", 
-                       "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art", 
-                       "pointillism", "pop_art", "ukiyo_e"]
-    }
+    # Import style categories from configuration
+    from prompt_config import style_categories as default_style_categories
     
-    # If user has custom style categories, use those
-    custom_style_categories = style_settings.get("style_categories", {})
+    # Use custom categories if available, otherwise use defaults
+    style_categories = style_settings.get("style_categories", default_style_categories)
     
-    # If no custom categories:
-    # 1. Use default categories 
-    # 2. Store them in user preferences for future use
-    if not custom_style_categories:
-        style_categories = default_style_categories
-        
-        # Save the default categories to user preferences
-        if "style_categories" not in style_settings:
-            style_settings["style_categories"] = default_style_categories
-            user_prefs.imagen_settings["style_settings"] = style_settings
-            user_prefs.save_preferences()
-    else:
-        style_categories = custom_style_categories
+    # Save default categories if needed
+    if not style_settings.get("style_categories"):
+        style_settings["style_categories"] = default_style_categories
+        user_prefs.imagen_settings["style_settings"] = style_settings
+        user_prefs.save_preferences()
     
     # Select a random category
     category = random.choice(list(style_categories.keys()))
-    # Select 2-3 compatible styles from the same category
     num_styles = random.randint(2, 3)
     available_styles = style_categories[category]
-    if len(available_styles) < num_styles:
-        num_styles = len(available_styles)
-    selected_styles = random.sample(available_styles, num_styles)
+    selected_styles = random.sample(available_styles, min(num_styles, len(available_styles)))
     return " + ".join(selected_styles)
 
 # Import get_preferences from wallpaper_settings
@@ -1118,17 +1108,11 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         
         # If specific style was provided, add related tags
         if style:
-            if style in ["nature", "landscape", "outdoor"]:
-                user_tags.extend(random.sample(nature_tags, min(2, len(nature_tags))))
-            elif style in ["space", "cosmic", "galaxy"]:
-                user_tags.extend(random.sample(space_tags, min(2, len(space_tags))))
-            elif style in ["urban", "city", "architecture"]:
-                user_tags.extend(random.sample(urban_tags, min(2, len(urban_tags))))
-            elif style in ["abstract", "geometric", "minimal"]:
-                user_tags.extend(random.sample(abstract_tags, min(2, len(abstract_tags))))
-            elif style in ["fantasy", "magical", "surreal"]:
-                user_tags.extend(random.sample(fantasy_tags, min(2, len(fantasy_tags))))
-            print_info(f"Adding tags for your selected style: {style}")
+            from prompt_config import style_to_tags
+            if style in style_to_tags:
+                available_tags = style_to_tags[style]
+                user_tags.extend(random.sample(available_tags, min(2, len(available_tags))))
+                print_info(f"Adding tags for your selected style: {style}")
         
         # If we have user tags, use them, otherwise use all tags
         tags_to_use = user_tags if user_tags else all_tags

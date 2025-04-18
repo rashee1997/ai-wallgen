@@ -81,6 +81,37 @@ mood_tags = [
     "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"
 ]
 
+# Style to tag category mapping
+style_to_tags = {
+    "nature": nature_tags,
+    "landscape": nature_tags,
+    "outdoor": nature_tags,
+    "space": space_tags,
+    "cosmic": space_tags,
+    "galaxy": space_tags,
+    "urban": urban_tags,
+    "city": urban_tags,
+    "architecture": urban_tags,
+    "abstract": abstract_tags,
+    "geometric": abstract_tags,
+    "minimal": abstract_tags,
+    "fantasy": fantasy_tags,
+    "magical": fantasy_tags,
+    "surreal": fantasy_tags
+}
+
+# Style categories for different artistic approaches
+style_categories = {
+    "photographic": ["cinematic", "documentary", "film_grain", "polaroid",
+                  "analog_film", "lomography", "long_exposure"],
+    "artistic": ["abstract", "impressionism", "expressionism", "cubism",
+                 "minimalism", "watercolor", "oil_painting", "acrylic",
+                 "stained_glass", "steampunk", "surrealism", "vaporwave"],
+    "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti",
+                   "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art",
+                   "pointillism", "pop_art", "ukiyo_e"]
+}
+
 # Available genres for prompt generation
 available_genres = [
     "Nature & Landscapes", "Mountains & Peaks", "Forests & Woods", "Desert & Dunes",
