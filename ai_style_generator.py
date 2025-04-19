@@ -50,7 +50,7 @@ def generate_random_style():
     prompt = generate_style_prompt()
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-pro-preview-03-25")
+        model = genai.GenerativeModel("gemini-2.5-pro-exp-03-25")  # Correct model name as per feedback
         response = model.generate_content(prompt)
         
         if response and hasattr(response, 'text') and response.text:
@@ -82,37 +82,34 @@ def handle_style_generation(user_prefs):
         print_warning("Gemini model is not initialized. Please ensure GEMINI_API_KEY environment variable is set.")
         return
     
-    try:
-        while True:
-            print_section("AI Style Generation")
-            print_info("Generating AI style...")
-            style = generate_random_style()
-            if style is None:
-                print_warning("Failed to generate style. Please try again later.")
-                return
-            
-            print_info(f"Generated AI Style:\n  {style}")
-            
-            save_choice = get_validated_input("Save this style to your preferences? (y/n/q)", ["y", "n", "q"])
-            if save_choice == "y":
-                if style not in user_prefs.preferred_styles:
-                    user_prefs.preferred_styles.append(style)
-                    user_prefs.save_preferences()
-                    print_success(f"Style '{style}' saved to your preferences.")
-                else:
-                    print_warning("This style is already in your preferences.")
-            elif save_choice == "q":
-                print_info("Exiting AI style generator.")
-                break
-            
-            next_choice = get_validated_input("Generate next style? (y/n)", ["y", "n"])
-            if next_choice != "y":
-                print_info("Exiting AI style generator.")
-                break
-    except KeyboardInterrupt:
-        # Use graceful exit handling consistent with rest of application
-        from graceful_exit import handle_interrupt
-        handle_interrupt("AI style generator")
+    # Removed try block as KeyboardInterrupt is handled globally
+    while True:
+        print_section("AI Style Generation")
+        print_info("Generating AI style...")
+        style = generate_random_style()
+        if style is None:
+            print_warning("Failed to generate style. Please try again later.")
+            return
+        
+        print_info(f"Generated AI Style:\n  {style}")
+        
+        save_choice = get_validated_input("Save this style to your preferences? (y/n/q)", ["y", "n", "q"])
+        if save_choice == "y":
+            if style not in user_prefs.preferred_styles:
+                user_prefs.preferred_styles.append(style)
+                user_prefs.save_preferences()
+                print_success(f"Style '{style}' saved to your preferences.")
+            else:
+                print_warning("This style is already in your preferences.")
+        elif save_choice == "q":
+            print_info("Exiting AI style generator.")
+            break
+        
+        next_choice = get_validated_input("Generate next style? (y/n)", ["y", "n"])
+        if next_choice != "y":
+            print_info("Exiting AI style generator.")
+            break
+    # Removed KeyboardInterrupt handler; global handler in graceful_exit.py will manage exit.
 
 def main():
     """

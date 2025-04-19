@@ -48,24 +48,13 @@ except ImportError:
 prompt_cache = {}
 
 # Set default Gemini model
-gemini_model_name = "gemini-2.5-pro-preview-03-25"
+gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
 
 # Configure signal handler for the module
-def prompt_signal_handler(sig, frame):
-    """Handle Ctrl+C interrupts during prompt generation.
-    
-    This function allows for a clean exit when Ctrl+C is pressed during
-    long-running API calls like prompt generation.
-    """
-    logging.info("Keyboard interrupt detected during prompt generation.")
-    print("\nInterrupted during prompt generation. Exiting...")
-    sys.exit(0)
-
-# Register the signal handler for this module
-signal.signal(signal.SIGINT, prompt_signal_handler)
+# Removed local signal handler; global handler in graceful_exit.py will manage exit.
 
 def set_prompt_preferences(use_preferences: bool):
     """Set whether to use user preferences for prompt generation.
@@ -392,7 +381,7 @@ Your response must follow this exact format:
                 
             try:
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+                model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
                 response = model.generate_content(instructions)
 
                 if response.parts:
@@ -781,7 +770,7 @@ Your response must follow this exact format:
             
         try:
             genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
             response = model.generate_content(enhancement_instructions)
 
             if response.parts:

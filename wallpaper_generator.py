@@ -18,6 +18,10 @@ import time
 import threading
 import re
 import glob
+import signal # Ensure signal is imported if not already (needed for graceful_exit)
+
+# Import graceful exit handler early to register the signal handler
+import graceful_exit
 import hashlib
 import html
 import shutil
@@ -111,7 +115,7 @@ os.makedirs("genimage", exist_ok=True)
 user_prefs = initialize_settings()
 
 # Set default Gemini model
-gemini_model_name = "gemini-2.5-pro-preview-03-25"
+gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
 def generate_prompt_gemini(tags, user_prefs):
     """Generate a detailed prompt using Gemini and user preferences."""
@@ -1481,54 +1485,17 @@ def configure_logging(level=logging.INFO):
 # Global flag to track if we're in the process of exiting
 exiting = False
 
-def signal_handler(sig, frame):
-    """Handle keyboard interrupts (Ctrl+C) gracefully.
-
-    Saves current user preferences before exiting the application,
-    even in the middle of prompt generation or other operations.
-    """
-    global exiting, user_prefs
-
-    if exiting:
-        print("\nSecond interrupt received. Exiting immediately without saving preferences.")
-        sys.exit(1)
-
-    exiting = True
-    print_info("\n\nKeyboard interrupt detected. Saving preferences before exit...")
-
-    try:
-        if 'user_prefs' in globals() and isinstance(user_prefs, UserPreferences):
-            print_info("Attempting to save current preferences...")
-            user_prefs.save_preferences()
-            print_success("Preferences saved successfully.")
-        else:
-            print_warning("User preferences object not found or invalid, cannot save.")
-    except Exception as e:
-        print_error(f"An error occurred while saving preferences: {str(e)}")
-        logging.error(f"Error during signal handler save: {e}", exc_info=True)
-
-    print_success("Goodbye!")
-    sys.exit(0)
+# Removed local signal handler; global handler in graceful_exit.py will manage exit.
 
 def main():
     """Main function handling command-line arguments."""
     global user_prefs
     
-    # Register signal handler for Ctrl+C
-    signal.signal(signal.SIGINT, signal_handler)
+    # Signal handler registration removed; handled globally by graceful_exit.py
     
-    # Register atexit handler to save preferences on normal exit
-    import atexit
-    def save_prefs_on_exit():
-        if 'user_prefs' in globals() and isinstance(user_prefs, UserPreferences):
-            try:
-                print_info("Saving preferences on program exit...")
-                user_prefs.save_preferences()
-                print_success("Preferences saved successfully on exit.")
-            except Exception as e:
-                print_error(f"Error saving preferences on exit: {e}")
-                logging.error(f"Error saving preferences on exit: {e}", exc_info=True)
-    atexit.register(save_prefs_on_exit)
+    # Removed redundant atexit handler; preference saving on interrupt
+    # is handled by the signal handler in graceful_exit.py.
+    # Normal exit (option 5) saves preferences explicitly.
     
     args = parse_arguments()
     
@@ -1741,13 +1708,8 @@ def run_main_menu():
         print_option("5", "Exit - Save and exit")
         print_option("6", "Preview Recent Images")
         
-        try:
-            choice = get_validated_input("Select an option (1-6)", ["1", "2", "3", "4", "5", "6"])
-        except KeyboardInterrupt:
-            print_info("\nSaving preferences before exit...")
-            user_prefs.save_preferences()
-            print_success("Goodbye!")
-            sys.exit(0)
+        # KeyboardInterrupt is now handled globally by sys.excepthook in graceful_exit.py
+        choice = get_validated_input("Select an option (1-6)", ["1", "2", "3", "4", "5", "6"])
         
         if choice == "1":
             print_section("Generate AI Wallpaper")
@@ -1759,12 +1721,8 @@ def run_main_menu():
             print_option("5", "Load Saved Preset")
             print_option("6", "Return to Main Menu")
             
-            try:
-                prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
-            except KeyboardInterrupt:
-                # Call the signal handler directly to ensure consistent exit logic
-                signal_handler(signal.SIGINT, None)
-                sys.exit(0)
+            # Removed try...except block; KeyboardInterrupt is handled globally
+            prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
             
             if prompt_choice == "6":
                 continue

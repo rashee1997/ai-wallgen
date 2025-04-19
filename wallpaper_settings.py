@@ -44,9 +44,19 @@ except ImportError:
     logging.warning("Could not import prompt_generator module. Some features will be disabled.")
     PROMPT_GENERATOR_AVAILABLE = False
 
-# Try to import Google's GenerativeAI module
+# Try to import Google's GenerativeAI module and AI Style Generator
 try:
     import google.generativeai as genai
+    from ai_style_generator import handle_style_generation, initialize_gemini
+    AI_STYLE_GEN_AVAILABLE = True
+except ImportError:
+    AI_STYLE_GEN_AVAILABLE = False
+    logging.warning("Could not import ai_style_generator. AI style generation feature disabled.")
+    # Keep trying to import genai separately if style generator fails
+    try:
+        import google.generativeai as genai
+    except ImportError:
+        logging.warning("google.generativeai module not found. Some features will be disabled.")
 except ImportError:
     logging.warning("google.generativeai module not found. Some features will be disabled.")
 
@@ -559,29 +569,141 @@ def handle_load_preset():
 def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bool:
     """
     Helper function to apply preset settings.
-    
+
     Args:
         settings: Dictionary containing settings to apply
         replace: If True, replace existing settings; if False, merge with existing
-    
+
     Returns:
         bool: True if settings were applied successfully, False otherwise
     """
     try:
-        for setting_type in ['imagen_settings', 'wallpaper_settings']:
-            if setting_type in settings and hasattr(user_prefs, setting_type):
-                current_settings = getattr(user_prefs, setting_type)
-                if replace:
-                    setattr(user_prefs, setting_type, settings[setting_type].copy())
-                else:
-                    if isinstance(current_settings, dict) and isinstance(settings[setting_type], dict):
-                        current_settings.update(settings[setting_type])
-                    else:
-                        setattr(user_prefs, setting_type, settings[setting_type])
-        return True
+        # Define default structure for essential settings
+        default_imagen_structure = {
+            "number_of_images": 1,
+            "seed": None,
+            "negative_prompt": "",
+            "quality_settings": {},
+            "style_settings": {},
+            "camera_settings": {},
+            "lighting_settings": {},
+            "composition_settings": {},
+            "environment_settings": {},
+            "color_settings": {},
+            "detail_settings": {}
+        }
+        default_wallpaper_structure = {
+             "auto_set": False,
+             "skip_preview": False
+        }
+
+        # Apply imagen_settings and wallpaper_settings
+        for setting_type, default_structure in [('imagen_settings', default_imagen_structure), ('wallpaper_settings', default_wallpaper_structure)]:
+            if hasattr(user_prefs, setting_type):
+                current_settings_dict = getattr(user_prefs, setting_type)
+                # Ensure current settings have the default structure
+                # Use setdefault to add missing keys without overwriting existing ones
+                for key, default_value in default_structure.items():
+                    current_settings_dict.setdefault(key, default_value)
+
+                if setting_type in settings:
+                    preset_settings_dict = settings[setting_type]
+                    if isinstance(preset_settings_dict, dict):
+                        if replace:
+                            # Start with defaults, then update with preset
+                            new_settings = default_structure.copy()
+                            new_settings.update(preset_settings_dict)
+                            setattr(user_prefs, setting_type, new_settings)
+                        else:
+                            # Merge preset into current (which already has defaults)
+                            def deep_update(d, u):
+                                for k, v in u.items():
+                                    if isinstance(v, dict):
+                                        # Ensure the key exists in d before recursing
+                                        # Use get(k, {}) to handle potentially missing keys in d during recursion
+                                        d[k] = deep_update(d.get(k, {}), v)
+                                    else:
+                                        d[k] = v
+                                return d
+                            deep_update(current_settings_dict, preset_settings_dict)
+                    else: # Preset value is not a dict, log warning
+                         logging.warning(f"Preset value for {setting_type} is not a dictionary. Skipping.")
+                # If setting_type not in preset, current_settings_dict (with defaults) remains unchanged
+
+        # Explicitly apply top-level styles and moods (always replace for these)
+        if "styles" in settings and isinstance(settings["styles"], list):
+            user_prefs.preferred_styles = settings["styles"][:] # Replace with a copy
+        if "moods" in settings and isinstance(settings["moods"], list):
+            user_prefs.preferred_moods = settings["moods"][:] # Replace with a copy
+
+        # Apply aspect ratio if present
+        if "aspect_ratio" in settings:
+             user_prefs.aspect_ratio = settings["aspect_ratio"]
+
+        # Apply negative prompts if present
+        if "negative_prompts" in settings and isinstance(settings["negative_prompts"], list):
+             if replace:
+                 user_prefs.negative_prompts = settings["negative_prompts"][:]
+             else: # Merge mode for negative prompts could append unique ones
+                 existing_neg = set(user_prefs.negative_prompts)
+                 new_neg = set(settings["negative_prompts"])
+                 user_prefs.negative_prompts = list(existing_neg.union(new_neg))
+
+        # Apply preferred genres if present
+        if "preferred_genres" in settings and isinstance(settings["preferred_genres"], list):
+             if replace:
+                 user_prefs.preferred_genres = settings["preferred_genres"][:]
+             else: # Merge mode for genres could append unique ones
+                 existing_genres = set(user_prefs.preferred_genres)
+                 new_genres = set(settings["preferred_genres"])
+                 user_prefs.preferred_genres = list(existing_genres.union(new_genres))
+
+        # Note: wallpaper_settings are handled in the loop above
+        # Note: history_file and last_preset are managed elsewhere, not applied from preset file
+
+        return True # Indicate success
+
     except Exception as e:
         logging.error(f"Error applying preset settings: {e}")
-        return False
+        return False # Indicate failure
+
+        # Explicitly apply top-level styles and moods (always replace for these)
+        if "styles" in settings and isinstance(settings["styles"], list):
+            user_prefs.preferred_styles = settings["styles"][:] # Replace with a copy
+        if "moods" in settings and isinstance(settings["moods"], list):
+            user_prefs.preferred_moods = settings["moods"][:] # Replace with a copy
+
+        # Apply aspect ratio if present
+        if "aspect_ratio" in settings:
+             user_prefs.aspect_ratio = settings["aspect_ratio"]
+
+        # Apply negative prompts if present
+        if "negative_prompts" in settings and isinstance(settings["negative_prompts"], list):
+             if replace:
+                 user_prefs.negative_prompts = settings["negative_prompts"][:]
+             else: # Merge mode for negative prompts could append unique ones
+                 existing_neg = set(user_prefs.negative_prompts)
+                 new_neg = set(settings["negative_prompts"])
+                 user_prefs.negative_prompts = list(existing_neg.union(new_neg))
+
+        # Apply preferred genres if present
+        if "preferred_genres" in settings and isinstance(settings["preferred_genres"], list):
+             if replace:
+                 user_prefs.preferred_genres = settings["preferred_genres"][:]
+             else: # Merge mode for genres could append unique ones
+                 existing_genres = set(user_prefs.preferred_genres)
+                 new_genres = set(settings["preferred_genres"])
+                 user_prefs.preferred_genres = list(existing_genres.union(new_genres))
+
+        # Note: wallpaper_settings are handled in the loop above
+        # Note: history_file and last_preset are managed elsewhere, not applied from preset file
+
+        return True # Indicate success
+
+    except Exception as e:
+        logging.error(f"Error applying preset settings: {e}")
+        return False # Indicate failure
+# Removed duplicated block from lines 642-651
 
 def handle_delete_preset():
     """Helper function to handle deleting a preset."""
@@ -1396,9 +1518,7 @@ def manage_styles():
                     print_success(f"Added '{selected_style}' to preferred styles")
                 else:
                     print_warning(f"'{selected_style}' is already in your preferred styles")
-        except KeyboardInterrupt:
-            print("\nKeyboard interrupt detected. Exiting style management.")
-            return
+        # Removed KeyboardInterrupt handler; global handler in graceful_exit.py will manage exit.
         except Exception as e:
             print_error(f"An error occurred: {e}")
             return
@@ -1641,10 +1761,48 @@ def configure_advanced_options():
         if advanced_choice == "1":
             manage_genres()
             
-        elif advanced_choice == "2":
-            manage_styles()
+        elif advanced_choice == "2": # Handle Styles directly
+            print_section("Set Preferred Style")
+            # Display current style
+            current_style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "None"
+            print_info(f"Current preferred style: {current_style}")
+
+            print_option("1", "Enter Custom Style")
+            print_option("2", "Generate AI Style")
+            print_option("b", "Back")
             
-        elif advanced_choice == "3":
+            style_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+            
+            if style_choice == "b":
+                continue # Go back to advanced options menu
+                
+            elif style_choice == "1": # Custom Style
+                custom_style = get_validated_input("Enter your custom style:", allow_empty=False)
+                if custom_style and custom_style.lower() != 'b': # Ensure 'b' isn't saved as style
+                    user_prefs.add_style(custom_style) # Replaces existing style
+                    print_success(f"Preferred style set to: {custom_style}")
+                else:
+                    print_warning("No custom style entered or input was 'b'.")
+                    
+            elif style_choice == "2": # AI Generated Style
+                if AI_STYLE_GEN_AVAILABLE:
+                    try:
+                        # Ensure Gemini is initialized (uses global state in ai_style_generator)
+                        api_key = os.environ.get("GEMINI_API_KEY") # Re-check API key
+                        if api_key:
+                            # handle_style_generation takes care of generation, prompting, and saving
+                            # It internally calls add_style which replaces the current style
+                            handle_style_generation(user_prefs)
+                        else:
+                            print_error("Gemini API key not found. Please set GEMINI_API_KEY environment variable.")
+                    except Exception as e:
+                        print_error(f"Error during AI style generation: {e}")
+                        logging.error(f"Error calling handle_style_generation: {e}", exc_info=True)
+                else:
+                    print_error("AI style generation module is not available.")
+                    print_info("Please ensure ai_style_generator.py is present and google-generativeai is installed.")
+            
+        elif advanced_choice == "3": # Moods
             manage_moods()
             
         elif advanced_choice == "4":
@@ -2920,11 +3078,8 @@ def manage_color_settings():
             print_option("7", "Custom")
             print_option("b", "Back")
             
-            try:
-                scheme_choice = get_validated_input("Select color scheme (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
-            except KeyboardInterrupt:
-                print_info("\nOperation cancelled.") # Optional: inform user
-                continue # Go back to the Color & Detail Settings menu
+            # Removed try...except block; KeyboardInterrupt is handled globally
+            scheme_choice = get_validated_input("Select color scheme (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
 
             if scheme_choice == "b":
                 continue # Go back to the Color & Detail Settings menu
@@ -2960,11 +3115,8 @@ def manage_color_settings():
             print_option("7", "Custom")
             print_option("b", "Back")
             
-            try:
-                palette_choice = get_validated_input("Select palette type (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
-            except KeyboardInterrupt:
-                print_info("\nOperation cancelled.") # Optional: inform user
-                continue # Go back to the Color & Detail Settings menu
+            # Removed try...except block; KeyboardInterrupt is handled globally
+            palette_choice = get_validated_input("Select palette type (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
 
             if palette_choice == "b":
                 continue # Go back to the Color & Detail Settings menu
