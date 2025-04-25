@@ -381,7 +381,7 @@ Your response must follow this exact format:
                 
             try:
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 response = model.generate_content(instructions)
 
                 if response.parts:
@@ -664,24 +664,24 @@ Your response must follow this exact format:
             environment_settings = settings.get("environment_settings", {})
             weather = environment_settings.get("weather")
             season = environment_settings.get("season")
-            atmospheric_effects = environment_settings.get("atmospheric_effects", [])
+            atmospheric_effects = atmospheric_effects if 'atmospheric_effects' in locals() else []
             location_type = environment_settings.get("location_type")
             
             # Style Settings
             style_settings = settings.get("style_settings", {})
             art_movement = style_settings.get("art_movement")
-            post_processing = style_settings.get("post_processing", [])
+            post_processing = post_processing if 'post_processing' in locals() else []
             
             # Detail Settings
             detail_settings = settings.get("detail_settings", {})
             detail_level = detail_settings.get("detail_level")
             texture_quality = detail_settings.get("texture_quality")
-            special_effects = detail_settings.get("special_effects", [])
+            special_effects = special_effects if 'special_effects' in locals() else []
             
             # Color Settings
             color_settings = settings.get("color_settings", {})
             color_scheme = color_settings.get("color_scheme")
-            palette_type = color_settings.get("palette_type")
+            palette_type = palette_type if 'palette_type' in locals() else None
             color_temperature = color_settings.get("color_temperature")
             
             # Quality Settings
@@ -767,13 +767,13 @@ Your response must follow this exact format:
             logging.warning("No Gemini API key configured")
             # Return formatted version of the original prompt
             return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
-            
+        
         try:
             genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content(enhancement_instructions)
 
-            if response.parts:
+            if response.parts and len(response.parts) > 0:
                 full_response = response.parts[0].text.strip()
                 
                 # If we're not using user preferences, apply the art medium enforcement
@@ -814,9 +814,11 @@ Your response must follow this exact format:
             return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
 
     except Exception as e:
-        logging.error(f"Error enhancing prompt with Gemini: {e}")
+        logging.exception(f"Error enhancing prompt with Gemini: {e}")
+        logging.warning(f"Error enhancing prompt with Gemini: {e}")
         # Return formatted version of the original prompt
         return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
+
 
 def enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt=""):
     """
@@ -965,4 +967,4 @@ def generate_random_style_mix(user_prefs=None):
 class SimplePrefs:
     def __init__(self, aspect_ratio="16:9", imagen_settings=None):
         self.aspect_ratio = aspect_ratio
-        self.imagen_settings = imagen_settings or {} 
+        self.imagen_settings = imagen_settings or {}

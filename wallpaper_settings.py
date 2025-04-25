@@ -45,20 +45,20 @@ except ImportError:
     PROMPT_GENERATOR_AVAILABLE = False
 
 # Try to import Google's GenerativeAI module and AI Style Generator
+# Try to import Google's GenerativeAI module first
 try:
     import google.generativeai as genai
+except ImportError:
+    logging.warning("google.generativeai module not found. Some features will be disabled.")
+    genai = None
+
+# Separately try to import AI Style Generator
+try:
     from ai_style_generator import handle_style_generation, initialize_gemini
     AI_STYLE_GEN_AVAILABLE = True
 except ImportError:
     AI_STYLE_GEN_AVAILABLE = False
     logging.warning("Could not import ai_style_generator. AI style generation feature disabled.")
-    # Keep trying to import genai separately if style generator fails
-    try:
-        import google.generativeai as genai
-    except ImportError:
-        logging.warning("google.generativeai module not found. Some features will be disabled.")
-except ImportError:
-    logging.warning("google.generativeai module not found. Some features will be disabled.")
 
 # Local application imports
 from wallpaper_config import (
@@ -1732,7 +1732,7 @@ def configure_advanced_options():
     while True:  # Advanced Options menu loop
         print_section("Advanced Options")
         print_option("1", "Genres")
-        print_option("2", "Styles")
+        print_option("2", "Style Settings & Options")
         print_option("3", "Moods")
         print_option("4", "Aspect Ratio")
         print_option("5", "Negative Prompt")
@@ -1761,47 +1761,9 @@ def configure_advanced_options():
         if advanced_choice == "1":
             manage_genres()
             
-        elif advanced_choice == "2": # Handle Styles directly
-            print_section("Set Preferred Style")
-            # Display current style
-            current_style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else "None"
-            print_info(f"Current preferred style: {current_style}")
-
-            print_option("1", "Enter Custom Style")
-            print_option("2", "Generate AI Style")
-            print_option("b", "Back")
-            
-            style_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
-            
-            if style_choice == "b":
-                continue # Go back to advanced options menu
+        elif advanced_choice == "2": # Styles
+            manage_styles()  # Directly show the styles list
                 
-            elif style_choice == "1": # Custom Style
-                custom_style = get_validated_input("Enter your custom style:", allow_empty=False)
-                if custom_style and custom_style.lower() != 'b': # Ensure 'b' isn't saved as style
-                    user_prefs.add_style(custom_style) # Replaces existing style
-                    print_success(f"Preferred style set to: {custom_style}")
-                else:
-                    print_warning("No custom style entered or input was 'b'.")
-                    
-            elif style_choice == "2": # AI Generated Style
-                if AI_STYLE_GEN_AVAILABLE:
-                    try:
-                        # Ensure Gemini is initialized (uses global state in ai_style_generator)
-                        api_key = os.environ.get("GEMINI_API_KEY") # Re-check API key
-                        if api_key:
-                            # handle_style_generation takes care of generation, prompting, and saving
-                            # It internally calls add_style which replaces the current style
-                            handle_style_generation(user_prefs)
-                        else:
-                            print_error("Gemini API key not found. Please set GEMINI_API_KEY environment variable.")
-                    except Exception as e:
-                        print_error(f"Error during AI style generation: {e}")
-                        logging.error(f"Error calling handle_style_generation: {e}", exc_info=True)
-                else:
-                    print_error("AI style generation module is not available.")
-                    print_info("Please ensure ai_style_generator.py is present and google-generativeai is installed.")
-            
         elif advanced_choice == "3": # Moods
             manage_moods()
             

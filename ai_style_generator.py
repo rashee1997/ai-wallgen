@@ -50,7 +50,7 @@ def generate_random_style():
     prompt = generate_style_prompt()
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-pro-exp-03-25")  # Correct model name as per feedback
+        model = genai.GenerativeModel("gemini-2.0-flash")  # Changed to gemini-2.0-flash model
         response = model.generate_content(prompt)
         
         if response and hasattr(response, 'text') and response.text:
@@ -95,12 +95,9 @@ def handle_style_generation(user_prefs):
         
         save_choice = get_validated_input("Save this style to your preferences? (y/n/q)", ["y", "n", "q"])
         if save_choice == "y":
-            if style not in user_prefs.preferred_styles:
-                user_prefs.preferred_styles.append(style)
-                user_prefs.save_preferences()
-                print_success(f"Style '{style}' saved to your preferences.")
-            else:
-                print_warning("This style is already in your preferences.")
+            # Use add_style to replace existing style instead of appending
+            user_prefs.add_style(style)
+            print_success(f"Style set to: {style}")
         elif save_choice == "q":
             print_info("Exiting AI style generator.")
             break

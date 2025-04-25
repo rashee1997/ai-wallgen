@@ -222,24 +222,13 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         genai.configure(api_key=api_key)
         model = None
         
-        # Try Pro model first
         try:
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')  # Use recommended Pro model
-            print_info("Using Gemini Pro model...")
-        except Exception as pro_err:
-            if "429" in str(pro_err) or "quota" in str(pro_err).lower(): # Quota exceeded
-                try:
-                    print_warning("Pro model quota exceeded, falling back to Gemini Flash...")
-                    model = genai.GenerativeModel('gemini-2.0-flash')  # Fallback to Flash
-                    print_info("Using Gemini Flash model...")
-                except Exception as flash_err:
-                    logging.error(f"Failed to initialize Gemini Flash model: {flash_err}")
-                    print_error("Could not initialize AI models (both Pro and Flash failed).")
-                    return False
-            else:
-                logging.error(f"Failed to initialize Gemini Pro model: {pro_err}")
-                print_error("Could not initialize AI model.")
-                return False
+            model = genai.GenerativeModel('gemini-2.0-flash')  # Use Gemini Flash model directly
+            print_info("Using Gemini Flash model...")
+        except Exception as err:
+            logging.error(f"Failed to initialize Gemini Flash model: {err}")
+            print_error("Could not initialize AI model.")
+            return False
 
         # Build category-specific instructions
         instruction_header = f"Select settings that work well with \"{base_style}\" ({style_category}):"

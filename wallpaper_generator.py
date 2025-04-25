@@ -60,7 +60,7 @@ from prompt_generator import (
     enforce_prompt_format, select_random_tags, generate_random_style_mix,
     set_prompt_preferences, use_user_preferences, SimplePrefs
 )
-from tkinter_preview import preview_image_gui
+from qt_preview import preview_image_gui
 
 # Configure logging
 logging.basicConfig(
@@ -1043,8 +1043,19 @@ from wallpaper_settings import get_preferences
 # Import use_user_preferences from prompt_generator
 from prompt_generator import use_user_preferences
 
-def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None):
-    """Generate wallpaper based on given parameters."""
+def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None, generate_only=False):
+    """Generate wallpaper based on given parameters.
+    
+    Args:
+        prompt_type: Type of prompt to generate ('gemini', 'random', 'custom')
+        custom_prompt: Custom prompt text if prompt_type is 'custom'
+        mood: Mood for the image
+        style: Style for the image
+        resolution: Image resolution
+        color_scheme: Color scheme for the image
+        lighting: Lighting settings
+        generate_only: If True, only generate the prompt without creating the image
+    """
     # Fetch the LATEST preferences right before generation
     user_prefs = get_preferences()
     global generation_history # Keep global for history
@@ -1076,6 +1087,15 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
         else:
             enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
+
+        if not enhanced_prompt:
+            print_warning("Failed to enhance custom prompt, using original prompt.")
+            enhanced_prompt = sanitized_prompt
+
+        # Defensive fallback: ensure enhanced_prompt is a string
+        if enhanced_prompt is None:
+            enhanced_prompt = sanitized_prompt
+
     elif prompt_type == "random":
         print_info("Generating random prompt...")
         # Use select_random_tags to get a subset of tags rather than all tags
@@ -1161,11 +1181,27 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         "output": None  # Will be updated when image is generated
     })
     
-    # Step 2: Display the prompt and get confirmation
+    # Step 2: Display the prompt and handle next steps
     if enhanced_prompt:
         print_section("Generated Prompt")
         print_info(enhanced_prompt)
         
+        # If generate_only is True, handle prompt saving and return early
+        if generate_only:
+            save_choice = get_validated_input("Would you like to save this prompt to a file? (y/n)", ["y", "n"])
+            if save_choice.lower() == "y":
+                filename = get_validated_input("Enter filename (or press Enter for default 'saved_prompt.txt'): ", allow_empty=True)
+                if not filename:
+                    filename = "saved_prompt.txt"
+                try:
+                    with open(filename, "w") as f:
+                        f.write(enhanced_prompt)
+                    print_success(f"Prompt saved to {filename}")
+                except Exception as e:
+                    print_error(f"Error saving prompt: {e}")
+            return True
+        
+        # Otherwise proceed with image generation confirmation
         for attempt in range(3):
             save_prompts_to_json(gemini_prompt, enhanced_prompt)
             confirmation = get_validated_input(f"Proceed with this prompt? (yes/no) (Attempt {attempt + 1}/3)", ["yes", "no", "y", "n"])
@@ -1280,13 +1316,23 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 # NOTE: We don't add negative_prompt directly to config anymore
                 # It's already incorporated into the enhanced_prompt by the Gemini flash model
                 
+                # List available models first
+                try:
+                    available_models = client.list_models()
+                    logging.info("Available models:")
+                    for model in available_models:
+                        logging.info(f"- {model.name}")
+                except Exception as e:
+                    logging.error(f"Error listing models: {e}")
+
                 # Customize config based on user's imagen_settings
                 if user_prefs.imagen_settings.get("model_version"):
                     model_version = user_prefs.imagen_settings["model_version"]
                 else:
-                    model_version = 'imagen-3.0-generate-002'  # Default
+                    model_version = 'imagen-3.0-generate-002'  # Default to known working model
                 
                 # Log the configuration details
+                # Log configuration details
                 logging.info(f"Using model: {model_version}")
                 logging.info(f"Aspect ratio: {aspect_ratio}")
                 logging.info(f"Negative prompt: {negative_prompt}")
@@ -1365,7 +1411,12 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 print_info("This might be due to an API version mismatch. Check your google-generativeai package version.")
                 return False
     except Exception as e:
-        print_error(f"Error generating image: {e}")
+        error_msg = str(e)
+        if "billed users" in error_msg:
+            print_error("Image generation requires a Google Cloud billing account")
+            print_info("Please visit https://ai.google.dev/tutorials/setup to set up billing")
+        else:
+            print_error(f"Error generating image: {error_msg}")
         return False
     
     # Step 4: Set the wallpaper
@@ -1526,7 +1577,7 @@ def main():
     user_prefs.wallpaper_settings['skip_preview'] = user_prefs.skip_preview
     
     # Import preview functionality
-    from tkinter_preview import preview_image_gui
+    from qt_preview import preview_image_gui
     
     # List and preview images if requested
     if args.list_images:
@@ -1702,98 +1753,104 @@ def run_main_menu():
     while True:
         print_section("Main Menu")
         print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
-        print_option("2", "Manage Preferences - Customize wallpaper settings")
-        print_option("3", "Tools & Utilities")
-        print_option("4", "View Generation History")
-        print_option("5", "Exit - Save and exit")
-        print_option("6", "Preview Recent Images")
+        print_option("2", "Generate Prompt Only - Create and save prompts without images")
+        print_option("3", "Manage Preferences - Customize wallpaper settings")
+        print_option("4", "Tools & Utilities")
+        print_option("5", "View Generation History")
+        print_option("6", "Exit - Save and exit")
+        print_option("7", "Preview Recent Images")
         
         # KeyboardInterrupt is now handled globally by sys.excepthook in graceful_exit.py
-        choice = get_validated_input("Select an option (1-6)", ["1", "2", "3", "4", "5", "6"])
+        choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
         
-        if choice == "1":
-            print_section("Generate AI Wallpaper")
-            print_breadcrumb(["Main Menu", "Generate AI Wallpaper"])
-            print_option("1", "Use Gemini AI to generate a prompt")
-            print_option("2", "Use a random prompt")
-            print_option("3", "Enter your own custom prompt")
-            print_option("4", "Advanced Options - Fine-tune generation parameters")
-            print_option("5", "Load Saved Preset")
-            print_option("6", "Return to Main Menu")
+        if choice in ["1", "2"]:  # Handle both Generate AI Wallpaper and Generate Prompt Only
+           generate_only = (choice == "2")
+           section_title = "Generate AI Wallpaper" if choice == "1" else "Generate Prompt Only"
+           breadcrumb = ["Main Menu", section_title]
+           print_section(section_title)
+           print_breadcrumb(breadcrumb)
+           print_option("1", "Use Gemini AI to generate a prompt")
+           print_option("2", "Use a random prompt")
+           print_option("3", "Enter your own custom prompt")
+           print_option("4", "Advanced Options - Fine-tune generation parameters")
+           print_option("5", "Load Saved Preset")
+           print_option("6", "Return to Main Menu")
             
-            # Removed try...except block; KeyboardInterrupt is handled globally
-            prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
-            
-            if prompt_choice == "6":
-                continue
-            elif prompt_choice == "5":
-                settings = load_preset()
-                if settings:
-                    generate_wallpaper(**settings)
-                continue
-            
-            if prompt_choice == "1":
-                # Get mood and style preferences for this generation
-                print_section("Optional Parameters")
-                print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
+           # Removed try...except block; KeyboardInterrupt is handled globally
+           prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+           
+           if prompt_choice == "6":
+               continue
+           elif prompt_choice == "5":
+               settings = load_preset()
+               if settings:
+                   generate_wallpaper(**settings)
+               continue
+           
+           generate_only = (choice == "2")  # True if "Generate Prompt Only" was selected
+           
+           if prompt_choice == "1":
+               # Get mood and style preferences for this generation
+               print_section("Optional Parameters")
+               print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
+               
+               mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
+                           "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
+               style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal",
+                              "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk",
+                              "digital_art", "divisionism", "double_exposure", "expressionism",
+                              "fantasy", "futurism", "glitch_art", "gothic", "graffiti",
+                              "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape",
+                              "line_art", "low_poly", "manga", "minimalist", "oil_painting",
+                              "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art",
+                              "pointillism", "pop_art", "realism", "retrowave", "sci_fi",
+                              "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e",
+                              "vaporwave", "watercolor", "woodcut"]
                 
-                mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
-                              "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
-                style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal", 
-                               "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk", 
-                               "digital_art", "divisionism", "double_exposure", "expressionism", 
-                               "fantasy", "futurism", "glitch_art", "gothic", "graffiti", 
-                               "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape", 
-                               "line_art", "low_poly", "manga", "minimalist", "oil_painting", 
-                               "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art", 
-                               "pointillism", "pop_art", "realism", "retrowave", "sci_fi", 
-                               "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e", 
-                               "vaporwave", "watercolor", "woodcut"]
+               print_info(f"Mood options: {', '.join(mood_options)}")
+               mood = input("Enter mood (optional): ").strip().lower()
+               if mood and mood not in mood_options:
+                   print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
+               
+               print_info(f"Style options: {', '.join(style_options)}")
+               print_info("You can also enter 'random_mix' to combine 2-3 compatible styles for creative results")
+               style = input("Enter style (optional): ").strip().lower()
+               
+               if style == "random_mix":
+                   style = generate_random_style_mix()
+                   print_info(f"Selected style mix: {style}")
+                   # Ask if the user wants to save this style mix to their preferences
+                   save_style = get_validated_input("Save this style mix to your preferences? (y/n)", ["y", "n"])
+                   if save_style == "y":
+                       if style not in user_prefs.preferred_styles:
+                           user_prefs.preferred_styles.append(style)
+                           user_prefs.save_preferences()
+                           print_success(f"Added '{style}' to preferred styles")
+                       else:
+                           print_warning(f"'{style}' is already in your preferred styles")
+               elif style and style not in style_options:
+                   print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
+               
+               generate_wallpaper("gemini", mood=mood, style=style, generate_only=generate_only)
                 
-                print_info(f"Mood options: {', '.join(mood_options)}")
-                mood = input("Enter mood (optional): ").strip().lower()
-                if mood and mood not in mood_options:
-                    print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
-                
-                print_info(f"Style options: {', '.join(style_options)}")
-                print_info("You can also enter 'random_mix' to combine 2-3 compatible styles for creative results")
-                style = input("Enter style (optional): ").strip().lower()
-                
-                if style == "random_mix":
-                    style = generate_random_style_mix()
-                    print_info(f"Selected style mix: {style}")
-                    # Ask if the user wants to save this style mix to their preferences
-                    save_style = get_validated_input("Save this style mix to your preferences? (y/n)", ["y", "n"])
-                    if save_style == "y":
-                        if style not in user_prefs.preferred_styles:
-                            user_prefs.preferred_styles.append(style)
-                            user_prefs.save_preferences()
-                            print_success(f"Added '{style}' to preferred styles")
-                        else:
-                            print_warning(f"'{style}' is already in your preferred styles")
-                elif style and style not in style_options:
-                    print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
-                
-                generate_wallpaper("gemini", mood=mood, style=style)
-                
-            elif prompt_choice == "2":
-                generate_wallpaper("random")
-                
-            elif prompt_choice == "3":
-                custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
-                if custom_prompt.lower() == 'b':
-                    continue
-                print_info("Processing custom prompt...")
-                generate_wallpaper("custom", custom_prompt=custom_prompt)
-            
-            elif prompt_choice == "4":
-                from wallpaper_settings import configure_advanced_options
-                configure_advanced_options()
-        
-        elif choice == "2":
+           elif prompt_choice == "2":
+               generate_wallpaper("random", generate_only=generate_only)
+               
+           elif prompt_choice == "3":
+               custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
+               if custom_prompt.lower() == 'b':
+                   continue
+               print_info("Processing custom prompt...")
+               generate_wallpaper("custom", custom_prompt=custom_prompt, generate_only=generate_only)
+           
+           elif prompt_choice == "4":
+               from wallpaper_settings import configure_advanced_options
+               configure_advanced_options()
+    
+        elif choice == "3":
             manage_preferences()
             
-        elif choice == "3":
+        elif choice == "4":
             print_section("Tools & Utilities")
             print_breadcrumb(["Main Menu", "Tools & Utilities"])
             print_option("1", "Manage Presets")
@@ -1821,14 +1878,14 @@ def run_main_menu():
             elif tools_choice == "6":
                 continue
         
-        elif choice == "4":
-            view_history()
         elif choice == "5":
+            view_history()
+        elif choice == "6":
             print_info("Saving preferences before exit...")
             user_prefs.save_preferences()
             print_success("Goodbye!")
             break
-        elif choice == "6":
+        elif choice == "7":
             # Preview recent images
             preview_recent_images()
 
@@ -1925,5 +1982,3 @@ def preview_recent_images():
 
 if __name__ == "__main__":
     main()
-
-
