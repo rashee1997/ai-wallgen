@@ -69,6 +69,17 @@ except ImportError:
     generate_random_style = lambda: None
     initialize_style_gemini = lambda x: None
 
+# Import utility functions
+from file_utils import deep_update
+
+# Import configuration
+try:
+    from config import STYLE_CATEGORIES
+except ImportError:
+    logging.warning("Could not import STYLE_CATEGORIES from config.py. Using empty dictionary.")
+    STYLE_CATEGORIES = {}
+
+
 # --- Configuration ---
 logging.basicConfig(
     level=logging.INFO,
@@ -162,14 +173,6 @@ def categorize_style(style_name: str) -> str:
 
     return "unknown"
 
-def deep_update(d, u):
-    """Recursively update nested dictionaries."""
-    for k, v in u.items():
-        if isinstance(v, dict):
-            d[k] = deep_update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
 
 # --- Main Generation Function ---
 
@@ -527,18 +530,12 @@ def main():
                     preset_data = json.load(f)
                 user_prefs = initialize_settings()
                 
-                # Apply settings
-                if preset_data.get("styles"):
-                    user_prefs.preferred_styles = preset_data["styles"]
-                if preset_data.get("moods"):
-                    user_prefs.preferred_moods = preset_data["moods"]
-                if preset_data.get("imagen_settings"):
-                    user_prefs.imagen_settings = deep_update(
-                        user_prefs.imagen_settings,
-                        preset_data["imagen_settings"]
-                    )
-                if preset_data.get("aspect_ratio"):
-                    user_prefs.aspect_ratio = preset_data["aspect_ratio"]
+                # Use _apply_preset_settings from wallpaper_settings.py to apply preset
+                from wallpaper_settings import _apply_preset_settings
+                
+                if not _apply_preset_settings(preset_data, replace=True):
+                    print_error("Failed to apply preset settings.")
+                    sys.exit(1)
                 
                 # Save preferences
                 user_prefs.save_preferences()
@@ -556,8 +553,15 @@ def main():
         if os.path.exists(preset_path):
             if get_validated_input(f"Delete preset '{args.name}'? (Y/N): ", ["y", "n"]) == "y":
                 try:
-                    os.remove(preset_path)
-                    print_success(f"Deleted preset: {args.name}")
+                    # Use delete_preset from wallpaper_settings.py
+                    from wallpaper_settings import delete_preset
+                    
+                    # Call delete_preset with the preset name
+                    if delete_preset(args.name):
+                        print_success(f"Deleted preset: {args.name}")
+                    else:
+                        print_error(f"Failed to delete preset: {args.name}")
+                        sys.exit(1)
                 except Exception as e:
                     print_error(f"Error deleting preset: {e}")
                     sys.exit(1)

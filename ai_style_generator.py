@@ -1,7 +1,8 @@
 import os
 import google.generativeai as genai
 from wallpaper_settings import get_preferences
-import sys  
+import sys
+from ui_utils import print_warning, print_section, print_info, get_validated_input, print_success
 
 # Global variable to track if Gemini is initialized
 gemini_initialized = False
@@ -76,7 +77,7 @@ def handle_style_generation(user_prefs):
     Interactive handler to generate AI styles and ask user to save them.
     Provides a 'next' option to generate another style or exit.
     """
-    from ui_utils import print_section, print_info, print_success, print_warning, get_validated_input
+    # ui_utils is imported at the top level now
     
     if not gemini_initialized:
         print_warning("Gemini model is not initialized. Please ensure GEMINI_API_KEY environment variable is set.")

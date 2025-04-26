@@ -30,6 +30,9 @@ from typing import Dict, List, Any, Optional, Union, Tuple
 from pathlib import Path
 from textwrap import wrap
 
+# Import utility functions
+from file_utils import get_generated_image_path
+
 # Try to import prompt_generator module
 try:
     from prompt_generator import (
@@ -37,7 +40,8 @@ try:
         generate_prompt_gemini, 
         generate_prompt_random, 
         enhance_custom_prompt,
-        enforce_prompt_format
+        enforce_prompt_format,
+        generate_random_style_mix # Import generate_random_style_mix
     )
     PROMPT_GENERATOR_AVAILABLE = True
 except ImportError:
@@ -61,26 +65,25 @@ except ImportError:
     logging.warning("Could not import ai_style_generator. AI style generation feature disabled.")
 
 # Local application imports
-from wallpaper_config import (
-    TEXT_LOGO_INSTRUCTIONS, LOGO_TEMPLATES, TEXT_TEMPLATES,
-    TEXT_LOGO_QUALITY_MODIFIERS, TEXT_LOGO_STYLE_MODIFIERS, TEXT_LOGO_BACKGROUND_MODIFIERS,
-    STYLE_CATEGORIES # Added STYLE_CATEGORIES
-)
 from ui_utils import (
     print_header, print_section, print_option, print_success, print_error,
     print_warning, print_info, print_prompt, get_validated_input, show_spinner,
     print_breadcrumb, print_colored
 )
+from file_utils import deep_update
 
 # Configuration imports
 try:
-    from prompt_config import (
+    from config import (
         nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
-        fantasy_tags, abstract_tags, mood_tags, available_genres
+        fantasy_tags, abstract_tags, mood_tags, available_genres,
+        STYLE_CATEGORIES, # STYLE_CATEGORIES is now in config
+        TEXT_LOGO_INSTRUCTIONS, LOGO_TEMPLATES, TEXT_TEMPLATES, # Text/Logo constants are now in config
+        TEXT_LOGO_QUALITY_MODIFIERS, TEXT_LOGO_STYLE_MODIFIERS, TEXT_LOGO_BACKGROUND_MODIFIERS
     )
 except ImportError:
-    # Fallback if prompt_config.py is not available
-    print_warning("Could not import prompt_config.py. Using empty tag lists.")
+    # Fallback if config.py is not available
+    print_warning("Could not import config.py. Using empty tag lists and default constants.")
     nature_tags = []
     space_tags = []
     sea_tags = []
@@ -90,6 +93,14 @@ except ImportError:
     abstract_tags = []
     mood_tags = []
     available_genres = []
+    STYLE_CATEGORIES = {}
+    TEXT_LOGO_INSTRUCTIONS = ""
+    LOGO_TEMPLATES = {}
+    TEXT_TEMPLATES = {}
+    TEXT_LOGO_QUALITY_MODIFIERS = {}
+    TEXT_LOGO_STYLE_MODIFIERS = {}
+    TEXT_LOGO_BACKGROUND_MODIFIERS = {}
+
 
 # Global variables
 user_prefs = None
@@ -151,7 +162,8 @@ class UserPreferences:
         # Default wallpaper settings
         self.wallpaper_settings = {
             "auto_set": False,
-            "skip_preview": False  # Default to showing preview
+            "skip_preview": False,  # Default to showing preview
+            "gui_preview_backend": "qt" # Default to Qt preview
         }
         
         # Default aspect ratio
@@ -213,6 +225,8 @@ class UserPreferences:
                     for key in self.wallpaper_settings.keys():
                         if key in wallpaper_data:
                             self.wallpaper_settings[key] = wallpaper_data[key]
+                if "gui_preview_backend" in data.get("wallpaper_settings", {}):
+                    self.wallpaper_settings["gui_preview_backend"] = data["wallpaper_settings"]["gui_preview_backend"]
                 if "history_file" in data:
                     self.history_file = data["history_file"]
                 if "last_preset" in data:
@@ -279,22 +293,25 @@ class UserPreferences:
 
 
     def add_style(self, style: str):
-        """Set preferred_styles to contain only the given style."""
+        """Add a style to preferred_styles, avoiding duplicates."""
         if style:
-            self.preferred_styles = [style]
-            self.save_preferences()
+            if style not in self.preferred_styles:
+                self.preferred_styles.append(style)
+                self.save_preferences()
 
     def add_genre(self, genre: str):
-        """Set preferred_genres to contain only the given genre."""
+        """Add a genre to preferred_genres, avoiding duplicates."""
         if genre:
-            self.preferred_genres = [genre]
-            self.save_preferences()
+            if genre not in self.preferred_genres:
+                self.preferred_genres.append(genre)
+                self.save_preferences()
 
     def add_mood(self, mood: str):
-        """Set preferred_moods to contain only the given mood."""
+        """Add a mood to preferred_moods, avoiding duplicates."""
         if mood:
-            self.preferred_moods = [mood]
-            self.save_preferences()
+            if mood not in self.preferred_moods:
+                self.preferred_moods.append(mood)
+                self.save_preferences()
 
 # Interface functions
 def initialize_settings() -> 'UserPreferences':
@@ -392,29 +409,6 @@ def save_last_genre(genre: str, filename: str = "last_genre.json") -> None:
             json.dump({"last_genre": genre}, f, indent=2)
     except Exception as e:
         logging.error(f"Error saving last genre to {filepath}: {e}")
-
-def generate_random_style_mix() -> str:
-    """
-    Generate a random mix of artistic styles.
-
-    This function combines styles from different categories to create unique
-    style combinations for image generation prompts.
-
-    Returns:
-        str: A string containing a combination of artistic styles, joined with " + "
-    """
-    # Use the imported style categories
-    style_categories = STYLE_CATEGORIES
-
-    # Select a random category
-    category = random.choice(list(style_categories.keys()))
-
-    # Select 2-3 compatible styles from the same category
-    available_styles = style_categories[category]
-    num_styles = min(random.randint(2, 3), len(available_styles))
-    selected_styles = random.sample(available_styles, num_styles)
-
-    return " + ".join(selected_styles)
 
 # Settings management functions will be implemented here
 def manage_preferences():
@@ -623,15 +617,7 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
                             setattr(user_prefs, setting_type, new_settings)
                         else:
                             # Merge preset into current (which already has defaults)
-                            def deep_update(d, u):
-                                for k, v in u.items():
-                                    if isinstance(v, dict):
-                                        # Ensure the key exists in d before recursing
-                                        # Use get(k, {}) to handle potentially missing keys in d during recursion
-                                        d[k] = deep_update(d.get(k, {}), v)
-                                    else:
-                                        d[k] = v
-                                return d
+                            # Use deep_update from file_utils
                             deep_update(current_settings_dict, preset_settings_dict)
                     else: # Preset value is not a dict, log warning
                          logging.warning(f"Preset value for {setting_type} is not a dictionary. Skipping.")
@@ -1076,43 +1062,6 @@ def import_settings() -> bool:
         print_error(f"Error during import: {e}")
         return False
 
-def get_generated_image_path(prompt: str) -> str:
-    """
-    Generate a file path for an image based on its prompt.
-    
-    This function creates a sanitized filename from the image prompt and
-    generates a unique hash to ensure filenames are both descriptive and unique.
-    
-    Args:
-        prompt (str): The prompt used to generate the image
-    
-    Returns:
-        str: The file path where the generated image should be saved
-    """
-    # Create a simple filename from the prompt
-    # Remove special characters and replace spaces with underscores
-    sanitized = re.sub(r'[^\w\s-]', '', prompt.lower())
-    sanitized = re.sub(r'[-\s]+', '_', sanitized)
-    
-    # Truncate to the maximum length (30 characters)
-    if len(sanitized) > 30:
-        # Try to cut at a word boundary
-        sanitized = sanitized[:30].rsplit('_', 1)[0]
-    
-    # Add a unique identifier (first 8 chars of the hash)
-    hash_object = hashlib.sha256(prompt.encode())
-    short_hash = hash_object.hexdigest()[:8]
-    
-    filename = f"{sanitized}_{short_hash}.png"
-    
-    # Ensure the genimage directory exists with absolute path
-    genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
-    try:
-        os.makedirs(genimage_dir, exist_ok=True)
-    except Exception as e:
-        logging.error(f"Error creating genimage directory: {e}")
-    
-    return os.path.join(genimage_dir, filename)
 
 def update_history_with_filenames(silent: bool = False) -> None:
     """

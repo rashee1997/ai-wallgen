@@ -1,6 +1,6 @@
-"""Configuration file for wallpaper generator containing tags and prompt instructions."""
+"""Consolidated configuration file for AI Wallpaper Generator."""
 
-# Define tag lists for prompt generation
+# Define tag lists for prompt generation (from prompt_config.py)
 nature_tags = [
     "landscape", "nature", "mountains", "forest", "trees", "waterfall", "ocean",
     "sea", "lake", "river", "sky", "clouds", "sunset", "sunrise", "stars",
@@ -81,7 +81,7 @@ mood_tags = [
     "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"
 ]
 
-# Style to tag category mapping
+# Style to tag category mapping (from prompt_config.py)
 style_to_tags = {
     "nature": nature_tags,
     "landscape": nature_tags,
@@ -100,19 +100,34 @@ style_to_tags = {
     "surreal": fantasy_tags
 }
 
-# Style categories for different artistic approaches
-style_categories = {
-    "photographic": ["cinematic", "documentary", "film_grain", "polaroid",
-                  "analog_film", "lomography", "long_exposure"],
-    "artistic": ["abstract", "impressionism", "expressionism", "cubism",
-                 "minimalism", "watercolor", "oil_painting", "acrylic",
-                 "stained_glass", "steampunk", "surrealism", "vaporwave"],
-    "illustration": ["anime", "cartoon", "comic_book", "divisionism", "graffiti",
-                   "ink_drawing", "line_art", "manga", "paper_cut", "pixel_art",
-                   "pointillism", "pop_art", "ukiyo_e"]
+# Style Categories for generation and UI (from prompt_config.py)
+STYLE_CATEGORIES = {
+    "Artistic & Painterly": [
+        "oil_painting", "watercolor", "pastel", "impressionism", "expressionism",
+        "pointillism", "divisionism", "art_nouveau", "art_deco", "cubism",
+        "constructivism", "futurism", "surrealism", "pop_art", "ukiyo_e", "woodcut"
+    ],
+    "Drawing & Sketching": [
+        "pencil_sketch", "charcoal", "ink_drawing", "sketch", "line_art"
+    ],
+    "Digital & Modern": [
+        "digital_art", "minimalist", "abstract", "geometric", "low_poly",
+        "pixel_art", "glitch_art", "vaporwave", "retrowave"
+    ],
+    "Photographic & Realistic": [
+        "photograph", "cinematic", "hyperrealism", "realism", "double_exposure",
+        "landscape" # Landscape can be photographic
+    ],
+    "Illustrative & Cartoon": [
+        "cartoon", "comic_book", "manga", "anime", "graffiti", "paper_cut",
+        "stained_glass"
+    ],
+    "Themed & Fantasy": [
+        "fantasy", "sci_fi", "cyberpunk", "steampunk", "gothic", "isometric"
+    ]
 }
 
-# Available genres for prompt generation
+# Available genres for prompt generation (from prompt_config.py)
 available_genres = [
     "Nature & Landscapes", "Mountains & Peaks", "Forests & Woods", "Desert & Dunes",
     "Waterfalls & Rivers", "Fields & Meadows", "Autumn Scenes", "Winter Wonderlands",
@@ -134,7 +149,7 @@ available_genres = [
     "Futuristic Architecture", "Retro-Futurism", "Digital Dreamscapes", "Surreal Landscapes"
 ]
 
-# Prompt generation instructions
+# Prompt generation instructions (from prompt_config.py)
 PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model. Your task is to craft clear, focused, and highly detailed prompts that maximize Imagen 3's capabilities in generating both photorealistic and artistic images.
 
 To achieve the best results, your prompts should be specific, detailed, and carefully consider the following elements:
@@ -145,7 +160,7 @@ To achieve the best results, your prompts should be specific, detailed, and care
    - Focus on style-specific elements and characteristics
    - Use appropriate style-specific terminology
 
-2. **Technical Specifications:**
+2. **Camera & Technical Settings:**
    - Resolution: {resolution}
    - Aspect ratio: {aspect_ratio}
    - Color scheme: {color_scheme}
@@ -196,7 +211,7 @@ Generate a single, detailed sentence that incorporates:
 
 The final prompt should read like a professional artist's or photographer's description, emphasizing the chosen style while maintaining clarity and focus."""
 
-# Custom prompt enhancement instructions
+# Custom prompt enhancement instructions (from prompt_config.py)
 CUSTOM_PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen 3 image generation model. Your task is to transform the given custom prompt into a highly detailed masterpiece that incorporates the following preferences:
 
 1. **Style & Artistic Direction:**
@@ -225,4 +240,4 @@ CUSTOM_PROMPT_INSTRUCTIONS = """You are an expert prompt engineer for the Imagen
    - Prevent common issues
    - Maintain quality
 
-Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with these preferences. Focus on creating a vivid and immersive experience that matches the desired style while maintaining clarity and focus.""" 
+Your enhanced prompt should be a single, descriptive sentence that combines the original prompt with these preferences. Focus on creating a vivid and immersive experience that matches the desired style while maintaining clarity and focus."""

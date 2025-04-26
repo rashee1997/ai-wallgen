@@ -10,8 +10,6 @@ import re
 import random
 import logging
 import os
-import signal
-import sys
 from typing import Dict, List, Optional, Any, Union
 
 # Third-party imports
@@ -20,11 +18,12 @@ try:
 except ImportError:
     logging.warning("google.generativeai module not found. Some features will be disabled.")
 
-# Import prompt configuration
-from prompt_config import (
+# Import configuration
+from config import (
     nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
     fantasy_tags, abstract_tags, mood_tags, available_genres,
-    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS
+    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS,
+    STYLE_CATEGORIES # STYLE_CATEGORIES is now in config
 )
 
 # Import no-preferences prompt instructions

@@ -2,7 +2,7 @@
 """AI Wallpaper Generator - Create stunning AI-generated desktop wallpapers
 
 This script generates high-quality desktop wallpapers using Google's Imagen 3 model
-via the Gemini API. It offers various customization options and prompt engineering 
+via the Gemini API. It offers various customization options and prompt engineering
 techniques to create visually appealing wallpapers tailored to your preferences.
 """
 # Standard library imports
@@ -17,17 +17,17 @@ import sys
 import time
 import threading
 import re
-import glob
-import signal # Ensure signal is imported if not already (needed for graceful_exit)
+# Removed duplicate import of signal; signal handling is managed by graceful_exit.py
 
 # Import graceful exit handler early to register the signal handler
 import graceful_exit
 import hashlib
 import html
 import shutil
-import signal
-import atexit
 from urllib.parse import quote
+
+# Import utility functions
+from file_utils import get_generated_image_path
 from datetime import datetime
 from typing import Optional, Dict, List, Any, Tuple
 import argparse
@@ -35,20 +35,20 @@ import argparse
 # Third-party imports
 import bleach
 import ctypes
-import tkinter as tk
 import google.generativeai as genai
 
 # Local application imports
 from wallpaper_settings import (
-    export_settings, import_settings, update_history_with_filenames, 
+    export_settings, import_settings, update_history_with_filenames,
     initialize_settings, manage_preferences, manage_presets, load_preset, save_preset, delete_preset,
     UserPreferences, load_last_genre, save_last_genre, manage_genres, manage_styles,
     manage_moods, manage_wallpaper_settings, manage_imagen_settings, configure_advanced_options
 )
-from prompt_config import (
+from config import (
     nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
     fantasy_tags, abstract_tags, mood_tags, available_genres,
-    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS
+    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS,
+    style_to_tags # Added style_to_tags import
 )
 from ui_utils import (
     print_header, print_section, print_option, print_success, print_error,
@@ -60,7 +60,6 @@ from prompt_generator import (
     enforce_prompt_format, select_random_tags, generate_random_style_mix,
     set_prompt_preferences, use_user_preferences, SimplePrefs
 )
-from qt_preview import preview_image_gui
 
 # Configure logging
 logging.basicConfig(
@@ -75,19 +74,19 @@ logging.basicConfig(
 def check_dependencies():
     """Check if all required dependencies are installed."""
     missing_deps = []
-    
+
     # Check for PIL/Pillow
     try:
         import PIL
     except ImportError:
         missing_deps.append("pillow")
-    
+
     # Check for bleach
     try:
         import bleach
     except ImportError:
         missing_deps.append("bleach")
-    
+
     if missing_deps:
         print_warning("\nMissing optional dependencies:")
         for dep in missing_deps:
@@ -117,6 +116,22 @@ user_prefs = initialize_settings()
 # Set default Gemini model
 gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
+def _extract_imagen_settings(user_prefs):
+    """Extract relevant Imagen settings from user preferences."""
+    settings = user_prefs.imagen_settings
+    return {
+        "camera_settings": settings.get("camera_settings", {}),
+        "lighting_settings": settings.get("lighting_settings", {}),
+        "composition_settings": settings.get("composition_settings", {}),
+        "environment_settings": settings.get("environment_settings", {}),
+        "style_settings": settings.get("style_settings", {}),
+        "detail_settings": settings.get("detail_settings", {}),
+        "color_settings": settings.get("color_settings", {}),
+        "quality_settings": settings.get("quality_settings", {}),
+        "negative_prompt": settings.get("negative_prompt", ""),
+        "aspect_ratio": user_prefs.aspect_ratio # Aspect ratio is directly on user_prefs
+    }
+
 def generate_prompt_gemini(tags, user_prefs):
     """Generate a detailed prompt using Gemini and user preferences."""
     try:
@@ -124,77 +139,69 @@ def generate_prompt_gemini(tags, user_prefs):
         # Check if we have this prompt cached
         if cache_key in prompt_cache:
             return prompt_cache[cache_key]
-            
-        # Get user preferences
+
+        # Extract settings using the helper function
+        settings_data = _extract_imagen_settings(user_prefs)
+        camera_settings = settings_data["camera_settings"]
+        lighting_settings = settings_data["lighting_settings"]
+        composition_settings = settings_data["composition_settings"]
+        environment_settings = settings_data["environment_settings"]
+        style_settings = settings_data["style_settings"]
+        detail_settings = settings_data["detail_settings"]
+        color_settings = settings_data["color_settings"]
+        quality_settings = settings_data["quality_settings"]
+        negative_prompt = settings_data["negative_prompt"]
+        aspect_ratio = settings_data["aspect_ratio"]
+
+        # Get user preferences (style and mood are still accessed directly for clarity)
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
         mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else None
-        
-        # Get all settings from imagen_settings
-        settings = user_prefs.imagen_settings
-        
-        # Extract camera settings for the prompt
-        camera_settings = settings.get("camera_settings", {})
+
+        # Extract specific settings for the prompt
         camera_model = camera_settings.get("camera_model")
         lens_type = camera_settings.get("lens_type")
         aperture = camera_settings.get("aperture")
         special_lens = camera_settings.get("special_lens")
-        depth_of_field = camera_settings.get("depth_of_field")
-        
-        # Extract lighting settings for the prompt
-        lighting_settings = settings.get("lighting_settings", {})
+        # FIX: Access depth_of_field correctly from composition_settings
+        depth_of_field = composition_settings.get("depth_of_field")
+
         time_of_day = lighting_settings.get("time_of_day")
         lighting_type = lighting_settings.get("lighting_type")
         light_source = lighting_settings.get("light_source")
         light_quality = lighting_settings.get("light_quality")
         artificial_sources = lighting_settings.get("artificial_sources", [])
-        
-        # Extract composition settings for the prompt
-        composition_settings = settings.get("composition_settings", {})
+
         technique = composition_settings.get("technique")
         camera_angle = composition_settings.get("camera_angle")
         visual_flow = composition_settings.get("visual_flow")
         depth_layering = composition_settings.get("depth_layering")
-        
-        # Extract environment settings for the prompt
-        environment_settings = settings.get("environment_settings", {})
+
         weather = environment_settings.get("weather")
         season = environment_settings.get("season")
         location_type = environment_settings.get("location_type")
         atmospheric_effects = environment_settings.get("atmospheric_effects", [])
-        
-        # Extract style settings for the prompt
-        style_settings = settings.get("style_settings", {})
+
         art_movement = style_settings.get("art_movement")
         post_processing = style_settings.get("post_processing", [])
-        
-        # Extract detail settings for the prompt
-        detail_settings = settings.get("detail_settings", {})
+
         detail_level = detail_settings.get("detail_level")
         texture_quality = detail_settings.get("texture_quality")
         special_effects = detail_settings.get("special_effects", [])
-        
-        # Extract color settings for the prompt
-        color_settings = settings.get("color_settings", {})
+
         color_scheme = color_settings.get("color_scheme")
         palette_type = color_settings.get("palette_type")
         color_temperature = color_settings.get("color_temperature")
-        
-        # Extract quality settings for the prompt
-        quality_settings = settings.get("quality_settings", {})
+
         resolution = quality_settings.get("resolution", "1920x1080")
         rendering_quality = quality_settings.get("rendering_quality")
-        aspect_ratio = user_prefs.aspect_ratio
-        
+
         # Format tags for prompt
         formatted_tags = ", ".join(tags)
-        
-        # Get negative prompt if available
-        negative_prompt = settings.get("negative_prompt", "")
-        
+
         # If no negative prompt is specified, use default negative prompt
         if not negative_prompt:
             negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
-        
+
         # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         instruction_context = PROMPT_INSTRUCTIONS.format(
             resolution=resolution if resolution else "Not specified",
@@ -204,7 +211,7 @@ def generate_prompt_gemini(tags, user_prefs):
             composition=technique if technique else "Not specified",
             depth_of_field=depth_of_field if depth_of_field else "Not specified"
         )
-        
+
         # Create a more comprehensive technical context with all settings
         technical_context = f"""
 Create a detailed description for a wallpaper image featuring: {formatted_tags}
@@ -280,23 +287,23 @@ The following elements must be avoided in the image: {negative_prompt}
             logging.warning("No Gemini API key configured")
             # Return a formatted version of the simple tags
             return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
-        
+
         try:
             genai.configure(api_key=GEMINI_API_KEY)
             model = genai.GenerativeModel(gemini_model_name)
             response = model.generate_content(instruction_context + "\n\n" + technical_context)
-            
+
             if response.text:
                 full_response = response.text.strip()
-                
+
                 # Parse the response to separate prompt and negative prompt
                 prompt_parts = full_response.split("Avoid:")
-                
+
                 if len(prompt_parts) > 1:
                     # If successfully parsed into two parts
                     main_prompt = prompt_parts[0].strip()
                     negative_part = prompt_parts[1].strip()
-                    
+
                     # Combine them with "Avoid:" format
                     final_prompt = f"{main_prompt} Avoid: {negative_part}"
                 else:
@@ -304,10 +311,10 @@ The following elements must be avoided in the image: {negative_prompt}
                     final_prompt = full_response
                     if "avoid" not in final_prompt.lower():
                         final_prompt += f" Avoid: {negative_prompt}"
-                
+
                 # Ensure proper formatting with resolution and aspect ratio
                 final_prompt = enforce_prompt_format(final_prompt, resolution, aspect_ratio, negative_prompt)
-                
+
                 prompt_cache[cache_key] = final_prompt
                 return final_prompt
             else:
@@ -327,47 +334,39 @@ The following elements must be avoided in the image: {negative_prompt}
 def generate_prompt_random(tags, user_prefs):
     """Generate a random prompt with selected tags and user preferences."""
     try:
-        # User preferences
+        # Extract settings using the helper function
+        settings_data = _extract_imagen_settings(user_prefs)
+        camera_settings = settings_data["camera_settings"]
+        lighting_settings = settings_data["lighting_settings"]
+        quality_settings = settings_data["quality_settings"]
+        style_settings = settings_data["style_settings"]
+        color_settings = settings_data["color_settings"]
+
+        # User preferences (style and mood are still accessed directly for clarity)
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
         mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else None
-        
-        # Get all settings from imagen_settings
-        settings = user_prefs.imagen_settings
-        
-        # Extract camera settings
-        camera_settings = settings.get("camera_settings", {})
+
+        # Extract specific settings for enhancers
         camera_model = camera_settings.get("camera_model")
         lens_type = camera_settings.get("lens_type")
-        
-        # Extract lighting settings
-        lighting_settings = settings.get("lighting_settings", {})
         time_of_day = lighting_settings.get("time_of_day")
         lighting_type = lighting_settings.get("lighting_type")
-        
-        # Extract quality settings
-        quality_settings = settings.get("quality_settings", {})
         detail_level = quality_settings.get("detail_level")
         rendering_quality = quality_settings.get("rendering_quality")
-        
-        # Extract style settings
-        style_settings = settings.get("style_settings", {})
         art_movement = style_settings.get("art_movement")
-        
-        # Extract color settings
-        color_settings = settings.get("color_settings", {})
         color_scheme = color_settings.get("color_scheme")
-        
+
         # Build the prompt
         prompt_parts = []
         for tag in tags:
             # Try to enhance tag selection based on user preferences
             prompt_parts.append(tag)
-            
+
         prompt = ", ".join(prompt_parts)
-        
+
         # Add image quality enhancers
         quality_enhancers = []
-        
+
         if style:
             quality_enhancers.append(style)
         if mood:
@@ -388,15 +387,17 @@ def generate_prompt_random(tags, user_prefs):
             quality_enhancers.append(time_of_day.replace('_', ' '))
         if lighting_type:
             quality_enhancers.append(lighting_type.replace('_', ' '))
-        
+
         # Add quality enhancers if available
         if quality_enhancers:
             prompt += ", " + ", ".join(quality_enhancers)
-        
+
         return prompt
     except Exception as e:
         print(f"Error in generate_prompt_random: {e}")
         return ", ".join(tags)  # Fallback to basic tags if error occurs
+
+
 
 def mask_sensitive_data_in_url(url):
     """Masks sensitive data in URLs before logging and decodes HTML entities."""
@@ -475,8 +476,8 @@ def extract_subject_from_prompt(prompt):
         # Get the response
         response = model.generate_content(
             contents=analysis_prompt
-        )
-        
+        ) # Added closing parenthesis
+
         if response and hasattr(response, 'candidates') and response.candidates:
             text = response.candidates[0].content.parts[0].text
             subject = text.strip()
@@ -545,91 +546,7 @@ def list_sorted_genimages(directory):
         logging.error(f"Error listing images in {directory}: {e}")
         return []
 
-def generate_prompt(custom_prompt=None):
-    """Handle prompt generation for wallpaper creation."""
-    try:
-        # If we received a custom prompt directly, process and return it
-        if custom_prompt:
-            try:
-                # Enhance the custom prompt with current settings
-                enhanced_prompt = enhance_custom_prompt(custom_prompt)
-                if enhanced_prompt:
-                    print_prompt(enhanced_prompt)
-                    return enhanced_prompt
-                else:
-                    print_warning("Failed to enhance custom prompt, using original")
-                    return custom_prompt
-            except Exception as e:
-                logging.error(f"Error enhancing custom prompt: {e}")
-                print_warning("Failed to enhance custom prompt, using original")
-                return custom_prompt
-        
-        print_section("Prompt Generation")
-        print_info("Choose prompt generation method:")
-        print_option("1", "AI-Powered Prompt")
-        print_option("2", "Random Tag Combination")
-        print_option("3", "Custom Prompt Input")
-        print_option("4", "Return to main menu")
-        
-        choice = get_validated_input("Select option (1-4)", ["1", "2", "3", "4"])
-        
-        if choice == "4":
-            return None
-            
-        if choice == "1":
-            # Get user preferences for prompt generation
-            tags = []
-            if user_prefs.preferred_genres:
-                tags.extend(user_prefs.preferred_genres)
-            
-            # Generate prompt using Gemini
-            prompt = generate_prompt_gemini(tags)
-            if prompt:
-                print_prompt(prompt)
-                return prompt
-                
-        elif choice == "2":
-            # Get user preferences for prompt generation
-            tags = []
-            if user_prefs.preferred_genres:
-                tags.extend(user_prefs.preferred_genres)
-            
-            # Generate prompt using random tags
-            prompt = generate_prompt_random(tags)
-            if prompt:
-                print_prompt(prompt)
-                return prompt
-                
-        elif choice == "3":
-            custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
-            if custom_prompt.lower() == 'b':
-                return None
-            
-            if custom_prompt:
-                print_info("Processing custom prompt...")
-                try:
-                    # Enhance the custom prompt with current settings
-                    enhanced_prompt = enhance_custom_prompt(custom_prompt)
-                    if enhanced_prompt:
-                        print_prompt(enhanced_prompt)
-                        return enhanced_prompt
-                    else:
-                        print_warning("Failed to enhance custom prompt, using original")
-                        return custom_prompt
-                except Exception as e:
-                    logging.error(f"Error enhancing custom prompt: {e}")
-                    print_warning("Failed to enhance custom prompt, using original")
-                    return custom_prompt
-            else:
-                print_warning("Empty prompt provided")
-                return None
-        
-        return None
-        
-    except Exception as e:
-        logging.error(f"Error in generate_prompt: {e}")
-        print_error("An unexpected error occurred while generating the prompt")
-        return None
+
 
 def detect_linux_desktop_environment():
     """Detect the Linux desktop environment."""
@@ -1041,7 +958,7 @@ def generate_random_style_mix():
     style_settings = settings.get("style_settings", {})
     
     # Import style categories from configuration
-    from prompt_config import style_categories as default_style_categories
+    from config import style_categories as default_style_categories
     
     # Use custom categories if available, otherwise use defaults
     style_categories = style_settings.get("style_categories", default_style_categories)
@@ -1153,8 +1070,8 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         
         # If specific style was provided, add related tags
         if style:
-            from prompt_config import style_to_tags
-            if style in style_to_tags:
+            # from prompt_config import style_to_tags # Removed local import
+            if style in style_to_tags: # Use the top-level imported style_to_tags
                 available_tags = style_to_tags[style]
                 user_tags.extend(random.sample(available_tags, min(2, len(available_tags))))
                 print_info(f"Adding tags for your selected style: {style}")
@@ -1464,43 +1381,92 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             set_wallpaper_confirmed = True
         else:
             print_info("Preview your new wallpaper before setting it...")
+            print_info("Preview your new wallpaper before setting it...")
             logging.info(f"Previewing wallpaper with path: {cache_path}")
             
-            try:
-                set_wallpaper_confirmed = preview_image_gui(cache_path, set_wallpaper)
-                if set_wallpaper_confirmed:
-                    # The GUI has already set the wallpaper, so we can return
-                    print_success("Wallpaper successfully applied!")
-                    print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
-                    logging.info(f"Wallpaper successfully set to: {cache_path}")
-                    return True
-            except Exception as e:
-                print_error(f"GUI preview failed: {e}")
-                print_info("Please check that your system supports GUI preview")
-                set_wallpaper_confirmed = False
+            gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
+            preview_func = None
             
+            if gui_backend == 'qt':
+                try:
+                    from qt_preview import preview_image_gui as preview_func
+                except ImportError:
+                    print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+                    print_info("Please install PySide6: pip install PySide6")
+                    print_info("Falling back to no preview.")
+                    preview_func = None
+            elif gui_backend == 'tkinter':
+                 try:
+                     from tkinter_preview import preview_image_gui as preview_func
+                 except ImportError:
+                     print_warning("Tkinter preview backend selected but Tkinter not available.")
+                     print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+                     print_info("Falling back to no preview.")
+                     preview_func = None
+            else:
+                print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+                preview_func = None
+
+            set_wallpaper_confirmed = False
+            if preview_func:
+                try:
+                    set_wallpaper_confirmed = preview_func(cache_path, set_wallpaper)
+                    if set_wallpaper_confirmed:
+                        # The GUI has already set the wallpaper, so we can return
+                        print_success("Wallpaper successfully applied!")
+                        print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+                        logging.info(f"Wallpaper successfully set to: {cache_path}")
+                        return True
+                except Exception as e:
+                    print_error(f"GUI preview failed: {e}")
+                    print_info("Please check that your system supports GUI preview")
+                    set_wallpaper_confirmed = False
+            else:
+                print_info("GUI preview is not available or failed to load. Skipping preview.")
+                set_wallpaper_confirmed = False # Ensure this is False if preview isn't used
+
             if set_wallpaper_confirmed:
                 logging.info("User confirmed to set the wallpaper after preview")
             else:
-                logging.info("User decided not to set the wallpaper after preview")
+                logging.info("User decided not to set the wallpaper after preview, or preview was skipped/failed.")
         
-        if set_wallpaper_confirmed:
-            result = set_wallpaper(cache_path)
-            if result:
-                print_success("Wallpaper successfully applied!")
-                print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
-                logging.info(f"Wallpaper successfully set to: {cache_path}")
-                return True
-            else:
-                print_warning("Wallpaper may not have been set correctly.")
-                print_info("Please check your desktop settings manually.")
-                return False
+        # If preview was skipped, failed, or user chose not to set from preview
+        if not skip_preview and not set_wallpaper_confirmed:
+             # If preview was attempted but user didn't confirm, or it failed
+             print_info("Wallpaper not set. You can find the generated image at:")
+             print_info(cache_path)
+             return True # Still return True since image generation was successful
+        elif set_wallpaper_confirmed:
+             # If preview was skipped but set_wallpaper_confirmed is True (e.g. via CLI arg)
+             result = set_wallpaper(cache_path)
+             if result:
+                 print_success("Wallpaper successfully applied!")
+                 print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+                 logging.info(f"Wallpaper successfully set to: {cache_path}")
+                 return True
+             else:
+                 print_warning("Wallpaper may not have been set correctly.")
+                 print_info("Please check your desktop settings manually.")
+                 return False
+        elif skip_preview:
+             # If preview was explicitly skipped via setting/CLI arg
+             result = set_wallpaper(cache_path)
+             if result:
+                 print_success("Wallpaper successfully applied!")
+                 print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+                 logging.info(f"Wallpaper successfully set to: {cache_path}")
+                 return True
+             else:
+                 print_warning("Wallpaper may not have been set correctly.")
+                 print_info("Please check your desktop settings manually.")
+                 return False
         else:
-            # User decided not to set the wallpaper
-            print_info("Wallpaper not set. You can find the generated image at:")
-            print_info(cache_path)
-            return True  # Still return True since image generation was successful
-            
+             # Should not reach here if logic is correct, but as a fallback
+             print_info("Wallpaper not set. You can find the generated image at:")
+             print_info(cache_path)
+             return True # Still return True since image generation was successful
+
+
     except subprocess.CalledProcessError as e:
         print_error("Failed to set wallpaper due to a system command error")
         print_info(f"Command: {e.cmd}")
@@ -1598,7 +1564,32 @@ def main():
     user_prefs.wallpaper_settings['skip_preview'] = user_prefs.skip_preview
     
     # Import preview functionality
-    from qt_preview import preview_image_gui
+    preview_func = None
+    gui_backend = None
+    try:
+        gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
+    except Exception:
+        gui_backend = 'qt'
+    
+    if gui_backend == 'qt':
+        try:
+            from qt_preview import preview_image_gui as preview_func
+        except ImportError:
+            print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+            print_info("Please install PySide6: pip install PySide6")
+            print_info("Falling back to no preview.")
+            preview_func = None
+    elif gui_backend == 'tkinter':
+        try:
+            from tkinter_preview import preview_image_gui as preview_func
+        except ImportError:
+            print_warning("Tkinter preview backend selected but Tkinter not available.")
+            print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+            print_info("Falling back to no preview.")
+            preview_func = None
+    else:
+        print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+        preview_func = None
     
     # List and preview images if requested
     if args.list_images:
@@ -1634,7 +1625,10 @@ def main():
             print_info(f"Previewing image: {image_files[int(choice) - 1]}")
             
             # Use GUI preview
-            result = preview_image_gui(image_path, set_wallpaper)
+            if preview_func:
+                result = preview_func(image_path, set_wallpaper)
+            else:
+                result = False
             
             # If user chooses to set as wallpaper, do so
             if result:
@@ -1671,7 +1665,10 @@ def main():
             print_info(f"Previewing latest image: {latest_image}")
             
             # Preview image with GUI
-            result = preview_image_gui(image_path, set_wallpaper)
+            if preview_func:
+                result = preview_func(image_path, set_wallpaper)
+            else:
+                result = False
             if result:
                 print_success("Wallpaper set successfully!")
             
@@ -1693,7 +1690,10 @@ def main():
             return
         
         # Preview image with GUI
-        result = preview_image_gui(image_path, set_wallpaper)
+        if preview_func:
+            result = preview_func(image_path, set_wallpaper)
+        else:
+            result = False
         if result:
             print_success("Wallpaper set successfully!")
         return
@@ -1963,9 +1963,39 @@ def preview_recent_images():
             ).strftime("%Y-%m-%d %H:%M:%S")
             print(f"{i}: {image_file} - Generated: {creation_time}")
 
-        # Ask user which image to preview
-        while True:
+        # Import the appropriate preview function based on user preferences
+        preview_func = None
+        gui_backend = None
+        try:
+            from wallpaper_settings import initialize_settings
+            user_prefs = initialize_settings()
+            gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
+        except Exception:
+            gui_backend = 'qt'
+
+        if gui_backend == 'qt':
             try:
+                from qt_preview import preview_image_gui as preview_func
+            except ImportError:
+                print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+                print_info("Please install PySide6: pip install PySide6")
+                print_info("Falling back to no preview.")
+                preview_func = None
+        elif gui_backend == 'tkinter':
+            try:
+                from tkinter_preview import preview_image_gui as preview_func
+            except ImportError:
+                print_warning("Tkinter preview backend selected but Tkinter not available.")
+                print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+                print_info("Falling back to no preview.")
+                preview_func = None
+        else:
+            print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+            preview_func = None
+
+        # Ask user which image to preview
+        try: # Moved try block to wrap the while loop
+            while True:
                 choice = get_validated_input(
                     f"Enter image number to preview (1-{max_display}) or 'q' to quit",
                     [str(i) for i in range(1, max_display + 1)] + ['q']
@@ -1979,15 +2009,18 @@ def preview_recent_images():
                 print_info(f"Previewing image: {display_files[int(choice) - 1]}")
 
                 # Preview image with GUI
-                result = preview_image_gui(image_path, set_wallpaper)
+                if preview_func:
+                    result = preview_func(image_path, set_wallpaper)
+                else:
+                    result = False
                 if result:
                     print_success("Wallpaper set successfully!")
 
                 # After viewing one image, we allow picking another or returning to menu
                 print_section("Recent Generated Images")
 
-            except (ValueError, IndexError) as e:
-                print_error(f"Invalid selection: {e}")
+        except (ValueError, IndexError) as e:
+            print_error(f"Invalid selection: {e}")
 
     except (FileNotFoundError, OSError) as e:
         print_error(f"Error accessing images directory: {e}")
