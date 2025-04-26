@@ -427,13 +427,14 @@ def manage_preferences():
     """
     menu_options: List[Tuple[str, str]] = [
         ("1", "Wallpaper Settings"),
-        ("2", "Advanced Options"),
         ("3", "Reset All Settings to None")
     ]
 
     while True:
         print_section("Manage Preferences")
-        choice: str = get_menu_choice(f"Select option (1-{len(menu_options)}, b)", [key for key, _ in menu_options] + ["b"])
+        print_menu_options(menu_options) # Display the options
+        # Update prompt and valid choices after removing 'Advanced Options'
+        choice: str = get_menu_choice("Select option (1, 3, b)", ["1", "3", "b"])
         if choice == "_INTERRUPTED_":
             return # Exit preference management if interrupted
 
@@ -442,7 +443,6 @@ def manage_preferences():
 
         handlers = {
             "1": manage_wallpaper_settings,
-            "2": configure_advanced_options,
             "3": lambda: confirm_and_reset()
         }
 
@@ -1369,9 +1369,11 @@ def manage_styles():
             print_option("a", "Add style (type name)")
             print_option("r", "Remove style (type name)")
             print_option("c", "Clear all")
+            print_option("am", "Art Movement")
+            print_option("pp", "Post-Processing Effects")
             print_option("b", "Back")
 
-            valid_choices = ["a", "r", "c", "b", "rand", "ai", "custom"]  # Use string options
+            valid_choices = ["a", "r", "c", "b", "rand", "ai", "custom", "am", "pp"]  # Added am and pp
             style_choice = get_validated_input(
                 "Select an option (or type a style name to add/remove)",
                 valid_choices,
@@ -1482,6 +1484,105 @@ def manage_styles():
                         print_warning(
                             f"'{custom_style}' is already in your preferred styles"
                         )
+            elif style_choice == "am":
+                # Art Movement submenu
+                while True:
+                    print_info("Select art movement:")
+                    print_option("0", "None (No specific art movement)")
+                    print_option("1", "Abstract Expressionism")
+                    print_option("2", "Impressionism")
+                    print_option("3", "Surrealism")
+                    print_option("4", "Cubism")
+                    print_option("5", "Pop Art")
+                    print_option("6", "Custom Movement")
+                    print_option("b", "Back")
+
+                    movement_choice = get_validated_input("Select art movement (0-6, b)", ["0", "1", "2", "3", "4", "5", "6", "b"])
+                    if movement_choice == "b":
+                        break  # Return to Style Settings menu
+
+                    if movement_choice == "0":
+                        user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = None
+                        print_success("Art movement set to None")
+                        user_prefs.save_preferences()
+                        continue
+
+                    if movement_choice == "6":
+                        custom_movement = input("Enter custom art movement: ").strip()
+                        if custom_movement:
+                            user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = custom_movement
+                            print_success(f"Custom art movement set to: {custom_movement}")
+                            user_prefs.save_preferences()
+                        continue
+
+                    movements = {
+                        "1": "Abstract Expressionism",
+                        "2": "Impressionism",
+                        "3": "Surrealism",
+                        "4": "Cubism",
+                        "5": "Pop Art"
+                    }
+
+                    user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = movements[movement_choice]
+                    print_success(f"Art movement set to {movements[movement_choice]}")
+                    user_prefs.save_preferences()
+            elif style_choice == "pp":
+                # Post-Processing Effects submenu
+                while True:
+                    print_info("Select post-processing effects:")
+                    print_option("1", "Bloom Effect")
+                    print_option("2", "Vignette Effect")
+                    print_option("3", "Color Grading")
+                    print_option("4", "Depth of Field")
+                    print_option("5", "Motion Blur")
+                    print_option("6", "Film Grain")
+                    print_option("7", "Lens Flare")
+                    print_option("8", "Chromatic Aberration")
+                    print_option("9", "Sharpening")
+                    print_option("10", "Tone Mapping")
+                    print_option("11", "HDR Effect")
+                    print_option("12", "Light Leaks")
+                    print_option("13", "No Post-Processing")
+                    print_option("14", "Custom Effects")
+                    print_option("b", "Back")
+
+                    effects_choice = get_validated_input("Select post-processing effects (1-14, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "b"])
+                    if effects_choice == "b":
+                        break  # Return to Style Settings menu
+
+                    if effects_choice == "13":
+                        user_prefs.imagen_settings["style_settings"]["post_processing"] = []
+                        print_success("Post-processing effects cleared")
+                        user_prefs.save_preferences()
+                        continue
+
+                    if effects_choice == "14":
+                        custom_effects = input("Enter custom post-processing effects (comma-separated): ").strip()
+                        if custom_effects:
+                            effects_list = [e.strip() for e in custom_effects.split(",")]
+                            user_prefs.imagen_settings["style_settings"]["post_processing"] = effects_list
+                            print_success(f"Custom post-processing effects set to: {', '.join(effects_list)}")
+                            user_prefs.save_preferences()
+                        continue
+
+                    effects = {
+                        "1": ["bloom"],
+                        "2": ["vignette"],
+                        "3": ["color_grading"],
+                        "4": ["depth_of_field"],
+                        "5": ["motion_blur"],
+                        "6": ["film_grain"],
+                        "7": ["lens_flare"],
+                        "8": ["chromatic_aberration"],
+                        "9": ["sharpening"],
+                        "10": ["tone_mapping"],
+                        "11": ["hdr"],
+                        "12": ["light_leaks"]
+                    }
+
+                    user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
+                    print_success(f"Post-processing effects set to {effects[effects_choice][0]}")
+                    user_prefs.save_preferences()
         except Exception as e:
             print_error(f"An error occurred: {e}")
             return
@@ -1701,20 +1802,18 @@ def configure_advanced_options():
         print_option("5", "Negative Prompt")
         print_option("6", "Imagen Settings")
         print_option("7", "Prompt Generation Settings")
-        print_option("8", "Style & Artistic Settings")
         print_option("9", "Camera & Technical Settings")
         print_option("10", "Output Quality Settings")
         print_option("11", "Lighting & Atmosphere")
         print_option("12", "Composition & Environment")
         print_option("13", "Color & Detail Settings")
         print_option("14", "View Current Settings")
-        print_option("15", "Customize All Parameters")
         print_option("16", "Generate AI Preset")
         print_option("17", "Reset to Default")
         print_option("b", "Back")
         
         advanced_choice = get_validated_input("Select option (1-17, b)",
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "b"])
+            ["1", "2", "3", "4", "5", "6", "7", "9", "10", "11", "12", "13", "14", "16", "17", "b"])
         if advanced_choice == "_INTERRUPTED_":
             break # Exit advanced options loop
 
@@ -1742,9 +1841,6 @@ def configure_advanced_options():
         elif advanced_choice == "7":
             manage_prompt_generation_settings()
             
-        elif advanced_choice == "8":  # Style & Artistic Settings
-            manage_style_settings()
-            
         elif advanced_choice == "9":  # Camera & Technical Settings
             manage_camera_settings()
             
@@ -1762,9 +1858,6 @@ def configure_advanced_options():
             
         elif advanced_choice == "14":
             view_current_settings()
-            
-        elif advanced_choice == "15":
-            customize_all_parameters()
             
         elif advanced_choice == "16":
             generate_ai_preset()
@@ -1806,191 +1899,7 @@ def manage_prompt_generation_settings():
             print_info("This will create simple, generic prompts based only on the selected subject or tags.")
             break
 
-def manage_style_settings():
-    """Manage style-specific settings."""
-    while True:  # Style & Artistic Settings menu loop
-        print_section("Style & Artistic Settings")
-        print_option("1", "Style Selection")
-        print_option("2", "Art Movement")
-        print_option("3", "Post-Processing Effects")
-        print_option("b", "Back")
-        
-        style_choice = get_validated_input("Select option (1-3, b)", ["1", "2", "3", "b"])
-        if style_choice == "_INTERRUPTED_":
-            break # Exit style settings loop
-        if style_choice == "b":
-            break  # Return to Style & Artistic Settings menu
-        
-        if style_choice == "1":
-            while True:  # Style Selection submenu loop
-                print_info("Select style:")
-                print_option("1", "Traditional Art")
-                print_option("2", "Digital Art")
-                print_option("3", "Illustration")
-                print_option("4", "Random Style Mix")
-                print_option("5", "See More Styles")
-                print_option("6", "Custom Style")
-                print_option("b", "Back")
-                
-                selection_choice = get_validated_input("Select style (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
-                if selection_choice == "b":
-                    break  # Return to Style & Artistic Settings menu
-                
-                if selection_choice == "4":  # Random Style Mix
-                    style_mix = generate_random_style_mix()
-                    print_info(f"Generated random style mix: {style_mix}")
-                    confirm = get_validated_input("Use this style mix? (y/n)", ["y", "n"])
-                    if confirm == "y":
-                        user_prefs.preferred_styles = [style_mix]
-                        print_success(f"Style set to: {style_mix}")
-                        user_prefs.save_preferences()
-                    continue
-                
-                if selection_choice == "5":  # See More Styles
-                    print_info("Additional available styles:")
-                    additional_styles = [
-                        "Photography", "Pixel Art", "Watercolor", "Oil Painting", 
-                        "Sketch", "Cartoon", "Manga", "Anime", "3D Render", 
-                        "Concept Art", "Graffiti", "Minimalist", "Abstract", 
-                        "Impressionist", "Surrealist", "Pop Art", "Cyberpunk",
-                        "Steampunk", "Gothic", "Fantasy", "Sci-Fi"
-                    ]
-                    for i, style in enumerate(additional_styles, 1):
-                        print_option(str(i), style)
-                    
-                    print_option("b", "Back to Style Selection")
-                    
-                    more_choice = get_validated_input(
-                        f"Select style (1-{len(additional_styles)}, b)", 
-                        [str(i) for i in range(1, len(additional_styles) + 1)] + ["b"]
-                    )
-                    
-                    if more_choice == "b":
-                        continue  # Return to main style selection menu
-                    
-                    selected_style = additional_styles[int(more_choice) - 1].lower().replace(" ", "_")
-                    user_prefs.preferred_styles = [selected_style]
-                    print_success(f"Style set to {selected_style}")
-                    user_prefs.save_preferences()
-                    continue
-                
-                if selection_choice == "6":  # Custom Style
-                    custom_style = input("Enter custom style: ").strip()
-                    if custom_style:
-                        user_prefs.preferred_styles = [custom_style]
-                        print_success(f"Custom style set to: {custom_style}")
-                        user_prefs.save_preferences()
-                    continue
-                
-                styles = {
-                    "1": "traditional_art",
-                    "2": "digital_art",
-                    "3": "illustration"
-                }
-                
-                selected_style = styles[selection_choice]
-                user_prefs.preferred_styles = [selected_style]
-                print_success(f"Style set to {selected_style}")
-                user_prefs.save_preferences()
-        
-        elif style_choice == "2":
-            while True:  # Art Movement submenu loop
-                print_info("Select art movement:")
-                print_option("0", "None (No specific art movement)")
-                print_option("1", "Abstract Expressionism")
-                print_option("2", "Impressionism")
-                print_option("3", "Surrealism")
-                print_option("4", "Cubism")
-                print_option("5", "Pop Art")
-                print_option("6", "Custom Movement")
-                print_option("b", "Back")
-                
-                movement_choice = get_validated_input("Select art movement (0-6, b)", ["0", "1", "2", "3", "4", "5", "6", "b"])
-                if movement_choice == "b":
-                    break  # Return to Style & Artistic menu
-                
-                if movement_choice == "0":
-                    user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = None
-                    print_success("Art movement set to None")
-                    user_prefs.save_preferences()
-                    continue
-                
-                if movement_choice == "6":
-                    custom_movement = input("Enter custom art movement: ").strip()
-                    if custom_movement:
-                        user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = custom_movement
-                        print_success(f"Custom art movement set to: {custom_movement}")
-                        user_prefs.save_preferences()
-                    continue
-                
-                movements = {
-                    "1": "Abstract Expressionism",
-                    "2": "Impressionism",
-                    "3": "Surrealism",
-                    "4": "Cubism",
-                    "5": "Pop Art"
-                }
-                
-                user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = movements[movement_choice]
-                print_success(f"Art movement set to {movements[movement_choice]}")
-                user_prefs.save_preferences()
-        
-        elif style_choice == "3":
-            while True:  # Post-Processing Effects submenu loop
-                print_info("Select post-processing effects:")
-                print_option("1", "Bloom Effect")
-                print_option("2", "Vignette Effect")
-                print_option("3", "Color Grading")
-                print_option("4", "Depth of Field")
-                print_option("5", "Motion Blur")
-                print_option("6", "Film Grain")
-                print_option("7", "Lens Flare")
-                print_option("8", "Chromatic Aberration")
-                print_option("9", "Sharpening")
-                print_option("10", "Tone Mapping")
-                print_option("11", "HDR Effect")
-                print_option("12", "Light Leaks")
-                print_option("13", "No Post-Processing")
-                print_option("14", "Custom Effects")
-                print_option("b", "Back")
-                
-                effects_choice = get_validated_input("Select post-processing effects (1-14, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "b"])
-                if effects_choice == "b":
-                    break  # Return to Style & Artistic Settings menu
-                
-                if effects_choice == "13":
-                    user_prefs.imagen_settings["style_settings"]["post_processing"] = []
-                    print_success("Post-processing effects cleared")
-                    user_prefs.save_preferences()
-                    continue
-                
-                if effects_choice == "14":
-                    custom_effects = input("Enter custom post-processing effects (comma-separated): ").strip()
-                    if custom_effects:
-                        effects_list = [e.strip() for e in custom_effects.split(",")]
-                        user_prefs.imagen_settings["style_settings"]["post_processing"] = effects_list
-                        print_success(f"Custom post-processing effects set to: {', '.join(effects_list)}")
-                        user_prefs.save_preferences()
-                    continue
-                
-                effects = {
-                    "1": ["bloom"],
-                    "2": ["vignette"],
-                    "3": ["color_grading"],
-                    "4": ["depth_of_field"],
-                    "5": ["motion_blur"],
-                    "6": ["film_grain"],
-                    "7": ["lens_flare"],
-                    "8": ["chromatic_aberration"],
-                    "9": ["sharpening"],
-                    "10": ["tone_mapping"],
-                    "11": ["hdr"],
-                    "12": ["light_leaks"]
-                }
-                
-                user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
-                print_success(f"Post-processing effects set to {effects[effects_choice][0]}")
-                user_prefs.save_preferences()
+
     
 def reset_all_settings_to_none():
     """
@@ -3210,39 +3119,6 @@ def view_current_settings():
         if choice == "b":
             return
 
-def customize_all_parameters():
-    """Customize all generation parameters."""
-    while True:
-        print_section("Customize All Parameters")
-        print_option("1", "Aspect Ratio & Resolution")
-        print_option("2", "Style Settings")
-        print_option("3", "Camera Settings")
-        print_option("4", "Lighting Settings")
-        print_option("5", "Composition Settings")
-        print_option("6", "Color Settings")
-        print_option("7", "Negative Prompt")
-        print_option("b", "Back")
-        
-        choice = get_validated_input("Select option (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
-        
-        if choice == "b":
-            return
-            
-        if choice == "1":
-            change_aspect_ratio()
-            manage_output_quality_settings()
-        elif choice == "2":
-            manage_style_settings()
-        elif choice == "3":
-            manage_camera_settings()
-        elif choice == "4":
-            manage_lighting_settings()
-        elif choice == "5":
-            manage_composition_settings()
-        elif choice == "6":
-            manage_color_settings()
-        elif choice == "7":
-            manage_negative_prompt()
 
 def generate_ai_preset():
     """Generate an AI-based preset using Gemini."""
