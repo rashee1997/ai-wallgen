@@ -81,6 +81,33 @@ mood_tags = [
     "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"
 ]
 
+# Style Categories for generation and UI
+STYLE_CATEGORIES = {
+    "Artistic & Painterly": [
+        "oil_painting", "watercolor", "pastel", "impressionism", "expressionism",
+        "pointillism", "divisionism", "art_nouveau", "art_deco", "cubism",
+        "constructivism", "futurism", "surrealism", "pop_art", "ukiyo_e", "woodcut"
+    ],
+    "Drawing & Sketching": [
+        "pencil_sketch", "charcoal", "ink_drawing", "sketch", "line_art"
+    ],
+    "Digital & Modern": [
+        "digital_art", "minimalist", "abstract", "geometric", "low_poly",
+        "pixel_art", "glitch_art", "vaporwave", "retrowave"
+    ],
+    "Photographic & Realistic": [
+        "photograph", "cinematic", "hyperrealism", "realism", "double_exposure",
+        "landscape" # Landscape can be photographic
+    ],
+    "Illustrative & Cartoon": [
+        "cartoon", "comic_book", "manga", "anime", "graffiti", "paper_cut",
+        "stained_glass"
+    ],
+    "Themed & Fantasy": [
+        "fantasy", "sci_fi", "cyberpunk", "steampunk", "gothic", "isometric"
+    ]
+}
+
 # Available genres for prompt generation
 available_genres = [
     "Nature & Landscapes", "Mountains & Peaks", "Forests & Woods", "Desert & Dunes",
@@ -602,4 +629,4 @@ TEXT_LOGO_BACKGROUND_MODIFIERS = {
         "custom"
     ],
     "custom_background": []  # For user-defined background modifiers
-} 
+}
