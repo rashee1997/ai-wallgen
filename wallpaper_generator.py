@@ -524,6 +524,27 @@ def get_generated_image_path(prompt):
     # Return absolute path to ensure consistency
     return os.path.join(genimage_dir, filename)
 
+def list_sorted_genimages(directory):
+    """List and sort image files in a directory by modification time."""
+    try:
+        # Ensure the directory exists with absolute path
+        abs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), directory)
+        os.makedirs(abs_dir, exist_ok=True)
+
+        # Get list of image files with full paths for sorting
+        files_with_paths = [os.path.join(abs_dir, f) for f in os.listdir(abs_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+        # Sort by modification time (newest first)
+        sorted_files_with_paths = sorted(files_with_paths, key=os.path.getmtime, reverse=True)
+
+        # Return just the filenames
+        image_filenames = [os.path.basename(f) for f in sorted_files_with_paths]
+
+        return image_filenames
+    except (FileNotFoundError, OSError) as e:
+        logging.error(f"Error listing images in {directory}: {e}")
+        return []
+
 def generate_prompt(custom_prompt=None):
     """Handle prompt generation for wallpaper creation."""
     try:
@@ -1581,13 +1602,8 @@ def main():
     
     # List and preview images if requested
     if args.list_images:
-        # Get list of images in genimage directory
-        genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
-        image_files = sorted(
-            [f for f in os.listdir(genimage_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))],
-            key=lambda x: os.path.getmtime(os.path.join(genimage_dir, x)),
-            reverse=True
-        )
+        # Get list of images using helper function
+        image_files = list_sorted_genimages("genimage")
         
         if not image_files:
             print_warning("No images found in the genimage directory.")
@@ -1923,60 +1939,56 @@ def load_user_preferences():
 
 def preview_recent_images():
     """Display and preview recent generated images."""
-    # Get list of images in genimage directory
-    genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
     try:
-        # Sort by modification time (newest first)
-        image_files = sorted(
-            [f for f in os.listdir(genimage_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))],
-            key=lambda x: os.path.getmtime(os.path.join(genimage_dir, x)),
-            reverse=True
-        )
-        
+        # Get list of images using helper function
+        image_files = list_sorted_genimages("genimage")
+
         if not image_files:
             print_warning("No images found in the genimage directory.")
             return
-        
+
         print_section("Recent Generated Images")
         print_info(f"Found {len(image_files)} images in the genimage directory.")
-        
+
         # Limit to showing the 20 most recent images for better user experience
         max_display = min(20, len(image_files))
         display_files = image_files[:max_display]
-        
+
         # Display the images with their numbers
-        for i, image_file in enumerate(display_files, 1):
+        for i, image_file in enumerate(display_files, 1): # image_file is now just the filename
+            # Need to construct the full path to get modification time
+            full_path = os.path.join("genimage", image_file)
             creation_time = datetime.fromtimestamp(
-                os.path.getmtime(os.path.join(genimage_dir, image_file))
+                os.path.getmtime(full_path)
             ).strftime("%Y-%m-%d %H:%M:%S")
             print(f"{i}: {image_file} - Generated: {creation_time}")
-        
+
         # Ask user which image to preview
         while True:
             try:
                 choice = get_validated_input(
-                    f"Enter image number to preview (1-{max_display}) or 'q' to quit", 
+                    f"Enter image number to preview (1-{max_display}) or 'q' to quit",
                     [str(i) for i in range(1, max_display + 1)] + ['q']
                 )
-                
+
                 if choice.lower() == 'q':
                     return
-                
-                # Preview the selected image
-                image_path = os.path.join(genimage_dir, display_files[int(choice) - 1])
+
+                # Preview the selected image - need full path
+                image_path = os.path.join("genimage", display_files[int(choice) - 1]) # Construct full path
                 print_info(f"Previewing image: {display_files[int(choice) - 1]}")
-                
+
                 # Preview image with GUI
                 result = preview_image_gui(image_path, set_wallpaper)
                 if result:
                     print_success("Wallpaper set successfully!")
-                
+
                 # After viewing one image, we allow picking another or returning to menu
                 print_section("Recent Generated Images")
-                
+
             except (ValueError, IndexError) as e:
                 print_error(f"Invalid selection: {e}")
-                
+
     except (FileNotFoundError, OSError) as e:
         print_error(f"Error accessing images directory: {e}")
 
