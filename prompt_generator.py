@@ -385,14 +385,22 @@ Your response must follow this exact format:
 
                 if response.parts:
                     full_response = response.parts[0].text.strip()
-                    
-                    # Check if the enhanced prompt contains the original tags
-                    # If not, prepend them to ensure they're included
-                    if not all(tag.lower() in full_response.lower() for tag in tags):
-                        logging.warning("Enhanced prompt doesn't contain original subject, prepending it")
-                        full_response = f"{formatted_tags}, {full_response}"
-                        
-                    return full_response
+
+                    # Find the start of the enhanced prompt after the introductory phrase
+                    intro_phrase = "Here's the enhanced prompt:"
+                    intro_index = full_response.find(intro_phrase)
+
+                    if intro_index != -1:
+                        # Extract the text after the introductory phrase
+                        enhanced_prompt_text = full_response[intro_index + len(intro_phrase):].strip()
+                    else:
+                        # Fallback: If the phrase is not found, assume the whole response is the prompt
+                        enhanced_prompt_text = full_response
+
+                    # Ensure proper formatting with resolution and aspect ratio
+                    final_prompt = enforce_prompt_format(enhanced_prompt_text, resolution, aspect_ratio, negative_prompt)
+
+                    return final_prompt
                 else:
                     # Fallback to basic prompt formatting if no response
                     return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
@@ -400,8 +408,8 @@ Your response must follow this exact format:
                 logging.error(f"Error generating prompt with Gemini: {str(e)}")
                 # Fallback to basic prompt formatting in case of error
                 return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
-            
-        # User preferences are enabled - use the original implementation
+
+        # User preferences are enabled or provided - use Gemini for enhancement
         # Get user preferences
         if hasattr(user_prefs, 'preferred_styles') and hasattr(user_prefs, 'preferred_moods'):
             style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
@@ -409,70 +417,197 @@ Your response must follow this exact format:
         else:
             style = None
             mood = None
-        
+
         # Get all settings from imagen_settings
         settings = user_prefs.imagen_settings
-        
-        # Extract camera settings
+
+        # Extract camera settings for the prompt
         camera_settings = settings.get("camera_settings", {})
         camera_model = camera_settings.get("camera_model")
         lens_type = camera_settings.get("lens_type")
-        
-        # Extract lighting settings
+        aperture = camera_settings.get("aperture")
+        special_lens = camera_settings.get("special_lens")
+        depth_of_field = camera_settings.get("depth_of_field")
+
+        # Extract lighting settings for the prompt
         lighting_settings = settings.get("lighting_settings", {})
         time_of_day = lighting_settings.get("time_of_day")
         lighting_type = lighting_settings.get("lighting_type")
-        
-        # Extract quality settings
-        quality_settings = settings.get("quality_settings", {})
-        detail_level = quality_settings.get("detail_level")
-        rendering_quality = quality_settings.get("rendering_quality")
-        
-        # Extract style settings
+        light_source = lighting_settings.get("light_source")
+        light_quality = lighting_settings.get("light_quality")
+        artificial_sources = lighting_settings.get("artificial_sources", [])
+
+        # Extract composition settings for the prompt
+        composition_settings = settings.get("composition_settings", {})
+        technique = composition_settings.get("technique")
+        camera_angle = composition_settings.get("camera_angle")
+        visual_flow = composition_settings.get("visual_flow")
+        depth_layering = composition_settings.get("depth_layering")
+
+        # Extract environment settings for the prompt
+        environment_settings = settings.get("environment_settings", {})
+        weather = environment_settings.get("weather")
+        season = environment_settings.get("season")
+        location_type = environment_settings.get("location_type")
+        atmospheric_effects = environment_settings.get("atmospheric_effects", [])
+
+        # Extract style settings for the prompt
         style_settings = settings.get("style_settings", {})
         art_movement = style_settings.get("art_movement")
-        
-        # Extract color settings
+        post_processing = style_settings.get("post_processing", [])
+
+        # Extract detail settings for the prompt
+        detail_settings = settings.get("detail_settings", {})
+        detail_level = detail_settings.get("detail_level")
+        texture_quality = detail_settings.get("texture_quality")
+        special_effects = detail_settings.get("special_effects", [])
+
+        # Extract color settings for the prompt
         color_settings = settings.get("color_settings", {})
         color_scheme = color_settings.get("color_scheme")
-        
-        # Build the prompt
-        prompt_parts = []
-        for tag in tags:
-            # Try to enhance tag selection based on user preferences
-            prompt_parts.append(tag)
-            
-        prompt = ", ".join(prompt_parts)
-        
-        # Add image quality enhancers
-        quality_enhancers = []
-        
-        if style:
-            quality_enhancers.append(style)
-        if mood:
-            quality_enhancers.append(mood)
-        if art_movement:
-            quality_enhancers.append(art_movement)
-        if rendering_quality:
-            quality_enhancers.append(rendering_quality)
-        if detail_level:
-            quality_enhancers.append(detail_level)
-        if color_scheme:
-            quality_enhancers.append(color_scheme)
-        if camera_model:
-            quality_enhancers.append(f"shot on {camera_model}")
-        if lens_type:
-            quality_enhancers.append(f"{lens_type} lens")
-        if time_of_day:
-            quality_enhancers.append(time_of_day.replace('_', ' '))
-        if lighting_type:
-            quality_enhancers.append(lighting_type.replace('_', ' '))
-        
-        # Add quality enhancers if available
-        if quality_enhancers:
-            prompt += ", " + ", ".join(quality_enhancers)
-        
-        return prompt
+        palette_type = color_settings.get("palette_type")
+        color_temperature = color_settings.get("color_temperature")
+
+        # Extract quality settings for the prompt
+        quality_settings = settings.get("quality_settings", {})
+        resolution = quality_settings.get("resolution", "1920x1080")
+        rendering_quality = quality_settings.get("rendering_quality")
+        aspect_ratio = user_prefs.aspect_ratio if hasattr(user_prefs, 'aspect_ratio') else "16:9"
+
+        # Format tags for prompt
+        formatted_tags = ", ".join(tags)
+
+        # Get negative prompt if available
+        negative_prompt = settings.get("negative_prompt", "")
+
+        # If no negative prompt is specified, use default negative prompt
+        if not negative_prompt:
+            negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+
+        # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
+        instruction_context = PROMPT_INSTRUCTIONS.format(
+            resolution=resolution if resolution else "Not specified",
+            aspect_ratio=aspect_ratio if aspect_ratio else "16:9",
+            color_scheme=color_scheme if color_scheme else "Not specified",
+            lighting=lighting_type if lighting_type else "Not specified",
+            composition=technique if technique else "Not specified",
+            depth_of_field=depth_of_field if depth_of_field else "Not specified"
+        )
+
+        # Create a more comprehensive technical context with all settings
+        technical_context = f"""
+Create a detailed description for a wallpaper image featuring: {formatted_tags}
+
+SUBJECT ANALYSIS:
+Carefully analyze the subject "{formatted_tags}" and tailor your description to highlight its unique characteristics:
+- For natural subjects: emphasize organic elements, textures, and environmental context
+- For urban subjects: focus on architectural details, perspective, and urban atmosphere
+- For abstract subjects: highlight patterns, shapes, and conceptual elements
+- For space/cosmic subjects: emphasize scale, wonder, and celestial phenomena
+- For fantasy subjects: create a cohesive magical or surreal atmosphere
+
+USER STYLE PREFERENCES:
+- Style: {style if style else "Use what makes sense for the subject"}
+- Mood: {mood if mood else "Use what makes sense for the subject"}
+- Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
+
+MANDATORY TECHNICAL PARAMETERS:
+Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
+Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
+
+TECHNICAL SPECIFICATIONS:
+- Camera model: {camera_model if camera_model else "Not specified"}
+- Lens: {lens_type if lens_type else "Not specified"}
+- Aperture: {aperture if aperture else "Not specified"}
+- Special lens: {special_lens if special_lens else "Not specified"}
+- Depth of field: {depth_of_field if depth_of_field else "Not specified"}
+- Lighting type: {lighting_type if lighting_type else "Not specified"}
+- Light quality: {light_quality if light_quality else "Not specified"}
+- Time of day: {time_of_day if time_of_day else "Not specified"}
+- Light source: {light_source if light_source else "Not specified"}
+- Artificial lighting: {", ".join(artificial_sources) if artificial_sources else "None"}
+- Composition technique: {technique if technique else "Not specified"}
+- Camera angle: {camera_angle if camera_angle else "Not specified"}
+- Visual flow: {visual_flow if visual_flow else "Not specified"}
+- Depth layering: {depth_layering if depth_layering else "Not specified"}
+- Weather: {weather if weather else "Not specified"}
+- Season: {season if season else "Not specified"}
+- Location type: {location_type if location_type else "Not specified"}
+- Atmospheric effects: {", ".join(atmospheric_effects) if atmospheric_effects else "None"}
+- Post-processing: {", ".join(post_processing) if post_processing else "None"}
+- Detail level: {detail_level if detail_level else "Not specified"}
+- Texture quality: {texture_quality if texture_quality else "Not specified"}
+- Special effects: {", ".join(special_effects) if special_effects else "None"}
+- Color scheme: {color_scheme if color_scheme else "Not specified"}
+- Palette type: {palette_type if palette_type else "Not specified"}
+- Color temperature: {color_temperature if color_temperature else "Not specified"}
+- Rendering quality: {rendering_quality if rendering_quality else "Not specified"}
+
+IMPORTANT GUIDELINES:
+1. Create a cohesive, detailed prompt that incorporates all specified settings naturally
+2. IGNORE any "Not specified" or "None" settings - do not include them
+3. Focus on creating a visually striking image suitable for a desktop wallpaper
+4. Ensure the subject "{formatted_tags}" remains the central focus
+5. Adapt the style and technical details to suit the specific subject matter
+6. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
+7. Always include a negative prompt section at the end
+
+OUTPUT FORMAT:
+Your response must follow this exact format:
+1. A single, detailed paragraph describing the image
+2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
+3. End with "Avoid: [negative elements]"
+
+NEGATIVE PROMPT - ALWAYS INCLUDE:
+The following elements must be avoided in the image: {negative_prompt}
+"""
+
+        # Generate prompt using Gemini
+        gemini_api_key = os.environ.get("GEMINI_API_KEY")
+        if not gemini_api_key:
+            logging.warning("No Gemini API key configured")
+            # Return a formatted version of the simple tags
+            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+
+        try:
+            genai.configure(api_key=gemini_api_key)
+            # Use gemini-2.0-flash as in the no-prefs path
+            model = genai.GenerativeModel('gemini-2.0-flash')
+            response = model.generate_content(instruction_context + "\n\n" + technical_context)
+
+            if response.text:
+                full_response = response.text.strip()
+
+                # Parse the response to separate prompt and negative prompt
+                prompt_parts = full_response.split("Avoid:")
+
+                if len(prompt_parts) > 1:
+                    # If successfully parsed into two parts
+                    main_prompt = prompt_parts[0].strip()
+                    negative_part = prompt_parts[1].strip()
+
+                    # Combine them with "Avoid:" format
+                    final_prompt = f"{main_prompt} Avoid: {negative_part}"
+                else:
+                    # If not in expected format, just add negative prompt
+                    final_prompt = full_response
+                    if "avoid" not in final_prompt.lower():
+                        final_prompt += f" Avoid: {negative_prompt}"
+
+                # Ensure proper formatting with resolution and aspect ratio
+                final_prompt = enforce_prompt_format(final_prompt, resolution, aspect_ratio, negative_prompt)
+
+                # No caching here for random prompts, as they are inherently random
+                # prompt_cache[cache_key] = final_prompt # Removed caching
+                return final_prompt
+            else:
+                # Return a formatted version of the simple tags
+                formatted_prompt = enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+                return formatted_prompt
+        except Exception as e:
+            logging.error(f"Error generating prompt with Gemini: {e}")
+            # Return a formatted version of the simple tags
+            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
     except Exception as e:
         logging.error(f"Error in generate_prompt_random: {e}")
         return ", ".join(tags)  # Fallback to basic tags if error occurs

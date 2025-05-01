@@ -499,4 +499,28 @@ def print_breadcrumb(path_list: List[str]) -> None:
     
     breadcrumb = " > ".join(path_list)
     print_colored(breadcrumb, Fore.CYAN)
-    print()  # Extra line for spacing 
+    print()  # Extra line for spacing
+
+def print_menu_options(options: List[tuple[str, str]]) -> None:
+    """
+    Print menu options given a list of (key, description) tuples.
+
+    Args:
+        options: List of tuples where each tuple is (key, description)
+    """
+    for key, description in options:
+        print_option(key, description)
+
+def get_menu_choice(prompt: str, valid_choices: List[str], allow_empty: bool = False) -> str:
+    """
+    Get a validated menu choice from the user.
+
+    Args:
+        prompt: The prompt to display to the user
+        valid_choices: List of valid input choices
+        allow_empty: Whether to allow empty input (default False)
+
+    Returns:
+        The user's validated choice as a string
+    """
+    return get_validated_input(prompt, valid_choices, allow_empty=allow_empty)

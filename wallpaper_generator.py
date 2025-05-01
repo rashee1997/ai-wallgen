@@ -38,12 +38,16 @@ import ctypes
 import google.generativeai as genai
 
 # Local application imports
-from wallpaper_settings import (
-    export_settings, import_settings, update_history_with_filenames,
-    initialize_settings, manage_preferences, manage_presets, load_preset, save_preset, delete_preset,
-    UserPreferences, load_last_genre, save_last_genre, manage_genres, manage_styles,
-    manage_moods, manage_wallpaper_settings, manage_imagen_settings, configure_advanced_options
-)
+from settings_modules.settings_import_export import export_settings, import_settings
+from settings_modules.settings_utils import update_history_with_filenames, load_last_genre, save_last_genre
+from settings_modules.settings_manager import initialize_settings, get_preferences
+from settings_modules.menu_management.main_menu import manage_preferences
+from settings_modules.preset_management import manage_presets, load_preset, save_preset, delete_preset
+from settings_modules.user_preferences import UserPreferences
+# The following functions are now called from within the menu management modules,
+# so they do not need to be imported directly in wallpaper_generator.py:
+# manage_genres, manage_styles, manage_moods, manage_wallpaper_settings, manage_imagen_settings, configure_advanced_options
+
 from config import (
     nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
     fantasy_tags, abstract_tags, mood_tags, available_genres,
