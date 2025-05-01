@@ -1886,9 +1886,9 @@ def run_main_menu():
             print_option("3", "Export Settings")
             print_option("4", "Import Settings")
             print_option("5", "Update History Filenames")
-            print_option("6", "Return to Main Menu")
+            print_option("b", "Return to Main Menu")
             
-            tools_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+            tools_choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
             
             if tools_choice == "1":
                 from wallpaper_settings import manage_presets
@@ -1903,7 +1903,7 @@ def run_main_menu():
             elif tools_choice == "5":
                 print_info("Updating generation history with descriptive filenames...")
                 update_history_with_filenames(silent=False)
-            elif tools_choice == "6":
+            elif tools_choice == "b":
                 continue
         
         elif choice == "5":
