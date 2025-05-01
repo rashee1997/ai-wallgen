@@ -39,7 +39,7 @@ def extract_subject_from_prompt(prompt):
         # import google.generativeai as genai # Redundant import, removed
 
         # Set up the model - assuming genai is configured
-        model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+        model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
 
         # Create the analysis request
         analysis_prompt = f"""

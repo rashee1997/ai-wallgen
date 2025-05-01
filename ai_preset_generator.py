@@ -79,6 +79,32 @@ except ImportError:
     logging.warning("Could not import STYLE_CATEGORIES from config.py. Using empty dictionary.")
     STYLE_CATEGORIES = {}
 
+# Import style templates
+try:
+    from style_templates import get_template_for_category
+    TEMPLATES_AVAILABLE = True
+except ImportError:
+    TEMPLATES_AVAILABLE = False
+    logging.warning("style_templates.py not found. Using default template for all styles.")
+    # Fallback template function
+    def get_template_for_category(style_category):
+        """Fallback template generator if style_templates.py is not available."""
+        return {
+            "preset_name": "[ evocative name ]",
+            "moods": ["[ one mood ]"],
+            "imagen_settings": {
+                "style_settings": {"art_movement": "[ fitting movement ]", "post_processing": ["[ 0-1 effect ]"]},
+                "camera_settings": {"camera_model": "[ appropriate model ]", "lens_type": "[ fitting lens ]", 
+                                   "aperture": "[ if relevant ]", "depth_of_field": "[ if relevant ]"},
+                "lighting_settings": {"lighting_type": "[ appropriate lighting ]", "time_of_day": "[ if relevant ]", 
+                                     "light_quality": "[ description ]"},
+                "composition_settings": {"technique": "[ composition technique ]", "camera_angle": "[ appropriate angle ]"},
+                "color_settings": {"color_scheme": "[ fitting scheme ]", "palette_type": "[ appropriate type ]", 
+                                  "color_temperature": "[ warm/cool/etc ]"}
+            },
+            "aspect_ratio": "16:9"
+        }
+
 
 # --- Configuration ---
 logging.basicConfig(
@@ -316,6 +342,9 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
             - Consider the mood and atmosphere
             - Select appropriate technical parameters"""
 
+        # Get the appropriate template for this style category
+        template = get_template_for_category(style_category)
+        
         # Build the complete prompt
         prompt = f"""
         Generate settings for a wallpaper with style: "{base_style}"
@@ -326,39 +355,9 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         3. {instruction_header}
            {category_instructions}
         4. Use aspect ratio 16:9 for desktop wallpaper
-        5. Output ONLY valid JSON:
+        5. Output ONLY valid JSON matching this structure:
 
-        {{
-            "preset_name": "[ evocative name ]",
-            "moods": ["[ one mood ]"],
-            "imagen_settings": {{
-                "style_settings": {{
-                    "art_movement": "[ fitting movement ]",
-                    "post_processing": ["[ 0-1 effect ]"]
-                }},
-                "camera_settings": {{
-                    "camera_model": "[ appropriate model ]",
-                    "lens_type": "[ fitting lens ]",
-                    "aperture": "[ if relevant ]",
-                    "depth_of_field": "[ if relevant ]"
-                }},
-                "lighting_settings": {{
-                    "lighting_type": "[ appropriate lighting ]",
-                    "time_of_day": "[ if relevant ]",
-                    "light_quality": "[ description ]"
-                }},
-                "composition_settings": {{
-                    "technique": "[ composition technique ]",
-                    "camera_angle": "[ appropriate angle ]"
-                }},
-                "color_settings": {{
-                    "color_scheme": "[ fitting scheme ]",
-                    "palette_type": "[ appropriate type ]",
-                    "color_temperature": "[ warm/cool/etc ]"
-                }}
-            }},
-            "aspect_ratio": "16:9"
-        }}
+        {json.dumps(template, indent=4)}
         """
 
         # Generate settings with fallback

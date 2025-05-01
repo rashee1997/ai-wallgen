@@ -25,7 +25,7 @@ A terminal-based tool for generating wallpapers using Google's Imagen 3 model vi
 
 > **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
 
-[Features](#-key-features) • [Installation](#-prerequisites) • [Documentation](#-documentation) • [License](#-license)
+[Features](#key-features) • [Installation](#prerequisites) • [Documentation](#documentation) • [License](#license)
 
 <!-- Trending Tags -->
 <p align="center">
@@ -78,12 +78,13 @@ For complete setup instructions, including installation steps for different oper
 Wallgen's main components include:
 
 - **Core Generator**: Controls the wallpaper generation process
-- **Settings Manager**: Manages user preferences
+- **Settings Management Package**: Manages user preferences and settings through a modular structure, including dedicated user preferences modules for customization
 - **UI Utilities**: Provides terminal interface elements
 - **Prompt Engineer**: Enhances prompts for better results
 - **API Client**: Communicates with the Gemini API
 
 For a detailed architecture explanation, see our [Architecture Documentation](docs/ARCHITECTURE.md).
+
 
 ## ⚡ Quick Usage
 

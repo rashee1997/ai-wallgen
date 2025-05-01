@@ -157,6 +157,18 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
     Returns:
         bool: True if settings were applied successfully, False otherwise
     """
+    # Log the input settings for debugging
+    logging.debug(f"Applying preset settings: {json.dumps(settings, indent=2)}")
+    """
+    Helper function to apply preset settings to the global user_prefs.
+
+    Args:
+        settings: Dictionary containing settings to apply
+        replace: If True, replace existing settings; if False, merge with existing
+
+    Returns:
+        bool: True if settings were applied successfully, False otherwise
+    """
     user_prefs = get_preferences() # Get preferences object
     try:
         # Define default structure for essential settings if needed (optional, UserPreferences might handle this)
@@ -164,7 +176,10 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
             "number_of_images": 1, "seed": None, "negative_prompt": "",
             "quality_settings": {}, "style_settings": {}, "camera_settings": {},
             "lighting_settings": {}, "composition_settings": {}, "environment_settings": {},
-            "color_settings": {}, "detail_settings": {}
+            "color_settings": {}, "detail_settings": {},
+            # Add support for style-specific settings from our new template system
+            "digital_settings": {}, "game_engine_settings": {}, "medium_settings": {}, 
+            "illustration_settings": {}, "abstract_settings": {}, "material_settings": {}
         }
         default_wallpaper_structure = {"auto_set": False, "skip_preview": False, "gui_preview_backend": "qt"}
 
@@ -184,6 +199,16 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
                             # setattr(user_prefs, setting_type, preset_settings_dict.copy()) # Simple replace
                             new_settings = default_structure.copy() # More robust replace
                             deep_update(new_settings, preset_settings_dict)
+                            
+                            # Handle both old and new style presets
+                            # First, copy all settings from the preset to the new settings
+                            for key in preset_settings_dict:
+                                # Copy all settings directly, ensuring compatibility with both old and new preset formats
+                                new_settings[key] = preset_settings_dict[key]
+                                
+                            # Log the new settings structure after applying preset
+                            logging.debug(f"New settings after applying preset: {json.dumps(new_settings, indent=2)}")
+                            
                             setattr(user_prefs, setting_type, new_settings)
                         else:
                             # Merge preset into current

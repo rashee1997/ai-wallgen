@@ -466,7 +466,7 @@ def extract_subject_from_prompt(prompt):
         
         # Set up the model
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+        model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
         
         # Create the analysis request
         analysis_prompt = f"""
@@ -1045,12 +1045,16 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         
         # Check if we should use user preferences
         if use_user_preferences:
-            gemini_prompt = generate_prompt_random(random_tags, user_prefs)
+            # Use the imported function from prompt_generator.py
+            from prompt_generator import generate_prompt_random as generator_random
+            gemini_prompt = generator_random(random_tags, user_prefs)
             # Enhance the random prompt to make it more detailed
             enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
             print(f"Enhanced random prompt: {enhanced_prompt}")
         else:
-            gemini_prompt = generate_prompt_random(random_tags)
+            # Use the imported function from prompt_generator.py
+            from prompt_generator import generate_prompt_random as generator_random
+            gemini_prompt = generator_random(random_tags)
             # Enhance the random prompt to make it more detailed
             enhanced_prompt = enhance_custom_prompt(gemini_prompt)
             print(f"Enhanced random prompt: {enhanced_prompt}")
@@ -1087,9 +1091,13 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         
         # Check if we should use user preferences
         if use_user_preferences:
-            gemini_prompt = generate_prompt_gemini(tags_to_use, user_prefs)
+            # Use the imported function from prompt_generator.py 
+            from prompt_generator import generate_prompt_gemini as generator_gemini
+            gemini_prompt = generator_gemini(tags_to_use, user_prefs)
         else:
-            gemini_prompt = generate_prompt_gemini(tags_to_use)
+            # Use the imported function from prompt_generator.py
+            from prompt_generator import generate_prompt_gemini as generator_gemini
+            gemini_prompt = generator_gemini(tags_to_use)
         
         if not gemini_prompt:
             print_warning("Gemini encountered an issue. Generating a random prompt instead...")

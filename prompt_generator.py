@@ -98,7 +98,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
                     "style_settings": {},
                     "detail_settings": {},
                     "color_settings": {},
-                    "quality_settings": {"resolution": "1920x1080"}
+                    "quality_settings": {"resolution": "3840x2160"}
                 }
             )
         
@@ -172,7 +172,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
         
         # Extract quality settings for the prompt
         quality_settings = settings.get("quality_settings", {})
-        resolution = quality_settings.get("resolution", "1920x1080")
+        resolution = quality_settings.get("resolution", "3840x2160")
         rendering_quality = quality_settings.get("rendering_quality")
         aspect_ratio = user_prefs.aspect_ratio if hasattr(user_prefs, 'aspect_ratio') else "16:9"
         
@@ -208,10 +208,14 @@ Carefully analyze the subject "{formatted_tags}" and tailor your description to 
 - For space/cosmic subjects: emphasize scale, wonder, and celestial phenomena
 - For fantasy subjects: create a cohesive magical or surreal atmosphere
 
-USER STYLE PREFERENCES:
+USER STYLE PREFERENCES - STRICTLY FOLLOW THESE:
 - Style: {style if style else "Use what makes sense for the subject"}
 - Mood: {mood if mood else "Use what makes sense for the subject"}
 - Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
+
+{f"CRITICAL: You MUST create a prompt in the EXACT style of '{style}'. This is the user's preferred style and takes priority over subject compatibility." if style else ""}
+{f"CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}'. This is the user's preferred mood and takes priority over subject compatibility." if mood else ""}
+{f"CRITICAL: You MUST incorporate the art movement '{art_movement}' in your prompt. This is the user's preference and takes priority over subject compatibility." if art_movement else ""}
 
 MANDATORY TECHNICAL PARAMETERS:
 Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
@@ -314,7 +318,7 @@ The following elements must be avoided in the image: {negative_prompt}
         logging.error(f"Error in generate_prompt_gemini: {e}")
         formatted_tags_str = ", ".join(tags)
         # Return a formatted version of the simple tags
-        return enforce_prompt_format(formatted_tags_str, "1920x1080", "16:9", negative_prompt)
+        return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", negative_prompt)
 
 def generate_prompt_random(tags, user_prefs=None):
     """Generate a random prompt using the provided tags."""
@@ -470,7 +474,7 @@ Your response must follow this exact format:
 
         # Extract quality settings for the prompt
         quality_settings = settings.get("quality_settings", {})
-        resolution = quality_settings.get("resolution", "1920x1080")
+        resolution = quality_settings.get("resolution", "3840x2160")
         rendering_quality = quality_settings.get("rendering_quality")
         aspect_ratio = user_prefs.aspect_ratio if hasattr(user_prefs, 'aspect_ratio') else "16:9"
 
@@ -506,10 +510,14 @@ Carefully analyze the subject "{formatted_tags}" and tailor your description to 
 - For space/cosmic subjects: emphasize scale, wonder, and celestial phenomena
 - For fantasy subjects: create a cohesive magical or surreal atmosphere
 
-USER STYLE PREFERENCES:
+USER STYLE PREFERENCES - STRICTLY FOLLOW THESE:
 - Style: {style if style else "Use what makes sense for the subject"}
 - Mood: {mood if mood else "Use what makes sense for the subject"}
 - Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
+
+{f"CRITICAL: You MUST create a prompt in the EXACT style of '{style}'. This is the user's preferred style and takes priority over subject compatibility." if style else ""}
+{f"CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}'. This is the user's preferred mood and takes priority over subject compatibility." if mood else ""}
+{f"CRITICAL: You MUST incorporate the art movement '{art_movement}' in your prompt. This is the user's preference and takes priority over subject compatibility." if art_movement else ""}
 
 MANDATORY TECHNICAL PARAMETERS:
 Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
@@ -645,7 +653,7 @@ def enhance_custom_prompt(custom_prompt, user_prefs=None):
                     "style_settings": {},
                     "detail_settings": {},
                     "color_settings": {},
-                    "quality_settings": {"resolution": "1920x1080"},
+                    "quality_settings": {"resolution": "3840x2160"},
                     "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
                 }
             )
@@ -653,7 +661,7 @@ def enhance_custom_prompt(custom_prompt, user_prefs=None):
             # Basic artwork style for no preferences
             style = None  # Don't enforce a style when no preferences
             mood = None
-            resolution = "1920x1080"
+            resolution = "3840x2160"
             aspect_ratio = "16:9"
             negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs"
             
@@ -820,7 +828,7 @@ Your response must follow this exact format:
             
             # Quality Settings
             quality_settings = settings.get("quality_settings", {})
-            resolution = quality_settings.get("resolution", "1920x1080")
+            resolution = quality_settings.get("resolution", "3840x2160")
             rendering_quality = quality_settings.get("rendering_quality")
             aspect_ratio = user_prefs.aspect_ratio if hasattr(user_prefs, 'aspect_ratio') else "16:9"
             
