@@ -7,21 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-05-01
+
+### Changed
+- **Major refactoring**: Modularized large `wallpaper_settings.py` file into smaller, logical components
+- Created new `settings_modules/` package with specialized submodules:
+  - `settings_manager.py`: Central settings initialization and access
+  - `user_preferences.py`: User preference handling and persistence
+  - `preset_management.py`: Preset saving, loading, and management
+  - `settings_import_export.py`: Settings file export and import functionality
+  - `ai_preset_generation.py`: AI-assisted preset generation
+  - `settings_utils.py`: Utility functions for settings management
+- Organized menu-related code into `settings_modules/menu_management/` with specialized modules:
+  - `main_menu.py`: Main settings menu handling
+  - `genres_menu.py`: Genre management interface
+  - `styles_menu.py`: Style management interface
+  - `moods_menu.py`: Mood management interface
+  - `advanced_options_menu.py`: Advanced configuration options
+  - And additional specialized menu modules
+- Moved UI utility functions from settings to `ui_utils.py`
+- Improved code organization with proper import structures
+- Improved main README.md with clearer installation instructions
+- Enhanced structure and formatting of module-specific documentation
+- Standardized documentation format across the project
+
 ### Added
+- Proper package initialization with `__init__.py` files
+- Better module boundaries and responsibility separation
+- Clear import hierarchies between modules
 - Comprehensive documentation enhancement across the project
 - User guide with detailed instructions and examples
 - Developer guide for contributors and developers
 - API reference documentation
 - Troubleshooting guide and FAQ section
 
-### Changed
-- Improved main README.md with clearer installation instructions
-- Enhanced structure and formatting of module-specific documentation
-- Standardized documentation format across the project
-
 ### Fixed
 - Documentation inconsistencies and broken links
 - Improved cross-referencing between documentation files
+
+### Benefits
+- Improved maintainability through smaller, focused modules
+- Better code navigation and logical grouping
+- Reduced cognitive load when working with settings functionality
+- Enhanced extensibility for future features
 
 ## [1.0.0] - 2024-03-20
 
@@ -68,7 +96,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic command-line interface
 - Minimal documentation
 
-[Unreleased]: https://github.com/yourusername/wallgen/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/wallgen/compare/v0.9.0...v1.0.0
-[0.9.0]: https://github.com/yourusername/wallgen/compare/v0.5.0...v0.9.0
-[0.5.0]: https://github.com/yourusername/wallgen/releases/tag/v0.5.0 
