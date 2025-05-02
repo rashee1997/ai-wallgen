@@ -145,34 +145,116 @@ def categorize_style(style_name: str) -> str:
     
     # Define keywords for each distinct category
     categories_keywords = {
-        # Illustration Categories
+        # --- Subcategory-level mapping for specific style_templates.py categories ---
+        # Illustration/Cartoon
         "illustration_pixar": ["pixar"],
         "illustration_disney": ["disney"],
         "illustration_tom_jerry": ["tom & jerry", "tom and jerry"],
         "illustration_vintage_cartoon": ["vintage cartoon", "rubber hose", "1930s cartoon"],
-        "illustration_anime_manga": ["anime", "manga"],
-        "illustration_comic": ["comic"],
-        "illustration_pixel": ["pixel art", "8-bit", "16-bit"],
-        
-        # Digital Art - Completely separate from game style
-        "digital_art": ["digital art", "digital painting", "3d art", "3d render", "vector art"],
-        
-        # Game Style - Completely separate from digital art
-        "game_style": ["game style", "game art", "unreal engine", "unity engine", "pubg", "game engine", "cyberpunk game"],
-        
-        # Other Categories
-        "photographic": ["photo", "shot on", "dslr", "camera", "realistic", "film", "kodak", "fujifilm", "cinematic"],
-        "traditional_painting_drawing": ["oil", "watercolor", "charcoal", "pencil", "sketch", "ink", "impressionist", "renaissance", "baroque", "rococo"],
-        "abstract_conceptual": ["abstract", "surreal", "cubist", "expressionist", "fauvist", "conceptual", "dreamscape"],
-        "material_sculptural": ["marble", "bronze", "clay", "wood", "sculpture", "ceramic", "metalwork"],
-        "illustration_graphic": ["illustration", "cartoon"] # General illustration last
+        "illustration_anime_manga": ["anime", "manga", "shonen", "shojo", "seinen"],
+        "illustration_comic": ["comic", "comic book"],
+        "illustration_pixel": ["pixel art", "8-bit", "16-bit", "pixelated"],
+        "illustration_graphic": ["illustration", "cartoon", "cartoony"],
+
+        # Painting/Drawing
+        "oil_painting": ["oil painting", "oil paint", "impasto"],
+        "watercolor": ["watercolor", "watercolour"],
+        "pastel": ["pastel"],
+        "charcoal": ["charcoal sketch", "charcoal drawing"],
+        "pencil_sketch": ["pencil", "pencil sketch", "graphite"],
+        "ink_drawing": ["ink drawing", "ink sketch", "pen and ink", "line drawing", "line art"],
+
+        "traditional_painting_drawing": [
+            "impressionist", "renaissance", "baroque", "rococo",
+            "acrylic", "tempera", "art nouveau", "art deco",
+            "cubism", "constructivism", "futurism", "pointillism", "divisionism",
+            "ukiyo-e", "woodcut"
+        ],
+
+        # Minimalist/Geometric
+        "minimalist": ["minimalism", "minimalist", "minimal", "minimal art"],
+        "geometric": ["geometric", "geometry", "geometric abstract", "low poly"],
+
+        # Digital/Modern
+        "digital_art": [
+            "digital art", "digital painting", "3d render", "3d art", 
+            "vector art", "glitch art", "vaporwave", "retrowave", "rendered"
+        ],
+
+        # Game Style
+        "game_style": [
+            "game style", "game art", "game engine", "unity", "unreal", 
+            "unreal engine", "unity engine", "pubg", "cyberpunk game", 
+            "fps", "rpg", "in-engine", "cel-shaded"
+        ],
+
+        # Photographic/Realism
+        "photographic": [
+            "photo", "photograph", "shot on", "dslr", "camera", "realistic", 
+            "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism"
+        ],
+        "cinematic": ["cinematic"],
+        "realistic": ["realism", "realistic", "photoreal", "hyperrealism", "photorealistic"],
+
+        # Abstract
+        "abstract_conceptual": [
+            "abstract", "conceptual", "expressionism", "expressionist", "cubist", "cubism",
+            "fauvist", "fauvism", "surreal", "surrealist", "surrealism", "dreamscape", "non-representational"
+        ],
+        "abstract": ["abstract", "abstraction", "non-representational"],
+
+        # Material/Sculptural
+        "material_sculptural": [
+            "sculpture", "sculptural", "marble", "bronze", "clay", "wood",
+            "ceramic", "ceramics", "metalwork", "statue", "bust"
+        ],
+        "sculpture": ["sculpture", "sculpted", "carved"],
+
+        # Fantasy/Sci-fi
+        "fantasy": ["fantasy", "magical", "enchanted", "mythical", "wizard", "dragon", "unicorn", "fairy tale", "castle"],
+        "sci_fi": ["sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"],
+
+        # Fallback for generics - last so specific matches win first
+        "unknown": []
     }
 
     # Check each category's keywords
     for category, keywords in categories_keywords.items():
-        if any(term in style_lower for term in keywords):
-            return category
-
+        for term in keywords:
+            if term in style_lower:
+                # Map subcategories to canonical template categories
+                if category in [
+                    "oil_painting", "watercolor", "pastel", "charcoal"
+                ]:
+                    return category
+                if category in [
+                    "pencil_sketch", "ink_drawing"
+                ]:
+                    return "drawing"
+                if category == "minimalist":
+                    return "minimalist"
+                if category == "geometric":
+                    return "geometric"
+                if category.startswith("illustration"):
+                    return category
+                if category == "digital_art":
+                    return "digital_art"
+                if category == "game_style":
+                    return "game_style"
+                if category in ["photographic", "cinematic", "realistic"]:
+                    # Pass through as is for template
+                    return category
+                if category in [
+                    "abstract_conceptual", "abstract"
+                ]:
+                    return "abstract_conceptual"
+                if category in ["material_sculptural", "sculpture"]:
+                    return "material_sculptural"
+                if category in ["fantasy", "sci_fi"]:
+                    return category
+                if category == "traditional_painting_drawing":
+                    return "traditional_painting_drawing"
+        # Don't break early -- let most specific win!
     return "unknown"
 
 
@@ -210,13 +292,35 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                 if not AI_STYLE_GEN_AVAILABLE:
                     print_error("AI Style Generator not available.")
                     return False
+                # Match in-app logic: select random canonical category (non-repeating per session)
                 print_info("Generating AI style...")
                 initialize_style_gemini(api_key)
-                base_style = generate_random_style()
-                if not base_style:
+                # Build random, non-repeating category logic
+                import random
+                all_categories = [
+                    "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
+                    "minimalist", "geometric", "illustration_pixel", "illustration_anime_manga", "illustration_comic",
+                    "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
+                    "fantasy", "sci_fi"
+                ]
+                # For the scope of this action, just pick a random one, or you could persist previous in file/globals.
+                chosen_category = random.choice(all_categories)
+                print_info(f"Chose style category: {chosen_category}")
+                style_obj = generate_random_style(category=chosen_category, style_type="detailed")
+                # Extract clean name
+                if not style_obj or not isinstance(style_obj, dict):
                     print_error("Failed to generate AI style.")
                     return False
-                print_success(f"Generated AI style: {base_style}")
+                # Extract first named block
+                import re
+                name = style_obj['name']
+                desc = style_obj['description']
+                name_for_show = name
+                m = re.search(r"\*\*(.+?)\*\*", desc)
+                if m:
+                    name_for_show = m.group(1)
+                print_success(f"Generated AI style: {name_for_show}")
+                base_style = name_for_show
 
         # --- Step 2: Generate Settings ---
         print_info(f"\nGenerating settings for style: '{base_style}'...")
