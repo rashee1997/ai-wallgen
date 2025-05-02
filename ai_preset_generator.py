@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """AI Preset Generator - Generate random wallpaper preferences using Gemini AI
 
@@ -137,85 +138,108 @@ def is_preset_unique(preset_data: Dict[str, Any]) -> bool:
         logging.error(f"Error checking preset uniqueness: {e}")
         return True
 
-def categorize_style(style_name: str) -> str:
+def categorize_style(style_name: Union[str, Dict]) -> str:
     """
     Attempt to categorize a style name. Digital art and game styles are kept completely separate.
+    
+    Args:
+        style_name: Either a string style name or a dictionary with 'name' key
     """
-    style_lower = style_name.lower()
+    if isinstance(style_name, dict):
+        style_name = style_name.get('name', '')
+    
+    style_lower = str(style_name).lower()
     
     # Define keywords for each distinct category
     categories_keywords = {
-        # --- Subcategory-level mapping for specific style_templates.py categories ---
-        # Illustration/Cartoon
-        "illustration_pixar": ["pixar"],
-        "illustration_disney": ["disney"],
-        "illustration_tom_jerry": ["tom & jerry", "tom and jerry"],
-        "illustration_vintage_cartoon": ["vintage cartoon", "rubber hose", "1930s cartoon"],
-        "illustration_anime_manga": ["anime", "manga", "shonen", "shojo", "seinen"],
-        "illustration_comic": ["comic", "comic book"],
-        "illustration_pixel": ["pixel art", "8-bit", "16-bit", "pixelated"],
-        "illustration_graphic": ["illustration", "cartoon", "cartoony"],
+        # --- Illustration/Cartoon Categories ---
+        "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
+        "illustration_disney": ["disney", "disney style", "disney animation"],
+        "illustration_tom_jerry": ["tom & jerry", "tom and jerry", "hanna-barbera"],
+        "illustration_vintage_cartoon": ["vintage cartoon", "rubber hose", "1930s cartoon", "classic cartoon"],
+        "illustration_anime_manga": ["anime", "manga", "shonen", "shojo", "seinen", "japanese animation"],
+        "illustration_comic": ["comic", "comic book", "comic strip", "sequential art"],
+        "illustration_pixel": ["pixel art", "8-bit", "16-bit", "pixelated", "retro game art"],
+        "illustration_graphic": ["illustration", "cartoon", "cartoony", "graphic novel"],
+        "illustration_childrens": ["children's book", "picture book", "kids illustration"],
+        "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
 
-        # Painting/Drawing
-        "oil_painting": ["oil painting", "oil paint", "impasto"],
-        "watercolor": ["watercolor", "watercolour"],
-        "pastel": ["pastel"],
-        "charcoal": ["charcoal sketch", "charcoal drawing"],
-        "pencil_sketch": ["pencil", "pencil sketch", "graphite"],
-        "ink_drawing": ["ink drawing", "ink sketch", "pen and ink", "line drawing", "line art"],
+        # --- Painting/Drawing Categories ---
+        "oil_painting": ["oil painting", "oil paint", "impasto", "alla prima", "wet-on-wet"],
+        "watercolor": ["watercolor", "watercolour", "wet-on-wet", "wet-on-dry"],
+        "pastel": ["pastel", "pastel drawing", "pastel painting"],
+        "charcoal": ["charcoal sketch", "charcoal drawing", "charcoal art"],
+        "pencil_sketch": ["pencil", "pencil sketch", "graphite", "pencil drawing"],
+        "ink_drawing": ["ink drawing", "ink sketch", "pen and ink", "line drawing", "line art", "ink wash"],
+        "acrylic_painting": ["acrylic", "acrylic paint", "acrylic painting"],
+        "mixed_media": ["mixed media", "collage", "assemblage", "combined media"],
+        "digital_painting": ["digital painting", "digital illustration", "digital art"],
 
+        # --- Traditional Art Categories ---
         "traditional_painting_drawing": [
             "impressionist", "renaissance", "baroque", "rococo",
             "acrylic", "tempera", "art nouveau", "art deco",
             "cubism", "constructivism", "futurism", "pointillism", "divisionism",
-            "ukiyo-e", "woodcut"
+            "ukiyo-e", "woodcut", "linocut", "etching"
         ],
+        "realism": ["realism", "realistic", "photoreal", "hyperrealism", "photorealistic"],
+        "abstract": ["abstract", "abstract art", "non-representational"],
+        "expressionism": ["expressionism", "expressionist", "emotional art"],
+        "surrealism": ["surrealism", "surreal", "dreamlike", "fantastical"],
+        "cubism": ["cubism", "cubist", "geometric abstraction"],
+        "fauvism": ["fauvism", "fauvist", "wild beasts"],
+        "art_nouveau": ["art nouveau", "new art", "modern style"],
+        "art_deco": ["art deco", "decop", "modernist"],
 
-        # Minimalist/Geometric
+        # --- Minimalist/Geometric Categories ---
         "minimalist": ["minimalism", "minimalist", "minimal", "minimal art"],
         "geometric": ["geometric", "geometry", "geometric abstract", "low poly"],
         "minimalist_geometric": ["minimalist geometric", "minimal geometric", "geometric minimalism"],
+        "constructivism": ["constructivism", "constructivist", "industrial art"],
+        "low_poly": ["low poly", "low polygon", "polygonal art"],
+        "isometric": ["isometric", "isometric view", "axonometric"],
 
-        # Digital/Modern
+        # --- Digital/Modern Categories ---
         "digital_art": [
             "digital art", "digital painting", "3d render", "3d art", 
-            "vector art", "glitch art", "vaporwave", "retrowave", "rendered"
+            "vector art", "glitch art", "vaporwave", "retrowave", "rendered",
+            "digital illustration", "digital media"
         ],
-        "psychedelic": ["psychedelic", "trippy", "hallucinogenic", "psychedelia"],
-        "surrealism": ["surrealism", "surreal", "dreamlike", "fantastical"],
+        "psychedelic": ["psychedelic", "trippy", "hallucinogenic", "psychedelia", "acid art"],
+        "cyberpunk": ["cyberpunk", "cyberpunk art", "futuristic", "neon city"],
+        "retrowave": ["retrowave", "vaporwave", "80s revival", "synthwave"],
+        "glitch_art": ["glitch art", "glitch effect", "digital glitch", "error art"],
+        "vector_art": ["vector art", "vector illustration", "vector graphics"],
+        "3d_render": ["3d render", "3d art", "3d modeling", "3d illustration"],
 
-        # Game Style
+        # --- Game Art Categories ---
         "game_style": [
             "game style", "game art", "game engine", "unity", "unreal", 
             "unreal engine", "unity engine", "pubg", "cyberpunk game", 
             "fps", "rpg", "in-engine", "cel-shaded", "cyberpunk cityscape"
         ],
+        "game_retro": ["retro game", "8-bit", "16-bit", "pixel art", "chunky pixels"],
+        "game_cel_shaded": ["cel-shaded", "toon shading", "anime style", "cartoon style"],
+        "game_3d": ["3d game", "3d engine", "realistic game", "next-gen game"],
+        "game_indie": ["indie game", "indie art", "hand-drawn game", "pixel art"],
 
-        # Photographic/Realism
+        # --- Photographic/Realism Categories ---
         "photographic": [
             "photo", "photograph", "shot on", "dslr", "camera", "realistic", 
-            "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism"
+            "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism",
+            "portrait photography", "landscape photography", "street photography"
         ],
-        "cinematic": ["cinematic"],
-        "realistic": ["realism", "realistic", "photoreal", "hyperrealism", "photorealistic"],
+        "cinematic": ["cinematic", "film look", "movie style", "motion picture"],
+        "documentary": ["documentary", "documentary style", "journalistic"],
+        "street_photography": ["street photography", "urban photography", "candid photography"],
 
-        # Abstract
-        "abstract_conceptual": [
-            "abstract", "conceptual", "expressionism", "expressionist", "cubist", "cubism",
-            "fauvist", "fauvism", "surreal", "surrealist", "surrealism", "dreamscape", "non-representational"
-        ],
-        "abstract": ["abstract", "abstraction", "non-representational"],
-
-        # Material/Sculptural
-        "material_sculptural": [
-            "sculpture", "sculptural", "marble", "bronze", "clay", "wood",
-            "ceramic", "ceramics", "metalwork", "statue", "bust"
-        ],
-        "sculpture": ["sculpture", "sculpted", "carved"],
-
-        # Fantasy/Sci-fi
-        "fantasy": ["fantasy", "magical", "enchanted", "mythical", "wizard", "dragon", "unicorn", "fairy tale", "castle", "fantasy landscape"],
+        # --- Fantasy/Sci-Fi Categories ---
+        "fantasy": ["fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "fairy tale", "castle", "fantasy landscape"],
         "sci_fi": ["sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"],
+        "space_art": ["space art", "astronomy art", "cosmic", "galaxy"],
+        "robot_art": ["robot art", "mech art", "cybernetic", "mecha"],
+        "steampunk": ["steampunk", "victorian sci-fi", "industrial fantasy"],
+        "dystopian": ["dystopian", "post-apocalyptic", "dark future", "ruined world"],
 
         # Fallback for generics - last so specific matches win first
         "unknown": []
@@ -261,7 +285,30 @@ def categorize_style(style_name: str) -> str:
     return "unknown"
 
 
-# --- Main Generation Function ---
+def generate_ai_style(api_key: str) -> Optional[str]:
+    """Generate an AI style name using Gemini AI."""
+    if not AI_STYLE_GEN_AVAILABLE:
+        print_error("AI Style Generator not available.")
+        return None
+    print_info("Generating AI style...")
+    initialize_style_gemini(api_key)
+    import random
+    all_categories = [
+        "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
+        "minimalist", "geometric", "illustration_pixel", "illustration_anime_manga", "illustration_comic",
+        "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
+        "fantasy", "sci_fi"
+    ]
+    chosen_category = random.choice(all_categories)
+    print_info(f"Chose style category: {chosen_category}")
+    style_obj = generate_random_style(category=chosen_category, style_type="detailed")
+    if not style_obj or not isinstance(style_obj, dict):
+        print_error("Failed to generate AI style.")
+        return None
+    name = style_obj['name']
+    print_success(f"Generated AI style: {name}")
+    return name
+
 
 def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optional[str] = None) -> Union[str, bool, None]:
     """Generate a random preset based on style category."""
@@ -282,7 +329,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
             print_option("2", "Generate AI Style")
             print_option("b", "Back")
             choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
-            
+
             if choice == "b":
                 print_info("Preset generation cancelled.")
                 return None
@@ -291,39 +338,23 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                 if not base_style:
                     print_error("No style entered.")
                     return False
-            else: # AI Style
-                if not AI_STYLE_GEN_AVAILABLE:
-                    print_error("AI Style Generator not available.")
-                    return False
-                # Match in-app logic: select random canonical category (non-repeating per session)
-                print_info("Generating AI style...")
-                initialize_style_gemini(api_key)
-                # Build random, non-repeating category logic
-                import random
-                all_categories = [
-                    "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
-                    "minimalist", "geometric", "illustration_pixel", "illustration_anime_manga", "illustration_comic",
-                    "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
-                    "fantasy", "sci_fi"
-                ]
-                # For the scope of this action, just pick a random one, or you could persist previous in file/globals.
-                chosen_category = random.choice(all_categories)
-                print_info(f"Chose style category: {chosen_category}")
-                style_obj = generate_random_style(category=chosen_category, style_type="detailed")
-                # Extract clean name
-                if not style_obj or not isinstance(style_obj, dict):
+                # Use the entered custom style directly without generating AI style
+            elif choice == "2":
+                print_info("Attempting to generate AI preset (this may take a moment)...")
+                base_style = generate_ai_style(api_key)
+                if not base_style:
                     print_error("Failed to generate AI style.")
                     return False
-                # Extract first named block
-                import re
-                name = style_obj['name']
-                desc = style_obj['description']
-                name_for_show = name
-                m = re.search(r"\*\*(.+?)\*\*", desc)
-                if m:
-                    name_for_show = m.group(1)
-                print_success(f"Generated AI style: {name_for_show}")
-                base_style = name_for_show
+
+        global gemini_initialized
+        if 'gemini_initialized' not in globals():
+            gemini_initialized = False
+
+        if not gemini_initialized:
+            if not initialize_style_gemini(api_key):
+                print_error("Failed to initialize Gemini API.")
+                return False
+        gemini_initialized = True
 
         # --- Step 2: Generate Settings ---
         print_info(f"\nGenerating settings for style: '{base_style}'...")
@@ -333,7 +364,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         # Initialize Gemini with Fallback
         genai.configure(api_key=api_key)
         model = None
-        
+
         try:
             model = genai.GenerativeModel('gemini-2.0-flash')  # Use Gemini Flash model directly
             print_info("Using Gemini Flash model...")
@@ -398,7 +429,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
             - Effects: Game-specific (bloom, ambient occlusion)
             - View: Game camera perspectives
             - Polish: High-end game engine look"""
-        
+
         elif style_category == "photographic":
             is_film = any(x in base_style.lower() for x in ["film", "kodak", "analog"])
             camera = "Film Camera" if is_film else "Digital Camera (e.g., Canon EOS R5)"
@@ -407,7 +438,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
             - Lens: Appropriate focal length (e.g., 35mm, 85mm)
             - Lighting: Natural or studio lighting
             - Style: {', '.join(['film grain', 'analog look'] if is_film else ['sharp', 'realistic'])}"""
-        
+
         elif style_category.startswith("illustration"):
             if style_category == "illustration_pixar":
                 category_instructions = """*   **Pixar Style:**
@@ -439,21 +470,21 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                 - Colors: Usually flat or cel-shaded
                 - Lighting: Stylized
                 - View: Artistic perspective"""
-        
+
         elif style_category == "traditional_painting_drawing":
             category_instructions = """*   **Traditional Medium:**
             - Technique: Emphasize texture, brushwork
             - Lighting: Natural, atmospheric
             - Movement: Consider historical styles
             - Colors: Often earth tones or traditional palettes"""
-        
+
         elif style_category == "abstract_conceptual":
             category_instructions = """*   **Abstract Focus:**
             - Form: Non-representational
             - Color: Expressive use
             - Composition: Can be unconventional
             - Movement: Consider modern art influences"""
-        
+
         else:
             category_instructions = """*   **General Guidance:**
             - Choose settings that match the style
@@ -462,11 +493,11 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
 
         # Get the appropriate template for this style category
         template = get_template_for_category(style_category)
-        
+
         # Build the complete prompt
         prompt = f"""
         Generate settings for a wallpaper with style: "{base_style}"
-        
+
         Instructions:
         1. Create a unique `preset_name` inspired by the style
         2. Choose ONE mood from: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy
@@ -530,16 +561,16 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                                 save_name = re.sub(r'[^\w\s-]', '', preset_data["preset_name"]).strip().replace(' ', '_')
                                 if not save_name:
                                     save_name = "unnamed_preset"
-                                
+
                                 presets_dir = os.path.join(os.path.dirname(__file__), PRESETS_DIR)
                                 os.makedirs(presets_dir, exist_ok=True)
-                                
+
                                 preset_path = os.path.join(presets_dir, f"{save_name}.json")
                                 if os.path.exists(preset_path):
                                     if get_validated_input(f"Preset '{save_name}' exists. Overwrite? (Y/N): ", ["y", "n"]) != "y":
                                         print_info("Preset not saved.")
                                         return None
-                                
+
                                 with open(preset_path, 'w') as f:
                                     json.dump(preset_data, f, indent=4)
                                 save_preset_to_cache(preset_data)
@@ -548,37 +579,37 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                             else:
                                 print_warning("Preset discarded by user.")
                                 return None
-                        
+
                         elif attempt < 2:
                             print_warning("Generated non-unique preset, trying again...")
                             continue
                         else:
                             print_warning("Could not generate unique preset after 3 attempts.")
                             return False
-                    
+
                     except (json.JSONDecodeError, ValueError) as e:
                         if attempt < 2:
                             print_warning(f"Invalid response format ({e}), retrying...")
                             continue
                         print_error("Failed to get valid response format after 3 attempts.")
                         return False
-                
+
                 else: # No JSON found
                     if attempt < 2:
                         print_warning("Could not extract settings JSON, retrying...")
                         continue
                     print_error("Failed to get valid JSON after 3 attempts.")
                     return False
-            
+
             else: # Empty response
                 if attempt < 2:
                     print_warning("Empty response from AI, retrying...")
                     continue
                 print_error("Failed to get response after 3 attempts.")
                 return False
-        
+
         return False # If we get here, all attempts failed
-    
+
     except Exception as e:
         logging.exception(f"Unexpected error in preset generation: {e}")
         print_error(f"An unexpected error occurred: {e}")
@@ -590,24 +621,24 @@ def main():
     """Main entry point for CLI usage."""
     parser = argparse.ArgumentParser(description='Generate and manage AI presets')
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+
     # Generate command
     gen_parser = subparsers.add_parser('generate', help='Generate a new preset')
     gen_parser.add_argument('--style', help='Custom style to use')
-    
+
     # List command
     list_parser = subparsers.add_parser('list', help='List available presets')
-    
+
     # Load command
     load_parser = subparsers.add_parser('load', help='Load a preset')
     load_parser.add_argument('name', help='Preset name (without .json)')
-    
+
     # Delete command
     del_parser = subparsers.add_parser('delete', help='Delete a preset')
     del_parser.add_argument('name', help='Preset name (without .json)')
-    
+
     args = parser.parse_args()
-    
+
     if args.command == 'generate':
         if not SETTINGS_AVAILABLE:
             print_error("wallpaper_settings.py required for generation.")
@@ -621,7 +652,7 @@ def main():
         else:
             print("\nPreset generation failed.")
             sys.exit(1)
-    
+
     elif args.command == 'list':
         presets_dir = os.path.join(os.path.dirname(__file__), PRESETS_DIR)
         if os.path.exists(presets_dir):
@@ -634,37 +665,37 @@ def main():
                 print_info("No presets found.")
         else:
             print_info(f"Presets directory not found at: {presets_dir}")
-    
+
     elif args.command == 'load':
         if not SETTINGS_AVAILABLE:
             print_error("wallpaper_settings.py required for loading presets.")
             sys.exit(1)
-        
+
         preset_path = os.path.join(os.path.dirname(__file__), PRESETS_DIR, f"{args.name}.json")
         if os.path.exists(preset_path):
             try:
                 with open(preset_path) as f:
                     preset_data = json.load(f)
                 user_prefs = initialize_settings()
-                
+
                 # Use _apply_preset_settings from wallpaper_settings.py to apply preset
                 from wallpaper_settings import _apply_preset_settings
-                
+
                 if not _apply_preset_settings(preset_data, replace=True):
                     print_error("Failed to apply preset settings.")
                     sys.exit(1)
-                
+
                 # Save preferences
                 user_prefs.save_preferences()
                 print_success(f"Loaded and applied preset: {args.name}")
-            
+
             except Exception as e:
                 print_error(f"Error loading preset: {e}")
                 sys.exit(1)
         else:
             print_error(f"Preset not found: {args.name}")
             sys.exit(1)
-    
+
     elif args.command == 'delete':
         preset_path = os.path.join(os.path.dirname(__file__), PRESETS_DIR, f"{args.name}.json")
         if os.path.exists(preset_path):
@@ -672,7 +703,7 @@ def main():
                 try:
                     # Use delete_preset from wallpaper_settings.py
                     from wallpaper_settings import delete_preset
-                    
+
                     # Call delete_preset with the preset name
                     if delete_preset(args.name):
                         print_success(f"Deleted preset: {args.name}")

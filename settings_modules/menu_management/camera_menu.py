@@ -15,16 +15,76 @@ def manage_camera_settings():
         print_option("3", "Aperture")
         print_option("4", "Depth of Field")
         print_option("5", "Special Lens Effects")
+        print_option("6", "Focal Length")
+        print_option("7", "Shutter Speed")
+        print_option("8", "ISO")
+        print_option("9", "Filter Type")
         print_option("b", "Back")
         
-        choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+        choice = get_validated_input("Select option (1-9, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "b"])
         if choice == "_INTERRUPTED_":
             return # Exit camera settings
 
         if choice == "b":
             return
             
-        if choice == "1":
+        if choice == "6":
+            # Focal Length
+            focal_length = input("Enter focal length (e.g., 35mm, 85mm, range, or custom): ").strip()
+            if focal_length:
+                user_prefs.imagen_settings["camera_settings"]["focal_length"] = focal_length
+                print_success(f"Focal length set to: {focal_length}")
+            user_prefs.save_preferences()
+        
+        elif choice == "7":
+            # Shutter Speed
+            shutter_speed = input("Enter shutter speed (e.g., 1/60s, 1/200s, Bulb, or custom): ").strip()
+            if shutter_speed:
+                user_prefs.imagen_settings["camera_settings"]["shutter_speed"] = shutter_speed
+                print_success(f"Shutter speed set to: {shutter_speed}")
+            user_prefs.save_preferences()
+        
+        elif choice == "8":
+            # ISO
+            iso = input("Enter ISO value (e.g., 100, 400, 1600, Auto, or custom): ").strip()
+            if iso:
+                user_prefs.imagen_settings["camera_settings"]["iso"] = iso
+                print_success(f"ISO set to: {iso}")
+            user_prefs.save_preferences()
+        
+        elif choice == "9":
+            # Filter Type
+            print_info("Select filter type:")
+            print_option("1", "UV")
+            print_option("2", "Polarizer")
+            print_option("3", "ND (Neutral Density)")
+            print_option("4", "Color Filter")
+            print_option("5", "Soft Focus Filter")
+            print_option("6", "Custom Filter")
+            print_option("b", "Back")
+            filter_choice = get_validated_input("Select filter type (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"])
+            if filter_choice == "_INTERRUPTED_":
+                return
+            if filter_choice == "b":
+                return
+            filters = {
+                "1": "uv",
+                "2": "polarizer",
+                "3": "nd",
+                "4": "color_filter",
+                "5": "soft_focus"
+            }
+            if filter_choice == "6":
+                custom_filter = input("Enter custom filter type: ").strip()
+                if custom_filter:
+                    user_prefs.imagen_settings["camera_settings"]["filter_type"] = custom_filter
+                    print_success(f"Filter type set to: {custom_filter}")
+            else:
+                user_prefs.imagen_settings["camera_settings"]["filter_type"] = filters[filter_choice]
+                print_success(f"Filter type set to: {filters[filter_choice]}")
+            user_prefs.save_preferences()
+        
+        elif choice == "1":
             print_info("Select camera model:")
             print_option("1", "DSLR")
             print_option("2", "Mirrorless")

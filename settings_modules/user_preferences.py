@@ -32,17 +32,99 @@ class UserPreferences:
             "number_of_images": 1,
             "seed": None,
             "negative_prompt": "",
-            "quality_settings": {},
+            "quality_settings": {
+                "resolution": "3840x2160",
+                "rendering_quality": "high"
+            },
             "style_settings": {
                 "art_movement": None,
-                "post_processing": []
+                "post_processing": [],
+                "style_era": None
             },
-            "camera_settings": {},
-            "lighting_settings": {},
-            "composition_settings": {},
-            "environment_settings": {},
-            "color_settings": {},
-            "detail_settings": {}
+            "camera_settings": {
+                "camera_model": None,
+                "lens_type": None,
+                "aperture": None,
+                "focal_length": None,
+                "shutter_speed": None,
+                "iso": None,
+                "filter_type": None,
+                "depth_of_field": None
+            },
+            "lighting_settings": {
+                "lighting_type": None,
+                "light_quality": None,
+                "light_direction": None,
+                "time_of_day": None
+            },
+            "composition_settings": {
+                "technique": None,
+                "focal_point": None,
+                "camera_angle": None,
+                "perspective": None
+            },
+            "environment_settings": {
+                "environment_type": None,
+                "atmospheric_effects": [],
+                "special_effects": []
+            },
+            "color_settings": {
+                "color_scheme": None,
+                "palette_type": None,
+                "color_temperature": None,
+                "color_contrast": None
+            },
+            "detail_settings": {
+                "detail_level": None,
+                "texture_quality": None
+            },
+            "digital_settings": {
+                "software": None,
+                "rendering_technique": None,
+                "digital_effects": [],
+                "resolution": None,
+                "filter_usage": [],
+                "brush_type": None,
+                "layer_complexity": None
+            },
+            "game_engine_settings": {
+                "engine_type": None,
+                "render_quality": None,
+                "special_effects": [],
+                "shader_type": None,
+                "post_effects": [],
+                "resolution": None,
+                "poly_detail": None,
+                "game_genre": None,
+                "game_era": None
+            },
+            "medium_settings": {
+                "painting_medium": None,
+                "canvas_type": None,
+                "brushwork": None,
+                "texture": None,
+                "layering_technique": None,
+                "stroke_style": None,
+                "detail_approach": None
+            },
+            "illustration_settings": {
+                "style": None,
+                "line_quality": None,
+                "color_approach": None,
+                "shading_style": None
+            },
+            "abstract_settings": {
+                "composition_type": None,
+                "color_scheme": None,
+                "texture_style": None,
+                "movement_type": None
+            },
+            "material_settings": {
+                "material_type": None,
+                "finish": None,
+                "texture": None,
+                "light_interaction": None
+            }
         }
         
         # Default wallpaper settings

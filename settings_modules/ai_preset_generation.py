@@ -35,14 +35,14 @@ def generate_ai_preset():
                 try:
                     from ai_preset_generator import generate_ai_preset as ai_gen_preset
 
-                    print_info("Attempting to generate AI preset (this may take a moment)...")
-                    # Now actually gather the base style:
+                    # Only show "Attempting to generate AI preset" if generating AI style (not for custom)
                     if style_choice == "1":
                         base_style = get_validated_input("Enter your custom style: ", allow_empty=False)
                         if not base_style:
                             print_error("No style entered.")
                             break
                     else:
+                        print_info("Attempting to generate AI preset (this may take a moment)...")
                         # Generate AI Style
                         try:
                             from ai_style_generator import generate_random_style, initialize_gemini

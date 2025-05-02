@@ -61,11 +61,12 @@ def manage_styles():
             print_option("4", "Set style (type name)")
             print_option("5", "Clear style")
             print_option("6", "Art Movement")
-            print_option("7", "Post-Processing Effects")
-            print_option("8", "Predefined Styles")
+            print_option("7", "Style Era")
+            print_option("8", "Post-Processing Effects")
+            print_option("9", "Predefined Styles")
             print_option("b", "Back")
 
-            valid_choices = ["4", "5", "b", "1", "2", "3", "6", "7", "8"]
+            valid_choices = ["4", "5", "b", "1", "2", "3", "6", "7", "8", "9"]
             style_choice = get_validated_input(
                 "Select an option (or type a style name to set)",
                 valid_choices,
@@ -170,6 +171,32 @@ def manage_styles():
                     print_success(f"Art movement set to {movements[movement_choice]}")
                     user_prefs.save_preferences()
             elif style_choice == "7":
+                print_info("Set Style Era (e.g., Modern, Golden Age, Silver Age, or custom):")
+                print_option("1", "Modern")
+                print_option("2", "Golden Age")
+                print_option("3", "Silver Age")
+                print_option("4", "Custom Era")
+                print_option("b", "Back")
+                era_choice = get_validated_input("Select style era (1-4, b)", ["1", "2", "3", "4", "b"])
+                if era_choice == "b":
+                    pass
+                else:
+                    eras = {
+                        "1": "Modern",
+                        "2": "Golden Age",
+                        "3": "Silver Age"
+                    }
+                    if era_choice == "4":
+                        custom_era = input("Enter custom style era: ").strip()
+                        if custom_era:
+                            user_prefs.imagen_settings["style_settings"]["style_era"] = custom_era
+                            print_success(f"Style era set to: {custom_era}")
+                            user_prefs.save_preferences()
+                    else:
+                        user_prefs.imagen_settings["style_settings"]["style_era"] = eras[era_choice]
+                        print_success(f"Style era set to: {eras[era_choice]}")
+                        user_prefs.save_preferences()
+            elif style_choice == "8":
                 while True:
                     print_info("Select post-processing effects:")
                     print_option("1", "Bloom Effect")
@@ -225,7 +252,7 @@ def manage_styles():
                     user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
                     print_success(f"Post-processing effects set to {effects[effects_choice][0]}")
                     user_prefs.save_preferences()
-            elif style_choice == "8":
+            elif style_choice == "9":
                 predefined_style_categories = {
                     "Artistic & Painterly": [
                         "oil_painting", "watercolor", "pastel", "impressionism", "expressionism", "pointillism", "divisionism", "art_nouveau", "art_deco", "cubism", "constructivism", "futurism", "surrealism", "pop_art", "ukiyo_e", "woodcut"

@@ -3,25 +3,64 @@ import google.generativeai as genai
 from wallpaper_settings import get_preferences
 import sys
 from ui_utils import print_warning, print_section, print_info, get_validated_input, print_success
+import logging
+from typing import Optional, Dict, Any
+import json
+import time
 
-# Global variable to track if Gemini is initialized
-gemini_initialized = False
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Attempt to get GEMINI_API_KEY from environment and configure Gemini
+# Configuration constants
+DEFAULT_MODEL = "gemini-2.0-flash"
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
+# Global state
+class GeminiState:
+    def __init__(self):
+        self.initialized = False
+        self.api_key = None
+        self.model = None
+        self.last_error = None
+        self.retry_count = 0
+
+gemini_state = GeminiState()
+
+# Load configuration from environment
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_initialized = True
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_state.api_key = GEMINI_API_KEY
+        gemini_state.initialized = True
+        logger.info("Successfully initialized Gemini with API key")
+    except Exception as e:
+        logger.error(f"Failed to initialize Gemini: {e}")
+        gemini_state.last_error = str(e)
 else:
-    print("Warning: GEMINI_API_KEY environment variable not set. AI style generation will not work.")
+    logger.warning("GEMINI_API_KEY environment variable not set. AI style generation will not work.")
 
-def initialize_gemini(api_key: str):
+def initialize_gemini(api_key: str) -> bool:
     """
     Initialize the Gemini model with the provided API key.
+    Returns True if initialization was successful, False otherwise.
     """
-    global gemini_initialized
-    genai.configure(api_key=api_key)
-    gemini_initialized = True
+    try:
+        genai.configure(api_key=api_key)
+        gemini_state.api_key = api_key
+        gemini_state.initialized = True
+        gemini_state.retry_count = 0
+        logger.info("Successfully initialized Gemini with new API key")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to initialize Gemini: {e}")
+        gemini_state.last_error = str(e)
+        return False
 
 def generate_style_prompt(category: str = None, style_type: str = "simple") -> str:
     """
@@ -29,6 +68,13 @@ def generate_style_prompt(category: str = None, style_type: str = "simple") -> s
     If category is provided, constrain to that art style family.
     If style_type is "simple", generate a style modifier (e.g. "vibrant cyberpunk neon").
     If style_type is "detailed", ask for a richer style title plus 1-2 characteristic notes.
+    
+    Args:
+        category: Optional category to constrain the style generation
+        style_type: Type of style to generate ('simple' or 'detailed')
+    
+    Returns:
+        str: The generated prompt
     """
     base = "You are an expert AI art style generator. "
     if category:
@@ -36,6 +82,7 @@ def generate_style_prompt(category: str = None, style_type: str = "simple") -> s
             f"Limit the style to the '{category}' category of art/design. "
             f"Focus on the distinctive characteristics, techniques, or traditions of this category."
         )
+    
     if style_type == "simple":
         core = (
             "Generate a single cohesive artistic style description that represents ONE clear visual concept. "
@@ -51,36 +98,66 @@ def generate_style_prompt(category: str = None, style_type: str = "simple") -> s
             "Below the name, in one sentence, describe 1-2 visual or technical hallmarks of this style, inspired by its category."
             "Output structure: Name on first line; description on second line."
         )
+    
     return base + core
 
-def generate_random_style(category: str = None, style_type: str = "simple"):
+def generate_random_style(category: str = None, style_type: str = "simple") -> Optional[Dict[str, str]]:
     """
     Use Gemini to generate a random style, optionally for a specific canonical category.
-    Returns the generated style string or a detailed description.
+    Implements retry logic and improved error handling.
+    
+    Args:
+        category: Optional category to constrain the style generation
+        style_type: Type of style to generate ('simple' or 'detailed')
+    
+    Returns:
+        Optional[Dict[str, str]]: The generated style as a dictionary with 'name' and 'description' keys,
+        or None if generation fails
     """
-    if not gemini_initialized:
+    if not gemini_state.initialized:
         raise RuntimeError("Gemini model is not initialized. Please initialize with your API key first.")
+    
     prompt = generate_style_prompt(category, style_type)
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
-        style_text = None
-        if response and hasattr(response, 'text') and response.text:
-            style_text = response.text.strip()
-        elif response and hasattr(response, 'candidates') and response.candidates:
-            style_text = response.candidates[0].content.parts[0].text.strip()
-        if style_text:
+    
+    for attempt in range(MAX_RETRIES):
+        try:
+            logger.info(f"Generating style (attempt {attempt + 1}/{MAX_RETRIES})")
+            model = genai.GenerativeModel(DEFAULT_MODEL)
+            response = model.generate_content(prompt)
+            
+            if not response:
+                logger.warning("No response received from Gemini")
+                continue
+                
+            style_text = None
+            if hasattr(response, 'text') and response.text:
+                style_text = response.text.strip()
+            elif hasattr(response, 'candidates') and response.candidates:
+                style_text = response.candidates[0].content.parts[0].text.strip()
+            
+            if not style_text:
+                logger.warning("No style text found in response")
+                continue
+                
             style_text = style_text.strip(' "\'\n\r')
-            if style_type != "simple" and "\n" in style_text:
+            
+            if style_type == "simple":
+                return {"name": style_text, "description": ""}
+            elif "\n" in style_text:
                 name, desc = style_text.split("\n", 1)
                 return {"name": name.strip(), "description": desc.strip()}
-            return style_text
-        print("No style text returned from Gemini response.")
-        return None
-    except Exception as e:
-        print(f"Error generating style with Gemini: {e}")
-        return None
+            
+        except Exception as e:
+            gemini_state.retry_count += 1
+            logger.error(f"Error generating style (attempt {attempt + 1}): {e}")
+            if attempt < MAX_RETRIES - 1:
+                logger.info(f"Retrying in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
+            else:
+                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts")
+                return None
+    
+    return None
 
 def generate_random_style_by_category(category: str):
     """
@@ -88,83 +165,55 @@ def generate_random_style_by_category(category: str):
     Returns the style string.
     """
     return generate_random_style(category=category, style_type="simple")
-def canonicalize_style_name(style_name: str):
+def canonicalize_style_name(style_name: str) -> str:
     """
     Map a generated/entered style string to a canonical category for validation or downstream use.
-    Enhanced: Map art movements/eras/techniques to canonical media categories!
+    Uses a more efficient and maintainable approach with dictionaries and sets.
+    
+    Args:
+        style_name: The style name to categorize
+    
+    Returns:
+        str: The canonical category name
     """
-    name = style_name.lower()
-    # Oil painting detection (includes major oil eras/movements)
-    oil_terms = ["oil", "impasto", "baroque", "impression", "post-impression", "romanticism",
-                 "expressionism", "fauvism", "pointillism", "divisionism", "van gogh", "renoir", "manet"]
-    if any(term in name for term in oil_terms):
-        return "oil_painting"
-    watercolor_terms = ["watercolor", "watercolour", "aquarelle"]
-    if any(term in name for term in watercolor_terms):
-        return "watercolor"
-    pastel_terms = ["pastel", "degas"]
-    if any(term in name for term in pastel_terms):
-        return "pastel"
-    charcoal_terms = ["charcoal", "carboncillo"]
-    if any(term in name for term in charcoal_terms):
-        return "charcoal"
-    pencil_terms = ["pencil", "graphite", "colored pencil"]
-    if any(term in name for term in pencil_terms):
-        return "pencil_sketch"
-    ink_terms = ["ink", "pen & ink", "line", "pen and ink"]
-    if any(term in name for term in ink_terms):
-        return "ink_drawing"
-    minimal_terms = ["minimal", "minimalism", "reductive"]
-    if any(term in name for term in minimal_terms):
-        return "minimalist"
-    geometric_terms = ["geometric", "geometry", "polygon", "low poly", "constructivism"]
-    if any(term in name for term in geometric_terms):
-        return "geometric"
-    minimalist_geometric_terms = ["minimalist geometric", "minimal geometric", "geometric minimalism"]
-    if any(term in name for term in minimalist_geometric_terms):
-        return "minimalist_geometric"
-    psychedelic_terms = ["psychedelic", "trippy", "hallucinogenic", "psychedelia"]
-    if any(term in name for term in psychedelic_terms):
-        return "psychedelic"
-    surrealism_terms = ["surrealism", "surreal", "dreamlike", "fantastical"]
-    if any(term in name for term in surrealism_terms):
-        return "surrealism"
-    fantasy_landscape_terms = ["fantasy landscape", "fantastical landscape", "enchanted landscape"]
-    if any(term in name for term in fantasy_landscape_terms):
-        return "fantasy_landscape"
-    cyberpunk_cityscape_terms = ["cyberpunk cityscape", "neon city", "futuristic cityscape"]
-    if any(term in name for term in cyberpunk_cityscape_terms):
-        return "cyberpunk_cityscape"
-    pixel_terms = ["pixel", "8-bit", "16-bit", "pixelated"]
-    if any(term in name for term in pixel_terms):
-        return "illustration_pixel"
-    anime_terms = ["anime", "manga", "shojo", "shonen", "seinen"]
-    if any(term in name for term in anime_terms):
-        return "illustration_anime_manga"
-    comic_terms = ["comic", "graphic novel"]
-    if any(term in name for term in comic_terms):
-        return "illustration_comic"
-    photo_terms = ["photo", "realistic", "photograph", "film", "kodak", "dslr", "cinematic", "fujifilm", "shot on", "hyperreal"]
-    if any(term in name for term in photo_terms):
-        return "photographic"
-    game_terms = ["game", "engine", "unreal", "unity", "fps", "rpg", "rendered", "in-engine"]
-    if any(term in name for term in game_terms):
-        return "game_style"
-    digital_terms = ["digital", "vector", "glitch", "vaporwave", "retrowave", "3d", "render"]
-    if any(term in name for term in digital_terms):
-        return "digital_art"
-    abstract_terms = ["abstract", "conceptual", "cubist", "fauvist", "expressionist", "non-representational", "dreamscape", "surreal"]
-    if any(term in name for term in abstract_terms):
-        return "abstract_conceptual"
-    sculptural_terms = ["sculpture", "sculpted", "statue", "bust", "relief", "bronze", "marble", "clay"]
-    if any(term in name for term in sculptural_terms):
-        return "material_sculptural"
-    fantasy_terms = ["fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "castle"]
-    if any(term in name for term in fantasy_terms):
-        return "fantasy"
-    sci_fi_terms = ["sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"]
-    if any(term in name for term in sci_fi_terms):
-        return "sci_fi"
+    # Convert to lowercase and split into words for better matching
+    words = set(style_name.lower().split())
+    
+    # Define category mappings using sets for efficient lookup
+    category_mappings = {
+        "oil_painting": {
+            "oil", "impasto", "baroque", "impression", "post-impression", "romanticism",
+            "expressionism", "fauvism", "pointillism", "divisionism", "van gogh", "renoir", "manet"
+        },
+        "watercolor": {"watercolor", "watercolour", "aquarelle"},
+        "pastel": {"pastel", "degas"},
+        "charcoal": {"charcoal", "carboncillo"},
+        "pencil_sketch": {"pencil", "graphite", "colored pencil"},
+        "ink_drawing": {"ink", "pen & ink", "line", "pen and ink"},
+        "minimalist": {"minimal", "minimalism", "reductive"},
+        "geometric": {"geometric", "geometry", "polygon", "low poly", "constructivism"},
+        "minimalist_geometric": {"minimalist geometric", "minimal geometric", "geometric minimalism"},
+        "psychedelic": {"psychedelic", "trippy", "hallucinogenic", "psychedelia"},
+        "surrealism": {"surrealism", "surreal", "dreamlike", "fantastical"},
+        "fantasy_landscape": {"fantasy landscape", "fantastical landscape", "enchanted landscape"},
+        "cyberpunk_cityscape": {"cyberpunk cityscape", "neon city", "futuristic cityscape"},
+        "illustration_pixel": {"pixel", "8-bit", "16-bit", "pixelated"},
+        "illustration_anime_manga": {"anime", "manga", "shojo", "shonen", "seinen"},
+        "illustration_comic": {"comic", "graphic novel"},
+        "photographic": {"photo", "realistic", "photograph", "film", "kodak", "dslr", "cinematic", "fujifilm", "shot on", "hyperreal"},
+        "game_style": {"game", "engine", "unreal", "unity", "fps", "rpg", "rendered", "in-engine"},
+        "digital_art": {"digital", "vector", "glitch", "vaporwave", "retrowave", "3d", "render"},
+        "abstract_conceptual": {"abstract", "conceptual", "cubist", "fauvist", "expressionist", "non-representational", "dreamscape", "surreal"},
+        "material_sculptural": {"sculpture", "sculpted", "statue", "bust", "relief", "bronze", "marble", "clay"},
+        "fantasy": {"fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "castle"},
+        "sci_fi": {"sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"}
+    }
+    
+    # Check each category for matching terms
+    for category, terms in category_mappings.items():
+        if any(term in words for term in terms):
+            return category
+    
     return "unknown"
 
 def handle_style_generation(user_prefs):
@@ -174,7 +223,7 @@ def handle_style_generation(user_prefs):
     Each style is generated in a random (non-repeating) canonical category for greater diversity.
     """
     import random
-    if not gemini_initialized:
+    if not gemini_state.initialized:
         print_warning("Gemini model is not initialized. Please ensure GEMINI_API_KEY environment variable is set.")
         return
     all_categories = [
@@ -199,22 +248,18 @@ def handle_style_generation(user_prefs):
         import re
         name = style['name']
         desc = style['description']
-        name_for_show = name
-        desc_for_show = desc
-        m = re.search(r"\*\*(.+?)\*\*", desc)
-        if m:
-            name_for_show = m.group(1)
-            desc_match = re.search(r"\*\*.+?\*\*\n([^\*]+)", desc)
-            if desc_match:
-                desc_for_show = desc_match.group(1).strip()
-            else:
-                desc_for_show = desc
-        print_info(f"Generated AI Style (Category: {chosen_category}):\n  {name_for_show}\n  {desc_for_show}")
+
+        # Extract style name: from the output, prefer first line, strip markdown and whitespace
+        # Handles case where output is "**Style Name**\nDescription" or just "Style Name"
+        import re
+        first_line = name.splitlines()[0] if name else ""
+        name_extracted = re.sub(r"^\*+|\*+$", "", first_line).strip()
+        print_info(f"Generated AI Style (Category: {chosen_category}):\n  {name_extracted}\n  {desc.strip()}")
 
         save_choice = get_validated_input("Save this style to your preferences? (y/n/q)", ["y", "n", "q"])
         if save_choice == "y":
-            user_prefs.add_style(name_for_show)
-            print_success(f"Style set to: {name_for_show}")
+            user_prefs.add_style(name_extracted)
+            print_success(f"Style set to: {name_extracted}")
         elif save_choice == "q":
             print_info("Exiting AI style generator.")
             break

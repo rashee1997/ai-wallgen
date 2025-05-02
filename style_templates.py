@@ -142,9 +142,48 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "environment": "[ mystical forests, floating islands, enchanted castles ]",
             "lighting": "[ ethereal, glowing, magical ]",
             "color_palette": "[ rich, vibrant, otherworldly ]",
-            "mood": "[ epic, adventurous, mysterious ]"
+            "mood": "[ epic, adventurous, mysterious ]",
+            "magical_elements": ["glowing runes", "floating crystals", "enchanted flora"],
+            "atmospheric_effects": ["mist", "aurora", "magical particles"]
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ panoramic, wide-angle ]"
+        imagen_settings["composition_settings"]["perspective"] = "[ grand, dramatic ]"
+
+    elif style_category == "fantasy_portrait":
+        # Fantasy portrait style settings
+        imagen_settings["fantasy_settings"] = {
+            "character_type": ["elf", "dwarf", "dragon", "wizard", "mythical creature"],
+            "costuming": ["elaborate", "ancient", "mystical", "regal"],
+            "accessories": ["magical staff", "crown", "amulet", "winged helm"],
+            "mood": ["majestic", "mysterious", "powerful", "ancient wisdom"],
+            "background_elements": ["ancient runes", "magical symbols", "enchanted forest", "castle ruins"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
+        imagen_settings["composition_settings"]["lighting_setup"] = "[ dramatic, chiaroscuro ]"
+
+    elif style_category == "fantasy_battle":
+        # Fantasy battle scene settings
+        imagen_settings["fantasy_settings"] = {
+            "combat_type": ["dragon", "wizard", "knight", "orc", "elf"],
+            "environment": ["ancient battlefield", "ruined castle", "enchanted forest"],
+            "action_elements": ["magical spells", "sword combat", "dragon fire", "enchanted weapons"],
+            "atmosphere": ["chaotic", "epic", "dramatic", "intense"],
+            "special_effects": ["explosions", "magical auras", "glowing runes", "enchanted weapons"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ dynamic, action-packed ]"
+        imagen_settings["composition_settings"]["motion_blur"] = "[ moderate, high ]"
+
+    elif style_category == "fantasy_cityscape":
+        # Fantasy cityscape settings
+        imagen_settings["fantasy_settings"] = {
+            "architecture_style": ["gothic", "medieval", "ancient", "magical"],
+            "environment": ["floating city", "underground cavern", "enchanted forest", "magical harbor"],
+            "magical_elements": ["flying ships", "magical lights", "enchanted architecture", "floating platforms"],
+            "time_of_day": ["twilight", "moonlit", "magical dawn"],
+            "atmosphere": ["mysterious", "enchanted", "ancient", "magical"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ wide-angle, panoramic ]"
+        imagen_settings["lighting_settings"]["light_quality"] = "[ magical, ethereal ]"
 
     elif style_category == "cyberpunk_cityscape":
         # Cyberpunk cityscape style settings
@@ -152,9 +191,49 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "environment": "[ neon-lit streets, futuristic skyscrapers, rainy nights ]",
             "lighting": "[ neon, reflective, high contrast ]",
             "color_palette": "[ dark, neon, saturated ]",
-            "mood": "[ gritty, futuristic, dystopian ]"
+            "mood": "[ gritty, futuristic, dystopian ]",
+            "atmospheric_effects": ["rain", "fog", "neon glow", "digital noise"],
+            "architectural_elements": ["skyscrapers", "billboards", "corporate towers", "alleyways"],
+            "special_effects": ["digital overlays", "holograms", "glitch effects", "cybernetic elements"]
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ street-level, aerial ]"
+        imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, reflective ]"
+
+    elif style_category == "cyberpunk_portrait":
+        # Cyberpunk portrait style settings
+        imagen_settings["cyberpunk_settings"] = {
+            "character_type": ["hacker", "cybernetic", "corporate", "street samurai"],
+            "costuming": ["tech-infused", "streetwear", "corporate", "military"],
+            "cybernetic_elements": ["cybernetic implants", "digital overlays", "glowing tattoos", "enhanced eyes"],
+            "environment": ["urban", "industrial", "corporate", "underground"],
+            "mood": ["cold", "dystopian", "rebellious", "mysterious"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
+        imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, digital ]"
+
+    elif style_category == "cyberpunk_action":
+        # Cyberpunk action scene settings
+        imagen_settings["cyberpunk_settings"] = {
+            "action_type": ["combat", "hacking", "chase", "assault"],
+            "environment": ["city streets", "corporate tower", "underground", "cybernetic lab"],
+            "special_effects": ["digital overlays", "holograms", "glitch effects", "cybernetic enhancements"],
+            "atmosphere": ["intense", "chaotic", "futuristic", "dystopian"],
+            "motion_elements": ["fast movement", "digital effects", "cybernetic enhancements", "glitch effects"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ dynamic, action-packed ]"
+        imagen_settings["composition_settings"]["motion_blur"] = "[ high ]"
+
+    elif style_category == "cyberpunk_technology":
+        # Cyberpunk technology scene settings
+        imagen_settings["cyberpunk_settings"] = {
+            "technology_type": ["AI", "cybernetics", "holograms", "quantum computing"],
+            "environment": ["lab", "data center", "network", "cybernetic interface"],
+            "special_effects": ["digital overlays", "glitch effects", "data streams", "holographic displays"],
+            "atmosphere": ["futuristic", "advanced", "complex", "digital"],
+            "technical_elements": ["circuitry", "data streams", "holograms", "digital interfaces"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ technical, focused ]"
+        imagen_settings["lighting_settings"]["light_quality"] = "[ digital, neon, technical ]"
 
     elif style_category == "game_style":
         # For game styles, use game engine-specific settings
@@ -164,7 +243,9 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "special_effects": ["[ effect ]"],
             "shader_type": "[ PBR/stylized/cel ]",
             "post_effects": ["[ bloom/ambient occlusion/etc ]"],
-            "resolution": "[ game appropriate resolution ]"
+            "resolution": "[ game appropriate resolution ]",
+            "physics_settings": ["[ realistic/arcade/etc ]"],
+            "animation_style": "[ smooth/stylized/cel-shaded ]"
         }
         imagen_settings["composition_settings"]["camera_angle"] = "[ game camera perspective ]"
         imagen_settings["composition_settings"]["view_mode"] = "[ first-person/third-person/isometric/top-down ]"
@@ -172,32 +253,108 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         imagen_settings["style_settings"]["poly_detail"] = "[ high/low/stylized ]"
         imagen_settings["style_settings"]["game_genre"] = "[ RPG/FPS/strategy/etc ]"
         imagen_settings["style_settings"]["game_era"] = "[ 8-bit/16-bit/modern/next-gen ]"
+        imagen_settings["game_settings"] = {
+            "interactivity": ["high/medium/low"],
+            "environment_type": ["indoor/outdoor/urban/fantasy"],
+            "character_style": ["realistic/stylized/cartoony"],
+            "lighting_type": ["dynamic/static/ambient"]
+        }
+
+    elif style_category == "game_retro":
+        # Retro game style settings
+        imagen_settings["game_engine_settings"] = {
+            "engine_type": ["retro", "pixel", "8-bit", "16-bit"],
+            "render_quality": ["pixelated", "chunky", "chunky pixels"],
+            "special_effects": ["sprite-based", "pixel animations", "retro filters"],
+            "shader_type": ["pixel", "chunky", "retro"],
+            "post_effects": ["CRT", "scanlines", "pixelation"],
+            "resolution": ["low", "medium", "chunky"],
+            "color_palette": ["limited", "chunky", "retro"]
+        }
+        imagen_settings["composition_settings"]["camera_angle"] = "[ top-down, side-scrolling ]"
+        imagen_settings["composition_settings"]["view_mode"] = "[ chunky pixels, chunky sprites ]"
+        imagen_settings["style_settings"]["poly_detail"] = "[ chunky pixels, chunky sprites ]"
+        imagen_settings["style_settings"]["game_era"] = "[ 8-bit, 16-bit, chunky pixels ]"
+        imagen_settings["game_settings"] = {
+            "retro_style": ["arcade", "platformer", "shmup"],
+            "color_depth": ["chunky", "chunky pixels", "chunky sprites"],
+            "animation_style": ["chunky", "chunky pixels", "chunky sprites"]
+        }
+
+    elif style_category == "game_cel_shaded":
+        # Cel-shaded game style settings
+        imagen_settings["game_engine_settings"] = {
+            "engine_type": ["cel-shaded", "toon", "anime"],
+            "render_quality": ["smooth", "clean edges", "flat shading"],
+            "special_effects": ["ink outlines", "cell animation", "toon shading"],
+            "shader_type": ["cel-shaded", "toon", "anime"],
+            "post_effects": ["ink outlines", "cell animation", "toon shading"],
+            "resolution": ["high", "medium", "chunky"],
+            "color_palette": ["vibrant", "chunky", "chunky pixels"]
+        }
+        imagen_settings["composition_settings"]["camera_angle"] = "[ cinematic, dynamic ]"
+        imagen_settings["composition_settings"]["view_mode"] = "[ third-person, cinematic ]"
+        imagen_settings["style_settings"]["poly_detail"] = "[ high, chunky pixels ]"
+        imagen_settings["style_settings"]["game_genre"] = "[ RPG, action, adventure ]"
+        imagen_settings["game_settings"] = {
+            "animation_style": ["cell animation", "chunky pixels", "chunky sprites"],
+            "lighting_type": ["soft", "chunky pixels", "chunky sprites"],
+            "character_style": ["anime", "chunky pixels", "chunky sprites"]
+        }
 
     elif style_category == "traditional_painting_drawing" or style_category in ["oil_painting", "watercolor", "pastel", "charcoal"]:
         # Determine medium based on category name if applicable
         medium = None
         if style_category == "oil_painting":
             medium = "oil paint"
+            imagen_settings["medium_settings"] = {
+                "painting_medium": "oil paint",
+                "canvas_type": ["canvas", "panel", "linen"],
+                "brushwork": ["impasto", "glazing", "scumbling", "dry brush"],
+                "texture": ["thick", "layered", "smooth", "textured"],
+                "layering_technique": ["fat over lean", "glazing", "scumbling", "impasto"],
+                "stroke_style": ["visible", "blended", "textured", "layered"],
+                "detail_approach": ["high", "medium", "low"]
+            }
         elif style_category == "watercolor":
             medium = "watercolor"
+            imagen_settings["medium_settings"] = {
+                "painting_medium": "watercolor",
+                "paper_type": ["cold press", "hot press", "rough"],
+                "technique": ["wet-on-wet", "wet-on-dry", "dry brush", "glazing"],
+                "texture": ["smooth", "textured", "organic"],
+                "layering_technique": ["layered", "washes", "glazing"],
+                "stroke_style": ["soft", "blended", "organic", "watery"],
+                "detail_approach": ["high", "medium", "low"]
+            }
         elif style_category == "pastel":
             medium = "pastel"
+            imagen_settings["medium_settings"] = {
+                "painting_medium": "pastel",
+                "paper_type": ["sanded", "textured", "smooth"],
+                "technique": ["layering", "scumbling", "blending"],
+                "texture": ["soft", "layered", "textured"],
+                "layering_technique": ["layered", "blended", "scumbled"],
+                "stroke_style": ["soft", "layered", "textured"],
+                "detail_approach": ["high", "medium", "low"]
+            }
         elif style_category == "charcoal":
             medium = "charcoal"
+            imagen_settings["medium_settings"] = {
+                "painting_medium": "charcoal",
+                "paper_type": ["smooth", "textured", "newsprint"],
+                "technique": ["hatching", "cross-hatching", "smudging"],
+                "texture": ["smooth", "textured", "gritty"],
+                "layering_technique": ["layered", "hatched", "smudged"],
+                "stroke_style": ["sharp", "soft", "textured"],
+                "detail_approach": ["high", "medium", "low"]
+            }
         
-        # For traditional painting, add medium-specific settings
-        imagen_settings["medium_settings"] = {
-            "painting_medium": medium if medium else "[ oil/watercolor/acrylic/etc ]",
-            "canvas_type": "[ canvas/paper/wood/etc ]",
-            "brushwork": "[ technique ]",
-            "texture": "[ texture quality ]",
-            "layering_technique": "[ glazing/impasto/etc ]",
-            "stroke_style": "[ visible/blended/etc ]",
-            "detail_approach": "[ fine/loose/etc ]"
-        }
         # Add stylistic choices common in traditional painting
-        imagen_settings["style_settings"]["brush_style"] = "[ impressionist/detailed/rough/etc ]"
-        imagen_settings["style_settings"]["painter_influence"] = "[ famous artist influence ]"
+        imagen_settings["style_settings"]["brush_style"] = ["impressionist", "realistic", "expressionist", "abstract"]
+        imagen_settings["style_settings"]["painter_influence"] = ["Rembrandt", "Van Gogh", "Monet", "Picasso", "Degas"]
+        imagen_settings["style_settings"]["period"] = ["Renaissance", "Baroque", "Impressionist", "Modern", "Contemporary"]
+        imagen_settings["style_settings"]["movement"] = ["Realism", "Impressionism", "Expressionism", "Cubism", "Surrealism"]
 
     elif style_category == "drawing" or style_category in ["pencil_sketch", "ink_drawing", "line_art"]:
         # Drawing specific settings

@@ -41,7 +41,8 @@ try:
     import colorama
     from colorama import Fore, Style, Back
     # Initialize colorama for cross-platform colored terminal output
-    colorama.init()
+    # Use specific parameters for better PowerShell support
+    colorama.init(convert=False, strip=False)
     COLORAMA_AVAILABLE = True
 except ImportError:
     # Create dummy classes for Fore, Style, and Back if colorama is not available

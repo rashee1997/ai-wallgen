@@ -121,7 +121,7 @@ user_prefs = initialize_settings()
 gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
 def _extract_imagen_settings(user_prefs):
-    """Extract relevant Imagen settings from user preferences."""
+    """Extract relevant Imagen settings from user preferences with enhanced style support."""
     settings = user_prefs.imagen_settings
     return {
         "camera_settings": settings.get("camera_settings", {}),
@@ -133,11 +133,17 @@ def _extract_imagen_settings(user_prefs):
         "color_settings": settings.get("color_settings", {}),
         "quality_settings": settings.get("quality_settings", {}),
         "negative_prompt": settings.get("negative_prompt", ""),
-        "aspect_ratio": user_prefs.aspect_ratio # Aspect ratio is directly on user_prefs
+        "aspect_ratio": user_prefs.aspect_ratio,
+        "digital_settings": settings.get("digital_settings", {}),
+        "game_engine_settings": settings.get("game_engine_settings", {}),
+        "medium_settings": settings.get("medium_settings", {}),
+        "illustration_settings": settings.get("illustration_settings", {}),
+        "abstract_settings": settings.get("abstract_settings", {}),
+        "material_settings": settings.get("material_settings", {})
     }
 
 def generate_prompt_gemini(tags, user_prefs):
-    """Generate a detailed prompt using Gemini and user preferences."""
+    """Generate a detailed prompt using Gemini and user preferences with enhanced style support."""
     try:
         cache_key = str(tags) + str(user_prefs.imagen_settings) + str(gemini_model_name)
         # Check if we have this prompt cached
@@ -156,17 +162,32 @@ def generate_prompt_gemini(tags, user_prefs):
         quality_settings = settings_data["quality_settings"]
         negative_prompt = settings_data["negative_prompt"]
         aspect_ratio = settings_data["aspect_ratio"]
+        digital_settings = settings_data["digital_settings"]
+        game_engine_settings = settings_data["game_engine_settings"]
+        medium_settings = settings_data["medium_settings"]
+        illustration_settings = settings_data["illustration_settings"]
+        abstract_settings = settings_data["abstract_settings"]
+        material_settings = settings_data["material_settings"]
 
         # Get user preferences (style and mood are still accessed directly for clarity)
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
         mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else None
+
+        # Extract style-specific settings
+        digital_software = digital_settings.get("software", "")
+        digital_effects = digital_settings.get("digital_effects", [])
+        game_engine = game_engine_settings.get("engine_type", "")
+        game_genre = game_engine_settings.get("game_genre", "")
+        painting_medium = medium_settings.get("painting_medium", "")
+        illustration_style = illustration_settings.get("style", "")
+        abstract_composition = abstract_settings.get("composition_type", "")
+        material_type = material_settings.get("material_type", "")
 
         # Extract specific settings for the prompt
         camera_model = camera_settings.get("camera_model")
         lens_type = camera_settings.get("lens_type")
         aperture = camera_settings.get("aperture")
         special_lens = camera_settings.get("special_lens")
-        # FIX: Access depth_of_field correctly from composition_settings
         depth_of_field = composition_settings.get("depth_of_field")
 
         time_of_day = lighting_settings.get("time_of_day")

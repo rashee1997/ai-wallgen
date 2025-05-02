@@ -13,15 +13,31 @@ def manage_composition_settings():
         print_option("2", "Camera Angle")
         print_option("3", "Visual Flow")
         print_option("4", "Depth Layering")
-        print_option("5", "Environment Settings")
+        print_option("5", "Focal Point")
+        print_option("6", "Perspective")
+        print_option("7", "Environment Settings")
         print_option("b", "Back")
         
-        choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
+        choice = get_validated_input("Select option (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"])
         
         if choice == "b":
             return
-            
-        if choice == "1":
+        
+        if choice == "5":
+            focal_point = input("Enter focal point (e.g., subject, feature, or theme to emphasize): ").strip()
+            if focal_point:
+                user_prefs.imagen_settings["composition_settings"]["focal_point"] = focal_point
+                print_success(f"Focal point set to: {focal_point}")
+            user_prefs.save_preferences()
+        
+        elif choice == "6":
+            perspective = input("Enter perspective (e.g., wide, narrow, linear, forced, atmospheric, or custom): ").strip()
+            if perspective:
+                user_prefs.imagen_settings["composition_settings"]["perspective"] = perspective
+                print_success(f"Perspective set to: {perspective}")
+            user_prefs.save_preferences()
+        
+        elif choice == "1":
             print_info("Select composition technique:")
             print_option("1", "Rule of Thirds")
             print_option("2", "Golden Ratio")
@@ -153,7 +169,7 @@ def manage_composition_settings():
             
             user_prefs.save_preferences()
             
-        elif choice == "5":
+        elif choice == "7":
             while True:
                 print_info("Environment Settings:")
                 print_option("1", "Weather")

@@ -66,7 +66,7 @@ def set_prompt_preferences(use_preferences: bool):
     logging.info(f"Prompt generation with user preferences: {use_preferences}")
 
 def generate_prompt_gemini(tags, user_prefs=None):
-    """Generate a detailed prompt using Gemini and user preferences.
+    """Generate a detailed prompt using Gemini and user preferences with enhanced style support.
     
     Args:
         tags: List of tags to include in the prompt
@@ -98,7 +98,13 @@ def generate_prompt_gemini(tags, user_prefs=None):
                     "style_settings": {},
                     "detail_settings": {},
                     "color_settings": {},
-                    "quality_settings": {"resolution": "3840x2160"}
+                    "quality_settings": {"resolution": "3840x2160"},
+                    "digital_settings": {},
+                    "game_engine_settings": {},
+                    "medium_settings": {},
+                    "illustration_settings": {},
+                    "abstract_settings": {},
+                    "material_settings": {}
                 }
             )
         
@@ -123,6 +129,41 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Get all settings from imagen_settings
         settings = user_prefs.imagen_settings
         
+        # Extract style-specific settings
+        digital_settings = settings.get("digital_settings", {})
+        game_engine_settings = settings.get("game_engine_settings", {})
+        medium_settings = settings.get("medium_settings", {})
+        illustration_settings = settings.get("illustration_settings", {})
+        abstract_settings = settings.get("abstract_settings", {})
+        material_settings = settings.get("material_settings", {})
+        
+        # Digital art settings
+        digital_software = digital_settings.get("software", "")
+        digital_effects = digital_settings.get("digital_effects", [])
+        digital_resolution = digital_settings.get("resolution", "")
+        
+        # Game engine settings
+        game_engine = game_engine_settings.get("engine_type", "")
+        game_genre = game_engine_settings.get("game_genre", "")
+        game_shader = game_engine_settings.get("shader_type", "")
+        
+        # Traditional medium settings
+        painting_medium = medium_settings.get("painting_medium", "")
+        brushwork = medium_settings.get("brushwork", "")
+        texture = medium_settings.get("texture", "")
+        
+        # Illustration settings
+        illustration_style = illustration_settings.get("style", "")
+        line_quality = illustration_settings.get("line_quality", "")
+        
+        # Abstract settings
+        abstract_composition = abstract_settings.get("composition_type", "")
+        movement_type = abstract_settings.get("movement_type", "")
+        
+        # Material settings
+        material_type = material_settings.get("material_type", "")
+        material_finish = material_settings.get("finish", "")
+        
         # Extract camera settings for the prompt
         camera_settings = settings.get("camera_settings", {})
         camera_model = camera_settings.get("camera_model")
@@ -130,6 +171,10 @@ def generate_prompt_gemini(tags, user_prefs=None):
         aperture = camera_settings.get("aperture")
         special_lens = camera_settings.get("special_lens")
         depth_of_field = camera_settings.get("depth_of_field")
+        focal_length = camera_settings.get("focal_length")
+        shutter_speed = camera_settings.get("shutter_speed")
+        iso = camera_settings.get("iso")
+        filter_type = camera_settings.get("filter_type")
         
         # Extract lighting settings for the prompt
         lighting_settings = settings.get("lighting_settings", {})
@@ -145,6 +190,8 @@ def generate_prompt_gemini(tags, user_prefs=None):
         camera_angle = composition_settings.get("camera_angle")
         visual_flow = composition_settings.get("visual_flow")
         depth_layering = composition_settings.get("depth_layering")
+        focal_point = composition_settings.get("focal_point")
+        perspective = composition_settings.get("perspective")
         
         # Extract environment settings for the prompt
         environment_settings = settings.get("environment_settings", {})
@@ -156,6 +203,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Extract style settings for the prompt
         style_settings = settings.get("style_settings", {})
         art_movement = style_settings.get("art_movement")
+        style_era = style_settings.get("style_era")
         post_processing = style_settings.get("post_processing", [])
         
         # Extract detail settings for the prompt
@@ -186,6 +234,49 @@ def generate_prompt_gemini(tags, user_prefs=None):
         if not negative_prompt:
             negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
         
+        # Build style-specific technical context
+        style_context = []
+        
+        # Digital art context
+        if digital_software:
+            style_context.append(f"Created using {digital_software}")
+        if digital_effects:
+            style_context.append(f"With digital effects: {', '.join(digital_effects)}")
+        
+        # Game art context
+        if game_engine:
+            style_context.append(f"Rendered in {game_engine}")
+        if game_genre:
+            style_context.append(f"Game genre: {game_genre}")
+        if game_shader:
+            style_context.append(f"Shader type: {game_shader}")
+        
+        # Traditional medium context
+        if painting_medium:
+            style_context.append(f"Medium: {painting_medium}")
+        if brushwork:
+            style_context.append(f"Brushwork: {brushwork}")
+        if texture:
+            style_context.append(f"Texture: {texture}")
+        
+        # Illustration context
+        if illustration_style:
+            style_context.append(f"Illustration style: {illustration_style}")
+        if line_quality:
+            style_context.append(f"Line quality: {line_quality}")
+        
+        # Abstract context
+        if abstract_composition:
+            style_context.append(f"Composition type: {abstract_composition}")
+        if movement_type:
+            style_context.append(f"Movement type: {movement_type}")
+        
+        # Material context
+        if material_type:
+            style_context.append(f"Material: {material_type}")
+        if material_finish:
+            style_context.append(f"Finish: {material_finish}")
+        
         # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         instruction_context = PROMPT_INSTRUCTIONS.format(
             resolution=resolution if resolution else "Not specified",
@@ -193,7 +284,8 @@ def generate_prompt_gemini(tags, user_prefs=None):
             color_scheme=color_scheme if color_scheme else "Not specified",
             lighting=lighting_type if lighting_type else "Not specified",
             composition=technique if technique else "Not specified",
-            depth_of_field=depth_of_field if depth_of_field else "Not specified"
+            depth_of_field=depth_of_field if depth_of_field else "Not specified",
+            style_context="\n".join(style_context) if style_context else ""
         )
         
         # Create a more comprehensive technical context with all settings
@@ -212,6 +304,7 @@ USER STYLE PREFERENCES - STRICTLY FOLLOW THESE:
 - Style: {style if style else "Use what makes sense for the subject"}
 - Mood: {mood if mood else "Use what makes sense for the subject"}
 - Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
+- Style Era: {style_era if style_era else "Not specified"}
 
 {f"CRITICAL: You MUST create a prompt in the EXACT style of '{style}'. This is the user's preferred style and takes priority over subject compatibility." if style else ""}
 {f"CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}'. This is the user's preferred mood and takes priority over subject compatibility." if mood else ""}
@@ -224,7 +317,11 @@ Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 TECHNICAL SPECIFICATIONS:
 - Camera model: {camera_model if camera_model else "Not specified"}
 - Lens: {lens_type if lens_type else "Not specified"}
+- Focal length: {focal_length if focal_length else "Not specified"}
 - Aperture: {aperture if aperture else "Not specified"}
+- Shutter speed: {shutter_speed if shutter_speed else "Not specified"}
+- ISO: {iso if iso else "Not specified"}
+- Filter type: {filter_type if filter_type else "Not specified"}
 - Special lens: {special_lens if special_lens else "Not specified"}
 - Depth of field: {depth_of_field if depth_of_field else "Not specified"}
 - Lighting type: {lighting_type if lighting_type else "Not specified"}
@@ -234,6 +331,8 @@ TECHNICAL SPECIFICATIONS:
 - Artificial lighting: {", ".join(artificial_sources) if artificial_sources else "None"}
 - Composition technique: {technique if technique else "Not specified"}
 - Camera angle: {camera_angle if camera_angle else "Not specified"}
+- Focal point: {focal_point if focal_point else "Not specified"}
+- Perspective: {perspective if perspective else "Not specified"}
 - Visual flow: {visual_flow if visual_flow else "Not specified"}
 - Depth layering: {depth_layering if depth_layering else "Not specified"}
 - Weather: {weather if weather else "Not specified"}
@@ -514,10 +613,12 @@ USER STYLE PREFERENCES - STRICTLY FOLLOW THESE:
 - Style: {style if style else "Use what makes sense for the subject"}
 - Mood: {mood if mood else "Use what makes sense for the subject"}
 - Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
+- Style Era: {style_era if style_era else "Not specified"}
 
 {f"CRITICAL: You MUST create a prompt in the EXACT style of '{style}'. This is the user's preferred style and takes priority over subject compatibility." if style else ""}
 {f"CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}'. This is the user's preferred mood and takes priority over subject compatibility." if mood else ""}
 {f"CRITICAL: You MUST incorporate the art movement '{art_movement}' in your prompt. This is the user's preference and takes priority over subject compatibility." if art_movement else ""}
+{f"CRITICAL: You MUST incorporate the style era '{style_era}' in your prompt. This is the user's preference and takes priority over subject compatibility." if style_era else ""}
 
 MANDATORY TECHNICAL PARAMETERS:
 Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
@@ -549,6 +650,7 @@ TECHNICAL SPECIFICATIONS:
 - Color scheme: {color_scheme if color_scheme else "Not specified"}
 - Palette type: {palette_type if palette_type else "Not specified"}
 - Color temperature: {color_temperature if color_temperature else "Not specified"}
+- Style era: {style_era if style_era else "Not specified"}
 - Rendering quality: {rendering_quality if rendering_quality else "Not specified"}
 
 IMPORTANT GUIDELINES:
@@ -837,6 +939,11 @@ Your response must follow this exact format:
         
         # Use CUSTOM_PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         # Add a prefix to make extra sure the prompt is preserved
+
+        style_settings = settings.get("style_settings", {}) if 'settings' in locals() else {}
+        art_movement = style_settings.get("art_movement") if style_settings else None
+        style_era = style_settings.get("style_era") if style_settings else None
+
         original_prompt_prefix = f"""ENHANCE THIS EXACT PROMPT: "{custom_prompt}"
 
 SUBJECT ANALYSIS:
@@ -877,6 +984,7 @@ Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
             atmospheric_effects=", ".join(atmospheric_effects) if atmospheric_effects else "None",
             location_type=location_type if location_type else "None specified",
             art_movement=art_movement if art_movement else "None specified",
+            style_era=style_era if style_era else "None specified",
             post_processing=", ".join(post_processing) if post_processing else "None",
             detail_level=detail_level if detail_level else "None specified",
             texture_quality=texture_quality if texture_quality else "None specified",

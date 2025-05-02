@@ -148,19 +148,7 @@ def handle_load_preset():
 
 def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bool:
     """
-    Helper function to apply preset settings to the global user_prefs.
-
-    Args:
-        settings: Dictionary containing settings to apply
-        replace: If True, replace existing settings; if False, merge with existing
-
-    Returns:
-        bool: True if settings were applied successfully, False otherwise
-    """
-    # Log the input settings for debugging
-    logging.debug(f"Applying preset settings: {json.dumps(settings, indent=2)}")
-    """
-    Helper function to apply preset settings to the global user_prefs.
+    Helper function to apply preset settings to the global user_prefs with enhanced style category support.
 
     Args:
         settings: Dictionary containing settings to apply
@@ -171,17 +159,117 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
     """
     user_prefs = get_preferences() # Get preferences object
     try:
-        # Define default structure for essential settings if needed (optional, UserPreferences might handle this)
+        # Define comprehensive default structure for all settings
         default_imagen_structure = {
-            "number_of_images": 1, "seed": None, "negative_prompt": "",
-            "quality_settings": {}, "style_settings": {}, "camera_settings": {},
-            "lighting_settings": {}, "composition_settings": {}, "environment_settings": {},
-            "color_settings": {}, "detail_settings": {},
-            # Add support for style-specific settings from our new template system
-            "digital_settings": {}, "game_engine_settings": {}, "medium_settings": {}, 
-            "illustration_settings": {}, "abstract_settings": {}, "material_settings": {}
+            "number_of_images": 1,
+            "seed": None,
+            "negative_prompt": "",
+            "quality_settings": {
+                "art_movement": "",
+                "post_processing": [],
+                "style_era": ""
+            },
+            "style_settings": {
+                "art_movement": "",
+                "post_processing": [],
+                "style_era": ""
+            },
+            "camera_settings": {
+                "camera_model": "",
+                "lens_type": "",
+                "aperture": "",
+                "focal_length": "",
+                "shutter_speed": "",
+                "iso": "",
+                "filter_type": "",
+                "depth_of_field": ""
+            },
+            "lighting_settings": {
+                "lighting_type": "",
+                "light_quality": "",
+                "light_direction": "",
+                "time_of_day": ""
+            },
+            "composition_settings": {
+                "technique": "",
+                "focal_point": "",
+                "camera_angle": "",
+                "perspective": ""
+            },
+            "environment_settings": {
+                "environment_type": "",
+                "atmospheric_effects": [],
+                "special_effects": []
+            },
+            "color_settings": {
+                "color_scheme": "",
+                "palette_type": "",
+                "color_temperature": "",
+                "color_contrast": ""
+            },
+            "detail_settings": {
+                "detail_level": "",
+                "texture_quality": ""
+            },
+            # Style-specific settings
+            "digital_settings": {
+                "software": "",
+                "rendering_technique": "",
+                "digital_effects": [],
+                "resolution": "",
+                "filter_usage": [],
+                "brush_type": "",
+                "layer_complexity": ""
+            },
+            "game_engine_settings": {
+                "engine_type": "",
+                "render_quality": "",
+                "special_effects": [],
+                "shader_type": "",
+                "post_effects": [],
+                "resolution": "",
+                "poly_detail": "",
+                "game_genre": "",
+                "game_era": ""
+            },
+            "medium_settings": {
+                "painting_medium": "",
+                "canvas_type": "",
+                "brushwork": "",
+                "texture": "",
+                "layering_technique": "",
+                "stroke_style": "",
+                "detail_approach": ""
+            },
+            "illustration_settings": {
+                "style": "",
+                "line_quality": "",
+                "color_approach": "",
+                "shading_style": ""
+            },
+            "abstract_settings": {
+                "composition_type": "",
+                "color_scheme": "",
+                "texture_style": "",
+                "movement_type": ""
+            },
+            "material_settings": {
+                "material_type": "",
+                "finish": "",
+                "texture": "",
+                "light_interaction": ""
+            }
         }
-        default_wallpaper_structure = {"auto_set": False, "skip_preview": False, "gui_preview_backend": "qt"}
+        default_wallpaper_structure = {
+            "auto_set": False,
+            "skip_preview": False,
+            "gui_preview_backend": "qt",
+            "aspect_ratio": "16:9",
+            "preferred_genres": [],
+            "preferred_styles": [],
+            "preferred_moods": [],
+            "negative_prompts": []
+        }
 
         # Apply imagen_settings and wallpaper_settings
         for setting_type, default_structure in [('imagen_settings', default_imagen_structure), ('wallpaper_settings', default_wallpaper_structure)]:
@@ -377,52 +465,66 @@ def view_preset_details():
          print_error(f"An unexpected error occurred: {e}")
          logging.exception(f"Unexpected error in view_preset_details for {current_preset}")
 
-def load_preset() -> Optional[Tuple[Dict[str, Any], str]]:
+def load_preset():
     """
-    Load a preset from a file.
+    Load a preset from a file with enhanced style category support.
 
     Returns:
         Optional[Tuple[Dict[str, Any], str]]: A tuple of (settings, preset_name) if successful,
         None if no presets found or user cancels
     """
+    preset_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets")
+    if not os.path.exists(preset_dir):
+        print_error("No presets directory found")
+        return None
+
+    presets = [f for f in os.listdir(preset_dir) if f.endswith('.json')]
+    if not presets:
+        print_error("No presets found")
+        return None
+
+    print_section("Available Presets")
+    for i, preset in enumerate(presets, 1):
+        preset_path = os.path.join(preset_dir, preset)
+        try:
+            with open(preset_path, 'r') as f:
+                preset_data = json.load(f)
+                metadata = preset_data.get('metadata', {})
+                description = metadata.get('description', 'User preset')
+                created_at = metadata.get('created_at', 'Unknown date')
+                
+                # Get style categories from the preset
+                style_categories = []
+                if 'imagen_settings' in preset_data:
+                    if 'style_settings' in preset_data['imagen_settings']:
+                        style_categories.extend(preset_data['imagen_settings']['style_settings'].get('art_movement', []))
+                    if 'game_engine_settings' in preset_data['imagen_settings']:
+                        style_categories.extend(['game_' + s for s in preset_data['imagen_settings']['game_engine_settings'].get('game_genre', [])])
+                    if 'digital_settings' in preset_data['imagen_settings']:
+                        style_categories.extend(['digital_' + s for s in preset_data['imagen_settings']['digital_settings'].get('software', [])])
+                    
+                style_categories = list(set(style_categories))[:3]  # Show up to 3 unique categories
+                style_str = f" ({', '.join(style_categories)})" if style_categories else ""
+                
+                print(f"{i}. {preset[:-5]} - {description}{style_str} (Created: {created_at})")
+        except Exception as e:
+            print_error(f"Error reading preset {preset}: {e}")
+            continue
+
+    print("b. Back")
+    choice = get_validated_input("Select preset (1-{}, b)".format(len(presets)), 
+                              [str(i+1) for i in range(len(presets))] + ['b'])
+
+    if choice == 'b':
+        return None
+
     try:
-        preset_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets") # Consistent path finding
-        os.makedirs(preset_dir, exist_ok=True) # Ensure presets directory exists
-
-        # Get list of presets
-        presets = sorted([f for f in os.listdir(preset_dir) if f.endswith(".json")]) # Sort for consistent order
-        if not presets:
-            print_warning("No saved presets found in directory.")
-            print_info(f"(Looked in: {preset_dir})")
-            input("Press Enter to continue...")
-            return None
-
-        # Show preset options
-        print_section("Available Presets")
-        for i, preset in enumerate(presets, 1):
-            print_option(str(i), preset.replace(".json", ""))
-        print_option("b", "Back")
-
-        # Get user choice
-        valid_choices = ["b"] + [str(i) for i in range(1, len(presets) + 1)]
-        choice = get_validated_input("Select preset to load", valid_choices)
-        if choice == "b":
-            return None
-
-        # Load selected preset
-        preset_file = presets[int(choice) - 1]
-        preset_path = os.path.join(preset_dir, preset_file)
-        preset_name = preset_file.replace(".json", "")
-
-        with open(preset_path, "r") as f:
+        preset_path = os.path.join(preset_dir, presets[int(choice)-1])
+        with open(preset_path, 'r') as f:
             settings = json.load(f)
-        print_success(f"Loaded preset '{preset_name}'")
-        return settings, preset_name
-
-    except (FileNotFoundError, json.JSONDecodeError, IOError, OSError) as e:
+            return settings, presets[int(choice)-1][:-5]
+    except Exception as e:
         print_error(f"Error loading preset: {e}")
-        logging.exception("Error in load_preset")
-        input("Press Enter to continue...")
         return None
     except Exception as e: # Catch unexpected errors
          print_error(f"An unexpected error occurred: {e}")
