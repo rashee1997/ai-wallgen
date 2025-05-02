@@ -22,26 +22,61 @@ def generate_ai_preset():
             return
 
         if choice == "1":
-            try:
-                from ai_preset_generator import generate_ai_preset as ai_gen_preset
+            # Added style source submenu
+            while True:
+                print_section("Choose Style Source for Preset")
+                print_option("1", "Enter Custom Style")
+                print_option("2", "Generate AI Style")
+                print_option("b", "Back")
+                style_choice = get_validated_input("Select option (1-2, b)", ["1", "2", "b"])
+                if style_choice == "b":
+                    break
 
-                print_info("Attempting to generate AI preset (this may take a moment)...")
-                # result: path (str) if saved, None if discarded, False if failed
-                result = ai_gen_preset(user_prefs)
+                try:
+                    from ai_preset_generator import generate_ai_preset as ai_gen_preset
 
-                if isinstance(result, str):
-                    print_success(f"AI preset generated and saved successfully!")
-                    print_info(f"Saved to: {result}")
-                elif result is None:
-                    print_info("AI preset generated but discarded by user.")
-                else:  # result is False
-                    print_warning("Failed to generate AI preset. See logs or previous messages for details.")
+                    print_info("Attempting to generate AI preset (this may take a moment)...")
+                    # Now actually gather the base style:
+                    if style_choice == "1":
+                        base_style = get_validated_input("Enter your custom style: ", allow_empty=False)
+                        if not base_style:
+                            print_error("No style entered.")
+                            break
+                    else:
+                        # Generate AI Style
+                        try:
+                            from ai_style_generator import generate_random_style, initialize_gemini
+                            api_key = os.environ.get("GEMINI_API_KEY")
+                            if not api_key:
+                                print_error("GEMINI_API_KEY environment variable not set.")
+                                break
+                            print_info("Generating AI style...")
+                            initialize_gemini(api_key)
+                            base_style = generate_random_style()
+                            if not base_style:
+                                print_error("Failed to generate AI style.")
+                                break
+                            print_success(f"Generated AI style: {base_style}")
+                        except ImportError:
+                            print_error("AI style generation is not available (ai_style_generator import failed).")
+                            break
 
-            except ImportError:
-                print_warning("AI preset generator module (ai_preset_generator.py) not found or google-generativeai is not installed.")
-                print_info("Please ensure the file exists and run: pip install google-generativeai")
-            except Exception as e:
-                print_error(f"An unexpected error occurred during AI preset generation: {e}")
-                logging.exception("Error in ai_preset_generation.generate_ai_preset wrapper")
+                    result = ai_gen_preset(user_prefs, base_style_override=base_style)
+
+                    if isinstance(result, str):
+                        print_success(f"AI preset generated and saved successfully!")
+                        print_info(f"Saved to: {result}")
+                    elif result is None:
+                        print_info("AI preset generated but discarded by user.")
+                    else:  # result is False
+                        print_warning("Failed to generate AI preset. See logs or previous messages for details.")
+
+                except ImportError:
+                    print_warning("AI preset generator module (ai_preset_generator.py) not found or google-generativeai is not installed.")
+                    print_info("Please ensure the file exists and run: pip install google-generativeai")
+                except Exception as e:
+                    print_error(f"An unexpected error occurred during AI preset generation: {e}")
+                    logging.exception("Error in ai_preset_generation.generate_ai_preset wrapper")
+                break
 
         input("\nPress Enter to return to the AI Preset menu...")

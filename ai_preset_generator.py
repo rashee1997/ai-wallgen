@@ -80,31 +80,7 @@ except ImportError:
     STYLE_CATEGORIES = {}
 
 # Import style templates
-try:
-    from style_templates import get_template_for_category
-    TEMPLATES_AVAILABLE = True
-except ImportError:
-    TEMPLATES_AVAILABLE = False
-    logging.warning("style_templates.py not found. Using default template for all styles.")
-    # Fallback template function
-    def get_template_for_category(style_category):
-        """Fallback template generator if style_templates.py is not available."""
-        return {
-            "preset_name": "[ evocative name ]",
-            "moods": ["[ one mood ]"],
-            "imagen_settings": {
-                "style_settings": {"art_movement": "[ fitting movement ]", "post_processing": ["[ 0-1 effect ]"]},
-                "camera_settings": {"camera_model": "[ appropriate model ]", "lens_type": "[ fitting lens ]", 
-                                   "aperture": "[ if relevant ]", "depth_of_field": "[ if relevant ]"},
-                "lighting_settings": {"lighting_type": "[ appropriate lighting ]", "time_of_day": "[ if relevant ]", 
-                                     "light_quality": "[ description ]"},
-                "composition_settings": {"technique": "[ composition technique ]", "camera_angle": "[ appropriate angle ]"},
-                "color_settings": {"color_scheme": "[ fitting scheme ]", "palette_type": "[ appropriate type ]", 
-                                  "color_temperature": "[ warm/cool/etc ]"}
-            },
-            "aspect_ratio": "16:9"
-        }
-
+from style_templates import get_template_for_category
 
 # --- Configuration ---
 logging.basicConfig(
@@ -403,12 +379,12 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
 
                         if is_preset_unique(preset_data):
                             # Show the generated preset
-                            print(f"\n--- AI Generated Preset: '{preset_data['preset_name']}' ---")
+                            print_section(f"AI Generated Preset: {preset_data['preset_name']}")
                             print(json.dumps(preset_data, indent=2))
-                            print("------------------------------------------")
+                            print("-" * 50)
 
-                            # Ask to save
-                            if get_validated_input("Save this preset? (Y/N): ", ["y", "n"]) == "y":
+                            # Ask to save with more user guidance
+                            if get_validated_input("Do you want to save this preset? (Y/N): ", ["y", "n"]) == "y":
                                 save_name = re.sub(r'[^\w\s-]', '', preset_data["preset_name"]).strip().replace(' ', '_')
                                 if not save_name:
                                     save_name = "unnamed_preset"
@@ -425,10 +401,10 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                                 with open(preset_path, 'w') as f:
                                     json.dump(preset_data, f, indent=4)
                                 save_preset_to_cache(preset_data)
-                                print_success(f"Preset saved to: {preset_path}")
+                                print_success(f"\n✅ Preset saved to: {preset_path}\n")
                                 return preset_path
                             else:
-                                print_info("Preset discarded.")
+                                print_warning("Preset discarded by user.")
                                 return None
                         
                         elif attempt < 2:

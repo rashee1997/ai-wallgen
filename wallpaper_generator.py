@@ -41,7 +41,7 @@ import google.generativeai as genai
 from settings_modules.settings_import_export import export_settings, import_settings
 from settings_modules.settings_utils import update_history_with_filenames, load_last_genre, save_last_genre
 from settings_modules.settings_manager import initialize_settings, get_preferences
-from settings_modules.menu_management.main_menu import manage_preferences
+from settings_modules.menu_management import main_menu
 from settings_modules.preset_management import manage_presets, load_preset, save_preset, delete_preset
 from settings_modules.user_preferences import UserPreferences
 # The following functions are now called from within the menu management modules,
@@ -196,7 +196,7 @@ def generate_prompt_gemini(tags, user_prefs):
         palette_type = color_settings.get("palette_type")
         color_temperature = color_settings.get("color_temperature")
 
-        resolution = quality_settings.get("resolution", "1920x1080")
+        resolution = quality_settings.get("resolution", "3840x2160")
         rendering_quality = quality_settings.get("rendering_quality")
 
         # Format tags for prompt
@@ -333,7 +333,7 @@ The following elements must be avoided in the image: {negative_prompt}
         logging.error(f"Error in generate_prompt_gemini: {e}")
         formatted_tags_str = ", ".join(tags)
         # Return a formatted version of the simple tags
-        return enforce_prompt_format(formatted_tags_str, "1920x1080", "16:9", negative_prompt)
+        return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", negative_prompt)
 
 def generate_prompt_random(tags, user_prefs):
     """Generate a random prompt with selected tags and user preferences."""
@@ -1761,7 +1761,7 @@ def main():
     
     # No command-line arguments provided, check dependencies and start UI
     check_dependencies()
-    run_main_menu()
+    main_menu.run_main_menu()
 
 def show_ascii_art():
     """Display ASCII art header."""
@@ -1770,152 +1770,6 @@ def show_ascii_art():
     print("=" * 80 + "\n")
     print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
 
-def run_main_menu():
-    """Run the main menu loop."""
-    # Check and create necessary directories
-    os.makedirs("genimage", exist_ok=True)
-    
-    # Update existing history entries with image filenames (silently)
-    update_history_with_filenames(silent=True)
-    
-    while True:
-        print_section("Main Menu")
-        print_option("1", "Generate AI Wallpaper - Create custom wallpapers using AI")
-        print_option("2", "Generate Prompt Only - Create and save prompts without images")
-        print_option("3", "Manage Preferences - Customize wallpaper settings")
-        print_option("4", "Tools & Utilities")
-        print_option("5", "View Generation History")
-        print_option("6", "Exit - Save and exit")
-        print_option("7", "Preview Recent Images")
-        
-        # KeyboardInterrupt is now handled globally by sys.excepthook in graceful_exit.py
-        choice = get_validated_input("Select an option (1-7)", ["1", "2", "3", "4", "5", "6", "7"])
-        
-        if choice in ["1", "2"]:  # Handle both Generate AI Wallpaper and Generate Prompt Only
-           generate_only = (choice == "2")
-           section_title = "Generate AI Wallpaper" if choice == "1" else "Generate Prompt Only"
-           breadcrumb = ["Main Menu", section_title]
-           print_section(section_title)
-           print_breadcrumb(breadcrumb)
-           print_option("1", "Use Gemini AI to generate a prompt")
-           print_option("2", "Use a random prompt")
-           print_option("3", "Enter your own custom prompt")
-           print_option("4", "Advanced Options - Fine-tune generation parameters")
-           print_option("5", "Load Saved Preset")
-           print_option("6", "Return to Main Menu")
-            
-           # Removed try...except block; KeyboardInterrupt is handled globally
-           prompt_choice = get_validated_input("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
-           
-           if prompt_choice == "6":
-               continue
-           elif prompt_choice == "5":
-               settings = load_preset()
-               if settings:
-                   generate_wallpaper(**settings)
-               continue
-           
-           generate_only = (choice == "2")  # True if "Generate Prompt Only" was selected
-           
-           if prompt_choice == "1":
-               # Get mood and style preferences for this generation
-               print_section("Optional Parameters")
-               print_info("You can specify a mood and style for your wallpaper (leave empty to use random)")
-               
-               mood_options = ["peaceful", "dramatic", "mysterious", "energetic", "melancholic",
-                           "joyful", "romantic", "eerie", "nostalgic", "contemplative"]
-               style_options = ["abstract", "anime", "art_deco", "art_nouveau", "cartoon", "charcoal",
-                              "cinematic", "comic_book", "constructivism", "cubism", "cyberpunk",
-                              "digital_art", "divisionism", "double_exposure", "expressionism",
-                              "fantasy", "futurism", "glitch_art", "gothic", "graffiti",
-                              "hyperrealism", "impressionism", "ink_drawing", "isometric", "landscape",
-                              "line_art", "low_poly", "manga", "minimalist", "oil_painting",
-                              "paper_cut", "pastel", "pencil_sketch", "photograph", "pixel_art",
-                              "pointillism", "pop_art", "realism", "retrowave", "sci_fi",
-                              "sketch", "stained_glass", "steampunk", "surrealism", "ukiyo_e",
-                              "vaporwave", "watercolor", "woodcut"]
-                
-               print_info(f"Mood options: {', '.join(mood_options)}")
-               mood = input("Enter mood (optional): ").strip().lower()
-               if mood and mood not in mood_options:
-                   print_warning(f"'{mood}' is not in the suggested moods, but we'll try to use it anyway")
-               
-               print_info(f"Style options: {', '.join(style_options)}")
-               print_info("You can also enter 'random_mix' to combine 2-3 compatible styles for creative results")
-               style = input("Enter style (optional): ").strip().lower()
-               
-               if style == "random_mix":
-                   style = generate_random_style_mix()
-                   print_info(f"Selected style mix: {style}")
-                   # Ask if the user wants to save this style mix to their preferences
-                   save_style = get_validated_input("Save this style mix to your preferences? (y/n)", ["y", "n"])
-                   if save_style == "y":
-                       if style not in user_prefs.preferred_styles:
-                           user_prefs.preferred_styles.append(style)
-                           user_prefs.save_preferences()
-                           print_success(f"Added '{style}' to preferred styles")
-                       else:
-                           print_warning(f"'{style}' is already in your preferred styles")
-               elif style and style not in style_options:
-                   print_warning(f"'{style}' is not in the suggested styles, but we'll try to use it anyway")
-               
-               generate_wallpaper("gemini", mood=mood, style=style, generate_only=generate_only)
-                
-           elif prompt_choice == "2":
-               generate_wallpaper("random", generate_only=generate_only)
-               
-           elif prompt_choice == "3":
-               custom_prompt = get_validated_input("Enter your custom prompt (or 'b' to go back)", allow_empty=False)
-               if custom_prompt.lower() == 'b':
-                   continue
-               print_info("Processing custom prompt...")
-               generate_wallpaper("custom", custom_prompt=custom_prompt, generate_only=generate_only)
-           
-           elif prompt_choice == "4":
-               from wallpaper_settings import configure_advanced_options
-               configure_advanced_options()
-    
-        elif choice == "3":
-            manage_preferences()
-            
-        elif choice == "4":
-            print_section("Tools & Utilities")
-            print_breadcrumb(["Main Menu", "Tools & Utilities"])
-            print_option("1", "Manage Presets")
-            print_option("2", "View Generation History")
-            print_option("3", "Export Settings")
-            print_option("4", "Import Settings")
-            print_option("5", "Update History Filenames")
-            print_option("b", "Return to Main Menu")
-            
-            tools_choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
-            
-            if tools_choice == "1":
-                from wallpaper_settings import manage_presets
-                manage_presets()
-            elif tools_choice == "2":
-                view_history()
-            elif tools_choice == "3":
-                export_settings()
-            elif tools_choice == "4":
-                from wallpaper_settings import import_settings
-                import_settings()
-            elif tools_choice == "5":
-                print_info("Updating generation history with descriptive filenames...")
-                update_history_with_filenames(silent=False)
-            elif tools_choice == "b":
-                continue
-        
-        elif choice == "5":
-            view_history()
-        elif choice == "6":
-            print_info("Saving preferences before exit...")
-            user_prefs.save_preferences()
-            print_success("Goodbye!")
-            break
-        elif choice == "7":
-            # Preview recent images
-            preview_recent_images()
 
 def select_random_tags():
     """Select a random set of tags from all available tag categories."""
@@ -1930,7 +1784,7 @@ def parse_arguments():
     parser.add_argument("--random", action="store_true", help="Generate a random wallpaper")
     parser.add_argument("--test-prompt", help="Test prompt generation without creating an image")
     parser.add_argument("--test-custom-prompt", help="Test custom prompt enhancement")
-    parser.add_argument("--resolution", help="Set resolution (e.g., '1920x1080')")
+    parser.add_argument("--resolution", help="Set resolution (e.g., '3840x2160')")
     parser.add_argument("--aspect-ratio", help="Set aspect ratio (e.g., '16:9')")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
@@ -1949,93 +1803,6 @@ def load_user_preferences():
     from wallpaper_settings import initialize_settings
     return initialize_settings()
 
-def preview_recent_images():
-    """Display and preview recent generated images."""
-    try:
-        # Get list of images using helper function
-        image_files = list_sorted_genimages("genimage")
-
-        if not image_files:
-            print_warning("No images found in the genimage directory.")
-            return
-
-        print_section("Recent Generated Images")
-        print_info(f"Found {len(image_files)} images in the genimage directory.")
-
-        # Limit to showing the 20 most recent images for better user experience
-        max_display = min(20, len(image_files))
-        display_files = image_files[:max_display]
-
-        # Display the images with their numbers
-        for i, image_file in enumerate(display_files, 1): # image_file is now just the filename
-            # Need to construct the full path to get modification time
-            full_path = os.path.join("genimage", image_file)
-            creation_time = datetime.fromtimestamp(
-                os.path.getmtime(full_path)
-            ).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"{i}: {image_file} - Generated: {creation_time}")
-
-        # Import the appropriate preview function based on user preferences
-        preview_func = None
-        gui_backend = None
-        try:
-            from wallpaper_settings import initialize_settings
-            user_prefs = initialize_settings()
-            gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
-        except Exception:
-            gui_backend = 'qt'
-
-        if gui_backend == 'qt':
-            try:
-                from qt_preview import preview_image_gui as preview_func
-            except ImportError:
-                print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
-                print_info("Please install PySide6: pip install PySide6")
-                print_info("Falling back to no preview.")
-                preview_func = None
-        elif gui_backend == 'tkinter':
-            try:
-                from tkinter_preview import preview_image_gui as preview_func
-            except ImportError:
-                print_warning("Tkinter preview backend selected but Tkinter not available.")
-                print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
-                print_info("Falling back to no preview.")
-                preview_func = None
-        else:
-            print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
-            preview_func = None
-
-        # Ask user which image to preview
-        try: # Moved try block to wrap the while loop
-            while True:
-                choice = get_validated_input(
-                    f"Enter image number to preview (1-{max_display}) or 'q' to quit",
-                    [str(i) for i in range(1, max_display + 1)] + ['q']
-                )
-
-                if choice.lower() == 'q':
-                    return
-
-                # Preview the selected image - need full path
-                image_path = os.path.join("genimage", display_files[int(choice) - 1]) # Construct full path
-                print_info(f"Previewing image: {display_files[int(choice) - 1]}")
-
-                # Preview image with GUI
-                if preview_func:
-                    result = preview_func(image_path, set_wallpaper)
-                else:
-                    result = False
-                if result:
-                    print_success("Wallpaper set successfully!")
-
-                # After viewing one image, we allow picking another or returning to menu
-                print_section("Recent Generated Images")
-
-        except (ValueError, IndexError) as e:
-            print_error(f"Invalid selection: {e}")
-
-    except (FileNotFoundError, OSError) as e:
-        print_error(f"Error accessing images directory: {e}")
 
 if __name__ == "__main__":
     main()

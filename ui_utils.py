@@ -522,5 +522,20 @@ def get_menu_choice(prompt: str, valid_choices: List[str], allow_empty: bool = F
 
     Returns:
         The user's validated choice as a string
+        
+    Note:
+        Returns "_INTERRUPTED_" if KeyboardInterrupt is caught, allowing
+        for graceful exit handling by the caller.
     """
-    return get_validated_input(prompt, valid_choices, allow_empty=allow_empty)
+    try:
+        return get_validated_input(prompt, valid_choices, allow_empty=allow_empty)
+    except KeyboardInterrupt:
+        print("\nOperation interrupted.")
+        return "_INTERRUPTED_"
+
+def show_ascii_art():
+    """Display ASCII art header for the application."""
+    print("\n" + "=" * 80)
+    print(" " * 29 + "AI Wallpaper Generator" + " " * 29)
+    print("=" * 80 + "\n")
+    print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
