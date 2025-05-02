@@ -57,7 +57,49 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
     }
 
     # Initialize style-specific settings based on the category
-    if style_category == "photographic" or style_category.startswith("cinematic") or style_category == "realistic":
+    if style_category == "3d_render":
+        # For 3D/CGI/Rendered/Modeled art, provide full 3D-specific settings
+        imagen_settings["software_settings"] = {
+            "suite": "[ Blender/Maya/Cinema4D/3dsMax ]",
+            "renderer": "[ Octane/Arnold/Cycles/Eevee ]",
+            "version": "[ software version ]"
+        }
+        imagen_settings["render_settings"] = {
+            "polycount": "[ high/medium/low ]",
+            "sampling": "[ samples ]",
+            "denoiser": "[ enabled/disabled ]",
+            "resolution": "[ 1920x1080/4K/etc ]",
+            "aspect_ratio": "[ 16:9/21:9/square ]",
+            "frame_number": "[ if animated ]"
+        }
+        imagen_settings["lighting_setup"] = {
+            "system": "[ HDRI/3-point/area lights ]",
+            "intensity": "[ value ]",
+            "color": "[ value ]",
+            "shadows": "[ soft/hard ]"
+        }
+        imagen_settings["material_settings"] = {
+            "shader_type": "[ PBR/toon/glossy ]",
+            "subsurface_scattering": "[ value ]",
+            "texture_maps": ["[ diffuse/normal/specular/etc ]"],
+            "bump_map": "[ yes/no ]",
+            "displacement": "[ yes/no ]"
+        }
+        imagen_settings["camera_settings"] = {
+            "camera_type": "[ perspective/orthographic ]",
+            "focal_length": "[ mm value ]",
+            "depth_of_field": "[ enabled/disabled ]",
+            "focus_distance": "[ value ]",
+            "camera_position": "[ XYZ or relative ]"
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ isometric/3rd person/1st person/freecam ]"
+        imagen_settings["post_processing"] = {
+            "effects": ["[ bloom/vignette/glare/lens flare ]"],
+            "color_grading": "[ LUT/none/custom ]",
+            "motion_blur": "[ enabled/disabled ]"
+        }
+
+    elif style_category == "photographic" or style_category.startswith("cinematic") or style_category == "realistic":
         # For photographic/cinematic/realistic styles, include camera settings
         imagen_settings["camera_settings"] = {
             "camera_model": "[ appropriate camera model ]",

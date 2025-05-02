@@ -152,6 +152,14 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
     
     # Define keywords for each distinct category
     categories_keywords = {
+        # --- 3D Render/CGI Categories ---
+        "3d_render": [
+            "3d", "3d render", "3d modeling", "3d model", "3d illustration",
+            "cgi", "c.g.i", "cg render", "clay render", "octane render", "arnold render",
+            "blender", "maya", "cinema 4d", "unreal engine", "3ds max",
+            "zbrush", "keyshot", "pixar style 3d", "toon 3d", "stylized 3d",
+            "photoreal 3d", "3d portrait", "3d scene", "3d composition", "3d character", "3d environment"
+        ],
         # --- Illustration/Cartoon Categories ---
         "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
         "illustration_disney": ["disney", "disney style", "disney animation"],
@@ -250,6 +258,8 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
         for term in keywords:
             if term in style_lower:
                 # Map subcategories to canonical template categories
+                if category == "3d_render":
+                    return "3d_render"
                 if category in [
                     "oil_painting", "watercolor", "pastel", "charcoal"
                 ]:

@@ -87,6 +87,11 @@ class UserPreferences:
                 "brush_type": None,
                 "layer_complexity": None
             },
+            "software_settings": {
+                "suite": None,
+                "renderer": None,
+                "version": None
+            },
             "game_engine_settings": {
                 "engine_type": None,
                 "render_quality": None,

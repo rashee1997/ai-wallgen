@@ -76,6 +76,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
     Returns:
         str: A detailed prompt for image generation
     """
+    style_era = None
     try:
         global use_user_preferences
         
@@ -132,6 +133,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Extract style-specific settings
         digital_settings = settings.get("digital_settings", {})
         game_engine_settings = settings.get("game_engine_settings", {})
+        software_settings = settings.get("software_settings", {})
         medium_settings = settings.get("medium_settings", {})
         illustration_settings = settings.get("illustration_settings", {})
         abstract_settings = settings.get("abstract_settings", {})
@@ -203,7 +205,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Extract style settings for the prompt
         style_settings = settings.get("style_settings", {})
         art_movement = style_settings.get("art_movement")
-        style_era = style_settings.get("style_era")
+        style_era = style_settings.get("style_era") if style_settings else None
         post_processing = style_settings.get("post_processing", [])
         
         # Extract detail settings for the prompt
@@ -237,12 +239,26 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Build style-specific technical context
         style_context = []
         
+        # Software/3D context
+        suite = software_settings.get("suite")
+        renderer = software_settings.get("renderer")
+        version = software_settings.get("version")
+        if suite or renderer or version:
+            sw_description = "Created"
+            if suite:
+                sw_description += f" in {suite}"
+            if renderer:
+                sw_description += f", rendered with {renderer}"
+            if version:
+                sw_description += f" (v{version})"
+            style_context.append(sw_description)
+
         # Digital art context
         if digital_software:
             style_context.append(f"Created using {digital_software}")
         if digital_effects:
             style_context.append(f"With digital effects: {', '.join(digital_effects)}")
-        
+
         # Game art context
         if game_engine:
             style_context.append(f"Rendered in {game_engine}")
@@ -250,7 +266,7 @@ def generate_prompt_gemini(tags, user_prefs=None):
             style_context.append(f"Game genre: {game_genre}")
         if game_shader:
             style_context.append(f"Shader type: {game_shader}")
-        
+
         # Traditional medium context
         if painting_medium:
             style_context.append(f"Medium: {painting_medium}")
@@ -258,19 +274,19 @@ def generate_prompt_gemini(tags, user_prefs=None):
             style_context.append(f"Brushwork: {brushwork}")
         if texture:
             style_context.append(f"Texture: {texture}")
-        
+
         # Illustration context
         if illustration_style:
             style_context.append(f"Illustration style: {illustration_style}")
         if line_quality:
             style_context.append(f"Line quality: {line_quality}")
-        
+
         # Abstract context
         if abstract_composition:
             style_context.append(f"Composition type: {abstract_composition}")
         if movement_type:
             style_context.append(f"Movement type: {movement_type}")
-        
+
         # Material context
         if material_type:
             style_context.append(f"Material: {material_type}")
@@ -301,72 +317,73 @@ Carefully analyze the subject "{formatted_tags}" and tailor your description to 
 - For fantasy subjects: create a cohesive magical or surreal atmosphere
 
 USER STYLE PREFERENCES - STRICTLY FOLLOW THESE:
-- Style: {style if style else "Use what makes sense for the subject"}
-- Mood: {mood if mood else "Use what makes sense for the subject"}
-- Art Movement: {art_movement if art_movement else "Use what makes sense for the subject"}
-- Style Era: {style_era if style_era else "Not specified"}
+- Style: {style if style else "You MUST use the user's preferred style without exception"}
+- Mood: {mood if mood else "You MUST use the user's preferred mood without exception"}
+- Art Movement: {art_movement if art_movement else "You MUST incorporate the user's preferred art movement without exception"}
+- Style Era: {style_era if style_era else "You MUST incorporate the user's preferred style era without exception"}
 
-{f"CRITICAL: You MUST create a prompt in the EXACT style of '{style}'. This is the user's preferred style and takes priority over subject compatibility." if style else ""}
-{f"CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}'. This is the user's preferred mood and takes priority over subject compatibility." if mood else ""}
-{f"CRITICAL: You MUST incorporate the art movement '{art_movement}' in your prompt. This is the user's preference and takes priority over subject compatibility." if art_movement else ""}
+CRITICAL: You MUST create a prompt in the EXACT style of '{style}' and incorporate all user preferences fully and strictly.
+CRITICAL: You MUST create a prompt with the EXACT mood of '{mood}' and incorporate all user preferences fully and strictly.
+CRITICAL: You MUST incorporate the art movement '{art_movement}' in your prompt and incorporate all user preferences fully and strictly.
+CRITICAL: You MUST incorporate the style era '{style_era}' in your prompt and incorporate all user preferences fully and strictly.
 
 MANDATORY TECHNICAL PARAMETERS:
 Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 
 TECHNICAL SPECIFICATIONS:
-- Camera model: {camera_model if camera_model else "Not specified"}
-- Lens: {lens_type if lens_type else "Not specified"}
-- Focal length: {focal_length if focal_length else "Not specified"}
-- Aperture: {aperture if aperture else "Not specified"}
-- Shutter speed: {shutter_speed if shutter_speed else "Not specified"}
-- ISO: {iso if iso else "Not specified"}
-- Filter type: {filter_type if filter_type else "Not specified"}
-- Special lens: {special_lens if special_lens else "Not specified"}
-- Depth of field: {depth_of_field if depth_of_field else "Not specified"}
-- Lighting type: {lighting_type if lighting_type else "Not specified"}
-- Light quality: {light_quality if light_quality else "Not specified"}
-- Time of day: {time_of_day if time_of_day else "Not specified"}
-- Light source: {light_source if light_source else "Not specified"}
-- Artificial lighting: {", ".join(artificial_sources) if artificial_sources else "None"}
-- Composition technique: {technique if technique else "Not specified"}
-- Camera angle: {camera_angle if camera_angle else "Not specified"}
-- Focal point: {focal_point if focal_point else "Not specified"}
-- Perspective: {perspective if perspective else "Not specified"}
-- Visual flow: {visual_flow if visual_flow else "Not specified"}
-- Depth layering: {depth_layering if depth_layering else "Not specified"}
-- Weather: {weather if weather else "Not specified"}
-- Season: {season if season else "Not specified"}
-- Location type: {location_type if location_type else "Not specified"}
-- Atmospheric effects: {", ".join(atmospheric_effects) if atmospheric_effects else "None"}
-- Post-processing: {", ".join(post_processing) if post_processing else "None"}
-- Detail level: {detail_level if detail_level else "Not specified"}
-- Texture quality: {texture_quality if texture_quality else "Not specified"}
-- Special effects: {", ".join(special_effects) if special_effects else "None"}
-- Color scheme: {color_scheme if color_scheme else "Not specified"}
-- Palette type: {palette_type if palette_type else "Not specified"}
-- Color temperature: {color_temperature if color_temperature else "Not specified"}
-- Resolution: {resolution if resolution else "Not specified"}
-- Rendering quality: {rendering_quality if rendering_quality else "Not specified"}
-- Aspect ratio: {aspect_ratio if aspect_ratio else "16:9"}
+- Camera model: {camera_model if camera_model else "You MUST include the camera model from user preferences"}
+- Lens: {lens_type if lens_type else "You MUST include the lens type from user preferences"}
+- Focal length: {focal_length if focal_length else "You MUST include the focal length from user preferences"}
+- Aperture: {aperture if aperture else "You MUST include the aperture from user preferences"}
+- Shutter speed: {shutter_speed if shutter_speed else "You MUST include the shutter speed from user preferences"}
+- ISO: {iso if iso else "You MUST include the ISO from user preferences"}
+- Filter type: {filter_type if filter_type else "You MUST include the filter type from user preferences"}
+- Special lens: {special_lens if special_lens else "You MUST include the special lens from user preferences"}
+- Depth of field: {depth_of_field if depth_of_field else "You MUST include the depth of field from user preferences"}
+- Lighting type: {lighting_type if lighting_type else "You MUST include the lighting type from user preferences"}
+- Light quality: {light_quality if light_quality else "You MUST include the light quality from user preferences"}
+- Time of day: {time_of_day if time_of_day else "You MUST include the time of day from user preferences"}
+- Light source: {light_source if light_source else "You MUST include the light source from user preferences"}
+- Artificial lighting: {", ".join(artificial_sources) if artificial_sources else "You MUST include artificial lighting sources from user preferences"}
+- Composition technique: {technique if technique else "You MUST include the composition technique from user preferences"}
+- Camera angle: {camera_angle if camera_angle else "You MUST include the camera angle from user preferences"}
+- Focal point: {focal_point if focal_point else "You MUST include the focal point from user preferences"}
+- Perspective: {perspective if perspective else "You MUST include the perspective from user preferences"}
+- Visual flow: {visual_flow if visual_flow else "You MUST include the visual flow from user preferences"}
+- Depth layering: {depth_layering if depth_layering else "You MUST include the depth layering from user preferences"}
+- Weather: {weather if weather else "You MUST include the weather from user preferences"}
+- Season: {season if season else "You MUST include the season from user preferences"}
+- Location type: {location_type if location_type else "You MUST include the location type from user preferences"}
+- Atmospheric effects: {", ".join(atmospheric_effects) if atmospheric_effects else "You MUST include atmospheric effects from user preferences"}
+- Post-processing: {", ".join(post_processing) if post_processing else "You MUST include post-processing effects from user preferences"}
+- Detail level: {detail_level if detail_level else "You MUST include the detail level from user preferences"}
+- Texture quality: {texture_quality if texture_quality else "You MUST include the texture quality from user preferences"}
+- Special effects: {", ".join(special_effects) if special_effects else "You MUST include special effects from user preferences"}
+- Color scheme: {color_scheme if color_scheme else "You MUST include the color scheme from user preferences"}
+- Palette type: {palette_type if palette_type else "You MUST include the palette type from user preferences"}
+- Color temperature: {color_temperature if color_temperature else "You MUST include the color temperature from user preferences"}
+- Resolution: {resolution if resolution else "You MUST include the resolution from user preferences"}
+- Rendering quality: {rendering_quality if rendering_quality else "You MUST include the rendering quality from user preferences"}
+- Aspect ratio: {aspect_ratio if aspect_ratio else "You MUST include the aspect ratio from user preferences"}
 
 IMPORTANT GUIDELINES:
-1. Create a cohesive, detailed prompt that incorporates all specified settings naturally
-2. IGNORE any "Not specified" or "None" settings - do not include them
-3. Focus on creating a visually striking image suitable for a desktop wallpaper
-4. Ensure the subject "{formatted_tags}" remains the central focus
-5. Adapt the style and technical details to suit the specific subject matter
-6. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
-7. Always include a negative prompt section at the end
+1. You MUST create a cohesive, detailed prompt that incorporates ALL specified settings naturally and strictly.
+2. You MUST IGNORE any "Not specified" or "None" settings - do not include them.
+3. You MUST focus on creating a visually striking image suitable for a desktop wallpaper.
+4. You MUST ensure the subject "{formatted_tags}" remains the central focus.
+5. You MUST adapt the style and technical details to suit the specific subject matter.
+6. You MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio".
+7. You MUST always include a negative prompt section at the end.
 
 OUTPUT FORMAT:
-Your response must follow this exact format:
-1. A single, detailed paragraph describing the image
-2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
-3. End with "Avoid: [negative elements]"
+Your response MUST follow this exact format:
+1. A single, detailed paragraph describing the image.
+2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio".
+3. End with "Avoid: [negative elements]".
 
 NEGATIVE PROMPT - ALWAYS INCLUDE:
-The following elements must be avoided in the image: {negative_prompt}
+The following elements MUST be avoided in the image: {negative_prompt}
 """
 
         # Generate prompt using Gemini
@@ -421,6 +438,7 @@ The following elements must be avoided in the image: {negative_prompt}
 
 def generate_prompt_random(tags, user_prefs=None):
     """Generate a random prompt using the provided tags."""
+    style_era = None
     try:
         global use_user_preferences
         
@@ -733,6 +751,7 @@ def enhance_custom_prompt(custom_prompt, user_prefs=None):
     Returns:
         str: An enhanced version of the custom prompt
     """
+    style_era = None
     try:
         global use_user_preferences
         
@@ -944,6 +963,9 @@ Your response must follow this exact format:
         art_movement = style_settings.get("art_movement") if style_settings else None
         style_era = style_settings.get("style_era") if style_settings else None
 
+        if 'style_era' not in locals():
+            style_era = None
+
         original_prompt_prefix = f"""ENHANCE THIS EXACT PROMPT: "{custom_prompt}"
 
 SUBJECT ANALYSIS:
@@ -1007,6 +1029,7 @@ Your response must follow this exact format:
 2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
 3. End with "Avoid: [negative elements]"
 """
+
         
         if negative_prompt:
             enhancement_instructions += f"\n\nAvoid the following negative elements: {negative_prompt}"

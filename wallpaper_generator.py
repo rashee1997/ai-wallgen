@@ -136,6 +136,7 @@ def _extract_imagen_settings(user_prefs):
         "aspect_ratio": user_prefs.aspect_ratio,
         "digital_settings": settings.get("digital_settings", {}),
         "game_engine_settings": settings.get("game_engine_settings", {}),
+        "software_settings": settings.get("software_settings", {}),
         "medium_settings": settings.get("medium_settings", {}),
         "illustration_settings": settings.get("illustration_settings", {}),
         "abstract_settings": settings.get("abstract_settings", {}),

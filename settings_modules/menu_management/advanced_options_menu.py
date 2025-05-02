@@ -36,6 +36,7 @@ from .composition_menu import manage_composition_settings
 from .color_menu import manage_color_settings
 from .negative_prompt_menu import manage_negative_prompt
 from .imagen_settings_menu import manage_imagen_settings
+from .software_settings_menu import manage_software_settings
 
 def configure_advanced_options():
     """
@@ -58,10 +59,10 @@ def configure_advanced_options():
         print_option("13", "View Current Settings")
         print_option("14", "Generate AI Preset")
         print_option("15", "Reset to Default")
+        print_option("16", "Software Settings & Renderer")
         print_option("b", "Back")
         
-        # Include all valid options, accounting for missing options 8 and 15
-        valid_options = [str(i) for i in range(1, 16)] + ["b"]
+        valid_options = [str(i) for i in range(1, 17)] + ["b"]
         choice = get_validated_input("Choose: ", valid_options)
         
         menu_map = {
@@ -79,7 +80,8 @@ def configure_advanced_options():
             "12": manage_color_settings,
             "13": view_current_settings,
             "14": generate_ai_preset,
-            "15": reset_to_default
+            "15": reset_to_default,
+            "16": manage_software_settings
         }
         if choice in menu_map:
             menu_map[choice]()
