@@ -57,12 +57,17 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-- **AI-Powered Generation**: Generate wallpapers using Google's Imagen 3 model via Gemini API
-- **Multiple Generation Methods**: Choose from AI-generated, random, or custom prompts
-- **Basic Settings**: Set resolution and image quality preferences
-- **Prompt Enhancement**: Automatically improve user-provided prompts
-- **Generation History**: View your previously generated wallpapers
-- **Terminal-Based UI**: Simple, text-based interface for all operating systems
+- **AI-Powered Generation**: Generate wallpapers using Google's Imagen 3 model via Gemini API.
+- **Multiple Generation Methods**: Choose from AI-generated, random, or custom prompts.
+- **Advanced Settings & Customization**: Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
+- **AI Preset Generation**: Automatically generate coherent setting presets using AI.
+- **AI Style Generation**: Generate unique artistic styles using AI.
+- **Detailed Prompt Engineering**: Sophisticated prompt enhancement techniques for optimal results.
+- **GUI Image Preview**: Preview generated images in a graphical window (Qt or Tkinter).
+- **Cross-Platform Wallpaper Setting**: Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments.
+- **Generation History**: View previously generated wallpapers along with the settings used.
+- **Terminal-Based UI**: Simple, text-based interface for interactive use.
+- **Command-Line Interface**: Control generation, presets, and styles directly via CLI arguments.
 
 For detailed feature documentation, see the [Advanced Features Guide](docs/advanced-features.md).
 
@@ -71,24 +76,27 @@ For detailed feature documentation, see the [Advanced Features Guide](docs/advan
 - Python 3.8+
 - Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
 
-For complete setup instructions, including installation steps for different operating systems, please refer to our [Getting Started Guide](docs/getting-started.md).
+For complete setup instructions, including installation steps for different operating systems and detailed command-line usage, please refer to the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
 
 ## 🧩 System Components
 
 Wallgen's main components include:
 
-- **Core Generator**: Controls the wallpaper generation process
-- **Settings Management Package**: Manages user preferences and settings through a modular structure, including dedicated user preferences modules for customization
-- **UI Utilities**: Provides terminal interface elements
-- **Prompt Engineer**: Enhances prompts for better results
-- **API Client**: Communicates with the Gemini API
+- **Core Generator (`wallpaper_generator.py`)**: Controls the main wallpaper generation process and interactive UI.
+- **Settings Management (`settings_modules/`)**: Manages user preferences, presets, and detailed Imagen settings through a modular structure.
+- **AI Preset Generator (`ai_preset_generator.py`)**: Generates coherent setting presets using AI.
+- **AI Style Generator (`ai_style_generator.py`)**: Generates unique artistic styles using AI.
+- **Prompt Engineering (`prompt_generator.py`, `config.py`)**: Enhances prompts using various strategies and configurations for better results.
+- **Image Preview (`qt_preview.py`, `tkinter_preview.py`)**: Provides GUI previews.
+- **UI Utilities (`ui_utils.py`)**: Provides terminal interface elements.
+- **API Client**: Communicates with the Gemini API.
 
 For a detailed architecture explanation, see our [Architecture Documentation](docs/ARCHITECTURE.md).
 
 
 ## ⚡ Quick Usage
 
-After installation, run the application:
+After installation, run the application. Run without arguments for the interactive menu:
 
 ```bash
 python wallpaper_generator.py
@@ -107,30 +115,31 @@ python wallpaper_generator.py --prompt "mountain landscape at sunset"
 python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
 ```
 
-For more examples and usage options, see the [Quick Reference Guide](docs/QUICK_REFERENCE.md).
+**AI Preset Generation:**
+```bash
+# Generate a new preset based on the "photographic" style
+python ai_preset_generator.py generate --style photographic
+
+# List available presets
+python ai_preset_generator.py list
+```
+
+**AI Style Generation:**
+```bash
+# Generate a detailed style for the "sci_fi" category
+python ai_style_generator.py --category sci_fi --detailed
+
+# Generate a random detailed style and save it to preferences
+python ai_style_generator.py --detailed --save
+```
+
+For more examples and usage options, see the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
 
 ## 📚 Documentation
 
-### Getting Started
-- [Getting Started Guide](docs/getting-started.md) - Installation and basic usage
-- [Quick Reference Guide](docs/QUICK_REFERENCE.md) - Commands and common tasks
-- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
-
-### User Documentation
-- [Advanced Features](docs/advanced-features.md) - Detailed feature documentation
-- [User Guide](docs/user-guide.md) - Comprehensive usage instructions
-- [Settings Import/Export Guide](docs/GUIDE_settings_import_export.md) - Managing your settings
-
-### Developer Documentation
-- [Architecture Overview](docs/ARCHITECTURE.md) - System design
-- [API Reference](docs/api-reference.md) - Programmatic interface
+- [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) - Detailed installation and command-line usage
+- [Git Commit Guide](docs/git-commit-guide.md) - Guidelines for writing Git commit messages
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- [Terminology Reference](docs/TERMINOLOGY.md) - Standard terminology
-- [UI Utilities Module](docs/README_ui_utils.md) - Terminal interface components
-- [Wallpaper Settings Module](docs/README_wallpaper_settings.md) - Settings management
-- [Testing Guide](docs/testing-guide.md) - Testing framework and guidelines
-
-### Reference
 - [Changelog](CHANGELOG.md) - Version history and updates
 
 ## 📝 License

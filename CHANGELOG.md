@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- AI Preset Generation functionality via `ai_preset_generator.py`.
+- AI Style Generation functionality via `ai_style_generator.py`.
+- GUI image preview (Qt/Tkinter).
+- CLI commands for preset and style generation.
+- Cross-platform wallpaper setting.
+- Improved prompt engineering.
+
 ## [2.0.0] - 2025-05-01
 
 ### Changed
@@ -95,4 +103,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial API integration
 - Basic command-line interface
 - Minimal documentation
-

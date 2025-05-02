@@ -1,39 +1,89 @@
-# Command Line Guide for AI Wallgen
-
-<div align="center">
-  <!-- Logo for AI Wallgen -->
-  <img src="../asset/logo/wallgen_logo.svg" alt="AI Wallgen Logo" width="200" height="200"/>
-  
-  <h1>Command Line Interface Guide</h1>
-  
-  ![AI-Powered](https://img.shields.io/badge/AI--Powered-Gemini-blue?style=flat-square)
-  ![Wallpapers](https://img.shields.io/badge/Wallpapers-HD%20Generation-brightgreen?style=flat-square)
-  ![Features](https://img.shields.io/badge/Features-Prompt%20Enhancement-yellow?style=flat-square)
-  ![Interface](https://img.shields.io/badge/Interface-CLI%20%26%20Interactive-success?style=flat-square)
-</div>
-
----
+# Installation and CLI Guide for Wallgen
 
 ## Overview
 
-AI Wallgen provides a comprehensive command line interface that allows you to generate wallpapers and test prompts without using the interactive menu system. This guide covers all available command line options and provides example commands for common use cases.
+This guide provides comprehensive information on setting up and using Wallgen, a terminal-based AI wallpaper generator, via its command line interface. You'll learn how to install the application, configure API access, and utilize all available command line options for generating and managing wallpapers without the interactive menu system.
 
-## Table of Contents
-- [Overview](#overview)
-- [Basic Usage](#basic-usage)
-- [Available Options](#available-options)
-  - [Prompt Options](#prompt-options)
-  - [Image Settings](#image-settings)
-  - [Behavior Options](#behavior-options)
-  - [Image Preview Options](#image-preview-options)
-  - [Debug Options](#debug-options)
-- [Common Command Combinations](#common-command-combinations)
-- [Troubleshooting](#troubleshooting)
-- [Troubleshooting](#troubleshooting)
+## Prerequisites
 
----
+Before you begin, ensure you have the following:
 
-## Basic Usage
+- **Python 3.8+** installed on your system
+- **pip** (Python package manager)
+- A **Google Gemini API key** (obtain from [Google AI Studio](https://makersuite.google.com/app/apikey))
+- Internet connection for API communication
+
+## Installation
+
+### Linux/macOS
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/rasheedh/wallgen.git
+   cd wallgen
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Windows
+
+1. Clone the repository:
+   ```powershell
+   git clone https://github.com/rasheedh/wallgen.git
+   cd wallgen
+   ```
+
+2. Create and activate a virtual environment:
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+## Setting Up API Access
+
+Wallgen requires a Google Gemini API key to function:
+
+1. Get a Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+2. Set the API key as an environment variable:
+
+   **Linux/macOS**:
+   ```bash
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+   **Windows (PowerShell)**:
+   ```powershell
+   $env:GEMINI_API_KEY="your_api_key_here"
+   ```
+
+   **Windows (Command Prompt)**:
+   ```
+   set GEMINI_API_KEY=your_api_key_here
+   ```
+
+3. Alternatively, you can create a `.env` file in the project root with the content:
+   ```
+   GEMINI_API_KEY=your_api_key_here
+   ```
+
+## Command Line Interface (CLI) Guide
+
+### Basic Usage
 
 The basic syntax for running AI Wallgen from the command line is:
 
@@ -43,11 +93,9 @@ python wallpaper_generator.py [OPTIONS]
 
 If no options are provided, AI Wallgen will start in interactive mode with the main menu.
 
----
+### Available Options
 
-## Available Options
-
-### Prompt Options
+#### Prompt Options
 
 | Option | Description |
 |:------:|:------------|
@@ -57,7 +105,7 @@ If no options are provided, AI Wallgen will start in interactive mode with the m
 | `--test-custom-prompt TEXT` | Test custom prompt enhancement |
 | `--dont-use-user-prefs` | Do not use user preferences for prompt generation |
 
-#### The `--prompt` Option
+##### The `--prompt` Option
 
 The `--prompt` option allows you to specify a custom text prompt for generating a wallpaper. This prompt will be enhanced by the AI to create a more detailed and artistic description before generating the image.
 
@@ -397,7 +445,9 @@ python wallpaper_generator.py --no-preset
 | `--preview-image PATH` | Preview a specific image in the terminal without setting as wallpaper |
 | `--preview-latest` | Preview the latest generated image without setting as wallpaper |
 | `--list-images` | List all generated images and preview one by number |
-| `--gui-preview` | Use the graphical Tkinter window for image previews instead of terminal |
+
+> **💡 Note on GUI Preview:**
+> The graphical preview window (using Qt or Tkinter, depending on your configuration and installed libraries) is used for image previews when available. You can configure the preferred GUI backend in the application's settings.
 
 #### The `--skip-preview` Option
 
@@ -438,22 +488,22 @@ python wallpaper_generator.py --preview-image "path/to/image.png"
 
 **What happens:**
 1. AI Wallgen loads the specified image file
-2. The image is displayed in the terminal (or GUI if `--gui-preview` is also used)
-3. You're given options to set the image as wallpaper or exit
-4. This is useful for reviewing previously generated images or any image file
+2. The image is displayed in the terminal or a graphical window, depending on your <a href="#gui-preview-note">GUI preview settings</a>.
+3. You're given options to set the image as wallpaper or exit.
+4. This is useful for reviewing previously generated images or any image file.
 
 > **💡 Tips:**
-> - You can use relative or absolute paths to the image file
-> - This works with any PNG, JPG, or JPEG image, not just those generated by AI Wallgen
-> - Combine with `--gui-preview` for a better visual experience with larger images
+> - You can use relative or absolute paths to the image file.
+> - This works with any PNG, JPG, or JPEG image, not just those generated by AI Wallgen.
+> - The graphical preview (Qt or Tkinter) provides a better visual experience with larger images if configured.
 
 **Examples with combinations:**
 ```bash
-# Preview a specific image in the terminal
+# Preview a specific image in the terminal (if GUI preview is not configured)
 python wallpaper_generator.py --preview-image "genimage/mountain_sunset_12345678.png"
 
-# Preview an image using the GUI window instead of terminal
-python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png" --gui-preview
+# Preview an image using the configured GUI window
+python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png"
 ```
 
 #### The `--preview-latest` Option
@@ -466,23 +516,23 @@ python wallpaper_generator.py --preview-latest
 ```
 
 **What happens:**
-1. AI Wallgen identifies the most recently created image in the `genimage` directory
-2. The image is displayed in the terminal (or GUI if `--gui-preview` is also used)
-3. You're given options to set the image as wallpaper or exit
-4. This is convenient for checking or applying the last image you generated
+1. AI Wallgen identifies the most recently created image in the `genimage` directory.
+2. The image is displayed in the terminal or a graphical window, depending on your <a href="#gui-preview-note">GUI preview settings</a>.
+3. You're given options to set the image as wallpaper or exit.
+4. This is convenient for checking or applying the last image you generated.
 
 > **💡 Tips:**
-> - This is useful when you've generated multiple images and want to review the latest one
-> - The "latest" is determined by file creation time, not by filename
-> - Combine with `--gui-preview` for a better visual experience
+> - This is useful when you've generated multiple images and want to review the latest one.
+> - The "latest" is determined by file creation time, not by filename.
+> - The graphical preview (Qt or Tkinter) provides a better visual experience if configured.
 
 **Examples with combinations:**
 ```bash
-# Preview the latest generated image in the terminal
+# Preview the latest generated image in the terminal (if GUI preview is not configured)
 python wallpaper_generator.py --preview-latest
 
-# Preview the latest image using the GUI window
-python wallpaper_generator.py --preview-latest --gui-preview
+# Preview the latest image using the configured GUI window
+python wallpaper_generator.py --preview-latest
 ```
 
 #### The `--list-images` Option
@@ -495,64 +545,29 @@ python wallpaper_generator.py --list-images
 ```
 
 **What happens:**
-1. AI Wallgen scans the `genimage` directory and lists all wallpaper images
-2. Images are displayed in reverse chronological order (newest first) with numbers
-3. You can select an image by number to preview it
-4. After preview, you can choose to set it as wallpaper or return to the list
+1. AI Wallgen scans the `genimage` directory and lists all wallpaper images.
+2. Images are displayed in reverse chronological order (newest first) with numbers.
+3. You can select an image by number to preview it in the terminal or a graphical window, depending on your <a href="#gui-preview-note">GUI preview settings</a>.
+4. After preview, you can choose to set it as wallpaper or return to the list.
 
 > **💡 Tips:**
-> - This is useful for browsing your wallpaper collection without using a file manager
-> - Each image is shown with its creation timestamp for easy reference
-> - You can exit the listing at any time by entering 'q'
+> - This is useful for browsing your wallpaper collection without using a file manager.
+> - Each image is shown with its creation timestamp for easy reference.
+> - You can exit the listing at any time by entering 'q'.
+> - The graphical preview (Qt or Tkinter) provides a better visual experience if configured.
 
 **Examples with combinations:**
 ```bash
-# List all images and allow selection for preview
+# List all images and allow selection for preview (terminal or GUI based on settings)
 python wallpaper_generator.py --list-images
-
-# List all images and use GUI preview when selecting an image
-python wallpaper_generator.py --list-images --gui-preview
-```
-
-#### The `--gui-preview` Option
-
-The `--gui-preview` option enables the graphical Tkinter window for image previews instead of using the terminal-based preview.
-
-**Usage:**
-```bash
-python wallpaper_generator.py --gui-preview
-```
-
-**What happens:**
-1. When previewing images (either newly generated or existing ones), AI Wallgen uses a Tkinter window
-2. The image is displayed at its actual resolution (or scaled to fit the screen)
-3. The GUI provides buttons to set as wallpaper or close the preview
-4. This provides a much better visual experience than terminal-based previews
-
-> **💡 Tips:**
-> - This option works with any preview command (`--preview-image`, `--preview-latest`, `--list-images`)
-> - It also affects the preview of newly generated images when using `--prompt` or `--random`
-> - The GUI preview shows the image in its true colors and proportions
-> - This setting can be saved in your preferences for future use
-
-**Examples with combinations:**
-```bash
-# Generate a custom prompt wallpaper and preview it in the GUI
-python wallpaper_generator.py --prompt "abstract geometric patterns" --gui-preview
-
-# Generate a random wallpaper and preview it in the GUI
-python wallpaper_generator.py --random --gui-preview
-
-# List all images and use GUI preview when selecting an image
-python wallpaper_generator.py --list-images --gui-preview
 ```
 
 ### Debug Options
 
 | Option | Description |
 |:------:|:------------|
-| `--verbose` | Enable verbose output |
-| `--debug` | Enable debug logging |
+| `--verbose` | Enable verbose output (currently similar to --debug) |
+| `--debug` | Enable detailed debug logging |
 
 #### The `--debug` Option
 
@@ -589,15 +604,85 @@ python wallpaper_generator.py --test-custom-prompt "forest with fog" --debug
 
 #### The `--verbose` Option
 
-This option is defined in the command line parser but is not fully implemented in the current version of AI Wallgen. When you use this flag, you may not see additional output beyond what's shown by default.
+The `--verbose` option enables verbose output, which currently functions similarly to the `--debug` flag by setting the logging level.
 
 **Usage:**
 ```bash
 python wallpaper_generator.py --verbose
 ```
 
-> **⚠️ Note:**
-> The `--verbose` option is reserved for future implementation to provide more detailed console output. For now, if you need detailed logging, use the `--debug` option instead, which is fully implemented.
+> **💡 Tips:**
+> - While this option sets the logging level, the `--debug` option is recommended for the most detailed logging output to the `wallpaper_generator.log` file.
+> **💡 Tips:**
+> - While this option sets the logging level, the `--debug` option is recommended for the most detailed logging output to the `wallpaper_generator.log` file.
+> - Its behavior may be expanded in future versions to provide more detailed console output.
+
+---
+
+### AI Preset Generator CLI (`ai_preset_generator.py`)
+
+This script allows you to manage AI-generated presets directly from the command line.
+
+**Usage:**
+```bash
+python ai_preset_generator.py [COMMAND] [OPTIONS]
+```
+
+**Available Commands:**
+
+| Command | Description | Options |
+|:--------|:------------|:--------|
+| `generate` | Generate a new AI preset. | `--style TEXT`: Use a specific style as a base for generation. |
+| `list` | List all saved presets. | None |
+| `load` | Load a preset and apply its settings to your user preferences. | `name`: The name of the preset file (without `.json`). |
+| `delete` | Delete a saved preset file. | `name`: The name of the preset file (without `.json`). |
+
+**Examples:**
+```bash
+# Generate a new preset based on the "photographic" style
+python ai_preset_generator.py generate --style photographic
+
+# List all saved presets
+python ai_preset_generator.py list
+
+# Load the settings from a preset named "cinematic_mood"
+python ai_preset_generator.py load cinematic_mood
+
+# Delete the preset named "my_abstract_preset"
+python ai_preset_generator.py delete my_abstract_preset
+```
+
+---
+
+### AI Style Generator CLI (`ai_style_generator.py`)
+
+This script allows you to generate AI art styles directly from the command line.
+
+**Usage:**
+```bash
+python ai_style_generator.py [OPTIONS]
+```
+
+**Available Options:**
+
+| Option | Description |
+|:-------|:------------|
+| `--key TEXT` | Provide your Gemini API key directly (optional if set as environment variable). |
+| `--category TEXT` | Generate a style within a specific canonical category (e.g., `oil_painting`, `geometric`, `photographic`). |
+| `--detailed` | Generate a detailed style output including a name and description. |
+| `--save` | Automatically save the generated style to your user preferences. |
+
+**Examples:**
+```bash
+# Generate a simple style in the "watercolor" category
+python ai_style_generator.py --category watercolor
+
+# Generate a detailed style (name + description) for the "sci_fi" category
+python ai_style_generator.py --category sci_fi --detailed
+
+# Generate a random detailed style and save it to preferences
+python ai_style_generator.py --detailed --save
+```
 
 ---
 
@@ -759,4 +844,18 @@ Common issues when using the command line interface:
 ![Command Reference](https://img.shields.io/badge/Command-Reference-1f425f.svg?style=flat-square)
 ![Image Generator](https://img.shields.io/badge/Image-Generator-purple?style=flat-square)
 ![Last Updated](https://img.shields.io/badge/Last%20Updated-March%202025-orange?style=flat-square)
-</div> 
+</div> <environment_details>
+# VSCode Visible Files
+docs/getting-started.md
+
+# VSCode Open Tabs
+docs/user-guide.md
+docs/getting-started.md
+docs/command-line-guide.md
+
+# Current Time
+5/2/2025, 10:20:59 AM (Asia/Qatar, UTC+3:00)
+
+# Current Mode
+ACT MODE
+</environment_details>
