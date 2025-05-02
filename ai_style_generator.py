@@ -120,6 +120,21 @@ def canonicalize_style_name(style_name: str):
     geometric_terms = ["geometric", "geometry", "polygon", "low poly", "constructivism"]
     if any(term in name for term in geometric_terms):
         return "geometric"
+    minimalist_geometric_terms = ["minimalist geometric", "minimal geometric", "geometric minimalism"]
+    if any(term in name for term in minimalist_geometric_terms):
+        return "minimalist_geometric"
+    psychedelic_terms = ["psychedelic", "trippy", "hallucinogenic", "psychedelia"]
+    if any(term in name for term in psychedelic_terms):
+        return "psychedelic"
+    surrealism_terms = ["surrealism", "surreal", "dreamlike", "fantastical"]
+    if any(term in name for term in surrealism_terms):
+        return "surrealism"
+    fantasy_landscape_terms = ["fantasy landscape", "fantastical landscape", "enchanted landscape"]
+    if any(term in name for term in fantasy_landscape_terms):
+        return "fantasy_landscape"
+    cyberpunk_cityscape_terms = ["cyberpunk cityscape", "neon city", "futuristic cityscape"]
+    if any(term in name for term in cyberpunk_cityscape_terms):
+        return "cyberpunk_cityscape"
     pixel_terms = ["pixel", "8-bit", "16-bit", "pixelated"]
     if any(term in name for term in pixel_terms):
         return "illustration_pixel"

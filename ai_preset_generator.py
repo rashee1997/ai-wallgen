@@ -174,18 +174,21 @@ def categorize_style(style_name: str) -> str:
         # Minimalist/Geometric
         "minimalist": ["minimalism", "minimalist", "minimal", "minimal art"],
         "geometric": ["geometric", "geometry", "geometric abstract", "low poly"],
+        "minimalist_geometric": ["minimalist geometric", "minimal geometric", "geometric minimalism"],
 
         # Digital/Modern
         "digital_art": [
             "digital art", "digital painting", "3d render", "3d art", 
             "vector art", "glitch art", "vaporwave", "retrowave", "rendered"
         ],
+        "psychedelic": ["psychedelic", "trippy", "hallucinogenic", "psychedelia"],
+        "surrealism": ["surrealism", "surreal", "dreamlike", "fantastical"],
 
         # Game Style
         "game_style": [
             "game style", "game art", "game engine", "unity", "unreal", 
             "unreal engine", "unity engine", "pubg", "cyberpunk game", 
-            "fps", "rpg", "in-engine", "cel-shaded"
+            "fps", "rpg", "in-engine", "cel-shaded", "cyberpunk cityscape"
         ],
 
         # Photographic/Realism
@@ -211,7 +214,7 @@ def categorize_style(style_name: str) -> str:
         "sculpture": ["sculpture", "sculpted", "carved"],
 
         # Fantasy/Sci-fi
-        "fantasy": ["fantasy", "magical", "enchanted", "mythical", "wizard", "dragon", "unicorn", "fairy tale", "castle"],
+        "fantasy": ["fantasy", "magical", "enchanted", "mythical", "wizard", "dragon", "unicorn", "fairy tale", "castle", "fantasy landscape"],
         "sci_fi": ["sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"],
 
         # Fallback for generics - last so specific matches win first
@@ -351,7 +354,42 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
             - Effects: Digital effects (glow, particles) but avoid game-specific effects
             - Colors: Full range available, from realistic to vibrant
             - Camera/View: Flexible, based on artistic vision"""
-        
+
+        elif style_category == "minimalist_geometric":
+            category_instructions = """*   **Minimalist Geometric Focus:**
+            - Style: Clean, simple geometric shapes
+            - Colors: Muted pastels or monochrome
+            - Composition: Balanced with negative space
+            - Mood: Calm, orderly, modern"""
+
+        elif style_category == "psychedelic":
+            category_instructions = """*   **Psychedelic Focus:**
+            - Colors: Vibrant, neon, contrasting
+            - Patterns: Swirling, fractal, kaleidoscopic
+            - Effects: Glowing, pulsating, morphing visuals
+            - Mood: Trippy, surreal, intense"""
+
+        elif style_category == "surrealism":
+            category_instructions = """*   **Surrealism Focus:**
+            - Concept: Dreamlike, bizarre, unexpected juxtapositions
+            - Colors: Muted, contrasting, symbolic
+            - Composition: Layered, symbolic, narrative
+            - Mood: Mysterious, uncanny, thought-provoking"""
+
+        elif style_category == "fantasy_landscape":
+            category_instructions = """*   **Fantasy Landscape Focus:**
+            - Environment: Mystical forests, floating islands, enchanted castles
+            - Lighting: Ethereal, glowing, magical
+            - Colors: Rich, vibrant, otherworldly
+            - Mood: Epic, adventurous, mysterious"""
+
+        elif style_category == "cyberpunk_cityscape":
+            category_instructions = """*   **Cyberpunk Cityscape Focus:**
+            - Environment: Neon-lit streets, futuristic skyscrapers, rainy nights
+            - Lighting: Neon, reflective, high contrast
+            - Colors: Dark, neon, saturated
+            - Mood: Gritty, futuristic, dystopian"""
+
         elif style_category == "game_style":
             category_instructions = """*   **Game Style Focus:**
             - Art Movement: 'Game Art', specific game genre styles

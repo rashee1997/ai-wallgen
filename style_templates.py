@@ -101,8 +101,8 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         # Digital art specific lighting
         imagen_settings["lighting_settings"]["lighting_effects"] = ["[ rim lighting/volumetric/etc ]"]
 
-    elif style_category == "minimalist" or style_category == "minimal" or style_category == "geometric":
-        # For minimalist and geometric styles
+    elif style_category == "minimalist" or style_category == "minimal" or style_category == "geometric" or style_category == "minimalist_geometric":
+        # For minimalist and geometric styles including new minimalist_geometric
         imagen_settings["minimalist_settings"] = {
             "simplicity_level": "[ extreme/moderate ]",
             "geometric_elements": ["[ shapes used ]"],
@@ -114,6 +114,47 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         # Remove settings that don't apply to minimalist art
         if "camera_settings" in imagen_settings:
             del imagen_settings["camera_settings"]
+
+    elif style_category == "psychedelic":
+        # Psychedelic style settings
+        imagen_settings["psychedelic_settings"] = {
+            "color_palette": "[ vibrant, neon, contrasting ]",
+            "patterns": "[ swirling, fractal, kaleidoscopic ]",
+            "visual_effects": "[ glowing, pulsating, morphing ]",
+            "mood": "[ trippy, surreal, intense ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ dynamic, colorful ]"
+        imagen_settings["composition_settings"]["technique"] = "[ abstract, flowing ]"
+
+    elif style_category == "surrealism":
+        # Surrealism style settings
+        imagen_settings["surrealism_settings"] = {
+            "conceptual_approach": "[ dreamlike, bizarre, unexpected juxtapositions ]",
+            "color_scheme": "[ muted, contrasting, symbolic ]",
+            "composition": "[ layered, symbolic, narrative ]",
+            "mood": "[ mysterious, uncanny, thought-provoking ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ dramatic, chiaroscuro ]"
+
+    elif style_category == "fantasy_landscape":
+        # Fantasy landscape style settings
+        imagen_settings["fantasy_settings"] = {
+            "environment": "[ mystical forests, floating islands, enchanted castles ]",
+            "lighting": "[ ethereal, glowing, magical ]",
+            "color_palette": "[ rich, vibrant, otherworldly ]",
+            "mood": "[ epic, adventurous, mysterious ]"
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ panoramic, wide-angle ]"
+
+    elif style_category == "cyberpunk_cityscape":
+        # Cyberpunk cityscape style settings
+        imagen_settings["cyberpunk_settings"] = {
+            "environment": "[ neon-lit streets, futuristic skyscrapers, rainy nights ]",
+            "lighting": "[ neon, reflective, high contrast ]",
+            "color_palette": "[ dark, neon, saturated ]",
+            "mood": "[ gritty, futuristic, dystopian ]"
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ street-level, aerial ]"
 
     elif style_category == "game_style":
         # For game styles, use game engine-specific settings
