@@ -5,29 +5,64 @@ This module provides style-specific template generation for different art styles
 to ensure settings are appropriate for each style category.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 
-def get_template_for_category(style_category: str) -> Dict[str, Any]:
-    """
-    Return the appropriate JSON template based on style category.
-    
-    Each template includes only the relevant settings for the specific style category.
-    For example, camera settings only for photographic styles, digital software settings
-    for digital art, etc.
-    
-    Args:
-        style_category (str): The detected style category
 
-    Returns:
-        Dict[str, Any]: A JSON template with appropriate fields for the style category
+def _priority_category_match(style_category: Union[str, List[str]]) -> str:
     """
+    Return the best-matching style category based on a fixed priority list.
+    When multiple categories are given, always choose the most specific/relevant one by priority.
+    Fallback to first or 'default'.
+    """
+    priority_list = [
+        "pop_surrealism",
+        "psychedelic_surrealism",
+        "dreamcore_weirdcore",
+        "cyberpunk_cityscape",
+        "cyberpunk_portrait",
+        "fantasy_battle",
+        "fantasy_portrait",
+        "fantasy_landscape",
+        "photorealism_glitch",
+        "digital_painting",
+        "minimalist_geometric",
+        "abstract_expressionism_cubism_fusion",
+        # Add other categories as needed
+    ]
+
+    # Normalize to a flat list of lowercase strings
+    if isinstance(style_category, str):
+        categories = [style_category.lower()]
+    elif isinstance(style_category, list):
+        categories = [str(cat).lower() for cat in style_category]
+    else:
+        categories = []
+
+    main_category = None
+    for pcat in priority_list:
+        if pcat in categories:
+            main_category = pcat
+            break
+    if main_category is None and categories:
+        main_category = categories[0]
+    elif main_category is None:
+        main_category = "default"
+    return main_category
+
+def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str, Any]:
+    """
+    Return the appropriate JSON template based on style category or list of style categories.
+    Uses priority to select the most relevant category when several are given, for enhanced preset compatibility.
+    """
+    main_category = _priority_category_match(style_category)
+
     # Base template with common fields all styles have
     base_template = {
         "preset_name": "[ evocative name ]",
         "moods": ["[ one mood ]"],
         "aspect_ratio": "16:9"
     }
-    
+
     # Common settings for all categories
     imagen_settings = {
         "style_settings": {
@@ -66,6 +101,360 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         },
         "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]"
     }
+
+    # -- Mixed/Hybrid Art Templates (creative blended settings) --
+    if main_category == "kinetic_ascii":
+        imagen_settings["kinetic_ascii_settings"] = {
+            "motion_type": "[ animated/looped/text-based ]",
+            "character_set": "[ ASCII/Unicode block/line ]",
+            "visual_flow": "[ left-to-right/top-down/randomized ]",
+            "energy_motif": "[ pulsing, blinking, flowing symbols ]",
+            "articulation": "[ frame-based/continuous ]",
+            "aesthetic_blend": "Kinetic movement visualized via ASCII symbols, pulsing text animating across grid; retro-tech/cyber fusion."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ ASCII kinetic motion grid ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ monochrome/neon ]"
+
+    elif main_category == "watercolor_pencil":
+        imagen_settings["watercolor_pencil_settings"] = {
+            "layering_effect": "[ watercolor washes underlying sharp pencil ]",
+            "stroke_quality": "[ loose pigment, fine overlay sketch ]",
+            "blend_level": "[ soft <= watercolor; detail <= pencil ]",
+            "paper_type": "[ textured/medium grain ]",
+            "aesthetic_blend": "Painterly fluidity with crisp pencil edges; dreamy backgrounds with focused main objects."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ wash-and-sketch ]"
+        imagen_settings["color_settings"]["color_interaction"] = "[ soft paint and linear grayscale ]"
+
+    elif main_category == "hybrid_traditional_digital":
+        imagen_settings["hybrid_traditional_digital_settings"] = {
+            "media_fusion": "[ traditional painting, digital enhancement, mixed media ]",
+            "techniques": "[ layering, digital brushwork, collage ]",
+            "color_palette": "[ natural tones with digital vibrancy ]",
+            "aesthetic_blend": "Seamless fusion of traditional and digital art techniques creating rich textures and depth."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ mixed media layering ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ natural, enhanced ]"
+
+    elif main_category == "installation_art":
+        imagen_settings["installation_art_settings"] = {
+            "media": "[ mixed media, found objects, spatial elements ]",
+            "scale": "[ large, immersive ]",
+            "interaction": "[ physical, digital, participatory ]",
+            "aesthetic_blend": "Spatial and immersive art combining physical materials with digital projections and interactivity."
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ immersive, 3D space ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ dynamic, projection-based ]"
+
+    elif main_category == "scientific_technological_hybrid":
+        imagen_settings["scientific_technological_hybrid_settings"] = {
+            "media": "[ photography, film, digital media, scientific visualization ]",
+            "concept": "[ data-driven, algorithmic, experimental ]",
+            "technology": "[ AI, AR, VR, interactive software ]",
+            "aesthetic_blend": "Artistic expression integrating scientific data and cutting-edge technology."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ algorithmic composition ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ high contrast, data-inspired ]"
+
+    elif main_category == "augmented_reality_art":
+        imagen_settings["augmented_reality_art_settings"] = {
+            "media": "[ 3D modeling, digital overlays, physical space ]",
+            "interaction": "[ user-driven, immersive ]",
+            "technology": "[ AR devices, sensors, real-time rendering ]",
+            "aesthetic_blend": "Blending virtual and physical realities through interactive digital art."
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ mixed reality, interactive ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ dynamic, real-time ]"
+
+    elif main_category == "abstract_expressionism_cubism_fusion":
+        imagen_settings["abstract_expressionism_cubism_fusion_settings"] = {
+            "form_style": "[ gestural brushwork, fragmented geometry ]",
+            "color_palette": "[ bold, contrasting, emotive ]",
+            "composition": "[ layered, dynamic, abstract ]",
+            "aesthetic_blend": "Fusion of abstract expressionism's emotion with cubism's structure."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ expressive abstraction with geometric fragmentation ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ bold, emotive ]"
+
+    elif main_category == "collage_digital_overlay":
+        imagen_settings["collage_digital_overlay_settings"] = {
+            "media": "[ paper collage, digital textures, photo manipulation ]",
+            "texture": "[ layered, tactile, digital enhancements ]",
+            "color_palette": "[ eclectic, vibrant ]",
+            "aesthetic_blend": "Combining tactile collage with digital overlays for rich visual narratives."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ mixed media collage with digital effects ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, eclectic ]"
+
+    elif main_category == "experimental_mixed_media":
+        imagen_settings["experimental_mixed_media_settings"] = {
+            "media": "[ unconventional materials, digital manipulation ]",
+            "techniques": "[ layering, deconstruction, reassembly ]",
+            "concept": "[ avant-garde, boundary-pushing ]",
+            "aesthetic_blend": "Innovative combinations of materials and digital techniques challenging traditional art."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ experimental, avant-garde ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ varied, unpredictable ]"
+
+
+    elif main_category == "patchwork_collage":
+        imagen_settings["patchwork_collage_settings"] = {
+            "material_mix": "[ fabric, paper, metal, wood ]",
+            "assembly_style": "[ layered, stitched, glued ]",
+            "texture_emphasis": "[ tactile, rough, varied ]",
+            "color_palette": "[ bold, contrasting, folk-inspired ]",
+            "aesthetic_blend": "Bold textures and patterns combined into cohesive compositions; folk and craft influences."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ collage assembly ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, earthy ]"
+
+    elif main_category == "paper_quilling":
+        imagen_settings["paper_quilling_settings"] = {
+            "coil_types": "[ tight, loose, shaped ]",
+            "paper_strip_width": "[ narrow, medium, wide ]",
+            "pattern_density": "[ sparse, dense ]",
+            "color_scheme": "[ pastel, bright, monochrome ]",
+            "aesthetic_blend": "Intricate rolled paper shapes forming delicate, decorative patterns."
+        }
+        imagen_settings["composition_settings"]["depth"] = "[ layered, dimensional ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ soft, bright ]"
+
+    elif main_category == "tradigital_mixed_media":
+        imagen_settings["tradigital_mixed_media_settings"] = {
+            "media_fusion": "[ traditional painting + digital enhancement ]",
+            "texture_blend": "[ brush strokes + digital overlays ]",
+            "color_interaction": "[ natural + enhanced ]",
+            "aesthetic_blend": "Seamless integration of traditional and digital techniques for rich textures."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ mixed media layering ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ natural, enhanced ]"
+
+    elif main_category == "whimsical_mixed_media":
+        imagen_settings["whimsical_mixed_media_settings"] = {
+            "motifs": "[ mythical creatures, soft colors, playful elements ]",
+            "texture": "[ light, airy, layered ]",
+            "color_palette": "[ pastel, dreamy ]",
+            "aesthetic_blend": "Lighthearted, dreamy compositions with fantasy and playful accents."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ playful, dreamy ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ pastel, soft ]"
+
+    elif main_category == "sci_fi_futuristic":
+        imagen_settings["sci_fi_futuristic_settings"] = {
+            "technology_level": "[ advanced, cybernetic, space-age ]",
+            "environment": "[ futuristic cities, space stations ]",
+            "lighting": "[ neon, holographic, cold ]",
+            "color_palette": "[ metallic, neon, dark ]",
+            "aesthetic_blend": "Futuristic and cyberpunk elements with high-tech visuals."
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ panoramic, dynamic ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ neon, artificial ]"
+
+    elif main_category == "mediterranean_style":
+        imagen_settings["mediterranean_style_settings"] = {
+            "environment": "[ sunny coastal scenes, vibrant landscapes ]",
+            "color_palette": "[ warm, bright, natural ]",
+            "lighting": "[ natural sunlight, warm glow ]",
+            "aesthetic_blend": "Vivid, colorful depictions of Mediterranean life and scenery."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ lively, warm ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ warm, bright ]"
+
+    elif main_category == "morphism_surreal":
+        imagen_settings["morphism_surreal_settings"] = {
+            "transformation_style": "[ surreal, fluid, fantastical ]",
+            "color_palette": "[ vibrant, dreamlike ]",
+            "composition": "[ morphing shapes, illogical progressions ]",
+            "aesthetic_blend": "Surreal transformations with fantastical and dreamlike qualities."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ surreal morphing ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, surreal ]"
+
+    elif main_category == "cubism_mixed":
+        imagen_settings["cubism_mixed_settings"] = {
+            "form_style": "[ angular, fragmented, multiple perspectives ]",
+            "color_palette": "[ muted, earthy, bold accents ]",
+            "composition": "[ geometric abstraction, layered planes ]",
+            "aesthetic_blend": "Cubist style with mixed media and modern influences."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ cubist fragmentation ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ muted, earthy ]"
+
+    elif main_category == "pixel_patchwork":
+        imagen_settings["pixel_patchwork_settings"] = {
+            "pixel_style": "[ pixel art, voxel art, low poly ]",
+            "color_palette": "[ limited, vibrant ]",
+            "texture": "[ blocky, geometric ]",
+            "aesthetic_blend": "Pixelated and geometric patchwork style combining digital and traditional motifs."
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ isometric, grid-based ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ limited, vibrant ]"
+
+    elif main_category == "phygital_hybrid":
+        imagen_settings["phygital_hybrid_settings"] = {
+            "media_fusion": "[ physical and digital art combined ]",
+            "technology": "[ AR, 3D printing, mixed reality ]",
+            "aesthetic_blend": "Hybrid physical/digital artworks blending real and virtual elements."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ hybrid layering ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ varied ]"
+
+    elif main_category == "screen_printing_bold":
+        imagen_settings["screen_printing_bold_settings"] = {
+            "print_style": "[ bold, graphic, tactile ]",
+            "color_palette": "[ limited, high contrast ]",
+            "texture": "[ flat, layered ]",
+            "aesthetic_blend": "Bold graphic prints with tactile qualities and strong contrasts."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ screen printing ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ limited, high contrast ]"
+
+    elif main_category == "mixed_media_journaling":
+        imagen_settings["mixed_media_journaling_settings"] = {
+            "media": "[ collage, sketch, paint, stamps ]",
+            "texture": "[ layered, varied ]",
+            "color_palette": "[ eclectic, varied ]",
+            "aesthetic_blend": "Eclectic, layered mixed media with personal and whimsical elements."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ personal, whimsical ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ varied ]"
+
+    elif main_category == "digital_pixel_traditional":
+        imagen_settings["digital_pixel_traditional_settings"] = {
+            "media_fusion": "[ digital pixel art combined with traditional painting ]",
+            "color_palette": "[ vibrant, mixed ]",
+            "texture": "[ pixelated and painterly ]",
+            "aesthetic_blend": "Fusion of pixel art and traditional painting techniques."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ hybrid media ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, mixed ]"
+
+    elif main_category == "patchwork_fabric":
+        imagen_settings["patchwork_fabric_settings"] = {
+            "material": "[ fabric, textile ]",
+            "assembly": "[ sewn, layered ]",
+            "texture": "[ soft, tactile ]",
+            "color_palette": "[ warm, earthy ]",
+            "aesthetic_blend": "Textile patchwork with warm, tactile qualities."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ fabric layering ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ warm, earthy ]"
+
+    elif main_category == "mixed_media_collage":
+        imagen_settings["mixed_media_collage_settings"] = {
+            "media": "[ paper, paint, found objects ]",
+            "texture": "[ layered, tactile ]",
+            "color_palette": "[ varied, eclectic ]",
+            "aesthetic_blend": "Eclectic collage combining diverse media and textures."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ collage assembly ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ varied ]"
+
+    elif main_category == "whimsical_fantasy":
+        imagen_settings["whimsical_fantasy_settings"] = {
+            "motifs": "[ fantasy creatures, pastel colors, dreamy ]",
+            "texture": "[ soft, layered ]",
+            "color_palette": "[ pastel, soft ]",
+            "aesthetic_blend": "Dreamy fantasy with playful and soft whimsical elements."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ dreamy, playful ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ pastel, soft ]"
+
+    elif main_category == "cubism_futurism":
+        imagen_settings["cubism_futurism_settings"] = {
+            "form_style": "[ angular, geometric, dynamic ]",
+            "color_palette": "[ muted, metallic ]",
+            "composition": "[ layered, fragmented ]",
+            "aesthetic_blend": "Fusion of cubist and futurist styles with dynamic geometry."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ cubist futurism ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ muted, metallic ]"
+
+    elif main_category == "digital_traditional_fusion":
+        imagen_settings["digital_traditional_fusion_settings"] = {
+            "media_fusion": "[ digital and traditional art combined ]",
+            "texture": "[ layered, mixed ]",
+            "color_palette": "[ varied, rich ]",
+            "aesthetic_blend": "Rich fusion of digital and traditional artistic techniques."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ hybrid media ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ varied ]"
+
+    elif main_category == "retro_pixel_vaporwave":
+        imagen_settings["retro_pixel_vaporwave_settings"] = {
+            "style": "[ retro pixel art with vaporwave aesthetics ]",
+            "color_palette": "[ neon, pastel, vibrant ]",
+            "texture": "[ pixelated, glitch ]",
+            "aesthetic_blend": "Retro pixel art infused with vaporwave neon and glitch effects."
+        }
+        imagen_settings["composition_settings"]["mood"] = "[ nostalgic, vibrant ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ neon, pastel ]"
+
+    elif main_category == "psychedelic_surrealism":
+        imagen_settings["psychedelic_surrealism_settings"] = {
+            "motifs": "[ trippy, surreal, dreamlike ]",
+            "color_palette": "[ vibrant, neon, contrasting ]",
+            "visual_effects": "[ glowing, morphing, fractal ]",
+            "aesthetic_blend": "Intense psychedelic visuals combined with surreal dreamscapes."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ psychedelic surrealism ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, neon ]"
+
+    elif style_category == "digital_painting":
+        imagen_settings["digital_painting_settings"] = {
+            "platform": "[ Procreate/Photoshop/Krita/custom ]",
+            "brushwork": "[ simulated paint, digital smudge, opacity layering ]",
+            "effect_blend": "[ overlays, filters, noise ]",
+            "aesthetic_blend": "Traditional painting strokes digitally composited with effects and masks."
+        }
+        imagen_settings["lighting_settings"]["lighting_effects"] = "[ digital glow, painted shadows ]"
+
+    elif style_category == "photorealism_glitch":
+        imagen_settings["photorealism_glitch_settings"] = {
+            "base_quality": "[ high-detail, high-contrast ]",
+            "distortion_techniques": "[ RGB shift, scanline, datamosh ]",
+            "fracture_level": "[ subtle/random/intense ]",
+            "aesthetic_blend": "Hyperreal imagery corrupted with digital noise, fragment overlays."
+        }
+        imagen_settings["detail_settings"]["texture_quality"] = "[ glitch surface ]"
+        imagen_settings["post_processing"] = {
+            "effects": ["[ VHS artifact, color tear ]"]
+        }
+
+    elif style_category == "anime_oilpainting":
+        imagen_settings["anime_oilpainting_settings"] = {
+            "character_design": "[ large-eyed/shoujo, painterly highlights ]",
+            "canvas_type": "[ linen/canvas texture ]",
+            "lighting": "[ soft rim/oil brush glaze ]",
+            "stroke_emphasis": "[ visible impasto, cell shading blend ]",
+            "aesthetic_blend": "Anime forms with lush oil-paint volume and brushwork."
+        }
+        imagen_settings["color_settings"]["palette_type"] = "[ pastel + vivid ]"
+
+    elif style_category == "minimalist_geometric":
+        imagen_settings["minimalist_geometric_settings"] = {
+            "geometry_focus": "[ circles/triangles/squares ]",
+            "simplicity": "[ 3 or fewer shapes/limited lines ]",
+            "style": "[ flat-projection, low noise, pastel palette ]",
+            "aesthetic_blend": "Extreme geometric abstraction with negative space and proportional rhythm."
+        }
+
+    elif style_category == "pop_surrealism_ascii":
+        imagen_settings["pop_surrealism_ascii_settings"] = {
+            "icon_motif": "[ pop icon, cartoon, ASCII overlay ]",
+            "visual_irony": "[ strange objects/characters with ASCII outlining ]",
+            "pattern_density": "[ sparse/dense ]",
+            "aesthetic_blend": "Cartoonish subjects re-rendered as digital character mosaics, bizarre and playful."
+        }
+
+    elif style_category == "dreamcore_weirdcore":
+        imagen_settings["dreamcore_weirdcore_settings"] = {
+            "atmosphere": "[ foggy, uncanny, low-sat color, liminal spaces ]",
+            "distortion": "[ scan error, smudge, trailing effect ]",
+            "motif": "[ ambiguous objects, portals, surreal geometry ]",
+            "aesthetic_blend": "Blends nostalgic dreaminess with unsettling strange objects/highlights; ambiguous scenes."
+        }
+        imagen_settings["color_settings"]["color_scheme"] = "[ pale neon, desaturated ]"
 
     # Initialize style-specific settings based on the category
     if style_category == "3d_render":
@@ -121,7 +510,7 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
         imagen_settings["composition_settings"]["lighting_setup"] = "[ dramatic, chiaroscuro ]"
-    elif style_category == "photographic" or style_category.startswith("cinematic") or style_category == "realistic":
+    elif main_category == "photographic" or (isinstance(main_category, str) and main_category.startswith("cinematic")) or main_category == "realistic":
         # For photographic/cinematic/realistic styles, include camera settings
         imagen_settings["camera_settings"] = {
             "camera_model": "[ appropriate camera model ]",
