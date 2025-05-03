@@ -310,8 +310,15 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
                     return category
                 if category == "traditional_painting_drawing":
                     return "traditional_painting_drawing"
+                if category in [
+                    "papercraft", "luna_photo", "pop_surrealism", "synesthesia_art",
+                    "weirdcore", "dreamcore", "ferrofluid", "animal_inspired",
+                    "ascii_art", "biopunk", "kinetic_art", "nightcore", "optic_art"
+                ]:
+                    return category
         # Don't break early -- let most specific win first
     return "unknown"
+
 
 
 

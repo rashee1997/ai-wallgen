@@ -590,6 +590,114 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "atmosphere": "[ mysterious/wondrous/ominous ]"
         }
 
+    elif style_category == "papercraft":
+        imagen_settings["papercraft_settings"] = {
+            "layering_technique": "[ stacked/cut/rolled ]",
+            "paper_type": "[ construction/cardstock/tissue ]",
+            "edge_quality": "[ sharp/rounded/deckled ]",
+            "construction_method": "[ glued/slot/folding ]",
+            "motif": "[ organic/geometric/abstract ]"
+        }
+        imagen_settings["composition_settings"]["depth"] = "[ low/medium/high ]"
+        imagen_settings["texture_quality"] = "[ crisp paper/fibrous ]"
+
+    elif style_category == "luna_photo":
+        imagen_settings["luna_photo_settings"] = {
+            "exposure_method": "[ double exposure/masking ]",
+            "photographic_style": "[ ethereal/surreal ]",
+            "subject_interaction": "[ blending/superimpose/separate ]",
+            "light_quality": "[ diffuse/moonlit/glowing ]"
+        }
+
+    elif style_category == "pop_surrealism":
+        imagen_settings["pop_surrealism_settings"] = {
+            "motif": "[ cartoon/lowbrow/pop icons ]",
+            "juxtaposition": "[ playful/subversive ]",
+            "narrative_element": "[ overt/hidden ]",
+            "color_palette": "[ saturated/vivid/unexpected ]"
+        }
+
+    elif style_category == "synesthesia_art":
+        imagen_settings["synesthesia_settings"] = {
+            "sensation_pairings": "[ color-sound/shape-taste ]",
+            "expression_style": "[ blended/disjointed ]",
+            "motif": "[ waves/flares/overlaps ]",
+            "dynamic_emphasis": "[ motion/static ]"
+        }
+
+    elif style_category == "weirdcore":
+        imagen_settings["weirdcore_settings"] = {
+            "motif": "[ nostalgic/liminal/dreamlike ]",
+            "distortion_type": "[ visual/glitch ]",
+            "color_scheme": "[ muted/neon ]",
+            "visual_emphasis": "[ surreal/uncanny/comforting ]"
+        }
+
+    elif style_category == "dreamcore":
+        imagen_settings["dreamcore_settings"] = {
+            "atmosphere": "[ foggy/diffuse/light beams ]",
+            "motif": "[ ethereal/spacey/lost places ]",
+            "color_scheme": "[ pastel/faded ]",
+            "emotional_tone": "[ wistful/nostalgic ]"
+        }
+
+    elif style_category == "ferrofluid":
+        imagen_settings["ferrofluid_settings"] = {
+            "fluid_effect": "[ spiky/smooth ]",
+            "magnetic_pattern": "[ geometric/organic ]",
+            "lighting_direction": "[ high contrast/backlit ]",
+            "motion_emphasis": "[ static/fluid/dynamic ]"
+        }
+
+    elif style_category == "animal_inspired":
+        imagen_settings["animal_inspired_settings"] = {
+            "theme_animal": "[ specify ]",
+            "pattern_usage": "[ direct/motif/abstract ]",
+            "texture_emphasis": "[ fur/scale/feather/carapace ]",
+            "integration_level": "[ subtle/prominent ]"
+        }
+
+    elif style_category == "ascii_art":
+        imagen_settings["ascii_art_settings"] = {
+            "character_set": "[ restricted/full ]",
+            "resolution": "[ low/medium/high ]",
+            "mosaic_density": "[ sparse/dense ]",
+            "contrast_method": "[ symbol/value/mix ]"
+        }
+
+    elif style_category == "biopunk":
+        imagen_settings["biopunk_settings"] = {
+            "bio_technology": "[ genetic/cybernetic/fungal ]",
+            "integration_style": "[ seamless/grafted ]",
+            "color_palette": "[ sickly/neon/muted ]",
+            "mood": "[ unsettling/energetic ]"
+        }
+        imagen_settings["lighting_settings"]["highlight_color"] = "[ green/purple/pale blue ]"
+
+    elif style_category == "kinetic_art":
+        imagen_settings["kinetic_art_settings"] = {
+            "motion_type": "[ mechanical/fluid/digital ]",
+            "cycle_pattern": "[ looped/triggered ]",
+            "audience_interaction": "[ passive/active ]",
+            "visual_emphasis": "[ clean/geometric/organic ]"
+        }
+
+    elif style_category == "nightcore":
+        imagen_settings["nightcore_settings"] = {
+            "tempo": "[ fast/very fast ]",
+            "color_palette": "[ neon/pastel/high-contrast ]",
+            "audio_motif": "[ music/visual waves ]",
+            "visual_emphasis": "[ high energy/edgy/futuristic ]"
+        }
+
+    elif style_category == "optic_art":
+        imagen_settings["optic_art_settings"] = {
+            "optical_illusion_type": "[ moiré/afterimage/grid ]",
+            "pattern_density": "[ tight/loose ]",
+            "movement_effect": "[ static/dynamic ]",
+            "contrast_level": "[ high/medium ]"
+        }
+
     else:
         # Fallback template for unknown or general styles
         imagen_settings["other_category_settings"] = {
