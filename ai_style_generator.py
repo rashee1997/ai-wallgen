@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuration constants
-DEFAULT_MODEL = "gemini-2.0-flash"
+DEFAULT_MODEL = "gemini-2.5-flash-preview-04-17"
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 

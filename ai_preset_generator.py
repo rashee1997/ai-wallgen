@@ -376,7 +376,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         model = None
 
         try:
-            model = genai.GenerativeModel('gemini-2.0-flash')  # Use Gemini Flash model directly
+            model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')  # Use updated Gemini Flash model directly
             print_info("Using Gemini Flash model...")
         except Exception as err:
             logging.error(f"Failed to initialize Gemini Flash model: {err}")
@@ -530,10 +530,11 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                 if "429" in str(api_err) and not using_flash and model.model_name == 'gemini-2.5-pro-preview-03-25':
                     # Switch to Flash model only if not already using it
                     print_warning("Pro model quota exceeded, switching to Gemini Flash...")
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
                     using_flash = True
                     print_info("Using Gemini Flash model...")
                     continue  # Retry the same attempt with Flash
+
                 else:
                     # Either already using Flash or different error
                     logging.error(f"Generation failed: {api_err}")

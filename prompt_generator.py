@@ -501,7 +501,7 @@ Your response must follow this exact format:
                 
             try:
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
                 response = model.generate_content(instructions)
 
                 if response.parts:
