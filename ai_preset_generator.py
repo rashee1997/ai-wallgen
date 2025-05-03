@@ -148,7 +148,9 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
     if isinstance(style_name, dict):
         style_name = style_name.get('name', '')
     
-    style_lower = str(style_name).lower()
+    # Normalize style_name by replacing underscores with spaces to improve matching
+    style_name = str(style_name).replace('_', ' ')
+    style_lower = style_name.lower()
     
     # Define keywords for each distinct category
     categories_keywords = {
@@ -160,6 +162,7 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
             "zbrush", "keyshot", "pixar style 3d", "toon 3d", "stylized 3d",
             "photoreal 3d", "3d portrait", "3d scene", "3d composition", "3d character", "3d environment"
         ],
+
         # --- Illustration/Cartoon Categories ---
         "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
         "illustration_disney": ["disney", "disney style", "disney animation"],
@@ -171,6 +174,7 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
         "illustration_graphic": ["illustration", "cartoon", "cartoony", "graphic novel"],
         "illustration_childrens": ["children's book", "picture book", "kids illustration"],
         "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
+        "ink_punk": ["ink punk", "inkpunk", "hand-drawn sketchy", "unfinished look"],
 
         # --- Painting/Drawing Categories ---
         "oil_painting": ["oil painting", "oil paint", "impasto", "alla prima", "wet-on-wet"],
@@ -198,6 +202,7 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
         "fauvism": ["fauvism", "fauvist", "wild beasts"],
         "art_nouveau": ["art nouveau", "new art", "modern style"],
         "art_deco": ["art deco", "decop", "modernist"],
+        "art_deco_revival": ["art deco revival", "art deco revival", "art deco style", "art deco architecture"],
 
         # --- Minimalist/Geometric Categories ---
         "minimalist": ["minimalism", "minimalist", "minimal", "minimal art"],
@@ -249,8 +254,22 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
         "steampunk": ["steampunk", "victorian sci-fi", "industrial fantasy"],
         "dystopian": ["dystopian", "post-apocalyptic", "dark future", "ruined world"],
 
+        # --- New Categories from Tavily Search ---
+        "papercraft": ["papercraft", "paper cut", "folded paper", "layered paper", "glued paper"],
+        "luna_photo": ["luna photo", "double exposure", "surreal photographic", "ethereal photo"],
+        "pop_surrealism": ["pop surrealism", "lowbrow art", "cartoon surrealism", "fantastical pop art"],
+        "synesthesia_art": ["synesthesia art", "color sound fusion", "sensory blending art"],
+        "weirdcore": ["weirdcore", "surreal glitch", "dreamlike glitch", "uncanny art"],
+        "dreamcore": ["dreamcore", "dreamlike aesthetic", "ethereal dream art"],
+        "ferrofluid": ["ferrofluid", "magnetic fluid art", "liquid metal art"],
+        "animal_inspired": ["animal inspired", "animal motif", "fauna art", "wildlife art"],
+        "ascii_art": ["ascii art", "text art", "character art", "typographic art"],
+        "biopunk": ["biopunk", "biological cyberpunk", "genetic art", "bio-tech art"],
+        "kinetic_art": ["kinetic art", "moving art", "dynamic sculpture", "motion art"],
+        "nightcore": ["nightcore", "fast paced art", "high energy art", "vibrant neon art"],
+        "optic_art": ["optic art", "op art", "optical illusion art", "visual trickery"]
         # Fallback for generics - last so specific matches win first
-        "unknown": []
+        ,"unknown": []
     }
 
     # Check each category's keywords
@@ -291,8 +310,9 @@ def categorize_style(style_name: Union[str, Dict]) -> str:
                     return category
                 if category == "traditional_painting_drawing":
                     return "traditional_painting_drawing"
-        # Don't break early -- let most specific win!
+        # Don't break early -- let most specific win first
     return "unknown"
+
 
 
 def generate_ai_style(api_key: str) -> Optional[str]:

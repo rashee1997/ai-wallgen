@@ -54,6 +54,16 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "detail_level": "[ high/medium/low ]",
             "texture_quality": "[ realistic/stylized/smooth ]"
         },
+        "environment_settings": {
+            "weather": "[ current weather ]",
+            "season": "[ current season ]",
+            "location_type": "[ indoor/outdoor/etc ]",
+            "atmospheric_effects": ["[ fog/rain/etc ]"]
+        },
+        "quality_settings": {
+            "resolution": "[ target resolution e.g., 3840x2160 ]",
+            "rendering_quality": "[ high/photorealistic/etc ]"
+        },
         "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]"
     }
 
@@ -100,6 +110,17 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             "motion_blur": "[ enabled/disabled ]"
         }
 
+    elif style_category == "fantasy_portrait":
+        # Fantasy portrait style settings
+        imagen_settings["fantasy_settings"] = {
+            "character_type": ["elf", "dwarf", "dragon", "wizard", "mythical creature"],
+            "costuming": ["elaborate", "ancient", "mystical", "regal"],
+            "accessories": ["magical staff", "crown", "amulet", "winged helm"],
+            "mood": ["majestic", "mysterious", "powerful", "ancient wisdom"],
+            "background_elements": ["ancient runes", "magical symbols", "enchanted forest", "castle ruins"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
+        imagen_settings["composition_settings"]["lighting_setup"] = "[ dramatic, chiaroscuro ]"
     elif style_category == "photographic" or style_category.startswith("cinematic") or style_category == "realistic":
         # For photographic/cinematic/realistic styles, include camera settings
         imagen_settings["camera_settings"] = {
@@ -128,6 +149,17 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
             }
             imagen_settings["style_settings"]["film_era"] = "[ classical/modern/new wave/etc ]"
 
+    elif style_category == "fantasy_battle":
+        # Fantasy battle scene settings
+        imagen_settings["fantasy_settings"] = {
+            "combat_type": ["dragon", "wizard", "knight", "orc", "elf"],
+            "environment": ["ancient battlefield", "ruined castle", "enchanted forest"],
+            "action_elements": ["magical spells", "sword combat", "dragon fire", "enchanted weapons"],
+            "atmosphere": ["chaotic", "epic", "dramatic", "intense"],
+            "special_effects": ["explosions", "magical auras", "glowing runes", "enchanted weapons"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ dynamic, action-packed ]"
+        imagen_settings["composition_settings"]["motion_blur"] = "[ moderate, high ]"
     elif style_category == "digital_art":
         # For digital art, replace camera with digital-specific settings
         imagen_settings["digital_settings"] = {
@@ -253,6 +285,17 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
         imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, digital ]"
+    elif style_category == "cyberpunk_portrait":
+        # Cyberpunk portrait style settings
+        imagen_settings["cyberpunk_settings"] = {
+            "character_type": ["hacker", "cybernetic", "corporate", "street samurai"],
+            "costuming": ["tech-infused", "streetwear", "corporate", "military"],
+            "cybernetic_elements": ["cybernetic implants", "digital overlays", "glowing tattoos", "enhanced eyes"],
+            "environment": ["urban", "industrial", "corporate", "underground"],
+            "mood": ["cold", "dystopian", "rebellious", "mysterious"]
+        }
+        imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
+        imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, digital ]"
 
     elif style_category == "cyberpunk_action":
         # Cyberpunk action scene settings
@@ -277,6 +320,48 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ technical, focused ]"
         imagen_settings["lighting_settings"]["light_quality"] = "[ digital, neon, technical ]"
+
+    elif style_category == "game_retro":
+        # Retro game style settings
+        imagen_settings["game_engine_settings"] = {
+            "engine_type": ["retro", "pixel", "8-bit", "16-bit"],
+            "render_quality": ["pixelated", "chunky", "chunky pixels"],
+            "special_effects": ["sprite-based", "pixel animations", "retro filters"],
+            "shader_type": ["pixel", "chunky", "retro"],
+            "post_effects": ["CRT", "scanlines", "pixelation"],
+            "resolution": ["low", "medium", "chunky"],
+            "color_palette": ["limited", "chunky", "retro"]
+        }
+        imagen_settings["composition_settings"]["camera_angle"] = "[ top-down, side-scrolling ]"
+        imagen_settings["composition_settings"]["view_mode"] = "[ chunky pixels, chunky sprites ]"
+        imagen_settings["style_settings"]["poly_detail"] = "[ chunky pixels, chunky sprites ]"
+        imagen_settings["style_settings"]["game_era"] = "[ 8-bit, 16-bit, chunky pixels ]"
+        imagen_settings["game_settings"] = {
+            "retro_style": ["arcade", "platformer", "shmup"],
+            "color_depth": ["chunky", "chunky pixels", "chunky sprites"],
+            "animation_style": ["chunky", "chunky pixels", "chunky sprites"]
+        }
+
+    elif style_category == "game_cel_shaded":
+        # Cel-shaded game style settings
+        imagen_settings["game_engine_settings"] = {
+            "engine_type": ["cel-shaded", "toon", "anime"],
+            "render_quality": ["smooth", "clean edges", "flat shading"],
+            "special_effects": ["ink outlines", "cell animation", "toon shading"],
+            "shader_type": ["cel-shaded", "toon", "anime"],
+            "post_effects": ["ink outlines", "cell animation", "toon shading"],
+            "resolution": ["high", "medium", "chunky"],
+            "color_palette": ["vibrant", "chunky", "chunky pixels"]
+        }
+        imagen_settings["composition_settings"]["camera_angle"] = "[ cinematic, dynamic ]"
+        imagen_settings["composition_settings"]["view_mode"] = "[ third-person, cinematic ]"
+        imagen_settings["style_settings"]["poly_detail"] = "[ high, chunky pixels ]"
+        imagen_settings["style_settings"]["game_genre"] = "[ RPG, action, adventure ]"
+        imagen_settings["game_settings"] = {
+            "animation_style": ["cell animation", "chunky pixels", "chunky sprites"],
+            "lighting_type": ["soft", "chunky pixels", "chunky sprites"],
+            "character_style": ["anime", "chunky pixels", "chunky sprites"]
+        }
 
     elif style_category == "game_style":
         # For game styles, use game engine-specific settings
