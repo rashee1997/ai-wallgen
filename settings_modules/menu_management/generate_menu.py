@@ -40,7 +40,7 @@ def run_generate_menu(generate_only: bool = False):
         ("3", "Enter your own custom prompt"),
         ("4", "Advanced Options - Fine-tune generation parameters"),
         ("5", "Load Saved Preset"),
-        ("6", "Return to Main Menu")
+        ("B", "Back to Main Menu")
     ]
     
     while True:
@@ -48,11 +48,11 @@ def run_generate_menu(generate_only: bool = False):
         print_breadcrumb(breadcrumb)
         print_menu_options(menu_options)
         
-        choice = get_menu_choice("Select option (1-6)", ["1", "2", "3", "4", "5", "6"])
+        choice = get_menu_choice("Select option (1-5, B)", ["1", "2", "3", "4", "5", "B"])
         if choice == "_INTERRUPTED_":
             return  # Exit if interrupted
             
-        if choice == "6":
+        if choice == "B":
             return
             
         if choice == "5":
