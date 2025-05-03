@@ -550,20 +550,27 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["composition_settings"]["view_mode"] = "[ dynamic, action-packed ]"
         imagen_settings["composition_settings"]["motion_blur"] = "[ moderate, high ]"
     elif style_category == "digital_art":
-        # For digital art, replace camera with digital-specific settings
+        # Enhanced digital art template with more unique settings
         imagen_settings["digital_settings"] = {
-            "software": "[ appropriate software ]",
-            "rendering_technique": "[ technique ]", 
-            "digital_effects": ["[ effect ]"],
-            "resolution": "[ appropriate resolution ]",
-            "filter_usage": ["[ digital filters ]"],
-            "brush_type": "[ digital brush style ]",
-            "layer_complexity": "[ simple/complex ]"
+            "software": "[ Photoshop, Procreate, Krita, Clip Studio Paint ]",
+            "rendering_technique": "[ digital painting, vector art, mixed media ]",
+            "digital_effects": ["glow", "blur", "texture overlays", "layer masks"],
+            "resolution": "4K or higher",
+            "filter_usage": ["Gaussian blur", "color dodge", "noise"],
+            "brush_type": "[ custom textured brushes, soft round, hard edge ]",
+            "layer_complexity": "complex with multiple adjustment layers"
         }
-        # Add viewport settings instead of camera angle
-        imagen_settings["composition_settings"]["viewport"] = "[ perspective/isometric/etc ]"
-        # Digital art specific lighting
-        imagen_settings["lighting_settings"]["lighting_effects"] = ["[ rim lighting/volumetric/etc ]"]
+        imagen_settings["composition_settings"]["viewport"] = "[ perspective, isometric, dynamic ]"
+        imagen_settings["lighting_settings"]["lighting_effects"] = ["rim lighting", "volumetric light", "soft shadows"]
+        imagen_settings["style_settings"]["art_movement"] = "Contemporary Digital Art"
+        imagen_settings["style_settings"]["post_processing"] = ["0.7"]
+        imagen_settings["style_settings"]["style_era"] = "Modern Digital Era"
+        imagen_settings["color_settings"]["color_scheme"] = "Analogous with vibrant accents"
+        imagen_settings["detail_settings"]["detail_level"] = "High"
+        imagen_settings["detail_settings"]["texture_quality"] = "Stylized with digital brush textures"
+        imagen_settings["environment_settings"]["location_type"] = "Digital studio or fantasy environment"
+        imagen_settings["quality_settings"]["rendering_quality"] = "High"
+        imagen_settings["negative_prompt"] = "pixelated, low resolution, blurry, poorly drawn, amateurish"
 
     elif style_category == "minimalist" or style_category == "minimal" or style_category == "geometric" or style_category == "minimalist_geometric":
         # For minimalist and geometric styles including new minimalist_geometric
@@ -626,16 +633,26 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["composition_settings"]["lighting_setup"] = "[ dramatic, chiaroscuro ]"
 
     elif style_category == "fantasy_battle":
-        # Fantasy battle scene settings
+        # Enhanced fantasy battle scene settings with more unique details
         imagen_settings["fantasy_settings"] = {
-            "combat_type": ["dragon", "wizard", "knight", "orc", "elf"],
-            "environment": ["ancient battlefield", "ruined castle", "enchanted forest"],
-            "action_elements": ["magical spells", "sword combat", "dragon fire", "enchanted weapons"],
-            "atmosphere": ["chaotic", "epic", "dramatic", "intense"],
-            "special_effects": ["explosions", "magical auras", "glowing runes", "enchanted weapons"]
+            "combat_type": ["dragon rider", "arcane wizard", "armored knight", "orc warlord", "elven archer"],
+            "environment": ["ancient battlefield with ruins", "enchanted forest clearing", "stormy mountain pass"],
+            "action_elements": ["magical fireballs", "clashing swords", "dragon breath", "enchanted armor glow"],
+            "atmosphere": ["chaotic, epic, intense, dramatic"],
+            "special_effects": ["explosions, magical auras, glowing runes, enchanted weapons"],
+            "lighting": ["dramatic chiaroscuro", "backlit silhouettes", "dynamic shadows"],
+            "color_palette": ["rich saturated reds, blues, and golds"],
+            "composition": ["dynamic angles, motion blur, focus on central combatants"]
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ dynamic, action-packed ]"
         imagen_settings["composition_settings"]["motion_blur"] = "[ moderate, high ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "[ dramatic, high contrast ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ rich, saturated ]"
+        imagen_settings["detail_settings"]["detail_level"] = "Very High"
+        imagen_settings["environment_settings"]["weather"] = "Stormy with magical effects"
+        imagen_settings["quality_settings"]["rendering_quality"] = "Ultra High"
+        imagen_settings["negative_prompt"] = "cartoonish, simplistic, blurry, low detail, flat lighting"
+
 
     elif style_category == "fantasy_cityscape":
         # Fantasy cityscape settings
