@@ -53,7 +53,8 @@ def get_template_for_category(style_category: str) -> Dict[str, Any]:
         "detail_settings": {
             "detail_level": "[ high/medium/low ]",
             "texture_quality": "[ realistic/stylized/smooth ]"
-        }
+        },
+        "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]"
     }
 
     # Initialize style-specific settings based on the category

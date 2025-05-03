@@ -513,8 +513,9 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         2. Choose ONE mood from: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy
         3. {instruction_header}
            {category_instructions}
-        4. Use aspect ratio 16:9 for desktop wallpaper
-        5. Output ONLY valid JSON matching this structure:
+        4. For the `negative_prompt` field in `imagen_settings`, generate a negative prompt that is specifically tailored to AVOID elements that would clash with or detract from the "{base_style}" style and its category "{style_category}". Consider common issues or undesirable elements for this type of art. Replace the placeholder "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]" with this generated negative prompt.
+        5. Use aspect ratio 16:9 for desktop wallpaper
+        6. Output ONLY valid JSON matching this structure:
 
         {json.dumps(template, indent=4)}
         """

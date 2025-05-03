@@ -47,7 +47,7 @@ except ImportError:
 prompt_cache = {}
 
 # Set default Gemini model
-gemini_model_name = "gemini-2.5-pro-exp-03-25"
+gemini_model_name = "gemini-2.5-flash-preview-04-17"
 
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
@@ -1172,14 +1172,38 @@ def enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt=""):
     return clean_prompt
 
 def select_random_tags():
-    """Select a random set of tags from all available tag categories.
-    
-    Returns:
-        list: A random selection of 3-6 tags
     """
-    all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
-    num_tags = random.randint(3, 6)  # Select between 3-6 tags
-    return random.sample(all_tags, min(num_tags, len(all_tags)))
+    Select a diverse set of tags for Gemini prompt generation by sampling from multiple categories.
+    Ensures broader creative diversity and theming.
+    Returns:
+        list: A deduplicated, randomized selection of tags from various conceptual categories.
+    """
+    from config import (
+        nature_tags, space_tags, sea_tags, flowers_tags, urban_tags, fantasy_tags, abstract_tags, mood_tags,
+        weather_tags, time_tags, season_tags, color_tags, material_tags, lighting_tags, pattern_tags,
+        terrain_tags, emotion_tags, architecture_tags
+    )
+
+    # Define desired categories to sample from
+    categories = [
+        nature_tags, space_tags, sea_tags, flowers_tags, urban_tags, fantasy_tags,
+        abstract_tags, mood_tags, weather_tags, time_tags, season_tags, color_tags,
+        material_tags, lighting_tags, pattern_tags, terrain_tags, emotion_tags, architecture_tags
+    ]
+
+    # Sample one tag from each category (if non-empty)
+    selected = []
+    for cat in categories:
+        if cat:
+            selected.append(random.choice(cat))
+
+    # Deduplicate and shuffle order
+    deduped = list(set(selected))
+    random.shuffle(deduped)
+
+    # Choose a final count (e.g., 5–8) for best prompt focus
+    final_count = random.randint(6, 9)
+    return deduped[:final_count]
 
 def generate_random_style_mix(user_prefs=None):
     """Generate a random mix of artistic styles.

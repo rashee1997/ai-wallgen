@@ -74,11 +74,54 @@ abstract_tags = [
 
 mood_tags = [
     "peaceful", "serene", "tranquil", "calm", "relaxing", "soothing",
-    "energetic", "vibrant", "dynamic", "exciting", "dramatic", "intense",
-    "mysterious", "enigmatic", "cryptic", "eerie", "spooky", "haunting",
-    "melancholic", "nostalgic", "wistful", "romantic", "passionate", "tender",
-    "joyful", "cheerful", "happy", "playful", "whimsical", "dreamy",
-    "contemplative", "thoughtful", "philosophical", "inspiring", "uplifting", "motivational"
+]
+
+# --- Enhanced Categories for Prompt Generation ---
+
+weather_tags = [
+    "sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "misty", "clear sky",
+    "overcast", "windy", "hazy", "drizzle", "light rain", "thunderstorm"
+]
+
+time_tags = [
+    "morning", "noon", "afternoon", "sunset", "sunrise", "dusk", "twilight", "night", "midnight", "golden hour", "blue hour"
+]
+
+season_tags = [
+    "spring", "summer", "autumn", "winter", "early spring", "late autumn"
+]
+
+color_tags = [
+    "vivid", "soft pastels", "monochrome", "analogous colors", "complementary colors",
+    "warm tones", "cool tones", "earth tones", "neon", "muted", "high contrast", "gradient"
+]
+
+material_tags = [
+    "glass", "marble", "stone", "wood", "metallic", "ceramic", "silk", "bamboo", "sand", "ice", "paper"
+]
+
+lighting_tags = [
+    "ambient light", "dramatic lighting", "backlit", "reflected light",
+    "diffused lighting", "soft glow", "rim lighting", "shadow play", "volumetric light", "spotlight"
+]
+
+pattern_tags = [
+    "dots", "chevrons", "mandala", "waves", "ripples", "kaleidoscope", "abstract lines",
+    "spirals", "grid", "ornate", "geometric tessellation"
+]
+
+terrain_tags = [
+    "desert", "plateau", "canyon", "island", "glacier", "tundra", "meadow", "savanna", "steppe", "wetland", "delta"
+]
+
+emotion_tags = [
+    "mysterious", "majestic", "melancholic", "uplifting", "inspiring", "awe", "vibrant", "ominous",
+    "playful", "inviting", "dynamic", "ethereal", "somber", "joyful"
+]
+
+architecture_tags = [
+    "cathedral", "pagoda", "skyscraper", "chateau", "temple", "villa", "bridge", "castle",
+    "palace", "fortress", "tower", "monastery", "colonnade", "dome", "archway"
 ]
 
 # Style to tag category mapping (from prompt_config.py)
