@@ -52,6 +52,95 @@ gemini_model_name = "gemini-2.5-flash-preview-04-17"
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
 
+def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
+    """
+    Recursively flatten a settings dictionary into a list of (section, field, value) tuples for prompt context.
+    Allows for dynamic prompt generation accommodating arbitrary new fields/styles.
+
+    Args:
+        settings (dict): Nested dictionary of settings.
+        parent_key (str): Current section or parent prefix.
+        sep (str): Separator between parent and child keys.
+        ignore_keys (set): Keys to ignore from output.
+
+    Returns:
+        List of (section, field, value) tuples suitable for inclusion in a prompt.
+    """
+    ignore_keys = ignore_keys or set(["negative_prompt"])  # Negative prompt handled separately
+    flattened = []
+    if not isinstance(settings, dict):
+        return flattened
+    for k, v in settings.items():
+        if k in ignore_keys:
+            continue
+        pretty_key = k.replace("_", " ").capitalize()
+        full_key = f"{parent_key}{sep}{pretty_key}" if parent_key else pretty_key
+        if isinstance(v, dict):
+            sub = flatten_settings(v, parent_key=full_key, sep=sep, ignore_keys=ignore_keys)
+            flattened.extend(sub)
+        elif isinstance(v, list):
+            list_val = ", ".join(str(x) for x in v if x)
+            if list_val:
+                flattened.append((parent_key if parent_key else pretty_key, pretty_key, list_val))
+        elif v is not None and v != "" and v != "Not specified":
+            flattened.append((parent_key if parent_key else pretty_key, pretty_key, str(v)))
+    return flattened
+
+def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x2160"):
+    """
+    Build a narrative technical context for prompts from all user preferences/settings (dynamic, grouped),
+    synthesizing each key/value pair into natural language descriptive phrases for the AI to integrate.
+    """
+    def phrase_from_kv(section, field, value):
+        # Simple heuristic-based phrasing: expands keys to context
+        key = field.lower()
+        val = str(value)
+        if key in ["lighting type", "light quality", "color scheme", "palette type", "color temperature"]:
+            return f"{val} lighting" if "light" in key else f"{val} color palette"
+        elif "brush" in key or "painting" in key or "medium" in key or "canvas" in key:
+            return f"{val} {key.replace('_',' ')}"
+        elif key in ["detail level", "texture quality"]:
+            return f"{val} {key.replace('_', ' ')}"
+        elif key in ["focal point"]:
+            return f"focal point: {val}"
+        elif key in ["season", "weather"]:
+            return f"{val} conditions"
+        elif key in ["post processing", "special effects"]:
+            return f"{key.replace('_',' ')} of {val}"
+        elif key in ["movement type", "composition type"]:
+            return f"{val} composition"
+        elif "style" in key and "style era" not in key:
+            return f"{val} style"
+        elif key == "aspect ratio":
+            return None # handled later
+        elif key == "resolution":
+            return None # handled later
+        elif key in ("", "none", "not specified"):
+            return None
+        # Default: write "field: value"
+        return f"{val} {key.replace('_', ' ')}"
+    
+    flat = flatten_settings(settings)
+    # Filter and phrase up all non-empty fields
+    phrases = [phrase_from_kv(section, field, value) for section, field, value in flat]
+    phrases = [p for p in phrases if p and not p.strip().lower().startswith("none")]
+    # Remove redundancies
+    deduped = []
+    for p in phrases:
+        if p not in deduped:
+            deduped.append(p)
+    if deduped:
+        # Join as a natural-language block with semicolons for separation
+        text = "; ".join(deduped)
+    else:
+        text = ""
+    # Always enforce aspect ratio/resolution at the end
+    text = text.rstrip("; ")
+    if text:
+        text += ". "
+    text += f"{resolution} resolution, {aspect_ratio} aspect ratio"
+    return text
+
 # Configure signal handler for the module
 # Removed local signal handler; global handler in graceful_exit.py will manage exit.
 

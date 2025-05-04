@@ -120,28 +120,79 @@ user_prefs = initialize_settings()
 # Set default Gemini model
 gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
-def _extract_imagen_settings(user_prefs):
-    """Extract relevant Imagen settings from user preferences with enhanced style support."""
-    settings = user_prefs.imagen_settings
-    return {
-        "camera_settings": settings.get("camera_settings", {}),
-        "lighting_settings": settings.get("lighting_settings", {}),
-        "composition_settings": settings.get("composition_settings", {}),
-        "environment_settings": settings.get("environment_settings", {}),
-        "style_settings": settings.get("style_settings", {}),
-        "detail_settings": settings.get("detail_settings", {}),
-        "color_settings": settings.get("color_settings", {}),
-        "quality_settings": settings.get("quality_settings", {}),
-        "negative_prompt": settings.get("negative_prompt", ""),
-        "aspect_ratio": user_prefs.aspect_ratio,
-        "digital_settings": settings.get("digital_settings", {}),
-        "game_engine_settings": settings.get("game_engine_settings", {}),
-        "software_settings": settings.get("software_settings", {}),
-        "medium_settings": settings.get("medium_settings", {}),
-        "illustration_settings": settings.get("illustration_settings", {}),
-        "abstract_settings": settings.get("abstract_settings", {}),
-        "material_settings": settings.get("material_settings", {})
-    }
+def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
+    """
+    Recursively flatten a settings dictionary into a list of (section, field, value) tuples for prompt context.
+    Used for dynamic prompt generation accommodating arbitrary new fields/styles.
+    """
+    ignore_keys = ignore_keys or set(["negative_prompt"])
+    flattened = []
+    if not isinstance(settings, dict):
+        return flattened
+    for k, v in settings.items():
+        if k in ignore_keys:
+            continue
+        pretty_key = k.replace("_", " ").capitalize()
+        full_key = f"{parent_key}{sep}{pretty_key}" if parent_key else pretty_key
+        if isinstance(v, dict):
+            sub = flatten_settings(v, parent_key=full_key, sep=sep, ignore_keys=ignore_keys)
+            flattened.extend(sub)
+        elif isinstance(v, list):
+            list_val = ", ".join(str(x) for x in v if x)
+            if list_val:
+                flattened.append((parent_key if parent_key else pretty_key, pretty_key, list_val))
+        elif v is not None and v != "" and v != "Not specified":
+            flattened.append((parent_key if parent_key else pretty_key, pretty_key, str(v)))
+    return flattened
+
+def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x2160"):
+    """
+    Build a narrative technical context for prompts from all user preferences/settings (dynamic, grouped),
+    synthesizing each key/value pair into natural language descriptive phrases for the AI to integrate.
+    """
+    def phrase_from_kv(section, field, value):
+        key = field.lower()
+        val = str(value)
+        if key in ["lighting type", "light quality", "color scheme", "palette type", "color temperature"]:
+            return f"{val} lighting" if "light" in key else f"{val} color palette"
+        elif "brush" in key or "painting" in key or "medium" in key or "canvas" in key:
+            return f"{val} {key.replace('_',' ')}"
+        elif key in ["detail level", "texture quality"]:
+            return f"{val} {key.replace('_', ' ')}"
+        elif key in ["focal point"]:
+            return f"focal point: {val}"
+        elif key in ["season", "weather"]:
+            return f"{val} conditions"
+        elif key in ["post processing", "special effects"]:
+            return f"{key.replace('_',' ')} of {val}"
+        elif key in ["movement type", "composition type"]:
+            return f"{val} composition"
+        elif "style" in key and "style era" not in key:
+            return f"{val} style"
+        elif key == "aspect ratio":
+            return None
+        elif key == "resolution":
+            return None
+        elif key in ("", "none", "not specified"):
+            return None
+        return f"{val} {key.replace('_', ' ')}"
+    
+    flat = flatten_settings(settings)
+    phrases = [phrase_from_kv(section, field, value) for section, field, value in flat]
+    phrases = [p for p in phrases if p and not p.strip().lower().startswith("none")]
+    deduped = []
+    for p in phrases:
+        if p not in deduped:
+            deduped.append(p)
+    if deduped:
+        text = "; ".join(deduped)
+    else:
+        text = ""
+    text = text.rstrip("; ")
+    if text:
+        text += ". "
+    text += f"{resolution} resolution, {aspect_ratio} aspect ratio"
+    return text
 
 def generate_prompt_gemini(tags, user_prefs):
     """Generate a detailed prompt using Gemini and user preferences with enhanced style support."""
@@ -151,24 +202,24 @@ def generate_prompt_gemini(tags, user_prefs):
         if cache_key in prompt_cache:
             return prompt_cache[cache_key]
 
-        # Extract settings using the helper function
-        settings_data = _extract_imagen_settings(user_prefs)
-        camera_settings = settings_data["camera_settings"]
-        lighting_settings = settings_data["lighting_settings"]
-        composition_settings = settings_data["composition_settings"]
-        environment_settings = settings_data["environment_settings"]
-        style_settings = settings_data["style_settings"]
-        detail_settings = settings_data["detail_settings"]
-        color_settings = settings_data["color_settings"]
-        quality_settings = settings_data["quality_settings"]
-        negative_prompt = settings_data["negative_prompt"]
-        aspect_ratio = settings_data["aspect_ratio"]
-        digital_settings = settings_data["digital_settings"]
-        game_engine_settings = settings_data["game_engine_settings"]
-        medium_settings = settings_data["medium_settings"]
-        illustration_settings = settings_data["illustration_settings"]
-        abstract_settings = settings_data["abstract_settings"]
-        material_settings = settings_data["material_settings"]
+        # Use dynamic extraction directly from user_prefs.imagen_settings
+        settings = user_prefs.imagen_settings
+        camera_settings = settings.get("camera_settings", {})
+        lighting_settings = settings.get("lighting_settings", {})
+        composition_settings = settings.get("composition_settings", {})
+        environment_settings = settings.get("environment_settings", {})
+        style_settings = settings.get("style_settings", {})
+        detail_settings = settings.get("detail_settings", {})
+        color_settings = settings.get("color_settings", {})
+        quality_settings = settings.get("quality_settings", {})
+        negative_prompt = settings.get("negative_prompt", "")
+        aspect_ratio = getattr(user_prefs, "aspect_ratio", "16:9")
+        digital_settings = settings.get("digital_settings", {})
+        game_engine_settings = settings.get("game_engine_settings", {})
+        medium_settings = settings.get("medium_settings", {})
+        illustration_settings = settings.get("illustration_settings", {})
+        abstract_settings = settings.get("abstract_settings", {})
+        material_settings = settings.get("material_settings", {})
 
         # Get user preferences (style and mood are still accessed directly for clarity)
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
@@ -360,13 +411,13 @@ The following elements must be avoided in the image: {negative_prompt}
 def generate_prompt_random(tags, user_prefs):
     """Generate a random prompt with selected tags and user preferences."""
     try:
-        # Extract settings using the helper function
-        settings_data = _extract_imagen_settings(user_prefs)
-        camera_settings = settings_data["camera_settings"]
-        lighting_settings = settings_data["lighting_settings"]
-        quality_settings = settings_data["quality_settings"]
-        style_settings = settings_data["style_settings"]
-        color_settings = settings_data["color_settings"]
+        # Use dynamic extraction directly from user_prefs.imagen_settings
+        settings = user_prefs.imagen_settings
+        camera_settings = settings.get("camera_settings", {})
+        lighting_settings = settings.get("lighting_settings", {})
+        quality_settings = settings.get("quality_settings", {})
+        style_settings = settings.get("style_settings", {})
+        color_settings = settings.get("color_settings", {})
 
         # User preferences (style and mood are still accessed directly for clarity)
         style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
