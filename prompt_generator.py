@@ -938,13 +938,14 @@ The following elements MUST be avoided in the image: {negative_prompt}
         logging.error(f"Error in generate_prompt_random: {e}")
         return ", ".join(tags)  # Fallback to basic tags if error occurs
 
-def enhance_custom_prompt(custom_prompt, user_prefs=None):
+def enhance_custom_prompt(custom_prompt, user_prefs=None, description=None):
     """Enhance the custom prompt using the Gemini model based on user preferences.
     
     Args:
         custom_prompt: The original prompt to enhance
         user_prefs: Optional user preferences object. If None and use_user_preferences
                    is True, the function will use the global user_prefs.
+        description: Optional description string from preset to include in prompt generation.
     
     Returns:
         str: An enhanced version of the custom prompt
@@ -1036,6 +1037,8 @@ The negative prompt has been configured to exclude competing art styles.
             camera_angle = None
             visual_flow = None
             depth_layering = None
+            focal_point = None
+            perspective = None
             weather = None
             season = None
             atmospheric_effects = []
@@ -1058,7 +1061,12 @@ CRITICAL INSTRUCTION:
 If this prompt specifies ANY artistic medium (watercolor, oil painting, 3D, digital art, etc.), you MUST PRESERVE IT EXACTLY.
 DO NOT convert between mediums - a watercolor must stay watercolor, an oil painting must stay oil painting, etc.
 {medium_instruction}
+"""
+            # Add description if provided
+            if description:
+                original_prompt_prefix += f"\nPRESET DESCRIPTION:\n{description}\n"
 
+            original_prompt_prefix += f"""
 SUBJECT ANALYSIS:
 Carefully analyze the subject "{custom_prompt}" and tailor your enhancement while STRICTLY PRESERVING the original content:
 - If it mentions a specific art style or medium (watercolor, oil painting, etc.), you MUST maintain that EXACT style/medium
@@ -1097,6 +1105,7 @@ Your response must follow this exact format:
             
             # Get all settings from imagen_settings
             settings = user_prefs.imagen_settings
+
             
         # Camera Settings
         camera_settings = settings.get("camera_settings", {})
