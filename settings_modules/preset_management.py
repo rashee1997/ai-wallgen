@@ -282,6 +282,10 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
                 if setting_type in settings:
                     preset_settings_dict = settings[setting_type]
                     if isinstance(preset_settings_dict, dict):
+                        # Remove "description" key if present to avoid applying it
+                        if "description" in preset_settings_dict:
+                            preset_settings_dict = preset_settings_dict.copy()
+                            preset_settings_dict.pop("description")
                         if replace:
                             # Start with defaults, then update with preset (or just assign)
                             # setattr(user_prefs, setting_type, preset_settings_dict.copy()) # Simple replace

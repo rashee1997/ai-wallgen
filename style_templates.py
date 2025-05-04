@@ -59,7 +59,8 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     base_template = {
         "preset_name": "[ evocative name ]",
         "moods": ["[ one mood ]"],
-        "aspect_ratio": "16:9"
+        "aspect_ratio": "16:9",
+        "description": "AI: create a description of this preset here."
     }
 
     # Common settings for all categories

@@ -571,11 +571,12 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
 
         Instructions:
         1. Create a unique `preset_name` inspired by the style "{base_style}" and category "{style_category}". Be creative and descriptive (e.g., "Neon Dreams Cyberpunk", "Minimalist Serenity Geo", "Watercolor Sketch Whimsy").
-        2. Choose EXACTLY ONE mood from this list: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy. Place it as a single string value in the "moods" list.
-        3. Follow the specific guidance for the detected category "{style_category}":
+        2. Create a `description` field that describes the preset as a whole, including mood, style, and key settings. The description should summarize the preset, not just the style.
+        3. Choose EXACTLY ONE mood from this list: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy. Place it as a single string value in the "moods" list.
+        4. Follow the specific guidance for the detected category "{style_category}":
            {instruction_header}
            {category_instructions}
-        4. For the `negative_prompt` field in `imagen_settings`, generate a concise (10-20 words) negative prompt that specifically AVOIDS elements conflicting with the style "{base_style}" (category: "{style_category}"). Tailor the negative prompt to exclude styles, textures, or features that clash or reduce coherence. For example:
+        5. For the `negative_prompt` field in `imagen_settings`, generate a concise (10-20 words) negative prompt that specifically AVOIDS elements conflicting with the style "{base_style}" (category: "{style_category}"). Tailor the negative prompt to exclude styles, textures, or features that clash or reduce coherence. For example:
            - Photorealistic: avoid "cartoon, drawing, sketch, unrealistic"
            - Minimalist: avoid "cluttered, detailed, messy, complex"
            - Watercolor: avoid "photorealistic, 3D render, sharp focus, hyperdetailed"
@@ -585,9 +586,9 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
            - Game Style: avoid "blurry, low resolution, photo"
            - Illustration: avoid "photorealistic, 3D render, grainy"
            Replace the placeholder "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]" with this tailored negative prompt.
-        5. Ensure the `composition.aspect_ratio` is exactly "16:9".
-        6. Fill in any other relevant fields from the template below based on the style and instructions.
-        7. Output ONLY the valid JSON object, starting with {{ and ending with }}, matching this structure exactly:
+        6. Ensure the `composition.aspect_ratio` is exactly "16:9".
+        7. Fill in any other relevant fields from the template below based on the style and instructions.
+        8. Output ONLY the valid JSON object, starting with {{ and ending with }}, matching this structure exactly:
 
         ```json
         {json.dumps(template, indent=4)}
