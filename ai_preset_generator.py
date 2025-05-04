@@ -312,7 +312,7 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
 
         # --- Photographic/Realism Categories ---
         "photographic": [
-            "photo", "photograph", "shot on", "dslr", "camera", "realistic",
+            "photo", "photograph", "photographic", "shot on", "dslr", "camera", "realistic",
             "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism",
             "portrait photography", "landscape photography", "street photography"
         ],
@@ -575,7 +575,16 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         3. Follow the specific guidance for the detected category "{style_category}":
            {instruction_header}
            {category_instructions}
-        4. For the `negative_prompt` field in `imagen_settings`, generate a specific negative prompt to AVOID elements that CLASH with "{base_style}" (category: "{style_category}"). Examples: If style is 'photorealistic', avoid 'cartoon, drawing'. If style is 'minimalist', avoid 'cluttered, detailed, messy'. If style is 'watercolor', avoid 'photorealistic, 3D render'. Replace "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]". Make it concise (10-20 words).
+        4. For the `negative_prompt` field in `imagen_settings`, generate a concise (10-20 words) negative prompt that specifically AVOIDS elements conflicting with the style "{base_style}" (category: "{style_category}"). Tailor the negative prompt to exclude styles, textures, or features that clash or reduce coherence. For example:
+           - Photorealistic: avoid "cartoon, drawing, sketch, unrealistic"
+           - Minimalist: avoid "cluttered, detailed, messy, complex"
+           - Watercolor: avoid "photorealistic, 3D render, sharp focus, hyperdetailed"
+           - Cyberpunk: avoid "pastel colors, soft lighting, natural landscapes"
+           - Fantasy: avoid "modern technology, urban scenes, dull colors"
+           - Surrealism: avoid "realistic, photographic, literal"
+           - Game Style: avoid "blurry, low resolution, photo"
+           - Illustration: avoid "photorealistic, 3D render, grainy"
+           Replace the placeholder "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]" with this tailored negative prompt.
         5. Ensure the `composition.aspect_ratio` is exactly "16:9".
         6. Fill in any other relevant fields from the template below based on the style and instructions.
         7. Output ONLY the valid JSON object, starting with {{ and ending with }}, matching this structure exactly:

@@ -1,5 +1,4 @@
-"""
-Style Templates Module for AI Preset Generator
+"""Style Templates Module for AI Preset Generator
 
 This module provides style-specific template generation for different art styles
 to ensure settings are appropriate for each style category.
@@ -121,7 +120,14 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "stroke_quality": "[ loose pigment, fine overlay sketch ]",
             "blend_level": "[ soft <= watercolor; detail <= pencil ]",
             "paper_type": "[ textured/medium grain ]",
-            "aesthetic_blend": "Painterly fluidity with crisp pencil edges; dreamy backgrounds with focused main objects."
+            "aesthetic_blend": "Painterly fluidity with crisp pencil edges; dreamy backgrounds with focused main objects.",
+            "color_palette": "[ soft, muted, natural ]",
+            "brush_stroke": "[ fluid watercolor, precise pencil lines ]",
+            "texture": "[ paper grain, pigment granulation ]",
+            "detail_level": "[ medium to high ]",
+            "watercolor_transparency": "[ high, layered ]",
+            "pencil_shading": "[ cross-hatching, stippling ]",
+            "color_bleeding": "[ subtle, controlled ]"
         }
         imagen_settings["composition_settings"]["technique"] = "[ wash-and-sketch ]"
         imagen_settings["color_settings"]["color_interaction"] = "[ soft paint and linear grayscale ]"
@@ -131,7 +137,10 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "media_fusion": "[ traditional painting, digital enhancement, mixed media ]",
             "techniques": "[ layering, digital brushwork, collage ]",
             "color_palette": "[ natural tones with digital vibrancy ]",
-            "aesthetic_blend": "Seamless fusion of traditional and digital art techniques creating rich textures and depth."
+            "aesthetic_blend": "Seamless fusion of traditional and digital art techniques creating rich textures and depth.",
+            "digital_effects": "[ overlays, texture masks, blending modes ]",
+            "traditional_media": "[ oil, acrylic, watercolor ]",
+            "digital_tools": "[ tablet, stylus, software brushes ]"
         }
         imagen_settings["composition_settings"]["technique"] = "[ mixed media layering ]"
         imagen_settings["color_settings"]["palette_type"] = "[ natural, enhanced ]"
@@ -141,46 +150,52 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "media": "[ mixed media, found objects, spatial elements ]",
             "scale": "[ large, immersive ]",
             "interaction": "[ physical, digital, participatory ]",
+            "spatial_arrangement": "[ site-specific, modular, interactive ]",
+            "technology_integration": "[ projection mapping, sensors, AR/VR ]",
             "aesthetic_blend": "Spatial and immersive art combining physical materials with digital projections and interactivity."
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ immersive, 3D space ]"
         imagen_settings["lighting_settings"]["lighting_type"] = "[ dynamic, projection-based ]"
-
     elif main_category == "scientific_technological_hybrid":
         imagen_settings["scientific_technological_hybrid_settings"] = {
             "media": "[ photography, film, digital media, scientific visualization ]",
             "concept": "[ data-driven, algorithmic, experimental ]",
             "technology": "[ AI, AR, VR, interactive software ]",
+            "data_visualization_methods": "[ infographics, heatmaps, 3D models ]",
+            "interactivity_level": "[ passive, interactive, immersive ]",
             "aesthetic_blend": "Artistic expression integrating scientific data and cutting-edge technology."
         }
         imagen_settings["composition_settings"]["technique"] = "[ algorithmic composition ]"
         imagen_settings["color_settings"]["palette_type"] = "[ high contrast, data-inspired ]"
-
     elif main_category == "augmented_reality_art":
         imagen_settings["augmented_reality_art_settings"] = {
             "media": "[ 3D modeling, digital overlays, physical space ]",
             "interaction": "[ user-driven, immersive ]",
             "technology": "[ AR devices, sensors, real-time rendering ]",
+            "tracking_methods": "[ marker-based, markerless, location-based ]",
+            "user_interface": "[ gesture, voice, controller ]",
             "aesthetic_blend": "Blending virtual and physical realities through interactive digital art."
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ mixed reality, interactive ]"
         imagen_settings["lighting_settings"]["lighting_type"] = "[ dynamic, real-time ]"
-
     elif main_category == "abstract_expressionism_cubism_fusion":
         imagen_settings["abstract_expressionism_cubism_fusion_settings"] = {
             "form_style": "[ gestural brushwork, fragmented geometry ]",
             "color_palette": "[ bold, contrasting, emotive ]",
             "composition": "[ layered, dynamic, abstract ]",
+            "emotional_intensity": "[ high, raw, spontaneous ]",
+            "spatial_distortion": "[ multiple perspectives, fractured planes ]",
             "aesthetic_blend": "Fusion of abstract expressionism's emotion with cubism's structure."
         }
         imagen_settings["composition_settings"]["technique"] = "[ expressive abstraction with geometric fragmentation ]"
         imagen_settings["color_settings"]["palette_type"] = "[ bold, emotive ]"
-
     elif main_category == "collage_digital_overlay":
         imagen_settings["collage_digital_overlay_settings"] = {
             "media": "[ paper collage, digital textures, photo manipulation ]",
             "texture": "[ layered, tactile, digital enhancements ]",
             "color_palette": "[ eclectic, vibrant ]",
+            "assembly_methods": "[ torn, cut, layered, stitched ]",
+            "digital_effects": "[ blending modes, opacity masks, filters ]",
             "aesthetic_blend": "Combining tactile collage with digital overlays for rich visual narratives."
         }
         imagen_settings["composition_settings"]["technique"] = "[ mixed media collage with digital effects ]"
@@ -203,6 +218,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "assembly_style": "[ layered, stitched, glued ]",
             "texture_emphasis": "[ tactile, rough, varied ]",
             "color_palette": "[ bold, contrasting, folk-inspired ]",
+            "pattern_variation": "[ patch sizes, shapes, colors ]",
             "aesthetic_blend": "Bold textures and patterns combined into cohesive compositions; folk and craft influences."
         }
         imagen_settings["composition_settings"]["technique"] = "[ collage assembly ]"
@@ -242,9 +258,10 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     elif main_category == "sci_fi_futuristic":
         imagen_settings["sci_fi_futuristic_settings"] = {
             "technology_level": "[ advanced, cybernetic, space-age ]",
-            "environment": "[ futuristic cities, space stations ]",
-            "lighting": "[ neon, holographic, cold ]",
-            "color_palette": "[ metallic, neon, dark ]",
+            "environment": "[ futuristic cities, space stations, alien landscapes ]",
+            "lighting": "[ neon, holographic, cold, dynamic ]",
+            "color_palette": "[ metallic, neon, dark, vibrant ]",
+            "special_effects": "[ holograms, lens flares, digital rain ]",
             "aesthetic_blend": "Futuristic and cyberpunk elements with high-tech visuals."
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ panoramic, dynamic ]"
@@ -474,13 +491,12 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     elif style_category == "oil_painting":
         imagen_settings["oil_painting_settings"] = {
             "painting_medium": "oil paint",
-            "canvas_type": ["canvas", "panel", "linen"],
+            "canvas_type": ["canvas", "linen", "panel"],
             "brushwork": ["impasto", "glazing", "scumbling", "dry brush"],
-            "texture": ["thick", "layered", "smooth", "textured"],
-            "layering_technique": ["fat over lean", "glazing", "scumbling", "impasto"],
-            "stroke_style": ["visible", "blended", "textured", "layered"],
-            "detail_approach": ["high", "medium", "low"],
-            "aesthetic_blend": "Rich, textured brushstrokes with layered color and depth."
+            "texture": ["thick", "layered", "textured"],
+            "layering_technique": ["fat over lean", "glazing", "scumbling"],
+            "stroke_style": ["visible", "blended", "textured"],
+            "detail_approach": ["high", "medium"]
         }
         imagen_settings["color_settings"]["palette_type"] = "[ warm, rich ]"
         imagen_settings["lighting_settings"]["lighting_type"] = "[ warm, directional ]"
@@ -533,29 +549,31 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["composition_settings"]["technique"] = "[ cubist fragmentation ]"
         imagen_settings["color_settings"]["palette_type"] = "[ muted, earthy ]"
 
-    elif style_category == "minimalist" or style_category == "minimal" or style_category == "geometric":
+    elif main_category == "minimalist":
         imagen_settings["minimalist_settings"] = {
-            "simplicity_level": "extreme to moderate",
-            "geometric_elements": ["circles", "triangles", "squares", "lines"],
+            "simplicity_level": "extreme",
+            "geometric_elements": ["circles", "lines", "squares"],
             "negative_space": "abundant",
             "line_type": "clean, precise",
-            "aesthetic_blend": "Minimalist compositions emphasizing form and space."
+            "color_count": "very limited",
+            "composition_balance": "asymmetric or symmetric"
         }
-        imagen_settings["color_settings"]["color_count"] = "[ very limited number ]"
-        imagen_settings["composition_settings"]["balance_type"] = "[ symmetric/asymmetric ]"
-        if "camera_settings" in imagen_settings:
-            del imagen_settings["camera_settings"]
+        imagen_settings["color_settings"]["palette_type"] = "monochrome or limited palette"
+        imagen_settings["color_settings"]["color_contrast"] = "high"
+        imagen_settings["lighting_settings"]["lighting_type"] = "flat or soft ambient"
+        imagen_settings["lighting_settings"]["light_quality"] = "minimal shadows"
+        imagen_settings["mood"] = "calm, focused, elegant"
 
-    elif style_category == "game_style":
+    elif main_category == "game_style":
         imagen_settings["game_engine_settings"] = {
-            "engine_type": "various game engines (Unreal, Unity, etc.)",
-            "render_quality": "high to medium",
+            "engine_type": "Unreal Engine 5",
+            "render_quality": "high",
+            "shader_type": "PBR with stylized elements",
             "special_effects": ["bloom", "ambient occlusion", "motion blur"],
-            "shader_type": "PBR, stylized, cel-shaded",
-            "post_effects": ["bloom", "ambient occlusion", "depth of field"],
-            "resolution": "game appropriate resolution",
-            "physics_settings": ["realistic", "arcade"],
-            "animation_style": "smooth, stylized, cel-shaded"
+            "post_effects": ["depth of field", "color grading"],
+            "resolution": "1920x1080 or higher",
+            "physics_settings": ["realistic"],
+            "animation_style": "smooth, stylized"
         }
         imagen_settings["composition_settings"]["camera_angle"] = "[ game camera perspective ]"
         imagen_settings["composition_settings"]["view_mode"] = "[ first-person/third-person/isometric/top-down ]"
@@ -570,28 +588,96 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         }
 
     elif style_category == "photographic":
-        imagen_settings["camera_settings"] = {
-            "camera_model": "[ DSLR, Mirrorless, Film ]",
-            "lens_type": "[ wide-angle, telephoto, prime ]",
-            "aperture": "[ f/1.4 - f/22 ]",
-            "focal_length": "[ mm value ]",
-            "shutter_speed": "[ appropriate speed ]",
-            "iso": "[ 100 - 3200 ]",
-            "filter_type": "[ polarizer, ND filter, UV filter ]",
-            "depth_of_field": "[ shallow, deep ]"
-        }
-        imagen_settings["composition_settings"]["camera_angle"] = "[ eye-level, low-angle, high-angle ]"
-        imagen_settings["lighting_settings"]["time_of_day"] = "[ golden hour, blue hour, midday ]"
-        imagen_settings["style_settings"]["photo_style"] = "[ documentary, fashion, landscape ]"
-        imagen_settings["quality_settings"]["rendering_quality"] = "high"
-        imagen_settings["negative_prompt"] = "blurry, low resolution, noise, artifacts"
+        # Enhance existing camera settings with additional detailed parameters
+        if "camera_settings" not in imagen_settings:
+            imagen_settings["camera_settings"] = {}
+        imagen_settings["camera_settings"].update({
+            "camera_model": "[ DSLR, Mirrorless, Film, Medium Format, Large Format ]",
+            "lens_type": "[ wide-angle, telephoto, prime, macro, tilt-shift, fisheye ]",
+            "aperture": "[ f/1.2 - f/22 ]",
+            "focal_length": "[ 14mm - 600mm ]",
+            "shutter_speed": "[ 1/8000s - 30s ]",
+            "iso": "[ 50 - 25600 ]",
+            "filter_type": "[ polarizer, ND filter, UV filter, graduated ND, infrared ]",
+            "depth_of_field": "[ shallow, deep, selective focus, bokeh ]",
+            "white_balance": "[ auto, daylight, tungsten, fluorescent, cloudy, shade ]",
+            "focus_mode": "[ manual, autofocus, continuous, single-shot ]",
+            "exposure_mode": "[ manual, aperture priority, shutter priority, program, bulb ]",
+            "image_stabilization": "[ optical, digital, none ]",
+            "metering_mode": "[ spot, center-weighted, evaluative ]",
+            "flash_mode": "[ off, on, auto, red-eye reduction ]"
+        })
+        # Enhance lighting settings with additional types and qualities
+        imagen_settings["lighting_settings"]["lighting_type"] = "dynamic, directional, natural, studio, ambient"
+        imagen_settings["lighting_settings"]["light_quality"] = "high contrast with soft shadows, diffused light, rim lighting, volumetric light"
+        imagen_settings["lighting_settings"]["light_direction"] = "[ front, side, back, top, fill, under ]"
+        imagen_settings["style_settings"]["photo_style"] = "[ portrait, landscape, macro, street, documentary, fashion, wildlife, astrophotography, architectural ]"
+        imagen_settings["composition_settings"]["camera_angle"] = "[ eye-level, low-angle, high-angle, bird's eye, worm's eye, tilted ]"
+        imagen_settings["quality_settings"]["resolution"] = "[ 4K, 8K, high-res, ultra HD ]"
+        imagen_settings["quality_settings"]["rendering_quality"] = "[ photorealistic, ultra-detailed, high dynamic range ]"
 
-    elif style_category == "fantasy_landscape":
+    elif style_category == "cinematic":
+        imagen_settings["camera_settings"] = {
+            "camera_model": "[ RED, ARRI Alexa, Blackmagic, Canon Cinema EOS ]",
+            "lens_type": "[ prime, zoom, anamorphic ]",
+            "aperture": "[ f/1.2 - f/16 ]",
+            "focal_length": "[ 24mm - 135mm ]",
+            "shutter_speed": "[ 1/48s - 1/100s ]",
+            "iso": "[ 100 - 3200 ]",
+            "filter_type": "[ ND filter, polarizer, diffusion ]",
+            "depth_of_field": "[ shallow, deep, rack focus ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "cinematic, dramatic, natural, artificial"
+        imagen_settings["lighting_settings"]["light_quality"] = "soft shadows, high contrast, volumetric light"
+        imagen_settings["lighting_settings"]["light_direction"] = "[ key, fill, back, rim, practical ]"
+        imagen_settings["style_settings"]["film_era"] = "[ classic, modern, noir, new wave ]"
+        imagen_settings["style_settings"]["color_grading"] = "[ teal and orange, monochrome, high contrast ]"
+        imagen_settings["composition_settings"]["camera_angle"] = "[ wide, close-up, over-the-shoulder, tracking ]"
+        imagen_settings["quality_settings"]["resolution"] = "[ 2K, 4K, 6K ]"
+        imagen_settings["quality_settings"]["rendering_quality"] = "[ cinematic, filmic ]"
+
+    elif style_category == "documentary":
+        imagen_settings["camera_settings"] = {
+            "camera_model": "[ handheld DSLR, mirrorless, cinema camera ]",
+            "lens_type": "[ standard, wide-angle, zoom ]",
+            "aperture": "[ f/2.8 - f/11 ]",
+            "focal_length": "[ 24mm - 85mm ]",
+            "shutter_speed": "[ 1/50s - 1/250s ]",
+            "iso": "[ 400 - 6400 ]",
+            "filter_type": "[ polarizer, UV filter ]",
+            "depth_of_field": "[ moderate, deep ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "natural, available light, minimal artificial"
+        imagen_settings["lighting_settings"]["light_quality"] = "soft, diffused, ambient"
+        imagen_settings["style_settings"]["photo_style"] = "[ candid, raw, realistic ]"
+        imagen_settings["composition_settings"]["camera_angle"] = "[ eye-level, candid ]"
+        imagen_settings["quality_settings"]["resolution"] = "[ HD, 4K ]"
+        imagen_settings["quality_settings"]["rendering_quality"] = "[ realistic, unfiltered ]"
+
+    elif style_category == "street_photography":
+        imagen_settings["camera_settings"] = {
+            "camera_model": "[ compact DSLR, mirrorless, rangefinder ]",
+            "lens_type": "[ wide-angle, standard prime ]",
+            "aperture": "[ f/1.4 - f/8 ]",
+            "focal_length": "[ 24mm - 50mm ]",
+            "shutter_speed": "[ 1/125s - 1/1000s ]",
+            "iso": "[ 200 - 3200 ]",
+            "filter_type": "[ UV filter ]",
+            "depth_of_field": "[ shallow, moderate ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "natural, ambient, street lights"
+        imagen_settings["lighting_settings"]["light_quality"] = "harsh shadows, contrasty, mixed lighting"
+        imagen_settings["style_settings"]["photo_style"] = "[ candid, urban, documentary ]"
+        imagen_settings["composition_settings"]["camera_angle"] = "[ eye-level, low-angle ]"
+        imagen_settings["quality_settings"]["resolution"] = "[ HD, 4K ]"
+        imagen_settings["quality_settings"]["rendering_quality"] = "[ realistic, gritty ]"
+
+    elif main_category == "fantasy_landscape":
         imagen_settings["fantasy_settings"] = {
-            "environment": ["mystical forests", "floating islands", "enchanted castles"],
-            "lighting": ["ethereal", "glowing", "magical"],
-            "color_palette": ["rich", "vibrant", "otherworldly"],
-            "mood": ["epic", "adventurous", "mysterious"],
+            "environment": ["enchanted forests", "floating islands", "ancient ruins"],
+            "lighting": ["ethereal glow", "magical light shafts"],
+            "color_palette": ["vibrant", "otherworldly", "rich"],
+            "mood": ["mysterious", "epic", "adventurous"],
             "magical_elements": ["glowing runes", "floating crystals", "enchanted flora"],
             "atmospheric_effects": ["mist", "aurora", "magical particles"]
         }
@@ -758,7 +844,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["detail_settings"]["texture_quality"] = "Stylized with digital brush textures"
         imagen_settings["environment_settings"]["location_type"] = "Digital studio or fantasy environment"
         imagen_settings["quality_settings"]["rendering_quality"] = "High"
-        imagen_settings["negative_prompt"] = "pixelated, low resolution, blurry, poorly drawn, amateurish"
+    
 
     elif style_category == "minimalist" or style_category == "minimal" or style_category == "geometric" or style_category == "minimalist_geometric":
         # For minimalist and geometric styles including new minimalist_geometric
@@ -839,7 +925,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["detail_settings"]["detail_level"] = "Very High"
         imagen_settings["environment_settings"]["weather"] = "Stormy with magical effects"
         imagen_settings["quality_settings"]["rendering_quality"] = "Ultra High"
-        imagen_settings["negative_prompt"] = "cartoonish, simplistic, blurry, low detail, flat lighting"
+        
 
 
     elif style_category == "fantasy_cityscape":

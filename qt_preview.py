@@ -1,12 +1,12 @@
-"""
-Simplified Qt Image Preview for Wallpaper Generator.
-
-This module provides a basic GUI window to preview images
-before setting them as wallpaper, with zoom, crop, and save functions.
-"""
-
 import os
 import sys
+
+# Set QT environment variables to avoid deprecated QT_DEVICE_PIXEL_RATIO warning
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+# Optionally unset deprecated variable if set
+if "QT_DEVICE_PIXEL_RATIO" in os.environ:
+    del os.environ["QT_DEVICE_PIXEL_RATIO"]
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer # Import QTimer
 
