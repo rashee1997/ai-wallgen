@@ -5,6 +5,7 @@ to ensure settings are appropriate for each style category.
 """
 
 from typing import Dict, Any, List, Optional, Union
+from portrait_style_templates import get_portrait_template
 
 
 def _priority_category_match(style_category: Union[str, List[str]]) -> str:
@@ -27,6 +28,11 @@ def _priority_category_match(style_category: Union[str, List[str]]) -> str:
         "minimalist_geometric",
         "abstract_expressionism_cubism_fusion",
         # Add other categories as needed
+        "photographic_portrait",
+        "traditional_portrait",
+        "futuristic_portrait",
+        "illustration_portrait",
+        "pop_portrait"
     ]
 
     # Normalize to a flat list of lowercase strings
@@ -54,6 +60,17 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     Uses priority to select the most relevant category when several are given, for enhanced preset compatibility.
     """
     main_category = _priority_category_match(style_category)
+
+    portrait_categories = {
+        "photographic_portrait",
+        "traditional_portrait",
+        "futuristic_portrait",
+        "illustration_portrait",
+        "pop_portrait"
+    }
+
+    if main_category in portrait_categories:
+        return get_portrait_template(main_category)
 
     # Base template with common fields all styles have
     base_template = {
@@ -99,10 +116,11 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "resolution": "[ target resolution e.g., 3840x2160 ]",
             "rendering_quality": "[ high/photorealistic/etc ]"
         },
-        "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]"
+        "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]",
+        "style_negative_prompt": "[GENERATE_STYLE_SPECIFIC_NEGATIVE_PROMPT]"
     }
-
-    # -- Mixed/Hybrid Art Templates (creative blended settings) --
+ 
+     # -- Mixed/Hybrid Art Templates (creative blended settings) --
     if main_category == "kinetic_ascii":
         imagen_settings["kinetic_ascii_settings"] = {
             "motion_type": "[ animated/looped/text-based ]",

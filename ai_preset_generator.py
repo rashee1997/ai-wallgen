@@ -147,8 +147,12 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     if isinstance(style_name, dict):
         style_name = style_name.get('name', '')
 
-    # Normalize style_name by replacing underscores with spaces to improve matching
-    style_name = str(style_name).replace('_', ' ')
+    # Normalize style_name by replacing underscores and hyphens with spaces to improve matching
+    style_name = str(style_name).replace('_', ' ').replace('-', ' ')
+    # Normalize British English spelling variants to American English for consistent matching
+    style_name = style_name.replace('colour', 'color')
+    # Normalize spaced variant "water color" to "watercolor"
+    style_name = style_name.replace('water color', 'watercolor')
     style_lower = style_name.lower()
 
     # Split and normalize tokens for hybrid detection
@@ -184,7 +188,12 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     hybrid_categories_keywords = {
         # Copied from user request
         "kinetic_ascii": [ "kinetic + ascii", "ascii + kinetic", "kinetic art + ascii art", "ascii art + kinetic art", "kinetic with ascii", "ascii with kinetic", "ascii kinetic", "kinetic ascii" ],
-        "watercolor_pencil": [ "watercolor + pencil", "pencil + watercolor", "watercolor and pencil", "pencil and watercolor", "watercolor pencil", "pencil watercolor", "watercolor with pencil sketch", "pencil sketch with watercolor" ],
+        "watercolor_pencil": [
+            "watercolor + pencil", "pencil + watercolor", "watercolor and pencil", "pencil and watercolor",
+            "watercolor pencil", "pencil watercolor", "watercolor with pencil sketch", "pencil sketch with watercolor",
+            "water colour + pencil", "pencil + water colour", "water colour and pencil", "pencil and water colour",
+            "water colour pencil", "pencil water colour", "water colour with pencil sketch", "pencil sketch with water colour"
+        ],
         "photorealism_glitch": [ "photorealism + glitch", "glitch + photorealism", "glitch art + photorealism", "photorealism and glitch", "glitch realistic", "realistic glitch art" ],
         "anime_oilpainting": [ "anime + oil painting", "oil painting + anime", "anime oil painting", "oil painting anime", "anime with oil painting", "oil painting with anime" ],
         "minimalist_geometric": [ "minimalist + geometric", "geometric + minimalist", "minimalist geometric", "geometric minimalist", "minimal geometric shapes", "minimalism", "minimalist", "minimal", "minimal art", "geometric", "geometry", "geometric abstract", "low poly", "minimalist geometric", "minimal geometric", "geometric minimalism" ], # Includes base terms
@@ -251,6 +260,13 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
         "illustration_childrens": ["children's book", "picture book", "kids illustration"],
         "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
         "ink_punk": ["ink punk", "inkpunk", "hand-drawn sketchy", "unfinished look"],
+
+        # --- Portrait Categories ---
+        "photographic_portrait": ["photographic portrait", "photo portrait", "realistic portrait"],
+        "traditional_portrait": ["traditional portrait", "oil portrait", "watercolor portrait", "pastel portrait", "charcoal portrait"],
+        "futuristic_portrait": ["futuristic portrait", "sci-fi portrait", "cyberpunk portrait"],
+        "illustration_portrait": ["illustration portrait", "cartoon portrait", "anime portrait", "manga portrait"],
+        "pop_portrait": ["pop portrait", "pop art portrait"],
 
         # --- Painting/Drawing Categories ---
         "oil_painting": ["oil painting", "oil paint", "impasto", "alla prima", "wet-on-wet"],
@@ -375,7 +391,10 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
                     "ascii_art", "biopunk", "kinetic_art", "nightcore", "optic_art",
                     # Other base terms
                     "surrealism", "cubism", "psychedelic", "cyberpunk", "retrowave", "glitch_art",
-                    "steampunk", "dystopian"
+                    "steampunk", "dystopian",
+                    # New Portrait Categories - explicitly map them
+                    "photographic_portrait", "traditional_portrait", "futuristic_portrait",
+                    "illustration_portrait", "pop_portrait"
                 ]: pass # Keep as is
 
                 logging.info(f"Matched single-term style: {mapped_category} using term '{term}' for '{style_name}'")
@@ -418,7 +437,10 @@ def generate_ai_style(api_key: str) -> Optional[str]:
         "illustration_pixel", "illustration_anime_manga", "illustration_comic",
         "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
         "fantasy", "sci_fi", "sci_fi_futuristic", "cyberpunk", # Added more specifics
-        "pop_surrealism", "papercraft", "kinetic_art", "watercolor_pencil" # Added some new ones
+        "pop_surrealism", "papercraft", "kinetic_art", "watercolor_pencil", # Added some new ones
+        # Add new portrait categories
+        "photographic_portrait", "traditional_portrait", "futuristic_portrait",
+        "illustration_portrait", "pop_portrait"
     ]
     chosen_category = random.choice(all_categories)
     print_info(f"Chose style category: {chosen_category}")
@@ -495,7 +517,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         # Initialize Gemini Model
         model = None
         using_flash = False # Track if we switched to flash
-        preferred_model = 'gemini-1.5-flash-latest' # Use the latest flash model alias
+        preferred_model = 'gemini-2.0-flash' # Use the latest flash model alias
 
         try:
             model = genai.GenerativeModel(preferred_model)
@@ -572,7 +594,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         Instructions:
         1. Create a unique `preset_name` inspired by the style "{base_style}" and category "{style_category}". Be creative and descriptive (e.g., "Neon Dreams Cyberpunk", "Minimalist Serenity Geo", "Watercolor Sketch Whimsy").
         2. Create a `description` field that describes the preset as a whole, including mood, style, and key settings. The description should summarize the preset, not just the style.
-        3. Choose EXACTLY ONE mood from this list: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy. Place it as a single string value in the "moods" list.
+        3. Choose EXACTLY ONE mood from this list: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy. **Choose a mood that is appropriate for the style "{base_style}".** Place it as a single string value in the "moods" list.
         4. Follow the specific guidance for the detected category "{style_category}":
            {instruction_header}
            {category_instructions}
@@ -586,9 +608,11 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
            - Game Style: avoid "blurry, low resolution, photo"
            - Illustration: avoid "photorealistic, 3D render, grainy"
            Replace the placeholder "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]" with this tailored negative prompt.
-        6. Ensure the `composition.aspect_ratio` is exactly "16:9".
-        7. Fill in any other relevant fields from the template below based on the style and instructions.
-        8. Output ONLY the valid JSON object, starting with {{ and ending with }}, matching this structure exactly:
+        6. For the `style_negative_prompt` field in `imagen_settings`, generate a concise (10-20 words) negative prompt that specifically AVOIDS elements conflicting with the *overall* style "{base_style}". This should be a more general negative prompt based on the core style, not just the category.
+           Replace the placeholder "[GENERATE_STYLE_SPECIFIC_NEGATIVE_PROMPT]" with this tailored negative prompt.
+        7. Ensure the `composition.aspect_ratio` is exactly "16:9".
+        8. Fill in any other relevant fields from the template below based on the style and instructions.
+        9. Output ONLY the valid JSON object, starting with {{ and ending with }}, matching this structure exactly:
 
         ```json
         {json.dumps(template, indent=4)}
@@ -658,7 +682,15 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                                 settings_data.setdefault("imagen_settings", {})["negative_prompt"] = default_negatives.get(style_category, default_negatives["default"])
                                 logging.warning("Negative prompt placeholder found, generating default.")
 
-                            # 5. Ensure aspect ratio
+                            # 5. Check style negative prompt placeholder
+                            style_neg_prompt = settings_data.get("imagen_settings", {}).get("style_negative_prompt", "")
+                            if not style_neg_prompt or "[GENERATE_STYLE_SPECIFIC_NEGATIVE_PROMPT]" in style_neg_prompt:
+                                # Generate a simple default based on the base style
+                                settings_data.setdefault("imagen_settings", {})["style_negative_prompt"] = f"avoid elements conflicting with {base_style}"
+                                logging.warning("Style negative prompt placeholder found, generating default.")
+
+
+                            # 6. Ensure aspect ratio
                             settings_data.setdefault("composition", {})["aspect_ratio"] = "16:9"
 
 
