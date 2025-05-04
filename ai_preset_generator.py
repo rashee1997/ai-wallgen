@@ -137,6 +137,8 @@ def is_preset_unique(preset_data: Dict[str, Any]) -> bool:
         logging.error(f"Error checking preset uniqueness: {e}")
         return True
 
+from style_category_catalog import hybrid_styles, hybrid_categories_keywords, categories_keywords, preferred_order, all_categories, instructions_for_category
+
 def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     """
     Attempt to categorize a style name. Digital art and game styles are kept completely separate.
@@ -184,51 +186,6 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
             return hybrid_cat
 
     # --- Keyword-based Hybrid Category Definitions ---
-    # Priority: Check these *after* token-based hybrids, *before* general single-term keywords.
-    hybrid_categories_keywords = {
-        # Copied from user request
-        "kinetic_ascii": [ "kinetic + ascii", "ascii + kinetic", "kinetic art + ascii art", "ascii art + kinetic art", "kinetic with ascii", "ascii with kinetic", "ascii kinetic", "kinetic ascii" ],
-        "watercolor_pencil": [
-            "watercolor + pencil", "pencil + watercolor", "watercolor and pencil", "pencil and watercolor",
-            "watercolor pencil", "pencil watercolor", "watercolor with pencil sketch", "pencil sketch with watercolor",
-            "water colour + pencil", "pencil + water colour", "water colour and pencil", "pencil and water colour",
-            "water colour pencil", "pencil water colour", "water colour with pencil sketch", "pencil sketch with water colour"
-        ],
-        "photorealism_glitch": [ "photorealism + glitch", "glitch + photorealism", "glitch art + photorealism", "photorealism and glitch", "glitch realistic", "realistic glitch art" ],
-        "anime_oilpainting": [ "anime + oil painting", "oil painting + anime", "anime oil painting", "oil painting anime", "anime with oil painting", "oil painting with anime" ],
-        "minimalist_geometric": [ "minimalist + geometric", "geometric + minimalist", "minimalist geometric", "geometric minimalist", "minimal geometric shapes", "minimalism", "minimalist", "minimal", "minimal art", "geometric", "geometry", "geometric abstract", "low poly", "minimalist geometric", "minimal geometric", "geometric minimalism" ], # Includes base terms
-        "pop_surrealism_ascii": [ "pop surrealism + ascii", "ascii + pop surrealism", "pop surrealism ascii", "ascii pop surrealism" ],
-        "dreamcore_weirdcore": [ "dreamcore + weirdcore", "weirdcore + dreamcore", "dreamcore and weirdcore", "weirdcore and dreamcore" ],
-        "patchwork_collage": [ "patchwork collage", "collage patchwork", "fabric collage", "mixed media collage", "paper collage" ],
-        "paper_quilling": [ "paper quilling", "quilling art", "rolled paper art", "coil paper art" ],
-        "tradigital_mixed_media": [ "tradigital mixed media", "digital and traditional mixed media", "tradigital art" ],
-        "whimsical_mixed_media": [ "whimsical mixed media", "whimsical art", "dreamy mixed media", "fantasy mixed media" ],
-        "sci_fi_futuristic": [ "sci-fi", "science fiction", "futuristic digital art", "cyberpunk", "dystopian digital art" ], # Includes base terms
-        "mediterranean_style": [ "mediterranean style", "sunny coastal art", "vivid colorful mediterranean" ],
-        "morphism_surreal": [ "morphism", "surreal morphing art", "fantastical transformations" ],
-        "cubism_mixed": [ "cubism", "cubist mixed media", "angular forms", "multiple perspectives" ], # Includes base term
-        "pixel_patchwork": [ "pixel art", "pixel patchwork", "voxel art", "low poly pixel" ], # Includes base term
-        "phygital_hybrid": [ "phygital art", "physical digital hybrid", "augmented reality art", "3d printing art" ],
-        "screen_printing_bold": [ "screen printing", "bold graphic art", "tactile print art" ],
-        "mixed_media_journaling": [ "mixed media journaling", "art journaling", "sketchbook mixed media" ],
-        "digital_pixel_traditional": [ "digital pixel art", "pixel art with traditional media", "pixel and paint hybrid" ],
-        "patchwork_fabric": [ "patchwork fabric", "fabric collage", "textile patchwork" ],
-        "mixed_media_collage": [ "mixed media collage", "collage art", "assemblage mixed media", "mixed media", "collage", "assemblage", "combined media" ], # Includes base terms
-        "whimsical_fantasy": [ "whimsical fantasy", "fantasy whimsical art", "dreamlike whimsical" ],
-        "cubism_futurism": [ "cubism futurism", "angular futurism", "geometric futurism" ],
-        "digital_traditional_fusion": [ "digital traditional fusion", "hybrid digital traditional", "mixed media fusion" ],
-        "retro_pixel_vaporwave": [ "retro pixel", "vaporwave pixel art", "synthwave pixel" ],
-        "psychedelic_surrealism": [ "psychedelic surrealism", "trippy surreal art", "dreamlike psychedelic" ],
-        "hybrid_traditional_digital": [ "hybrid traditional digital", "traditional digital fusion", "mixed traditional digital" ],
-        "installation_art": [ "installation art", "immersive art", "spatial art", "mixed media installation" ],
-        "scientific_technological_hybrid": [ "scientific hybrid art", "technological art", "data driven art", "algorithmic art", "ai art", "ar art", "vr art" ],
-        "augmented_reality_art": [ "augmented reality art", "ar art", "mixed reality art", "interactive digital art" ],
-        "abstract_expressionism_cubism_fusion": [ "abstract expressionism cubism", "abstract cubism fusion", "expressionist cubism" ],
-        "collage_digital_overlay": [ "collage digital overlay", "digital collage", "photo manipulation collage" ],
-        "experimental_mixed_media": [ "experimental mixed media", "avant-garde mixed media", "boundary pushing mixed media" ],
-    }
-
-    # Check keyword-based hybrid categories
     for category, keywords in hybrid_categories_keywords.items():
         for term in keywords:
             # Use \b for word boundaries to avoid partial matches (e.g., 'art' in 'earth')
@@ -237,188 +194,56 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
                 return category
 
     # --- General/Single-Term Category Keywords ---
-    # Fallback: legacy multi-style support (accumulate all matches)
-    categories_keywords = {
-        # --- 3D Render/CGI Categories ---
-        "3d_render": [
-            "3d", "3d render", "3d modeling", "3d model", "3d illustration",
-            "cgi", "c.g.i", "cg render", "clay render", "octane render", "arnold render",
-            "blender", "maya", "cinema 4d", "unreal engine", "3ds max",
-            "zbrush", "keyshot", "pixar style 3d", "toon 3d", "stylized 3d",
-            "photoreal 3d", "3d portrait", "3d scene", "3d composition", "3d character", "3d environment"
-        ],
-
-        # --- Illustration/Cartoon Categories ---
-        "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
-        "illustration_disney": ["disney", "disney style", "disney animation"],
-        "illustration_tom_jerry": ["tom & jerry", "tom and jerry", "hanna-barbera"],
-        "illustration_vintage_cartoon": ["vintage cartoon", "rubber hose", "1930s cartoon", "classic cartoon"],
-        "illustration_anime_manga": ["anime", "manga", "shonen", "shojo", "seinen", "japanese animation"],
-        "illustration_comic": ["comic", "comic book", "comic strip", "sequential art"],
-        "illustration_pixel": ["pixel art", "8-bit", "16-bit", "pixelated", "retro game art"], # Moved from hybrid list
-        "illustration_graphic": ["illustration", "cartoon", "cartoony", "graphic novel"],
-        "illustration_childrens": ["children's book", "picture book", "kids illustration"],
-        "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
-        "ink_punk": ["ink punk", "inkpunk", "hand-drawn sketchy", "unfinished look"],
-
-        # --- Portrait Categories ---
-        "photographic_portrait": ["photographic portrait", "photo portrait", "realistic portrait"],
-        "traditional_portrait": ["traditional portrait", "oil portrait", "watercolor portrait", "pastel portrait", "charcoal portrait"],
-        "futuristic_portrait": ["futuristic portrait", "sci-fi portrait", "cyberpunk portrait"],
-        "illustration_portrait": ["illustration portrait", "cartoon portrait", "anime portrait", "manga portrait"],
-        "pop_portrait": ["pop portrait", "pop art portrait"],
-
-        # --- Painting/Drawing Categories ---
-        "oil_painting": ["oil painting", "oil paint", "impasto", "alla prima", "wet-on-wet"],
-        "watercolor": ["watercolor", "watercolour", "wet-on-wet", "wet-on-dry"], # Base term
-        "pastel": ["pastel", "pastel drawing", "pastel painting"],
-        "charcoal": ["charcoal sketch", "charcoal drawing", "charcoal art"],
-        "pencil_sketch": ["pencil", "pencil sketch", "graphite", "pencil drawing"], # Base term
-        "ink_drawing": ["ink drawing", "ink sketch", "pen and ink", "line drawing", "line art", "ink wash"],
-        "acrylic_painting": ["acrylic", "acrylic paint", "acrylic painting"],
-        # "mixed_media": ["mixed media", "collage", "assemblage", "combined media"], # Moved to hybrid "mixed_media_collage"
-        "digital_painting": ["digital painting", "digital illustration", "digital art"], # Base term
-
-        # --- Traditional Art Categories ---
-        "traditional_painting_drawing": [
-            "impressionist", "renaissance", "baroque", "rococo",
-            "acrylic", "tempera", "art nouveau", "art deco",
-            "cubism", "constructivism", "futurism", "pointillism", "divisionism",
-            "ukiyo-e", "woodcut", "linocut", "etching"
-        ],
-        "realism": ["realism", "realistic", "photoreal", "hyperrealism", "photorealistic"],
-        "abstract": ["abstract", "abstract art", "non-representational"],
-        "expressionism": ["expressionism", "expressionist", "emotional art"],
-        "surrealism": ["surrealism", "surreal", "dreamlike", "fantastical"], # Base term
-        "cubism": ["cubism", "cubist", "geometric abstraction"], # Base term
-        "fauvism": ["fauvism", "fauvist", "wild beasts"],
-        "art_nouveau": ["art nouveau", "new art", "modern style"],
-        "art_deco": ["art deco", "decop", "modernist"],
-        "art_deco_revival": ["art deco revival", "art deco revival", "art deco style", "art deco architecture"],
-
-        # --- Minimalist/Geometric Categories ---
-        # "minimalist": ["minimalism", "minimalist", "minimal", "minimal art"], # Covered by hybrid "minimalist_geometric"
-        # "geometric": ["geometric", "geometry", "geometric abstract", "low poly"], # Covered by hybrid "minimalist_geometric"
-        "constructivism": ["constructivism", "constructivist", "industrial art"],
-        "low_poly": ["low poly", "low polygon", "polygonal art"], # Base term
-        "isometric": ["isometric", "isometric view", "axonometric"],
-
-        # --- Digital/Modern Categories ---
-        "digital_art": [ # Broad category
-            "digital art", "digital painting", "vector art", "glitch art",
-            "vaporwave", "retrowave", "rendered", "digital illustration", "digital media"
-        ],
-        "psychedelic": ["psychedelic", "trippy", "hallucinogenic", "psychedelia", "acid art"], # Base term
-        "cyberpunk": ["cyberpunk", "cyberpunk art", "futuristic", "neon city"], # Base term
-        "retrowave": ["retrowave", "vaporwave", "80s revival", "synthwave"], # Base term
-        "glitch_art": ["glitch art", "glitch effect", "digital glitch", "error art"], # Base term
-        "vector_art": ["vector art", "vector illustration", "vector graphics"],
-        # "3d_render": ["3d render", "3d art", "3d modeling", "3d illustration"], # Already defined above
-
-        # --- Game Art Categories ---
-        "game_style": [
-            "game style", "game art", "game engine", "unity", "unreal",
-            "unreal engine", "unity engine", "pubg", "cyberpunk game",
-            "fps", "rpg", "in-engine", "cel-shaded", "cyberpunk cityscape"
-        ],
-        "game_retro": ["retro game", "8-bit", "16-bit", "pixel art", "chunky pixels"],
-        "game_cel_shaded": ["cel-shaded", "toon shading", "anime style", "cartoon style"],
-        "game_3d": ["3d game", "3d engine", "realistic game", "next-gen game"],
-        "game_indie": ["indie game", "indie art", "hand-drawn game"], # Removed "pixel art" as it's in illustration_pixel
-
-        # --- Photographic/Realism Categories ---
-        "photographic": [
-            "photo", "photograph", "photographic", "shot on", "dslr", "camera", "realistic",
-            "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism",
-            "portrait photography", "landscape photography", "street photography"
-        ],
-        "cinematic": ["cinematic", "film look", "movie style", "motion picture"],
-        "documentary": ["documentary", "documentary style", "journalistic"],
-        "street_photography": ["street photography", "urban photography", "candid photography"],
-
-        # --- Fantasy/Sci-Fi Categories ---
-        "fantasy": ["fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "fairy tale", "castle", "fantasy landscape"], # Base term
-        "sci_fi": ["sci-fi", "science fiction", "spaceship", "space opera"], # Base term, subset of hybrid sci_fi_futuristic
-        "space_art": ["space art", "astronomy art", "cosmic", "galaxy"],
-        "robot_art": ["robot art", "mech art", "cybernetic", "mecha"],
-        "steampunk": ["steampunk", "victorian sci-fi", "industrial fantasy"],
-        "dystopian": ["dystopian", "post-apocalyptic", "dark future", "ruined world"], # Base term
-
-        # --- New Single-Term Categories (from Tavily research, if not covered by hybrids) ---
-        "papercraft": ["papercraft", "paper cut", "folded paper", "layered paper", "glued paper"], # Base term
-        "luna_photo": ["luna photo", "double exposure", "surreal photographic", "ethereal photo"],
-        "pop_surrealism": ["pop surrealism", "lowbrow art", "cartoon surrealism", "fantastical pop art"], # Base term
-        "synesthesia_art": ["synesthesia art", "color sound fusion", "sensory blending art"],
-        "weirdcore": ["weirdcore", "surreal glitch", "dreamlike glitch", "uncanny art"], # Base term
-        "dreamcore": ["dreamcore", "dreamlike aesthetic", "ethereal dream art"], # Base term
-        "ferrofluid": ["ferrofluid", "magnetic fluid art", "liquid metal art"],
-        "animal_inspired": ["animal inspired", "animal motif", "fauna art", "wildlife art"],
-        "ascii_art": ["ascii art", "text art", "character art", "typographic art"], # Base term
-        "biopunk": ["biopunk", "biological cyberpunk", "genetic art", "bio-tech art"],
-        "kinetic_art": ["kinetic art", "moving art", "dynamic sculpture", "motion art"], # Base term
-        "nightcore": ["nightcore", "fast paced art", "high energy art", "vibrant neon art"],
-        "optic_art": ["optic art", "op art", "optical illusion art", "visual trickery"],
-        # Fallback for generics - last so specific matches win first
-        "unknown": []
-    }
-
-    # Check each general category's keywords
     matched_categories = set()
     for category, keywords in categories_keywords.items():
         for term in keywords:
             # Use word boundaries for better matching
             if re.search(r'\b' + re.escape(term) + r'\b', style_lower):
-                # Map subcategories to canonical template categories
-                mapped_category = category # Default to the matched category name
+                mapped_category = category  # Default to the matched category name
 
-                if category == "3d_render": mapped_category = "3d_render"
-                elif category in ["oil_painting", "watercolor", "pastel", "charcoal"]: pass # Keep as is
-                elif category in ["pencil_sketch", "ink_drawing"]: mapped_category = "drawing"
-                # elif category == "minimalist": mapped_category = "minimalist" # Handled by hybrid
-                # elif category == "geometric": mapped_category = "geometric" # Handled by hybrid
-                elif category.startswith("illustration"): pass # Keep as is (e.g., illustration_pixar)
-                elif category == "digital_art": mapped_category = "digital_art"
-                elif category == "game_style": mapped_category = "game_style"
-                elif category in ["photographic", "cinematic", "realism"]: pass # Keep as is
-                elif category in ["abstract", "abstract_conceptual"]: mapped_category = "abstract_conceptual"
-                # elif category == "mixed_media": mapped_category = "mixed_media_collage" # Handled by hybrid
-                elif category in ["material_sculptural", "sculpture"]: mapped_category = "material_sculptural"
-                elif category in ["fantasy", "sci_fi"]: pass # Keep as is
-                elif category == "traditional_painting_drawing": mapped_category = "traditional_painting_drawing"
-                elif category in [ # New single-term categories
+                if category == "3d_render":
+                    mapped_category = "3d_render"
+                elif category in ["oil_painting", "watercolor", "pastel", "charcoal"]:
+                    pass  # Keep as is
+                elif category in ["pencil_sketch", "ink_drawing"]:
+                    mapped_category = "drawing"
+                elif category.startswith("illustration"):
+                    pass  # Keep as is (e.g., illustration_pixar)
+                elif category == "digital_art":
+                    mapped_category = "digital_art"
+                elif category == "game_style":
+                    mapped_category = "game_style"
+                elif category in ["photographic", "cinematic", "realism"]:
+                    pass  # Keep as is
+                elif category in ["abstract", "abstract_conceptual"]:
+                    mapped_category = "abstract_conceptual"
+                elif category in ["material_sculptural", "sculpture"]:
+                    mapped_category = "material_sculptural"
+                elif category in ["fantasy", "sci_fi"]:
+                    pass  # Keep as is
+                elif category == "traditional_painting_drawing":
+                    mapped_category = "traditional_painting_drawing"
+                elif category in [
                     "papercraft", "luna_photo", "pop_surrealism", "synesthesia_art",
                     "weirdcore", "dreamcore", "ferrofluid", "animal_inspired",
                     "ascii_art", "biopunk", "kinetic_art", "nightcore", "optic_art",
-                    # Other base terms
                     "surrealism", "cubism", "psychedelic", "cyberpunk", "retrowave", "glitch_art",
                     "steampunk", "dystopian",
-                    # New Portrait Categories - explicitly map them
                     "photographic_portrait", "traditional_portrait", "futuristic_portrait",
                     "illustration_portrait", "pop_portrait"
-                ]: pass # Keep as is
+                ]:
+                    pass  # Keep as is
 
                 logging.info(f"Matched single-term style: {mapped_category} using term '{term}' for '{style_name}'")
                 matched_categories.add(mapped_category)
-                # Don't break inner loop - allow multiple keywords for same category
-                # Don't break outer loop - allow matching multiple categories if needed later, though we currently return first
 
     # --- Prioritize and Return ---
-    # If multiple single-term categories matched, apply some prioritization logic if needed
-    # For now, just return the first one found alphabetically (or based on dict order, which is insertion order in Py 3.7+)
     if matched_categories:
-        # Simple prioritization: maybe prefer more specific illustrations?
-        preferred_order = [
-            "illustration_pixar", "illustration_disney", "illustration_vintage_cartoon",
-            "illustration_anime_manga", "illustration_comic", "illustration_pixel",
-            "illustration_graphic", "illustration_childrens", "illustration_fantasy"
-        ]
         for pref in preferred_order:
             if pref in matched_categories:
                 return pref
-        # Otherwise, return any match (sorted for consistency)
         return sorted(list(matched_categories))[0]
 
-    # If no specific, hybrid, or single-term match found
     logging.warning(f"Could not categorize style: '{style_name}'. Falling back to 'unknown'.")
     return "unknown"
 
@@ -440,7 +265,8 @@ def generate_ai_style(api_key: str) -> Optional[str]:
         "pop_surrealism", "papercraft", "kinetic_art", "watercolor_pencil", # Added some new ones
         # Add new portrait categories
         "photographic_portrait", "traditional_portrait", "futuristic_portrait",
-        "illustration_portrait", "pop_portrait"
+        "illustration_portrait", "pop_portrait",
+        "environmental_portrait", "caricature_portrait", "conceptual_portrait", "fashion_portrait", "selfie_portrait"
     ]
     chosen_category = random.choice(all_categories)
     print_info(f"Chose style category: {chosen_category}")
@@ -529,49 +355,8 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
 
         # Build category-specific instructions
         instruction_header = f"Select settings that work well with \"{base_style}\" (category: {style_category}):"
-        category_instructions = ""
-
-        # --- Add instructions for NEW categories ---
-        if style_category == "watercolor_pencil":
-            category_instructions = """*   **Watercolor Pencil Focus:**
-            - Technique: Blend watercolor washes with distinct pencil lines. Soft edges vs sharp details.
-            - Texture: Visible paper texture, light watercolor grain, graphite sheen.
-            - Colors: Transparent washes, buildable layers, pencil shading.
-            - Mood: Delicate, illustrative, sketched."""
-        elif style_category == "minimalist_geometric":
-            category_instructions = """*   **Minimalist Geometric Focus:**
-            - Style: Clean, simple geometric shapes (lines, circles, squares). Emphasis on negative space.
-            - Colors: Often monochrome, muted palettes, or limited accent colors.
-            - Composition: Balanced, orderly, potentially asymmetric.
-            - Mood: Calm, modern, sophisticated, uncluttered."""
-        elif style_category == "patchwork_collage":
-            category_instructions = """*   **Patchwork Collage Focus:**
-            - Technique: Combine different textures/patterns like fabric scraps, paper cutouts. Layering.
-            - Texture: Visible seams, fabric weave, paper edges, tactile feel.
-            - Colors: Varied, can be harmonious or contrasting based on 'patches'.
-            - Mood: Handcrafted, textured, eclectic, potentially folk-art inspired."""
-        elif style_category == "sci_fi_futuristic":
-             category_instructions = """*   **Sci-Fi/Futuristic Focus:**
-            - Elements: Advanced technology, spaceships, futuristic cities, cybernetics, aliens.
-            - Lighting: Often high-contrast, neon glows, lens flares, artificial sources.
-            - Colors: Can range from sleek monochrome/metallics to vibrant neon palettes.
-            - Mood: Awe-inspiring, advanced, potentially dystopian or utopian."""
-        # --- Existing category instructions (condensed for brevity) ---
-        elif style_category == "digital_art": category_instructions = "*   **Digital Art Focus:** Flexible techniques (painting, vector, 3D non-game), studio/atmospheric lighting, digital effects, full color range."
-        elif style_category == "psychedelic": category_instructions = "*   **Psychedelic Focus:** Vibrant/neon colors, swirling/fractal patterns, glowing/morphing effects, trippy/surreal mood."
-        elif style_category == "surrealism": category_instructions = "*   **Surrealism Focus:** Dreamlike/bizarre concepts, symbolic colors/composition, mysterious/uncanny mood."
-        elif style_category == "fantasy": category_instructions = "*   **Fantasy Focus:** Mystical environments, magical lighting, rich/otherworldly colors, epic/adventurous mood."
-        elif style_category == "cyberpunk": category_instructions = "*   **Cyberpunk Focus:** Neon cities, high contrast lighting, dark/saturated colors, gritty/futuristic mood." # Could merge with sci-fi?
-        elif style_category == "game_style": category_instructions = "*   **Game Style Focus:** Game engine look (Unreal/Unity), game lighting/effects, game camera views, polished."
-        elif style_category == "photographic":
-            is_film = any(x in base_style.lower() for x in ["film", "kodak", "analog"])
-            camera = "Film Camera" if is_film else "Digital Camera (e.g., Canon EOS R5)"
-            category_instructions = f"*   **Photographic Focus:** Suggest {camera}, appropriate lens, natural/studio light, {'film grain/analog look' if is_film else 'sharp/realistic'}."
-        elif style_category.startswith("illustration"): category_instructions = "*   **Illustration Focus:** Style-specific linework/colors (Pixar: vibrant, Disney: expressive, Anime: cel-shaded, Vintage: rubber hose), stylized lighting/perspective."
-        elif style_category == "traditional_painting_drawing": category_instructions = "*   **Traditional Medium:** Emphasize texture/brushwork, natural/atmospheric light, consider historical movements, traditional palettes."
-        elif style_category == "abstract_conceptual": category_instructions = "*   **Abstract Focus:** Non-representational form, expressive color, unconventional composition, modern art influences."
-        else: category_instructions = "*   **General Guidance:** Choose settings matching the style, mood, and technical parameters."
-
+        from style_category_catalog import instructions_for_category
+        category_instructions = instructions_for_category(style_category, base_style)
 
         # Get the appropriate template for this style category
         # Ensure get_template_for_category handles the new categories or falls back gracefully
@@ -594,7 +379,7 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         Instructions:
         1. Create a unique `preset_name` inspired by the style "{base_style}" and category "{style_category}". Be creative and descriptive (e.g., "Neon Dreams Cyberpunk", "Minimalist Serenity Geo", "Watercolor Sketch Whimsy").
         2. Create a `description` field that describes the preset as a whole, including mood, style, and key settings. The description should summarize the preset, not just the style.
-        3. Choose EXACTLY ONE mood from this list: peaceful, serene, energetic, dramatic, mysterious, romantic, playful, dreamy. **Choose a mood that is appropriate for the style "{base_style}".** Place it as a single string value in the "moods" list.
+        3. Choose a mood that best fits the style "{base_style}". The mood can be any descriptive word or phrase that captures the essence of the style. Place it as a single string value in the "moods" list.
         4. Follow the specific guidance for the detected category "{style_category}":
            {instruction_header}
            {category_instructions}
@@ -658,11 +443,10 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                                 settings_data["moods"] = [default_mood]
                                 logging.warning(f"Mood formatting incorrect, defaulting to {default_mood}")
                             else:
-                                # Ensure the mood is valid
-                                valid_moods = ["peaceful", "serene", "energetic", "dramatic", "mysterious", "romantic", "playful", "dreamy"]
-                                if settings_data["moods"][0].lower() not in valid_moods:
+                                # Accept any mood string without restricting to a fixed list
+                                if not isinstance(settings_data["moods"][0], str) or not settings_data["moods"][0].strip():
                                      logging.warning(f"Invalid mood '{settings_data['moods'][0]}', defaulting.")
-                                     settings_data["moods"] = [random.choice(valid_moods)] # Pick a random valid one
+                                     settings_data["moods"] = [default_mood] # Pick default if invalid
 
                             # 3. Check preset_name
                             if not settings_data.get("preset_name") or "[GENERATED_NAME]" in settings_data.get("preset_name", ""):
@@ -800,10 +584,13 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
         return False
 
 
+from settings_modules import preset_management
+
 def main():
     """Main function to handle user interaction."""
     parser = argparse.ArgumentParser(description="Generate AI wallpaper presets.")
     parser.add_argument("--style", type=str, help="Specify a base style to generate a preset for directly.")
+    parser.add_argument("--apply-preset", type=str, help="Apply a preset by name directly from the terminal.")
     args = parser.parse_args()
 
     if not SETTINGS_AVAILABLE:
@@ -812,6 +599,35 @@ def main():
         print_warning("UI Utils not available. Using basic console output.")
 
     user_prefs = get_preferences() # Load current preferences if needed
+
+    if args.apply_preset:
+        preset_name = args.apply_preset
+        print_info(f"Applying preset: {preset_name}")
+        # Load preset file from presets directory
+        preset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "presets")
+        # Handle if user includes .json extension or not
+        if preset_name.lower().endswith(".json"):
+            preset_file = preset_name
+        else:
+            preset_file = f"{preset_name}.json"
+        preset_path = os.path.join(preset_dir, preset_file)
+        if not os.path.exists(preset_path):
+            print_error(f"Preset '{preset_file}' not found in presets directory.")
+            sys.exit(1)
+        try:
+            with open(preset_path, 'r') as f:
+                settings = json.load(f)
+            # Apply preset settings using preset_management's function
+            success = preset_management._apply_preset_settings(settings, replace=True)
+            if success:
+                print_success(f"Preset '{preset_file}' applied successfully.")
+                sys.exit(0)
+            else:
+                print_error(f"Failed to apply preset '{preset_file}'.")
+                sys.exit(1)
+        except Exception as e:
+            print_error(f"Error loading or applying preset '{preset_file}': {e}")
+            sys.exit(1)
 
     if args.style:
         print_info(f"Generating preset directly for style: {args.style}")

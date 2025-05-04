@@ -135,6 +135,71 @@ def get_portrait_template(style_category: str) -> Dict[str, Any]:
         imagen_settings["color_settings"]["palette_type"] = "bold, vibrant"
         imagen_settings["style_settings"]["art_movement"] = "Pop Art, Lowbrow"
 
+    elif style_category == "environmental_portrait":
+        imagen_settings["environmental_settings"] = {
+            "location_context": "[ subject's environment, workplace, home, urban, nature ]",
+            "props": "[ key items related to subject ]",
+            "storytelling_elements": "[ tell story with surroundings ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "natural, contextual, ambient"
+        imagen_settings["lighting_settings"]["light_quality"] = "realistic, available light"
+        imagen_settings["lighting_settings"]["light_direction"] = "[ window, side, backlit ]"
+        imagen_settings["composition_settings"]["camera_angle"] = "environment-integrated"
+        imagen_settings["style_settings"]["photo_style"] = "environmental"
+        imagen_settings["quality_settings"]["rendering_quality"] = "realistic, documentary"
+
+    elif style_category == "caricature_portrait":
+        imagen_settings["caricature_settings"] = {
+            "exaggeration_focus": "[ facial features, gestures, expressions ]",
+            "humor_style": "[ satirical, playful ]",
+            "line_quality": "[ bold, sketchy, exaggerated ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "cartoon, graphic"
+        imagen_settings["lighting_settings"]["light_quality"] = "flat, simple"
+        imagen_settings["color_settings"]["palette_type"] = "vibrant, loud, exaggerated"
+        imagen_settings["style_settings"]["art_movement"] = "Caricature, cartoon"
+        imagen_settings["composition_settings"]["technique"] = "[ exaggeration, distortion ]"
+        imagen_settings["detail_settings"]["texture_quality"] = "stylized"
+
+    elif style_category == "conceptual_portrait":
+        imagen_settings["conceptual_settings"] = {
+            "concept_theme": "[ identity, metaphor, symbolism, surrealism ]",
+            "visual_motifs": "[ objects, patterns, overlays ]",
+            "abstraction_level": "[ representational, abstract ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "artificial, dramatic, conceptual"
+        imagen_settings["lighting_settings"]["light_quality"] = "moody, mysterious"
+        imagen_settings["color_settings"]["palette_type"] = "[ muted, high-contrast, symbolic ]"
+        imagen_settings["composition_settings"]["technique"] = "concept-driven, creative"
+        imagen_settings["style_settings"]["art_movement"] = "Conceptual Art, Surrealism"
+
+    elif style_category == "fashion_portrait":
+        imagen_settings["fashion_settings"] = {
+            "clothing_style": "[ haute couture, casual, editorial, avant-garde ]",
+            "makeup_style": "[ bold, natural, stylized ]",
+            "pose_direction": "[ directed, dynamic, expressive ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "studio, runway, editorial"
+        imagen_settings["lighting_settings"]["light_quality"] = "high-fashion, diffusion"
+        imagen_settings["color_settings"]["palette_type"] = "[ bold, trendy, monochrome ]"
+        imagen_settings["style_settings"]["photo_style"] = "fashion, editorial"
+        imagen_settings["composition_settings"]["camera_angle"] = "dynamic, fashion-driven"
+        imagen_settings["quality_settings"]["resolution"] = "high, magazine-quality"
+
+    elif style_category == "selfie_portrait":
+        imagen_settings["selfie_settings"] = {
+            "device_type": "[ smartphone, front camera ]",
+            "pose_type": "[ candid, posed, spontaneous ]",
+            "filters": "[ none, beauty, trend-based ]",
+            "background": "[ casual, personal, social ]"
+        }
+        imagen_settings["lighting_settings"]["lighting_type"] = "natural, mixed"
+        imagen_settings["lighting_settings"]["light_quality"] = "ambient, variable"
+        imagen_settings["style_settings"]["photo_style"] = "selfie"
+        imagen_settings["composition_settings"]["camera_angle"] = "arm's length, high-angle"
+        imagen_settings["quality_settings"]["resolution"] = "[ phone, social-media ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ trendy, filtered, real-life ]"
+
     else:
         # Fallback for unknown portrait styles
         imagen_settings["other_portrait_settings"] = {

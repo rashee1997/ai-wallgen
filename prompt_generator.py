@@ -56,6 +56,7 @@ def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
     """
     Recursively flatten a settings dictionary into a list of (section, field, value) tuples for prompt context.
     Allows for dynamic prompt generation accommodating arbitrary new fields/styles.
+    Now handles non-standard settings from user_preferences.json by preserving all valid values.
 
     Args:
         settings (dict): Nested dictionary of settings.
@@ -82,7 +83,7 @@ def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
             list_val = ", ".join(str(x) for x in v if x)
             if list_val:
                 flattened.append((parent_key if parent_key else pretty_key, pretty_key, list_val))
-        elif v is not None and v != "" and v != "Not specified":
+        elif v is not None and v != "" and v != "Not specified" and v != "none" and v != "None":
             flattened.append((parent_key if parent_key else pretty_key, pretty_key, str(v)))
     return flattened
 
@@ -92,33 +93,45 @@ def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x21
     synthesizing each key/value pair into natural language descriptive phrases for the AI to integrate.
     """
     def phrase_from_kv(section, field, value):
-        # Simple heuristic-based phrasing: expands keys to context
+        # Natural language phrasing that blends settings into flowing descriptions
+        # Now handles non-standard settings with more flexible matching
         key = field.lower()
         val = str(value)
-        if key in ["lighting type", "light quality", "color scheme", "palette type", "color temperature"]:
-            return f"{val} lighting" if "light" in key else f"{val} color palette"
-        elif "brush" in key or "painting" in key or "medium" in key or "canvas" in key:
-            return f"{val} {key.replace('_',' ')}"
-        elif key in ["detail level", "texture quality"]:
-            return f"{val} {key.replace('_', ' ')}"
-        elif key in ["focal point"]:
-            return f"focal point: {val}"
-        elif key in ["season", "weather"]:
-            return f"{val} conditions"
-        elif key in ["post processing", "special effects"]:
-            return f"{key.replace('_',' ')} of {val}"
-        elif key in ["movement type", "composition type"]:
-            return f"{val} composition"
-        elif "style" in key and "style era" not in key:
-            return f"{val} style"
-        elif key == "aspect ratio":
-            return None # handled later
-        elif key == "resolution":
-            return None # handled later
-        elif key in ("", "none", "not specified"):
+        
+        # Handle empty/null values
+        if not val or val.lower() in ("none", "not specified", ""):
             return None
-        # Default: write "field: value"
-        return f"{val} {key.replace('_', ' ')}"
+            
+        # Standard settings
+        if key in ["lighting type", "light quality"]:
+            return f"illuminated by {val} lighting that"
+        elif key in ["color scheme", "palette type", "color temperature"]:
+            return f"using a {val} color palette that"
+        elif "brush" in key or "painting" in key or "medium" in key or "canvas" in key:
+            return f"rendered in {val} {key.replace('_',' ')} with"
+        elif key in ["detail level", "texture quality"]:
+            return f"featuring {val} {key.replace('_', ' ')} that"
+        elif key in ["focal point"]:
+            return f"centered around {val} with"
+        elif key in ["season", "weather"]:
+            return f"set in {val} conditions where"
+        elif key in ["post processing", "special effects"]:
+            return f"enhanced with {val} effects creating"
+        elif key in ["movement type", "composition type"]:
+            return f"composed with {val} movement that"
+        elif "style" in key and "style era" not in key:
+            return f"in {val} style featuring"
+        elif key == "aspect ratio":
+            return None
+        elif key == "resolution":
+            return None
+            
+        # Handle non-standard settings with flexible matching
+        if "setting" in key or "preference" in key or "option" in key:
+            return f"with {val} {key.replace('_', ' ')} that"
+            
+        # Default natural phrasing for any other fields
+        return f"with {val} {key.replace('_', ' ')} that"
     
     flat = flatten_settings(settings)
     # Filter and phrase up all non-empty fields
@@ -130,15 +143,17 @@ def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x21
         if p not in deduped:
             deduped.append(p)
     if deduped:
-        # Join as a natural-language block with semicolons for separation
-        text = "; ".join(deduped)
+        # Join phrases with natural language connectors
+        if len(deduped) == 1:
+            text = deduped[0]
+        else:
+            text = ", ".join(deduped[:-1]) + " and " + deduped[-1]
     else:
         text = ""
     # Always enforce aspect ratio/resolution at the end
-    text = text.rstrip("; ")
     if text:
-        text += ". "
-    text += f"{resolution} resolution, {aspect_ratio} aspect ratio"
+        text += " with "
+    text += f"{resolution} resolution in {aspect_ratio} aspect ratio"
     return text
 
 # Configure signal handler for the module
@@ -414,110 +429,45 @@ def generate_prompt_gemini(tags, user_prefs=None):
             depth_of_field=depth_of_field if depth_of_field else "Not specified",
             style_context="\n".join(style_context) if style_context else ""
         )
-        
-        # Create a more comprehensive technical context with all settings
+
+        # Soft-inspire via description from user_prefs—encourage natural style flow
+        description_instruction = ""
+        if hasattr(user_prefs, "description") and user_prefs.description:
+            description_text = user_prefs.description.strip()
+            if description_text:
+                description_instruction = f"\nSTYLE INSPIRATION:\nTo guide the atmosphere and visual narrative, the intended style and mood of this preset can be summarized as:\n\"{description_text}\"\n"
+
+        # New, natural-flow-focused technical context with settings as inspiration cues—not as a list
         technical_context = f"""
-Create a detailed description for a wallpaper image featuring: {formatted_tags}
+Compose a single, immersive visual description for a wallpaper image featuring: {formatted_tags}
+{description_instruction}
 
-SUBJECT ANALYSIS:
-Carefully analyze the subject "{formatted_tags}" and tailor your description to highlight its unique characteristics:
-- For natural subjects: emphasize organic elements, textures, and environmental context
-- For urban subjects: focus on architectural details, perspective, and urban atmosphere
-- For abstract subjects: highlight patterns, shapes, and conceptual elements
-- For space/cosmic subjects: emphasize scale, wonder, and celestial phenomena
-- For fantasy subjects: create a cohesive magical or surreal atmosphere
+Let all camera, lighting, composition, environment, style, color, and quality settings below inspire the narrative organically.
+Weave together the mood, geometric arrangement, lighting effects, and palette as a seamless scene—never recite settings, instead capture the feeling and intent they produce. If any specific attributes (e.g., 'rule of thirds', 'monochromatic muted palette', 'soft diffused ambient light') are mentioned, let them subtly but clearly influence the visual description. Everything should support the peaceful, minimalist, and modern geometric abstraction mood, and the narrative should have a harmonious, tranquil flow.
 
-USER STYLE PREFERENCES - ABSOLUTELY MANDATORY:
-- Style: {style if style else "Not specified - adapt to subject unless overridden by other style settings"}
-- Mood: {mood if mood else "Not specified - adapt to subject unless overridden by other style settings"}
+You are encouraged to creatively exaggerate or amplify any quality, feeling, visual motif, or stylistic effect using your own inspired style: magnify the sense of scale, serenity, negative space, geometric rhythm, lighting aura, or the emotional impact, blending together all user settings and preset cues so the wallpaper's mood and composition are powerfully felt.
+
+Be bold and poetic in your writing: paint with metaphor, invent atmosphere, and lavish dramatic attention on the interplay of space, geometry, light, and calm. Use cinematic, sensorial, and emotional language to make the visual experience vivid—exaggerate silence, tension, tranquility, or awe to transform the scene into visual poetry.
+
+Required: Conclude with the specified resolution and aspect ratio—"3840x2160 resolution, 16:9 aspect ratio".
+After the paragraph, include the phrase: "Avoid:" followed by the negative prompt.
+
+Relevant scene inspiration:
+- Mood: {mood if mood else "Not specified"}
+- Styles: {style if style else "Not specified"}
 - Art Movement: {art_movement if art_movement else "Not specified"}
 - Style Era: {style_era if style_era else "Not specified"}
+- Composition: {technique if technique else "Not specified"}; Focal point: {focal_point if focal_point else "Not specified"}; Balance: {composition_settings.get("balance_type", "") if composition_settings else ""}
+- Shapes: {settings.get("minimalist_geometric_settings", {}).get("geometry_focus", "") if "minimalist_geometric_settings" in settings else ""}
+- Color: {color_scheme if color_scheme else "Not specified"} palette, {palette_type if palette_type else "Not specified"}; {color_temperature if color_temperature else ""}
+- Lighting: {lighting_type if lighting_type else "Not specified"}; {light_quality if light_quality else ""}
+- Texture: {settings.get("detail_settings", {}).get("texture_quality", "") if "detail_settings" in settings else ""}
+- Level of Detail: {detail_level if detail_level else "Not specified"}
+- Anything unnecessary, repetitive, or technical should be omitted for maximal naturalness.
 
-CRITICAL: You MUST fully integrate ALL provided user preferences below into your descriptive paragraph. Do not merely list them. Weave them naturally into the scene's description. Prioritize explicit user preferences (Style, Mood, Art Movement, Style Era) above all else.
-
-MANDATORY TECHNICAL PARAMETERS:
-Resolution: {resolution} - YOU MUST INCLUDE THIS EXACTLY AT THE END OF THE DESCRIPTION
-Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS EXACTLY AT THE END OF THE DESCRIPTION
-
-TECHNICAL SPECIFICATIONS - FULLY INTEGRATE ALL PROVIDED VALUES:
-# Camera
-- Camera model: {camera_model if camera_model else "Not specified"}
-- Lens: {lens_type if lens_type else "Not specified"}
-- Focal length: {focal_length if focal_length else "Not specified"}
-- Aperture: {aperture if aperture else "Not specified"}
-- Shutter speed: {shutter_speed if shutter_speed else "Not specified"}
-- ISO: {iso if iso else "Not specified"}
-- Filter type: {filter_type if filter_type else "Not specified"}
-- Special lens: {special_lens if special_lens else "Not specified"}
-- Depth of field: {depth_of_field if depth_of_field else "Not specified"}
-# Lighting
-- Lighting type: {lighting_type if lighting_type else "Not specified"}
-- Light quality: {light_quality if light_quality else "Not specified"}
-- Time of day: {time_of_day if time_of_day else "Not specified"}
-- Light source: {light_source if light_source else "Not specified"}
-- Artificial lighting: {", ".join(artificial_sources) if artificial_sources else "None"}
-# Composition
-- Composition technique: {technique if technique else "Not specified"}
-- Camera angle: {camera_angle if camera_angle else "Not specified"}
-- Focal point: {focal_point if focal_point else "Not specified"}
-- Perspective: {perspective if perspective else "Not specified"}
-- Visual flow: {visual_flow if visual_flow else "Not specified"}
-- Depth layering: {depth_layering if depth_layering else "Not specified"}
-# Environment
-- Weather: {weather if weather else "Not specified"}
-- Season: {season if season else "Not specified"}
-- Location type: {location_type if location_type else "Not specified"}
-- Atmospheric effects: {", ".join(atmospheric_effects) if atmospheric_effects else "None"}
-# Style Details
-- Post-processing: {", ".join(post_processing) if post_processing else "None"}
-# Detail & Quality
-- Detail level: {detail_level if detail_level else "Not specified"}
-- Texture quality: {texture_quality if texture_quality else "Not specified"}
-- Special effects: {", ".join(special_effects) if special_effects else "None"}
-- Rendering quality: {rendering_quality if rendering_quality else "Not specified"}
-# Color
-- Color scheme: {color_scheme if color_scheme else "Not specified"}
-- Palette type: {palette_type if palette_type else "Not specified"}
-- Color temperature: {color_temperature if color_temperature else "Not specified"}
-# Specific Art Styles (Integrate if provided)
-- Digital Software: {digital_software if digital_software else "Not specified"}
-- Digital Effects: {", ".join(digital_effects) if digital_effects else "None"}
-- Game Engine: {game_engine if game_engine else "Not specified"}
-- Game Genre: {game_genre if game_genre else "Not specified"}
-- Game Shader: {game_shader if game_shader else "Not specified"}
-- Software Suite: {suite if suite else "Not specified"}
-- Software Renderer: {renderer if renderer else "Not specified"}
-- Software Version: {version if version else "Not specified"}
-- Painting Medium: {painting_medium if painting_medium else "Not specified"}
-- Brushwork: {brushwork if brushwork else "Not specified"}
-- Medium Texture: {texture if texture else "Not specified"}
-- Illustration Style: {illustration_style if illustration_style else "Not specified"}
-- Line Quality: {line_quality if line_quality else "Not specified"}
-- Abstract Composition: {abstract_composition if abstract_composition else "Not specified"}
-- Abstract Movement: {movement_type if movement_type else "Not specified"}
-- Material Type: {material_type if material_type else "Not specified"}
-- Material Finish: {material_finish if material_finish else "Not specified"}
-
-IMPORTANT GUIDELINES - FOLLOW WITHOUT FAIL:
-1. Create ONE SINGLE, detailed paragraph describing the image.
-2. NATURALLY INTEGRATE *ALL* provided User Preferences and Technical Specifications (except Resolution/Aspect Ratio) into the descriptive paragraph. Do NOT just list them. Describe *how* they affect the scene.
-3. The subject "{formatted_tags}" MUST remain the central focus.
-4. IGNORE any "Not specified" or "None" settings - do not mention them in the output.
-5. The description MUST end *exactly* with "{resolution} resolution, {aspect_ratio} aspect ratio". No extra words before or after this phrase at the very end of the paragraph.
-6. After the description paragraph, you MUST include the negative prompt section starting exactly with "Avoid: ".
-
-OUTPUT FORMAT:
-Your response MUST follow this exact format:
-1. A single, detailed paragraph describing the image, integrating all preferences, ending with the resolution and aspect ratio.
-2. A newline.
-3. The negative prompt section, starting exactly with "Avoid: ".
-
-Example Structure:
-[Detailed descriptive paragraph incorporating all settings naturally...] {resolution} resolution, {aspect_ratio} aspect ratio
-Avoid: [negative elements]
-
-NEGATIVE PROMPT - ALWAYS INCLUDE:
-The following elements MUST be avoided in the image: {negative_prompt}
+Example Output:
+[One flowing, evocative paragraph visually describing the scene, smoothly integrating settings, ending with resolution and aspect ratio.]
+Avoid: [negative prompt]
 """
 
         # Generate prompt using Gemini

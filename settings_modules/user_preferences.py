@@ -149,7 +149,10 @@ class UserPreferences:
         
         # Track last used preset
         self.last_preset = None
-        
+
+        # Add a description field (for preset/collection description)
+        self.description = None
+
         # Load existing preferences if available
         logging.debug("UserPreferences: Initializing and loading preferences.")
         self.load_preferences()
@@ -247,6 +250,11 @@ class UserPreferences:
                     self.aspect_ratio = data["aspect_ratio"]
                     logging.debug(f"UserPreferences: Loaded aspect_ratio: {self.aspect_ratio}")
 
+                # Load description if present
+                if "description" in data:
+                    self.description = data["description"]
+                    logging.debug(f"UserPreferences: Loaded description: {self.description}")
+
                 logging.debug("UserPreferences: Preferences loaded successfully.")
             else:
                 logging.debug("UserPreferences: Preferences file not found. Using default settings.")
@@ -277,8 +285,9 @@ class UserPreferences:
             self.preferred_genres = list(dict.fromkeys(self.preferred_genres))
             self.preferred_moods = list(dict.fromkeys(self.preferred_moods))
             
-            # Prepare data for serialization
+            # Prepare data for serialization with description as the top field
             data = {
+                "description": self.description,  # description first
                 "preferred_genres": self.preferred_genres,
                 "preferred_styles": self.preferred_styles,
                 "preferred_moods": self.preferred_moods,

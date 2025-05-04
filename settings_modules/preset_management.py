@@ -275,29 +275,13 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
         for setting_type, default_structure in [('imagen_settings', default_imagen_structure), ('wallpaper_settings', default_wallpaper_structure)]:
             if hasattr(user_prefs, setting_type):
                 current_settings_dict = getattr(user_prefs, setting_type)
-                # Optional: Ensure current settings have the default structure if UserPreferences doesn't
-                # for key, default_value in default_structure.items():
-                #     current_settings_dict.setdefault(key, default_value)
-
                 if setting_type in settings:
                     preset_settings_dict = settings[setting_type]
                     if isinstance(preset_settings_dict, dict):
                         # Remove "description" key if present to avoid applying it
                         if replace:
-                            # Start with defaults, then update with preset (or just assign)
-                            # setattr(user_prefs, setting_type, preset_settings_dict.copy()) # Simple replace
                             new_settings = default_structure.copy() # More robust replace
                             deep_update(new_settings, preset_settings_dict)
-                            
-                            # Handle both old and new style presets
-                            # First, copy all settings from the preset to the new settings
-                            for key in preset_settings_dict:
-                                # Copy all settings directly, ensuring compatibility with both old and new preset formats
-                                new_settings[key] = preset_settings_dict[key]
-                                
-                            # Log the new settings structure after applying preset
-                            logging.debug(f"New settings after applying preset: {json.dumps(new_settings, indent=2)}")
-                            
                             setattr(user_prefs, setting_type, new_settings)
                         else:
                             # Merge preset into current
@@ -362,6 +346,37 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
                  existing = set(user_prefs.preferred_genres)
                  new = set(settings["preferred_genres"])
                  user_prefs.preferred_genres = list(existing.union(new))
+
+        # Apply description field if present in metadata or at the top level
+        description = None
+        if "metadata" in settings and isinstance(settings["metadata"], dict):
+            description = settings["metadata"].get("description")
+        if not description and "description" in settings and isinstance(settings["description"], str):
+            description = settings["description"]
+        if description:
+            # Save description in user preferences and also persist in the preferences file
+            setattr(user_prefs, "description", description)
+            # Add description to the saved preferences JSON if not already present
+            try:
+                # Load current preferences JSON
+                import json
+                import os
+                pref_file = os.path.join(os.getcwd(), "user_preferences.json")
+                if os.path.exists(pref_file):
+                    with open(pref_file, "r", encoding="utf-8") as f:
+                        prefs_data = json.load(f)
+                else:
+                    prefs_data = {}
+
+                # Update description
+                prefs_data["description"] = description
+
+                # Save back to file
+                with open(pref_file, "w", encoding="utf-8") as f:
+                    json.dump(prefs_data, f, indent=4)
+            except Exception as e:
+                import logging
+                logging.error(f"Failed to save description to user_preferences.json: {e}")
 
         # Save preferences after applying changes
         user_prefs.save_preferences()
