@@ -358,12 +358,21 @@ def generate_prompt_gemini(tags, user_prefs=None):
         # Format tags for prompt
         formatted_tags = ", ".join(tags)
         
-        # Get negative prompt if available
-        negative_prompt = settings.get("negative_prompt", "")
+        # Get and enhance negative prompts
+        default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        user_negative_prompt = settings.get("negative_prompt", "")
         
-        # If no negative prompt is specified, use default negative prompt
-        if not negative_prompt:
-            negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        # Split into individual terms
+        default_terms = set(term.strip() for term in default_negative_prompt.split(',') if term.strip())
+        user_terms = set(term.strip() for term in user_negative_prompt.split(',') if term.strip())
+        
+        # Enhance user terms first if they exist
+        if user_terms:
+            enhanced_user_terms = set(enhance_negative_prompt(term) for term in user_terms)
+            final_terms = enhanced_user_terms.union(default_terms)
+            negative_prompt = ", ".join(sorted(list(final_terms)))  # Sort for consistency
+        else:
+            negative_prompt = default_negative_prompt
         
         # Build style-specific technical context
         style_context = []
@@ -1601,3 +1610,45 @@ class SimplePrefs:
     def __init__(self, aspect_ratio="16:9", imagen_settings=None):
         self.aspect_ratio = aspect_ratio
         self.imagen_settings = imagen_settings or {}
+
+def enhance_negative_prompt(negative_prompt_text: str) -> str:
+    """
+    Enhance a given negative prompt string using Gemini.
+
+    Args:
+        negative_prompt_text: The original negative prompt text.
+
+    Returns:
+        str: An enhanced version of the negative prompt.
+    """
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_api_key:
+        logging.warning("No Gemini API key configured for negative prompt enhancement.")
+        return negative_prompt_text # Return original if no API key
+
+    try:
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash') # Use a fast model for this
+        instruction = f"""
+Enhance the following negative prompt by adding related terms and synonyms to make it more comprehensive.
+Keep the output as a comma-separated list. Do not add any introductory or concluding phrases.
+
+Original negative prompt: {negative_prompt_text}
+
+Enhanced negative prompt:
+"""
+        response = model.generate_content(instruction)
+
+        if response.text:
+            enhanced_text = response.text.strip()
+            # Clean up potential unwanted characters or formatting from Gemini
+            enhanced_text = re.sub(r'^["\']|["\']$', '', enhanced_text) # Remove leading/trailing quotes
+            enhanced_text = re.sub(r'\s*,\s*', ', ', enhanced_text) # Standardize comma spacing
+            return enhanced_text
+        else:
+            logging.warning("Gemini returned empty response for negative prompt enhancement.")
+            return negative_prompt_text # Return original if response is empty
+
+    except Exception as e:
+        logging.error(f"Error enhancing negative prompt with Gemini: {e}")
+        return negative_prompt_text # Return original in case of error

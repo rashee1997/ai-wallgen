@@ -275,9 +275,35 @@ def generate_prompt_gemini(tags, user_prefs):
         # Format tags for prompt
         formatted_tags = ", ".join(tags)
 
-        # If no negative prompt is specified, use default negative prompt
-        if not negative_prompt:
-            negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        # Define the default negative prompt
+        default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        default_terms = set(term.strip() for term in default_negative_prompt.split(',') if term.strip())
+
+        # Get user's negative prompt
+        user_negative_prompt = settings.get("negative_prompt", "")
+        user_terms = set(term.strip() for term in user_negative_prompt.split(',') if term.strip())
+
+        # Combine user prompt with default, ensuring uniqueness
+        if user_terms:
+            # Enhance user's negative prompt terms first
+            enhanced_user_terms = set(enhance_negative_prompt(term) for term in user_terms)
+            final_negative_terms = enhanced_user_terms.union(default_terms)
+            combined_negative_prompt = ", ".join(sorted(list(final_negative_terms))) # Sort for consistency
+        else:
+            combined_negative_prompt = default_negative_prompt # Use default if user provided none
+
+        # Enhance the combined/default negative prompt (assuming enhance_negative_prompt adds value)
+        # Check prompt_generator.py for its definition if needed.
+        try:
+            # Assuming enhance_negative_prompt is imported from prompt_generator
+            from prompt_generator import enhance_negative_prompt
+            negative_prompt = enhance_negative_prompt(combined_negative_prompt)
+        except ImportError:
+            logging.warning("enhance_negative_prompt function not found or import failed. Using combined prompt directly.")
+            negative_prompt = combined_negative_prompt
+        except NameError: # Catch if enhance_negative_prompt is not defined even after import attempt
+             logging.warning("enhance_negative_prompt function not defined. Using combined prompt directly.")
+             negative_prompt = combined_negative_prompt
 
         # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         instruction_context = PROMPT_INSTRUCTIONS.format(
@@ -363,6 +389,12 @@ The following elements must be avoided in the image: {negative_prompt}
         if not GEMINI_API_KEY:
             logging.warning("No Gemini API key configured")
             # Return a formatted version of the simple tags
+            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt) # Use the final negative_prompt here
+
+        # Generate prompt using Gemini
+        if not GEMINI_API_KEY:
+            logging.warning("No Gemini API key configured")
+            # Return a formatted version of the simple tags
             return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
 
         try:
@@ -387,25 +419,30 @@ The following elements must be avoided in the image: {negative_prompt}
                     # If not in expected format, just add negative prompt
                     final_prompt = full_response
                     if "avoid" not in final_prompt.lower():
+                        # Use the final processed negative_prompt variable
                         final_prompt += f" Avoid: {negative_prompt}"
 
                 # Ensure proper formatting with resolution and aspect ratio
+                # Use the final processed negative_prompt variable
                 final_prompt = enforce_prompt_format(final_prompt, resolution, aspect_ratio, negative_prompt)
 
                 prompt_cache[cache_key] = final_prompt
                 return final_prompt
             else:
                 # Return a formatted version of the simple tags
+                # Use the final processed negative_prompt variable
                 formatted_prompt = enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
                 return formatted_prompt
         except Exception as e:
             logging.error(f"Error generating prompt with Gemini: {e}")
             # Return a formatted version of the simple tags
+            # Use the final processed negative_prompt variable
             return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
     except Exception as e:
         logging.error(f"Error in generate_prompt_gemini: {e}")
         formatted_tags_str = ", ".join(tags)
         # Return a formatted version of the simple tags
+        # Use the final processed negative_prompt variable
         return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", negative_prompt)
 
 def generate_prompt_random(tags, user_prefs):
@@ -1320,25 +1357,97 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 user_prefs.save_preferences()
             
             try:
-                # Get negative prompt from user preferences if available
+                # Append the enhanced negative prompt to the prompt text
                 negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
-                if negative_prompt:
-                    print_info(f"Using negative prompt: {negative_prompt}")
-                
+                if GEMINI_API_KEY and enhanced_prompt:
+                    try:
+                        genai.configure(api_key=GEMINI_API_KEY)
+                        model_version = 'imagen-3.0-generate-002'  # Change model to imagen-3.0-generate-002
+                        negative_prompt_instruction = f"""
+                        Given the following wallpaper prompt description, generate a concise negative prompt listing undesirable elements to avoid in the image generation.
+                        The negative prompt should be a comma-separated list of visual artifacts, errors, or unwanted features.
+
+                        Wallpaper prompt: {enhanced_prompt}
+
+                        Negative prompt:
+                        """
+                        # Wait briefly to ensure prompt generation stability
+                        import time
+                        time.sleep(2.0)  # Increased wait time for stability
+                        model_version = 'gemini-2.0-flash'
+                        # Generate enhanced negative prompt using the current enhanced prompt as input
+                        response = genai.GenerativeModel(model_version).generate_content(negative_prompt_instruction)
+                        if response and response.text:
+                            negative_prompt = response.text.strip()
+                            print_info(f"Enhanced negative prompt: {negative_prompt}")
+                        else:
+                            print_info(f"No enhanced negative prompt returned, using fallback.")
+                    except Exception as e:
+                        logging.error(f"Error enhancing negative prompt with Gemini: {e}")
+                        # Fallback to user preference negative prompt if enhancement fails
+                        if negative_prompt:
+                            print_info(f"Using fallback negative prompt: {negative_prompt}")
+                # Get user's configured negative prompt and enhance it
+                user_configured_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
+                from prompt_generator import enhance_negative_prompt
+                enhanced_user_negative_prompt = enhance_negative_prompt(user_configured_negative_prompt)
+                logging.info(f"Enhanced user negative prompt: {enhanced_user_negative_prompt}")
+
+                # Generate negative prompt based on the main prompt
+                generated_negative_prompt_from_main = ""
+                if GEMINI_API_KEY and enhanced_prompt:
+                    try:
+                        genai.configure(api_key=GEMINI_API_KEY)
+                        negative_prompt_instruction = f"""
+                        Given the following wallpaper prompt description, generate a concise negative prompt listing undesirable elements to avoid in the image generation.
+                        The negative prompt should be a comma-separated list of visual artifacts, errors, or unwanted features.
+
+                        Wallpaper prompt: {enhanced_prompt}
+
+                        Negative prompt:
+                        """
+                        # Wait briefly to ensure prompt generation stability
+                        import time
+                        time.sleep(2.0)  # Increased wait time for stability
+                        model_version = 'gemini-2.0-flash'
+                        response = genai.GenerativeModel(model_version).generate_content(negative_prompt_instruction)
+                        if response and response.text:
+                            generated_negative_prompt_from_main = response.text.strip()
+                            logging.info(f"Generated negative prompt from main prompt: {generated_negative_prompt_from_main}")
+                        else:
+                            logging.info(f"No negative prompt generated from main prompt.")
+                    except Exception as e:
+                        logging.error(f"Error generating negative prompt from main prompt with Gemini: {e}")
+
+                # Combine all negative prompts, ensuring uniqueness
+                all_negative_terms = set()
+                if enhanced_user_negative_prompt:
+                    all_negative_terms.update(term.strip() for term in enhanced_user_negative_prompt.split(',') if term.strip())
+                if generated_negative_prompt_from_main:
+                    all_negative_terms.update(term.strip() for term in generated_negative_prompt_from_main.split(',') if term.strip())
+
+                final_negative_prompt = ", ".join(sorted(list(all_negative_terms)))
+                logging.info(f"Final combined negative prompt for Imagen: {final_negative_prompt}")
+
+                # Combine main prompt with the final negative prompt for the API call
+                combined_prompt_for_api = f"{enhanced_prompt}. Avoid: {final_negative_prompt}"
+                print_info(f"Final combined prompt sent to image generation:\n{combined_prompt_for_api}")
+
                 # Create generation config with supported parameters
                 config = types.GenerateImagesConfig(
                     number_of_images=user_prefs.imagen_settings["number_of_images"],
-                    aspect_ratio=aspect_ratio
+                    aspect_ratio=aspect_ratio,
+                    # Pass the negative prompt here if the API supports a separate parameter
+                    # As per the analysis, the code appends it to the prompt string,
+                    # so we will continue that approach for now.
+                    # negative_prompt=final_negative_prompt # Example if API supported
                 )
-                
+
                 # Add seed if specified
                 if user_prefs.imagen_settings["seed"] is not None:
                     config.seed = user_prefs.imagen_settings["seed"]
                     print_info(f"Using seed: {user_prefs.imagen_settings['seed']}")
-                
-                # NOTE: We don't add negative_prompt directly to config anymore
-                # It's already incorporated into the enhanced_prompt by the Gemini flash model
-                
+
                 # List available models first
                 try:
                     available_models = client.list_models()
@@ -1348,25 +1457,21 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                 except Exception as e:
                     logging.error(f"Error listing models: {e}")
 
-                # Customize config based on user's imagen_settings
-                if user_prefs.imagen_settings.get("model_version"):
-                    model_version = user_prefs.imagen_settings["model_version"]
-                else:
-                    model_version = 'imagen-3.0-generate-002'  # Default to known working model
-                
+                # Use the updated model version
+                model_version = 'imagen-3.0-generate-002'
+
                 # Log the configuration details
-                # Log configuration details
                 logging.info(f"Using model: {model_version}")
                 logging.info(f"Aspect ratio: {aspect_ratio}")
                 logging.info(f"Negative prompt: {negative_prompt}")
                 logging.info(f"Number of images: {user_prefs.imagen_settings['number_of_images']}")
                 if user_prefs.imagen_settings["seed"] is not None:
                     logging.info(f"Seed: {user_prefs.imagen_settings['seed']}")
-                
-                # Generate the image
+
+                # Generate the image passing negative_prompt as a separate argument
                 response = client.models.generate_images(
                     model=model_version,
-                    prompt=enhanced_prompt,
+                    prompt=combined_prompt_for_api,
                     config=config
                 )
                 
