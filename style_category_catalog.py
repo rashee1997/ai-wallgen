@@ -196,7 +196,9 @@ categories_keywords = {
     "kinetic_art": ["kinetic art", "moving art", "dynamic sculpture", "motion art"],
     "nightcore": ["nightcore", "fast paced art", "high energy art", "vibrant neon art"],
     "optic_art": ["optic art", "op art", "optical illusion art", "visual trickery"],
+    "claymation": ["claymation", "stop motion", "clay animation", "clay figure animation"],
     "unknown": []
+
 }
 
 preferred_order = [
@@ -349,5 +351,11 @@ def instructions_for_category(style_category, base_style):
         - Typically shot with phones, candid or posed.
         - Angle: Arm's length, playful, contemporary mood.
         - Often informal setting/background; may use filters."""
+    elif style_category == "claymation":
+        return """*   **Claymation Focus:**
+        - Technique: Stop-motion animation using clay models.
+        - Texture: Visible clay surface, fingerprints, and handcrafted details.
+        - Colors: Earthy, muted tones with occasional bright accents.
+        - Mood: Playful, tactile, handcrafted, nostalgic."""
     else:
         return "*   **General Guidance:** Choose settings matching the style, mood, and technical parameters."

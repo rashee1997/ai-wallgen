@@ -27,6 +27,7 @@ def _priority_category_match(style_category: Union[str, List[str]]) -> str:
         "digital_painting",
         "minimalist_geometric",
         "abstract_expressionism_cubism_fusion",
+        "claymation",
         # Add other categories as needed
         "photographic_portrait",
         "traditional_portrait",
@@ -219,6 +220,18 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         }
         imagen_settings["composition_settings"]["technique"] = "[ mixed media collage with digital effects ]"
         imagen_settings["color_settings"]["palette_type"] = "[ vibrant, eclectic ]"
+
+    elif main_category == "claymation":
+        imagen_settings["claymation_settings"] = {
+            "media": "[ clay, plasticine, stop-motion animation ]",
+            "texture": "[ tactile, hand-molded, slightly rough ]",
+            "color_palette": "[ vibrant, saturated, playful ]",
+            "lighting": "[ soft, warm, directional ]",
+            "animation_style": "[ stop-motion, frame-by-frame ]",
+            "aesthetic_blend": "Whimsical, handcrafted look with visible textures and playful character designs."
+        }
+        imagen_settings["composition_settings"]["technique"] = "[ stop-motion framing and composition ]"
+        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, saturated ]"
 
     elif main_category == "experimental_mixed_media":
         imagen_settings["experimental_mixed_media_settings"] = {
