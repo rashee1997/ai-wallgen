@@ -62,7 +62,8 @@ from ui_utils import (
 from prompt_generator import (
     generate_prompt_gemini, generate_prompt_random, enhance_custom_prompt,
     enforce_prompt_format, select_random_tags, generate_random_style_mix,
-    set_prompt_preferences, use_user_preferences, SimplePrefs
+    set_prompt_preferences, use_user_preferences, SimplePrefs,
+    enhance_negative_prompt, infer_subject_negatives_gemini
 )
 
 # Configure logging
@@ -275,35 +276,63 @@ def generate_prompt_gemini(tags, user_prefs):
         # Format tags for prompt
         formatted_tags = ", ".join(tags)
 
-        # Define the default negative prompt
-        default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
-        default_terms = set(term.strip() for term in default_negative_prompt.split(',') if term.strip())
+        # Consolidated Dynamic Negative Prompt Assembly (Refactored):
 
-        # Get user's negative prompt
+        # --- Step 1: Gather sources ---
+        # User preferences
         user_negative_prompt = settings.get("negative_prompt", "")
         user_terms = set(term.strip() for term in user_negative_prompt.split(',') if term.strip())
 
-        # Combine user prompt with default, ensuring uniqueness
-        if user_terms:
-            # Enhance user's negative prompt terms first
-            enhanced_user_terms = set(enhance_negative_prompt(term) for term in user_terms)
-            final_negative_terms = enhanced_user_terms.union(default_terms)
-            combined_negative_prompt = ", ".join(sorted(list(final_negative_terms))) # Sort for consistency
-        else:
-            combined_negative_prompt = default_negative_prompt # Use default if user provided none
+        # Default system negatives
+        default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
+        default_terms = set(term.strip() for term in default_negative_prompt.split(',') if term.strip())
 
-        # Enhance the combined/default negative prompt (assuming enhance_negative_prompt adds value)
-        # Check prompt_generator.py for its definition if needed.
+        # AI enhancement - covers general "artifact" and edge-case negatives
         try:
-            # Assuming enhance_negative_prompt is imported from prompt_generator
             from prompt_generator import enhance_negative_prompt
-            negative_prompt = enhance_negative_prompt(combined_negative_prompt)
-        except ImportError:
-            logging.warning("enhance_negative_prompt function not found or import failed. Using combined prompt directly.")
-            negative_prompt = combined_negative_prompt
-        except NameError: # Catch if enhance_negative_prompt is not defined even after import attempt
-             logging.warning("enhance_negative_prompt function not defined. Using combined prompt directly.")
-             negative_prompt = combined_negative_prompt
+            enhanced_user = enhance_negative_prompt(user_negative_prompt) if user_negative_prompt else ""
+            ai_terms = set(term.strip() for term in enhanced_user.split(',') if term.strip()) if enhanced_user else set()
+        except Exception as e:
+            logging.warning(f"Avoided AI negative enhancement due to error: {e}")
+            ai_terms = set()
+
+        # Inferred subject/confounder negatives (Gemini-powered)
+        # Use text of the current (about-to-be-generated) positive prompt to extract subject-based negatives
+        try:
+            from prompt_generator import infer_subject_negatives_gemini
+            # Compose a temp positive prompt context from current tags plus user preference context for inference
+            # (This is before Gemini prompt full generation, but we can use tags + settings as a mini positive prompt)
+            subject_context = ", ".join(tags)
+            subject_negatives = set(infer_subject_negatives_gemini(subject_context))
+        except Exception as e:
+            logging.warning(f"Subject-specific Gemini negative inference failed: {e}")
+            subject_negatives = set()
+
+        # --- Step 2: Merge/deduplicate/reduce ---
+        # Priority: Subject-negatives > AI-enhanced > user terms > defaults. But should not drop core artifact protection.
+        all_terms = list(subject_negatives) + list(ai_terms) + list(user_terms) + list(default_terms)
+        # Deduplicate and trim to unique, keep relative order of preference
+        seen = set()
+        ordered_unique = []
+        for term in all_terms:
+            key = term.lower()
+            if key and key not in seen:
+                seen.add(key)
+                ordered_unique.append(term)
+            if len(ordered_unique) >= 15:
+                break
+        # If <10, pad with defaults (system always needs some negatives)
+        min_neg = 10
+        if len(ordered_unique) < min_neg:
+            for term in default_terms:
+                key = term.lower()
+                if key not in seen:
+                    ordered_unique.append(term)
+                    if len(ordered_unique) >= min_neg:
+                        break
+
+        # --- Step 3: Assemble final string ---
+        negative_prompt = ", ".join(ordered_unique[:15])
 
         # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         instruction_context = PROMPT_INSTRUCTIONS.format(
@@ -1222,7 +1251,89 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         enhanced_prompt = gemini_prompt
         print_info("Review your prompt below:")
     
-    # Add to generation history
+    # Step 2: Display the prompt and collect confirmation before building the negative prompt or generating the image
+
+    wait_for_user = True
+    prompt_confirmed = False
+    if enhanced_prompt:
+        # Build combined prompt with negative prompt for user review before confirmation
+        from prompt_generator import enhance_negative_prompt
+        user_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
+        enhanced_user_negative_prompt = enhance_negative_prompt(user_negative_prompt)
+        negative_prompt = enhanced_user_negative_prompt if enhanced_user_negative_prompt else ""
+        combined_prompt_for_review = f"{enhanced_prompt}. Avoid: {negative_prompt}"
+        
+        print_section("Generated Prompt (for your confirmation)")
+        print_info(combined_prompt_for_review)
+
+        if generate_only:
+            save_choice = get_validated_input("Would you like to save this prompt to a file? (y/n)", ["y", "n"])
+            if save_choice.lower() == "y":
+                filename = get_validated_input("Enter filename (or press Enter for default 'saved_prompt.txt'): ", allow_empty=True)
+                if not filename:
+                    filename = "saved_prompt.txt"
+                try:
+                    with open(filename, "w") as f:
+                        f.write(combined_prompt_for_review)
+                    print_success(f"Prompt saved to {filename}")
+                except Exception as e:
+                    print_error(f"Error saving prompt: {e}")
+            return True
+
+        for attempt in range(3):
+            save_prompts_to_json(gemini_prompt, enhanced_prompt)
+            confirmation = get_validated_input(f"Proceed with this prompt? (yes/no) (Attempt {attempt + 1}/3)", ["yes", "no", "y", "n"])
+            if confirmation in ["yes", "y"]:
+                prompt_confirmed = True
+                break
+            else:
+                # Allow regeneration/edition logic
+                if prompt_type == "custom":
+                    custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
+                    sanitized_prompt = sanitize_prompt(custom_prompt)
+                    gemini_prompt = sanitized_prompt
+                    if use_user_preferences:
+                        enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
+                    else:
+                        enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
+                elif prompt_type == "random":
+                    random_tags = select_random_tags()
+                    if use_user_preferences:
+                        gemini_prompt = generate_prompt_random(random_tags, user_prefs)
+                        enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
+                        print(f"Enhanced random prompt: {enhanced_prompt}")
+                    else:
+                        gemini_prompt = generate_prompt_random(random_tags)
+                        enhanced_prompt = enhance_custom_prompt(gemini_prompt)
+                        print(f"Enhanced random prompt: {enhanced_prompt}")
+                else:
+                    all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
+                    if use_user_preferences:
+                        gemini_prompt = generate_prompt_gemini(all_tags, user_prefs)
+                        if not gemini_prompt:
+                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
+                            random_tags = select_random_tags()
+                            gemini_prompt = generate_prompt_random(random_tags, user_prefs)
+                    else:
+                        gemini_prompt = generate_prompt_gemini(all_tags)
+                        if not gemini_prompt:
+                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
+                            random_tags = select_random_tags()
+                            gemini_prompt = generate_prompt_random(random_tags)
+                    enhanced_prompt = gemini_prompt
+
+                print_section("New Generated Prompt")
+                print_info(enhanced_prompt)
+        else:
+            print_warning("Limit reached. Stopping the process.")
+            return False
+
+    if not prompt_confirmed:
+        return False
+
+    # Only now, after explicit confirmation, build the negative prompt pipeline and add to history
+    # Prepare tags etc. from context (re-extract if needed for this context)
+    tags_for_neg = tags_to_use if prompt_type == "gemini" else select_random_tags() if prompt_type == "random" else []
     generation_history.add_entry({
         "prompt": custom_prompt if custom_prompt else gemini_prompt,
         "enhanced_prompt": enhanced_prompt,
@@ -1233,88 +1344,11 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             "preferred_moods": user_prefs.preferred_moods,
             "negative_prompts": user_prefs.negative_prompts,
             "aspect_ratio": user_prefs.aspect_ratio,
-            # Note: imagen_settings and wallpaper_settings are saved separately below
-            # history_file and last_preset are likely not needed in the history entry itself
         },
         "imagen_settings": user_prefs.imagen_settings,
         "wallpaper_settings": user_prefs.wallpaper_settings,
-        "output": None  # Will be updated when image is generated
+        "output": None
     })
-    
-    # Step 2: Display the prompt and handle next steps
-    if enhanced_prompt:
-        print_section("Generated Prompt")
-        print_info(enhanced_prompt)
-        
-        # If generate_only is True, handle prompt saving and return early
-        if generate_only:
-            save_choice = get_validated_input("Would you like to save this prompt to a file? (y/n)", ["y", "n"])
-            if save_choice.lower() == "y":
-                filename = get_validated_input("Enter filename (or press Enter for default 'saved_prompt.txt'): ", allow_empty=True)
-                if not filename:
-                    filename = "saved_prompt.txt"
-                try:
-                    with open(filename, "w") as f:
-                        f.write(enhanced_prompt)
-                    print_success(f"Prompt saved to {filename}")
-                except Exception as e:
-                    print_error(f"Error saving prompt: {e}")
-            return True
-        
-        # Otherwise proceed with image generation confirmation
-        for attempt in range(3):
-            save_prompts_to_json(gemini_prompt, enhanced_prompt)
-            confirmation = get_validated_input(f"Proceed with this prompt? (yes/no) (Attempt {attempt + 1}/3)", ["yes", "no", "y", "n"])
-            if confirmation in ["yes", "y"]:
-                break
-            else:
-                if prompt_type == "custom":
-                    custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
-                    sanitized_prompt = sanitize_prompt(custom_prompt)
-                    gemini_prompt = sanitized_prompt
-                    # Check if we should use user preferences
-                    if use_user_preferences:
-                        enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
-                    else:
-                        enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
-                elif prompt_type == "random":
-                    # Use select_random_tags to get a subset of tags rather than all tags
-                    random_tags = select_random_tags()
-                    # Check if we should use user preferences
-                    if use_user_preferences:
-                        gemini_prompt = generate_prompt_random(random_tags, user_prefs)
-                        # Enhance the random prompt to make it more detailed
-                        enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
-                        print(f"Enhanced random prompt: {enhanced_prompt}")
-                    else:
-                        gemini_prompt = generate_prompt_random(random_tags)
-                        # Enhance the random prompt to make it more detailed
-                        enhanced_prompt = enhance_custom_prompt(gemini_prompt)
-                        print(f"Enhanced random prompt: {enhanced_prompt}")
-                else:  # gemini
-                    all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
-                    # Check if we should use user preferences
-                    if use_user_preferences:
-                        gemini_prompt = generate_prompt_gemini(all_tags, user_prefs)
-                        if not gemini_prompt:
-                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
-                            # Use select_random_tags instead of all_tags
-                            random_tags = select_random_tags()
-                            gemini_prompt = generate_prompt_random(random_tags, user_prefs)
-                    else:
-                        gemini_prompt = generate_prompt_gemini(all_tags)
-                        if not gemini_prompt:
-                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
-                            # Use select_random_tags instead of all_tags
-                            random_tags = select_random_tags()
-                            gemini_prompt = generate_prompt_random(random_tags)
-                    enhanced_prompt = gemini_prompt
-                
-                print_section("New Generated Prompt")
-                print_info(enhanced_prompt)
-        else:
-            print_warning("Limit reached. Stopping the process.")
-            return False
     
     # Step 3: Generate the image
     if not GEMINI_API_KEY:
@@ -1381,12 +1415,14 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                             negative_prompt = response.text.strip()
                             print_info(f"Enhanced negative prompt: {negative_prompt}")
                         else:
-                            print_info(f"No enhanced negative prompt returned, using fallback.")
+                            # Inform user only once about fallback negative prompt
+                            print_info(f"No enhanced negative prompt returned, using fallback negative prompt.")
                     except Exception as e:
                         logging.error(f"Error enhancing negative prompt with Gemini: {e}")
                         # Fallback to user preference negative prompt if enhancement fails
                         if negative_prompt:
-                            print_info(f"Using fallback negative prompt: {negative_prompt}")
+                            # Suppress repeated fallback message to reduce clutter
+                            pass
                 # Get user's configured negative prompt and enhance it
                 user_configured_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
                 from prompt_generator import enhance_negative_prompt
@@ -1431,7 +1467,8 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
 
                 # Combine main prompt with the final negative prompt for the API call
                 combined_prompt_for_api = f"{enhanced_prompt}. Avoid: {final_negative_prompt}"
-                print_info(f"Final combined prompt sent to image generation:\n{combined_prompt_for_api}")
+                # Commented out to avoid duplicate prompt output
+                # print_info(f"Final combined prompt sent to image generation:\n{combined_prompt_for_api}")
 
                 # Create generation config with supported parameters
                 config = types.GenerateImagesConfig(

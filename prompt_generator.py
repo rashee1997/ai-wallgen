@@ -1611,13 +1611,70 @@ class SimplePrefs:
         self.aspect_ratio = aspect_ratio
         self.imagen_settings = imagen_settings or {}
 
+def infer_subject_negatives_gemini(positive_prompt: str) -> list:
+    """
+    Use Gemini to infer subject-specific negative prompt terms from the positive prompt text.
+    Returns a list of negative prompt terms suitable for merging and deduplication.
+    Implements caching to avoid repeated calls for the same prompt.
+    """
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_api_key:
+        logging.warning("No Gemini API key configured for subject negative inference.")
+        return []
+
+    # Simple in-memory cache to avoid repeated calls for the same prompt
+    if not hasattr(infer_subject_negatives_gemini, "_cache"):
+        infer_subject_negatives_gemini._cache = {}
+    cache = infer_subject_negatives_gemini._cache
+    if positive_prompt in cache:
+        logging.debug("Using cached subject negatives for prompt.")
+        return cache[positive_prompt]
+
+    try:
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        instruction = f"""
+Extract a comma-separated list of 3-8 subject-specific negative prompt terms that should be explicitly avoided for the following positive image generation prompt. 
+Focus on subtle, nuanced, and mutually exclusive visual confounders, class confusion, or obvious subject/scene artifacts the model may produce, but do not copy generic negatives (e.g., "blurry, watermark, bad anatomy").
+If the subject is an animal, exclude rival/confusing animals or breeds; if a place, exclude different environments or features; for portraits, exclude age/gender confounders, double faces, etc.
+Avoid generic artifact terms (e.g., "blurry, watermark, distortion, extra limbs")—only include terms directly related to the prompt's main subject/theme.
+Provide only the comma-separated list without any additional explanation or formatting.
+
+Prompt: {positive_prompt}
+
+Negative terms:
+"""
+        response = model.generate_content(instruction)
+        if response.text:
+            text = response.text.strip()
+            raw_terms = [term.strip().lower() for term in re.split(r',|\n', text) if term.strip()]
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_terms = []
+            for term in raw_terms:
+                if term not in seen:
+                    seen.add(term)
+                    unique_terms.append(term)
+            logging.debug(f"Subject negatives inferred: {unique_terms}")
+            cache[positive_prompt] = unique_terms
+            return unique_terms
+        else:
+            logging.warning("Gemini returned empty response for subject negatives.")
+            cache[positive_prompt] = []
+            return []
+    except Exception as e:
+        logging.error(f"Error inferring subject negatives with Gemini: {e}")
+        cache[positive_prompt] = []
+        return []
+
 def enhance_negative_prompt(negative_prompt_text: str) -> str:
     """
     Enhance a given negative prompt string using Gemini.
+    Improves cleaning and normalization of Gemini output to avoid duplicates and irrelevant terms.
+    Adds logging for input and output.
 
     Args:
         negative_prompt_text: The original negative prompt text.
-
     Returns:
         str: An enhanced version of the negative prompt.
     """
@@ -1630,7 +1687,7 @@ def enhance_negative_prompt(negative_prompt_text: str) -> str:
         genai.configure(api_key=gemini_api_key)
         model = genai.GenerativeModel('gemini-2.0-flash') # Use a fast model for this
         instruction = f"""
-Enhance the following negative prompt by adding related terms and synonyms to make it more comprehensive.
+Enhance the following negative prompt by adding related terms, synonyms, and subject-specific confounders to make it more comprehensive.
 Keep the output as a comma-separated list. Do not add any introductory or concluding phrases.
 
 Original negative prompt: {negative_prompt_text}
@@ -1642,13 +1699,25 @@ Enhanced negative prompt:
         if response.text:
             enhanced_text = response.text.strip()
             # Clean up potential unwanted characters or formatting from Gemini
-            enhanced_text = re.sub(r'^["\']|["\']$', '', enhanced_text) # Remove leading/trailing quotes
-            enhanced_text = re.sub(r'\s*,\s*', ', ', enhanced_text) # Standardize comma spacing
-            return enhanced_text
+            enhanced_text = re.sub(r'^["\']|["\']$', '', enhanced_text)
+            # Normalize commas and spaces
+            enhanced_text = re.sub(r'\s*,\s*', ', ', enhanced_text)
+            # Split into terms and remove duplicates while preserving order
+            terms = [term.strip().lower() for term in re.split(r',', enhanced_text) if term.strip()]
+            seen = set()
+            unique_terms = []
+            for term in terms:
+                if term not in seen:
+                    seen.add(term)
+                    unique_terms.append(term)
+            cleaned_text = ", ".join(unique_terms)
+            logging.debug(f"Enhanced negative prompt input: {negative_prompt_text}")
+            logging.debug(f"Enhanced negative prompt output: {cleaned_text}")
+            return cleaned_text
         else:
             logging.warning("Gemini returned empty response for negative prompt enhancement.")
-            return negative_prompt_text # Return original if response is empty
+            return negative_prompt_text
 
     except Exception as e:
         logging.error(f"Error enhancing negative prompt with Gemini: {e}")
-        return negative_prompt_text # Return original in case of error
+        return negative_prompt_text
