@@ -1,7 +1,5 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-print("[debug] sys.path at start:", sys.path)
-print("[debug] CWD at start:", os.getcwd())
 import os
 import logging
 from ui_utils import (
