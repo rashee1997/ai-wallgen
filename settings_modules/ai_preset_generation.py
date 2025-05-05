@@ -1,3 +1,7 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+print("[debug] sys.path at start:", sys.path)
+print("[debug] CWD at start:", os.getcwd())
 import os
 import logging
 from ui_utils import (
@@ -33,7 +37,7 @@ def generate_ai_preset():
                     break
 
                 try:
-                    from ai_preset_generator import generate_ai_preset as ai_gen_preset
+                    from ai_prest_gen.ai_preset_generator import generate_ai_preset as ai_gen_preset
 
                     # Only show "Attempting to generate AI preset" if generating AI style (not for custom)
                     if style_choice == "1":
@@ -71,9 +75,11 @@ def generate_ai_preset():
                     else:  # result is False
                         print_warning("Failed to generate AI preset. See logs or previous messages for details.")
 
-                except ImportError:
+                except ImportError as e:
                     print_warning("AI preset generator module (ai_preset_generator.py) not found or google-generativeai is not installed.")
                     print_info("Please ensure the file exists and run: pip install google-generativeai")
+                    import traceback
+                    traceback.print_exc()
                 except Exception as e:
                     print_error(f"An unexpected error occurred during AI preset generation: {e}")
                     logging.exception("Error in ai_preset_generation.generate_ai_preset wrapper")

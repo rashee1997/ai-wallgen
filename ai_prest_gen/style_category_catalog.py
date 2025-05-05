@@ -75,6 +75,9 @@ categories_keywords = {
         "photoreal 3d", "3d portrait", "3d scene", "3d composition", "3d character", "3d environment"
     ],
 
+    "line_art": ["line art", "lineart", "clean lines", "ink lines", "digital line art", "line drawing"],
+
+
     # --- Illustration/Cartoon Categories ---
     "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
     "illustration_disney": ["disney", "disney style", "disney animation"],
@@ -357,5 +360,11 @@ def instructions_for_category(style_category, base_style):
         - Texture: Visible clay surface, fingerprints, and handcrafted details.
         - Colors: Earthy, muted tones with occasional bright accents.
         - Mood: Playful, tactile, handcrafted, nostalgic."""
+    elif style_category == "line_art":
+        return """*   **Line Art Focus:**
+        - Emphasize clean, crisp lines with minimal or no shading.
+        - Style: Monochrome or limited color palette, focusing on line clarity.
+        - Composition: Balanced use of negative space and precise line work.
+        - Mood: Minimalist, graphic, stylized, elegant."""
     else:
         return "*   **General Guidance:** Choose settings matching the style, mood, and technical parameters."

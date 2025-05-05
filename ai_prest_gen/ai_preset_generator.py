@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 """AI Preset Generator - Generate random wallpaper preferences using Gemini AI
 
 This script uses Google's Gemini AI to create intelligent, coherent random presets
@@ -17,13 +19,49 @@ import time
 import argparse
 from typing import Dict, Any, List, Optional, Union
 
-# --- Gemini API Import ---
 try:
+    # --- Gemini API Import ---
     import google.generativeai as genai
     import google.generativeai.types as genai_types
-except ImportError:
-    print("Error: google-generativeai package not installed")
-    print("Please install it with: pip install google-generativeai")
+
+    # --- Local Imports & Fallbacks ---
+    # Define fallbacks first
+    def print_section(x): print(f"\n--- {x} ---")
+    def print_option(k, v): print(f"  {k}. {v}")
+    def print_info(x): print(x)
+    def print_error(x): print(f"ERROR: {x}")
+    def print_success(x): print(f"SUCCESS: {x}")
+    def print_warning(x): print(f"WARNING: {x}")
+    def get_validated_input(p, v):
+        while True:
+            val = input(f"{p} {v}: ").strip().lower()
+            is_valid = False
+            if isinstance(v, list): is_valid = val in [str(choice).lower() for choice in v]
+            if is_valid: return val
+            else: print(f"Invalid input. Please enter one of {v}")
+
+    class UserPreferences: pass # Minimal placeholder
+    def initialize_settings(): return UserPreferences()
+    def get_preferences(): return initialize_settings()
+
+    from wallpaper_settings import UserPreferences, get_preferences, initialize_settings
+
+    from ui_utils import get_validated_input, print_section, print_option, print_info, print_error, print_success, print_warning
+
+    from ai_style_generator import generate_random_style, initialize_gemini as initialize_style_gemini
+
+    # Import utility functions
+    from file_utils import deep_update
+
+    # Import configuration
+    from config import STYLE_CATEGORIES
+
+    # Import style templates
+    from ai_prest_gen.style_templates import get_template_for_category
+
+except ImportError as e:
+    print(f"FATAL ImportError during ai_prest_gen/ai_preset_generator.py initialization: {e}")
+    import traceback; traceback.print_exc()
     sys.exit(1)
 
 # --- Local Imports & Fallbacks ---
@@ -80,7 +118,9 @@ except ImportError:
     STYLE_CATEGORIES = {}
 
 # Import style templates
-from style_templates import get_template_for_category
+from ai_prest_gen.style_templates import get_template_for_category
+
+# @tem: Added support for unique line_art template in style_templates.py
 
 # --- Configuration ---
 logging.basicConfig(
@@ -137,7 +177,7 @@ def is_preset_unique(preset_data: Dict[str, Any]) -> bool:
         logging.error(f"Error checking preset uniqueness: {e}")
         return True
 
-from style_category_catalog import hybrid_styles, hybrid_categories_keywords, categories_keywords, preferred_order, all_categories, instructions_for_category
+from ai_prest_gen.style_category_catalog import hybrid_styles, hybrid_categories_keywords, categories_keywords, preferred_order, all_categories, instructions_for_category
 
 def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     """
@@ -162,24 +202,7 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     tokens_set = frozenset(tokens)
 
     # --- Hybrid/Compound Style Mapping (Token-based) ---
-    hybrid_styles = {
-        frozenset({'pop', 'surrealism'}): 'pop_surrealism',
-        frozenset({'abstract', 'expressionism', 'cubism'}): 'abstract_expressionism_cubism_fusion',
-        # Removed watercolor_pencil as it's now keyword-based below
-        # frozenset({'watercolor', 'pencil'}): 'watercolor_pencil',
-        frozenset({'traditional', 'digital'}): 'hybrid_traditional_digital',
-        frozenset({'collage', 'digital'}): 'collage_digital_overlay',
-        frozenset({'experimental', 'mixed media'}): 'experimental_mixed_media',
-        # Removed patchwork_collage as it's keyword-based below
-        # frozenset({'patchwork', 'collage'}): 'patchwork_collage',
-        # Removed paper_quilling as it's keyword-based below
-        # frozenset({'paper', 'quilling'}): 'paper_quilling',
-        frozenset({'tradigital', 'mixed media'}): 'tradigital_mixed_media',
-        frozenset({'whimsical', 'mixed media'}): 'whimsical_mixed_media',
-        frozenset({'sci-fi', 'futuristic'}): 'sci_fi_futuristic',
-        # Add more token-based hybrids as needed
-    }
-    # Prioritized token-based hybrid detection
+    # Use imported hybrid_styles from style_category_catalog.py
     for hybrid_set, hybrid_cat in hybrid_styles.items():
         if hybrid_set == tokens_set:
             logging.info(f"Matched token-based hybrid style: {hybrid_cat} for '{style_name}'")
@@ -205,6 +228,9 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
                     mapped_category = "3d_render"
                 elif category in ["oil_painting", "watercolor", "pastel", "charcoal"]:
                     pass  # Keep as is
+                elif category == "line_art":
+                    # Keep line_art as its own category, do not map to drawing
+                    mapped_category = "line_art"
                 elif category in ["pencil_sketch", "ink_drawing"]:
                     mapped_category = "drawing"
                 elif category.startswith("illustration"):
@@ -248,36 +274,12 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     return "unknown"
 
 
-def generate_ai_style(api_key: str) -> Optional[str]:
-    """Generate an AI style name using Gemini AI."""
-    if not AI_STYLE_GEN_AVAILABLE:
-        print_error("AI Style Generator not available.")
-        return None
-    print_info("Generating AI style...")
-    initialize_style_gemini(api_key)
-    import random
-    all_categories = [
-        "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
-        "minimalist_geometric", # Use hybrid category
-        "illustration_pixel", "illustration_anime_manga", "illustration_comic",
-        "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
-        "fantasy", "sci_fi", "sci_fi_futuristic", "cyberpunk", # Added more specifics
-        "pop_surrealism", "papercraft", "kinetic_art", "watercolor_pencil", # Added some new ones
-        # Add new portrait categories
-        "photographic_portrait", "traditional_portrait", "futuristic_portrait",
-        "illustration_portrait", "pop_portrait",
-        "environmental_portrait", "caricature_portrait", "conceptual_portrait", "fashion_portrait", "selfie_portrait"
-    ]
-    chosen_category = random.choice(all_categories)
-    print_info(f"Chose style category: {chosen_category}")
-    # Assuming generate_random_style can handle these category names
-    style_obj = generate_random_style(category=chosen_category, style_type="detailed")
-    if not style_obj or not isinstance(style_obj, dict):
-        print_error("Failed to generate AI style.")
-        return None
-    name = style_obj['name']
-    print_success(f"Generated AI style: {name}")
-    return name
+from ai_style_generator import generate_random_style, initialize_gemini
+
+# Remove local generate_ai_style function and replace usage with imported functions
+
+# Remove local hardcoded hybrid_styles dictionary and use imported one
+# Remove local all_categories list and use imported one from style_category_catalog.py
 
 
 def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optional[str] = None) -> Union[str, bool, None]:
@@ -311,9 +313,14 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
                 # Use the entered custom style directly without generating AI style
             elif choice == "2":
                 print_info("Attempting to generate AI preset (this may take a moment)...")
-                base_style = generate_ai_style(api_key)
-                if not base_style:
+                initialize_gemini(api_key)
+                style_obj = generate_random_style(style_type="detailed")
+                if not style_obj or not isinstance(style_obj, dict):
                     print_error("Failed to generate AI style.")
+                    return False
+                base_style = style_obj.get('name', None)
+                if not base_style:
+                    print_error("Failed to generate AI style name.")
                     return False
 
         global gemini_initialized
@@ -355,11 +362,12 @@ def generate_ai_preset(user_prefs: UserPreferences, base_style_override: Optiona
 
         # Build category-specific instructions
         instruction_header = f"Select settings that work well with \"{base_style}\" (category: {style_category}):"
-        from style_category_catalog import instructions_for_category
+        from ai_prest_gen.style_category_catalog import instructions_for_category
         category_instructions = instructions_for_category(style_category, base_style)
 
         # Get the appropriate template for this style category
         # Ensure get_template_for_category handles the new categories or falls back gracefully
+        from ai_prest_gen.style_templates import get_template_for_category
         template = get_template_for_category(style_category)
         if not template:
              logging.error(f"No template found for category: {style_category}. Using default.")

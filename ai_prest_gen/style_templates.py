@@ -5,7 +5,7 @@ to ensure settings are appropriate for each style category.
 """
 
 from typing import Dict, Any, List, Optional, Union
-from portrait_style_templates import get_portrait_template
+from ai_prest_gen.portrait_style_templates import get_portrait_template
 
 
 def _priority_category_match(style_category: Union[str, List[str]]) -> str:
@@ -1196,7 +1196,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["style_settings"]["period"] = ["Renaissance", "Baroque", "Impressionist", "Modern", "Contemporary"]
         imagen_settings["style_settings"]["movement"] = ["Realism", "Impressionism", "Expressionism", "Cubism", "Surrealism"]
 
-    elif style_category == "drawing" or style_category in ["pencil_sketch", "ink_drawing", "line_art"]:
+    elif style_category == "drawing" or style_category in ["pencil_sketch", "ink_drawing"]:
         # Drawing specific settings
         drawing_medium = None
         if style_category == "pencil_sketch":
@@ -1213,6 +1213,19 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "detail_level": "[ detailed/suggestive/minimal ]"
         }
         imagen_settings["style_settings"]["drawing_approach"] = "[ realistic/stylized/abstract ]"
+
+    elif style_category == "line_art":
+        # Unique line art template with emphasis on clean lines and minimal shading
+        imagen_settings["line_art_settings"] = {
+            "medium": "ink or digital pen",
+            "line_style": "clean, crisp, precise",
+            "shading": "minimal or none",
+            "color_palette": "monochrome or limited colors",
+            "paper_texture": "smooth or no texture",
+            "detail_level": "high focus on line clarity",
+            "composition": "balanced with negative space emphasis"
+        }
+        imagen_settings["style_settings"]["line_art_approach"] = "minimalist, graphic, stylized"
 
     elif style_category.startswith("illustration"):
         # For illustration styles, include illustration-specific settings
