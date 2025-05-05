@@ -2,30 +2,57 @@
 
 <div align="center">
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Gemini API](https://img.shields.io/badge/Gemini%20API-Enabled-blue)](https://ai.google.dev/)
+  <a href="https://www.python.org/downloads/" title="Requires Python 3.8+">
+    <img alt="Python 3.8+" src="https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white&style=for-the-badge">
+  </a>
+  <a href="LICENSE" title="MIT License">
+    <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge">
+  </a>
+  <a href="https://ai.google.dev/" title="Gemini API">
+    <img alt="Gemini API" src="https://img.shields.io/badge/Gemini%20API-Enabled-blue?style=for-the-badge&logo=google">
+  </a>
+  <a href="#features" title="Wallpaper Generator">
+    <img alt="Wallpaper Generator" src="https://img.shields.io/badge/Wallpaper-Generator-brightgreen?style=for-the-badge&logo=wallpaperflare">
+  </a>
+  <a href="https://ai.google.dev/" title="AI Powered">
+    <img alt="AI Powered" src="https://img.shields.io/badge/AI--Powered-orange?style=for-the-badge&logo=artificial-intelligence">
+  </a>
+  <a href="https://ai.google.dev/" title="Imagen 3 Enabled">
+    <img alt="Imagen 3" src="https://img.shields.io/badge/Imagen%203-Enabled-purple?style=for-the-badge&logo=google">
+  </a>
+  <a href="#prerequisites" title="Supported Platforms">
+    <img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey?style=for-the-badge&logo=linux">
+  </a>
 
-<!-- Additional Badges -->
-[![AI](https://img.shields.io/badge/AI-Powered-orange.svg)](https://ai.google.dev/)
-[![Imagen](https://img.shields.io/badge/Imagen%203-Enabled-purple.svg)](https://ai.google.dev/)
-[![Wallpaper](https://img.shields.io/badge/Wallpaper-Generator-brightgreen.svg)](#features)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](#prerequisites)
-
-<div align="center">
-<img src="asset/logo/gemini.svg" alt="Gemini Logo" width="128" height="128">
-
-> Powered by [Google's Imagen 3](https://ai.google.dev/) and [Gemini API](https://ai.google.dev/). This project uses Google AI services for image generation. All generated images are subject to Google's terms of service.
-
-**Disclaimer**: This tool uses experimental AI technology that may sometimes provide inaccurate or unexpected content. Use discretion when generating and using the wallpapers. The generated content does not represent Google's views.
 </div>
 
-A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API. Create desktop wallpapers with customizable prompts and settings.
+---
 
-> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
+<div align="center">
+  <img src="asset/logo/gemini.svg" alt="Gemini Logo" width="128" height="128">
+</div>
 
-[Features](#key-features) • [Installation](#prerequisites) • [Documentation](#documentation) • [License](#license)
+<div align="center">
+
+> Powered by [Google's Imagen 3](https://ai.google.dev/) and [Gemini API](https://ai.google.dev/).  
+> This project uses Google AI services for image generation.  
+> All generated images are subject to Google's terms of service.
+>
+> **Disclaimer**: This tool uses experimental AI technology that may sometimes provide inaccurate or unexpected content.  
+> Use discretion when generating and using the wallpapers.  
+> The generated content does not represent Google's views.
+
+</div>
+
+---
+
+A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API.  
+Create desktop wallpapers with customizable prompts and settings.
+
+> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development.  
+> Features may change, and some functionality might be incomplete or experimental.
+
+[Features](#✨-key-features) • [Installation](#🚀-prerequisites) • [Documentation](#📚-documentation) • [License](#📝-license)
 
 <!-- Trending Tags -->
 <p align="center">
@@ -36,40 +63,86 @@ A terminal-based tool for generating wallpapers using Google's Imagen 3 model vi
   <code>#python-ai</code>
 </p>
 
-</div>
+---
 
 ## 🎭 Showcase
 
 Here are some examples of wallpapers generated using this tool:
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="asset/samples/palace_corridor.png" alt="Palace Corridor" width="400"/><br><em>Ancient Palace Corridor</em></td>
-      <td align="center"><img src="asset/samples/mosque_street.png" alt="Mosque Street" width="400"/><br><em>Middle Eastern Street View</em></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="asset/samples/garden_art.png" alt="Garden Art" width="400"/><br><em>Topiary Garden Art</em></td>
-      <td align="center"><img src="asset/samples/taj_mahal.png" alt="Taj Mahal" width="400"/><br><em>Taj Mahal at Sunset</em></td>
-    </tr>
-  </table>
+
+<table>
+  <tr>
+    <td align="center"><img src="asset/samples/palace_corridor.png" alt="Palace Corridor" width="400"/><br><em>Ancient Palace Corridor</em></td>
+    <td align="center"><img src="asset/samples/mosque_street.png" alt="Mosque Street" width="400"/><br><em>Middle Eastern Street View</em></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="asset/samples/garden_art.png" alt="Garden Art" width="400"/><br><em>Topiary Garden Art</em></td>
+    <td align="center"><img src="asset/samples/taj_mahal.png" alt="Taj Mahal" width="400"/><br><em>Taj Mahal at Sunset</em></td>
+  </tr>
+</table>
+
 </div>
+
+---
 
 ## ✨ Key Features
 
-- **AI-Powered Generation**: Generate wallpapers using Google's Imagen 3 model via Gemini API.
-- **Multiple Generation Methods**: Choose from AI-generated, random, or custom prompts.
-- **Advanced Settings & Customization**: Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
-- **AI Preset Generation**: Automatically generate coherent setting presets using AI.
-- **AI Style Generation**: Generate unique artistic styles using AI.
-- **Detailed Prompt Engineering**: Sophisticated prompt enhancement techniques for optimal results.
-- **GUI Image Preview**: Preview generated images in a graphical window (Qt or Tkinter).
-- **Cross-Platform Wallpaper Setting**: Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments.
-- **Generation History**: View previously generated wallpapers along with the settings used.
-- **Terminal-Based UI**: Simple, text-based interface for interactive use.
-- **Command-Line Interface**: Control generation, presets, and styles directly via CLI arguments.
+- 🤖 **AI-Powered Generation:** Generate wallpapers using Google's Imagen 3 model via Gemini API.
+- 🔀 **Multiple Generation Methods:** Choose from AI-generated, random, or custom prompts.
+- 🛠️ **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
+- 🧩 **AI Preset Generation:** Automatically generate coherent setting presets using AI, with CLI commands for generation, listing, loading, and deletion.
+- 🎨 **AI Style Generation:** Generate unique artistic styles using AI, with CLI options for category selection, detailed output, and saving to preferences.
+- ✍️ **Detailed Prompt Engineering:** Sophisticated prompt enhancement techniques for optimal results.
+- 🖼️ **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter), with options for terminal or GUI previews.
+- 💻 **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments, with options to skip preview and apply wallpapers directly.
+- 🕑 **Generation History:** View previously generated wallpapers along with the settings used.
+- 💻 **Terminal-Based UI:** Simple, text-based interface for interactive use.
+- ⌨️ **Command-Line Interface:** Control generation, presets, styles, image previews, and advanced options directly via CLI arguments.
 
-For detailed feature documentation, see the [Advanced Features Guide](docs/advanced-features.md).
+---
+
+## 🛠️ Advanced: Adding Custom Keys in User Preferences (Dynamic Settings)
+
+**Wallgen supports unlimited customization!**  
+You can add any custom settings/key–value pairs (at any depth) in your `user_preferences.json` or via the UI/settings menus, and *all* such fields will be automatically discovered and included in prompt generation, thanks to dynamic flattening of settings.
+
+This lets you extend Imagen settings, styles, or user metadata with no code changes.
+
+**Example: Adding custom keys and nested fields to user preferences**
+
+```json
+{
+  "preferred_styles": ["fantasy", "minimalist"],
+  "aspect_ratio": "21:9",
+  "imagen_settings": {
+    "lighting_settings": {
+      "lighting_type": "neon",
+      "custom_light_mode": "ambient disco"
+    },
+    "composition_settings": {
+      "technique": "rule_of_thirds",
+      "experimental_composition": {
+        "geometry_focus": "hexagonal_pattern",
+        "symmetry_level": 0.75
+      }
+    },
+    "my_extra_tag": "magic glow",
+    "custom_materials": ["silk", "obsidian"]
+  },
+  "my_global_note": "I love ultra-wide scenes"
+}
+```
+
+> *Wallgen will auto-flatten all such entries. Any (non-ignored) keys, even arbitrary new fields/nesting, immediately show up as creative context in prompts or sample output, e.g.:*
+>
+> ...and with magic glow my extra tag that, using custom light mode that, geometry focus: hexagonal_pattern, symmetry level: 0.75, custom materials that, I love ultra-wide scenes my global note that, ...
+
+You can freely add fields without changing code, and all will enhance the AI's creative awareness.
+
+> **Note:** Avoid using reserved names (like `negative_prompt`, which is handled separately), and use human-readable/custom key names for best readability in prompt context.
+
+---
 
 ## 🚀 Prerequisites
 
@@ -78,21 +151,22 @@ For detailed feature documentation, see the [Advanced Features Guide](docs/advan
 
 For complete setup instructions, including installation steps for different operating systems and detailed command-line usage, please refer to the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
 
+---
+
 ## 🧩 System Components
 
 Wallgen's main components include:
 
-- **Core Generator (`wallpaper_generator.py`)**: Controls the main wallpaper generation process and interactive UI.
-- **Settings Management (`settings_modules/`)**: Manages user preferences, presets, and detailed Imagen settings through a modular structure.
-- **AI Preset Generator (`ai_preset_generator.py`)**: Generates coherent setting presets using AI.
-- **AI Style Generator (`ai_style_generator.py`)**: Generates unique artistic styles using AI.
-- **Prompt Engineering (`prompt_generator.py`, `config.py`)**: Enhances prompts using various strategies and configurations for better results.
-- **Image Preview (`qt_preview.py`, `tkinter_preview.py`)**: Provides GUI previews.
-- **UI Utilities (`ui_utils.py`)**: Provides terminal interface elements.
-- **API Client**: Communicates with the Gemini API.
+- **Core Generator:** `wallpaper_generator.py`
+- **Settings Management:** `settings_modules/`
+- **AI Preset Generator:** `ai_preset_generator.py`
+- **AI Style Generator:** `ai_style_generator.py`
+- **Prompt Engineering:** `prompt_generator.py`, `config.py`
+- **Image Preview:** `qt_preview.py`, `tkinter_preview.py`
+- **UI Utilities:** `ui_utils.py`
+- **API Client:** Integrated with Gemini API
 
-For a detailed architecture explanation, see our [Architecture Documentation](docs/ARCHITECTURE.md).
-
+---
 
 ## ⚡ Quick Usage
 
@@ -116,16 +190,27 @@ python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
 ```
 
 **AI Preset Generation:**
+
 ```bash
 # Generate a new preset based on the "photographic" style
 python ai_preset_generator.py generate --style photographic
 
 # List available presets
 python ai_preset_generator.py list
+
+# Load a preset by name
+python ai_preset_generator.py load cinematic_mood
+
+# Delete a preset by name
+python ai_preset_generator.py delete my_abstract_preset
 ```
 
 **AI Style Generation:**
+
 ```bash
+# Generate a simple style in the "watercolor" category
+python ai_style_generator.py --category watercolor
+
 # Generate a detailed style for the "sci_fi" category
 python ai_style_generator.py --category sci_fi --detailed
 
@@ -133,21 +218,46 @@ python ai_style_generator.py --category sci_fi --detailed
 python ai_style_generator.py --detailed --save
 ```
 
+---
+
+### Image Preview and Management
+
+```bash
+# Preview the latest generated wallpaper
+python wallpaper_generator.py --preview-latest
+
+# Preview a specific image file
+python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png"
+
+# List all generated images and preview one by number
+python wallpaper_generator.py --list-images
+
+# Generate a wallpaper and immediately set it as desktop background
+python wallpaper_generator.py --prompt "mountain landscape with lakes" --skip-preview
+```
+
 For more examples and usage options, see the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
+
+---
 
 ## 📚 Documentation
 
-- [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) - Detailed installation and command-line usage
-- [Git Commit Guide](docs/git-commit-guide.md) - Guidelines for writing Git commit messages
-- [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- [Changelog](CHANGELOG.md) - Version history and updates
+- [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) — Detailed installation and command-line usage
+- [Git Commit Guide](docs/git-commit-guide.md) — Guidelines for writing Git commit messages
+- [Changelog](CHANGELOG.md) — Version history and updates
+
+
+---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <div align="center">
-Made with ❤️ by [Rasheed](https://github.com/rashee1997)
+<a href="https://github.com/rashee1997" target="_blank" rel="noopener noreferrer" style="text-decoration:none; border-radius: 12px; padding: 6px 12px; background-color: #e55353; color: white; font-weight: 600; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: inline-flex; align-items: center; gap: 6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+  Made with ❤️ by Rasheed
+</a>
 </div>
