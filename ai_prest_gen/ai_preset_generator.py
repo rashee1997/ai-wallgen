@@ -61,7 +61,7 @@ try:
 
 except ImportError as e:
     print(f"FATAL ImportError during ai_prest_gen/ai_preset_generator.py initialization: {e}")
-    import traceback; traceback.print_exc()
+    # Removed traceback.print_exc() to avoid logging system path information
     sys.exit(1)
 
 # --- Local Imports & Fallbacks ---
