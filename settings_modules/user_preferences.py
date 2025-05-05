@@ -4,30 +4,35 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Union, Tuple
 
-from .utils import deep_update
+# Robust import logic to ensure CLI and module execution both work
+try:
+    from .utils import deep_update
+except ImportError:
+    # Fallback for CLI execution (direct python settings_modules/user_preferences.py)
+    from settings_modules.utils import deep_update
 
 class UserPreferences:
     """
     Class to manage user preferences for the wallpaper generator.
 
+    Now supports adding, retrieving, and saving arbitrary custom keys (including nested)
+    directly into user_preferences.json, fully preserving custom fields across load/save.
+
     Handles loading, saving, and providing access to user preferences
     including image generation settings, style preferences, and application configuration.
     Maintains persistent storage of settings between application runs.
     """
+
     def __init__(self):
         """
-        Initialize user preferences with minimal default values.
-        
-        Sets up the initial state of user preferences with minimal values for required
-        settings. This prevents loading all options in the settings menu.
+        Initialize user preferences with minimal default values and support 
+        arbitrary custom user fields (for dynamic extensibility as described in project README).
         """
-        # Initialize with empty collections
+        # --- Standard fields (explicit UI/exposed fields) ---
         self.preferred_genres = []
-        self.preferred_styles: List[str] = []  # List to store styles
+        self.preferred_styles: List[str] = []
         self.preferred_moods = []
         self.negative_prompts = []
-        
-        # Minimal default Imagen settings
         self.imagen_settings = {
             "number_of_images": 1,
             "seed": None,
@@ -131,29 +136,22 @@ class UserPreferences:
                 "light_interaction": None
             }
         }
-        
-        # Default wallpaper settings
         self.wallpaper_settings = {
             "auto_set": False,
-            "skip_preview": False,  # Default to showing preview
-            "gui_preview_backend": "qt" # Default to Qt preview
+            "skip_preview": False,
+            "gui_preview_backend": "qt"
         }
-        
-        # Default aspect ratio
         self.aspect_ratio = "16:9"
-        
-        # Set history file path
         import os
         script_dir = os.getcwd()
         self.history_file = os.path.join(script_dir, "generation_history.json")
-        
-        # Track last used preset
         self.last_preset = None
-
-        # Add a description field (for preset/collection description)
         self.description = None
 
-        # Load existing preferences if available
+        # --- Internal dict for ALL arbitrary custom fields ---
+        self._custom_fields: Dict[str, Any] = {}  # stores non-standard fields at root
+
+        # Load existing preferences if available (integrate custom arbitrary keys)
         logging.debug("UserPreferences: Initializing and loading preferences.")
         self.load_preferences()
         logging.debug("UserPreferences: Initialization complete.")
@@ -402,3 +400,82 @@ class UserPreferences:
         """
         self.negative_prompts = []
         self.save_preferences()
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description="CLI for managing arbitrary custom fields in user_preferences.json"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Add command
+    add_parser = subparsers.add_parser("add", help="Add or update a custom field")
+    add_parser.add_argument("--key", required=True, help="Custom field key (string)")
+    add_parser.add_argument("--value", required=True, help="Value for key (JSON or string)")
+
+    # Get command
+    get_parser = subparsers.add_parser("get", help="Get a custom field")
+    get_parser.add_argument("--key", required=True, help="Custom field key")
+
+    # Remove command
+    remove_parser = subparsers.add_parser("remove", help="Remove a custom field")
+    remove_parser.add_argument("--key", required=True, help="Custom field key")
+
+    # List command
+    list_parser = subparsers.add_parser("list", help="List all custom fields")
+
+    args = parser.parse_args()
+    prefs = UserPreferences()
+
+    # Direct access to _custom_fields for maximum flexibility
+    custom_fields = getattr(prefs, "_custom_fields", {})
+
+    if args.command == "add":
+        k = args.key
+        v_str = args.value
+        # Try to parse JSON, else fallback to string
+        try:
+            v = json.loads(v_str)
+        except Exception:
+            v = v_str
+        if not hasattr(prefs, "_custom_fields"):
+            prefs._custom_fields = {}
+        prefs._custom_fields[k] = v
+        prefs.save_preferences()
+        print(f"Custom field '{k}' set to: {v}")
+
+    elif args.command == "get":
+        k = args.key
+        v = custom_fields.get(k, None)
+        if v is not None:
+            print(v if not isinstance(v, (dict, list)) else json.dumps(v, indent=2))
+        else:
+            print(f"(not found)")
+            sys.exit(1)
+
+    elif args.command == "remove":
+        k = args.key
+        if k in custom_fields:
+            del prefs._custom_fields[k]
+            prefs.save_preferences()
+            print(f"Custom field '{k}' removed.")
+        else:
+            print(f"Field '{k}' not found.")
+            sys.exit(1)
+
+    elif args.command == "list":
+        if not custom_fields:
+            print("(no custom fields present)")
+        else:
+            for k, v in custom_fields.items():
+                if isinstance(v, (dict, list)):
+                    v_str = json.dumps(v, indent=2)
+                else:
+                    v_str = str(v)
+                print(f"{k}: {v_str}")
+
+    else:
+        parser.print_help()
+        sys.exit(1)
