@@ -17,6 +17,7 @@ import sys
 import time
 import threading
 import re
+
 # Removed duplicate import of signal; signal handling is managed by graceful_exit.py
 
 # Import graceful exit handler early to register the signal handler
@@ -39,41 +40,74 @@ import google.generativeai as genai
 
 # Local application imports
 from settings_modules.settings_import_export import export_settings, import_settings
-from settings_modules.settings_utils import update_history_with_filenames, load_last_genre, save_last_genre
+from settings_modules.settings_utils import (
+    update_history_with_filenames,
+    load_last_genre,
+    save_last_genre,
+)
 from settings_modules.settings_manager import initialize_settings, get_preferences
 from settings_modules.menu_management import main_menu
-from settings_modules.preset_management import manage_presets, load_preset, save_preset, delete_preset
+from settings_modules.preset_management import (
+    manage_presets,
+    load_preset,
+    save_preset,
+    delete_preset,
+)
 from settings_modules.user_preferences import UserPreferences
+
 # The following functions are now called from within the menu management modules,
 # so they do not need to be imported directly in wallpaper_generator.py:
 # manage_genres, manage_styles, manage_moods, manage_wallpaper_settings, manage_imagen_settings, configure_advanced_options
 
 from config import (
-    nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
-    fantasy_tags, abstract_tags, mood_tags, available_genres,
-    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS,
-    style_to_tags # Added style_to_tags import
+    nature_tags,
+    space_tags,
+    sea_tags,
+    flowers_tags,
+    urban_tags,
+    fantasy_tags,
+    abstract_tags,
+    mood_tags,
+    available_genres,
+    PROMPT_INSTRUCTIONS,
+    CUSTOM_PROMPT_INSTRUCTIONS,
+    style_to_tags,  # Added style_to_tags import
 )
 from ui_utils import (
-    print_header, print_section, print_option, print_success, print_error,
-    print_warning, print_info, print_prompt, get_validated_input, show_spinner,
-    print_breadcrumb, print_colored
+    print_header,
+    print_section,
+    print_option,
+    print_success,
+    print_error,
+    print_warning,
+    print_info,
+    print_prompt,
+    get_validated_input,
+    show_spinner,
+    print_breadcrumb,
+    print_colored,
 )
 from prompt_generator import (
-    generate_prompt_gemini, generate_prompt_random, enhance_custom_prompt,
-    enforce_prompt_format, select_random_tags, generate_random_style_mix,
-    set_prompt_preferences, use_user_preferences, SimplePrefs,
-    enhance_negative_prompt, infer_subject_negatives_gemini
+    generate_prompt_gemini,
+    generate_prompt_random,
+    enhance_custom_prompt,
+    enforce_prompt_format,
+    select_random_tags,
+    generate_random_style_mix,
+    set_prompt_preferences,
+    use_user_preferences,
+    SimplePrefs,
+    enhance_negative_prompt,
+    infer_subject_negatives_gemini,
 )
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("wallpaper_generator.log")
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("wallpaper_generator.log")],
 )
+
 
 # Check for required dependencies
 def check_dependencies():
@@ -100,6 +134,7 @@ def check_dependencies():
         print(f"  pip install {' '.join(missing_deps)}")
         print("\nThe script will still run, but some features may be limited.\n")
 
+
 # Configure the Gemini API key
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_API_KEY:
@@ -121,6 +156,7 @@ user_prefs = initialize_settings()
 # Set default Gemini model
 gemini_model_name = "gemini-2.5-pro-exp-03-25"
 
+
 def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
     """
     Recursively flatten a settings dictionary into a list of (section, field, value) tuples for prompt context.
@@ -136,25 +172,39 @@ def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
         pretty_key = k.replace("_", " ").capitalize()
         full_key = f"{parent_key}{sep}{pretty_key}" if parent_key else pretty_key
         if isinstance(v, dict):
-            sub = flatten_settings(v, parent_key=full_key, sep=sep, ignore_keys=ignore_keys)
+            sub = flatten_settings(
+                v, parent_key=full_key, sep=sep, ignore_keys=ignore_keys
+            )
             flattened.extend(sub)
         elif isinstance(v, list):
             list_val = ", ".join(str(x) for x in v if x)
             if list_val:
-                flattened.append((parent_key if parent_key else pretty_key, pretty_key, list_val))
+                flattened.append(
+                    (parent_key if parent_key else pretty_key, pretty_key, list_val)
+                )
         elif v is not None and v != "" and v != "Not specified":
-            flattened.append((parent_key if parent_key else pretty_key, pretty_key, str(v)))
+            flattened.append(
+                (parent_key if parent_key else pretty_key, pretty_key, str(v))
+            )
     return flattened
+
 
 def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x2160"):
     """
     Build a narrative technical context for prompts from all user preferences/settings (dynamic, grouped),
     synthesizing each key/value pair into natural language descriptive phrases for the AI to integrate.
     """
+
     def phrase_from_kv(section, field, value):
         key = field.lower()
         val = str(value)
-        if key in ["lighting type", "light quality", "color scheme", "palette type", "color temperature"]:
+        if key in [
+            "lighting type",
+            "light quality",
+            "color scheme",
+            "palette type",
+            "color temperature",
+        ]:
             return f"{val} lighting" if "light" in key else f"{val} color palette"
         elif "brush" in key or "painting" in key or "medium" in key or "canvas" in key:
             return f"{val} {key.replace('_',' ')}"
@@ -177,7 +227,7 @@ def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x21
         elif key in ("", "none", "not specified"):
             return None
         return f"{val} {key.replace('_', ' ')}"
-    
+
     flat = flatten_settings(settings)
     phrases = [phrase_from_kv(section, field, value) for section, field, value in flat]
     phrases = [p for p in phrases if p and not p.strip().lower().startswith("none")]
@@ -194,6 +244,7 @@ def dynamic_technical_context(settings, aspect_ratio="16:9", resolution="3840x21
         text += ". "
     text += f"{resolution} resolution, {aspect_ratio} aspect ratio"
     return text
+
 
 def generate_prompt_gemini(tags, user_prefs):
     """Generate a detailed prompt using Gemini and user preferences with enhanced style support."""
@@ -281,17 +332,30 @@ def generate_prompt_gemini(tags, user_prefs):
         # --- Step 1: Gather sources ---
         # User preferences
         user_negative_prompt = settings.get("negative_prompt", "")
-        user_terms = set(term.strip() for term in user_negative_prompt.split(',') if term.strip())
+        user_terms = set(
+            term.strip() for term in user_negative_prompt.split(",") if term.strip()
+        )
 
         # Default system negatives
         default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
-        default_terms = set(term.strip() for term in default_negative_prompt.split(',') if term.strip())
+        default_terms = set(
+            term.strip() for term in default_negative_prompt.split(",") if term.strip()
+        )
 
         # AI enhancement - covers general "artifact" and edge-case negatives
         try:
             from prompt_generator import enhance_negative_prompt
-            enhanced_user = enhance_negative_prompt(user_negative_prompt) if user_negative_prompt else ""
-            ai_terms = set(term.strip() for term in enhanced_user.split(',') if term.strip()) if enhanced_user else set()
+
+            enhanced_user = (
+                enhance_negative_prompt(user_negative_prompt)
+                if user_negative_prompt
+                else ""
+            )
+            ai_terms = (
+                set(term.strip() for term in enhanced_user.split(",") if term.strip())
+                if enhanced_user
+                else set()
+            )
         except Exception as e:
             logging.warning(f"Avoided AI negative enhancement due to error: {e}")
             ai_terms = set()
@@ -300,6 +364,7 @@ def generate_prompt_gemini(tags, user_prefs):
         # Use text of the current (about-to-be-generated) positive prompt to extract subject-based negatives
         try:
             from prompt_generator import infer_subject_negatives_gemini
+
             # Compose a temp positive prompt context from current tags plus user preference context for inference
             # (This is before Gemini prompt full generation, but we can use tags + settings as a mini positive prompt)
             subject_context = ", ".join(tags)
@@ -310,7 +375,12 @@ def generate_prompt_gemini(tags, user_prefs):
 
         # --- Step 2: Merge/deduplicate/reduce ---
         # Priority: Subject-negatives > AI-enhanced > user terms > defaults. But should not drop core artifact protection.
-        all_terms = list(subject_negatives) + list(ai_terms) + list(user_terms) + list(default_terms)
+        all_terms = (
+            list(subject_negatives)
+            + list(ai_terms)
+            + list(user_terms)
+            + list(default_terms)
+        )
         # Deduplicate and trim to unique, keep relative order of preference
         seen = set()
         ordered_unique = []
@@ -341,7 +411,7 @@ def generate_prompt_gemini(tags, user_prefs):
             color_scheme=color_scheme if color_scheme else "Not specified",
             lighting=lighting_type if lighting_type else "Not specified",
             composition=technique if technique else "Not specified",
-            depth_of_field=depth_of_field if depth_of_field else "Not specified"
+            depth_of_field=depth_of_field if depth_of_field else "Not specified",
         )
 
         # Create a more comprehensive technical context with all settings
@@ -418,18 +488,24 @@ The following elements must be avoided in the image: {negative_prompt}
         if not GEMINI_API_KEY:
             logging.warning("No Gemini API key configured")
             # Return a formatted version of the simple tags
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt) # Use the final negative_prompt here
+            return enforce_prompt_format(
+                formatted_tags, resolution, aspect_ratio, negative_prompt
+            )  # Use the final negative_prompt here
 
         # Generate prompt using Gemini
         if not GEMINI_API_KEY:
             logging.warning("No Gemini API key configured")
             # Return a formatted version of the simple tags
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+            return enforce_prompt_format(
+                formatted_tags, resolution, aspect_ratio, negative_prompt
+            )
 
         try:
             genai.configure(api_key=GEMINI_API_KEY)
             model = genai.GenerativeModel(gemini_model_name)
-            response = model.generate_content(instruction_context + "\n\n" + technical_context)
+            response = model.generate_content(
+                instruction_context + "\n\n" + technical_context
+            )
 
             if response.text:
                 full_response = response.text.strip()
@@ -453,26 +529,35 @@ The following elements must be avoided in the image: {negative_prompt}
 
                 # Ensure proper formatting with resolution and aspect ratio
                 # Use the final processed negative_prompt variable
-                final_prompt = enforce_prompt_format(final_prompt, resolution, aspect_ratio, negative_prompt)
+                final_prompt = enforce_prompt_format(
+                    final_prompt, resolution, aspect_ratio, negative_prompt
+                )
 
                 prompt_cache[cache_key] = final_prompt
                 return final_prompt
             else:
                 # Return a formatted version of the simple tags
                 # Use the final processed negative_prompt variable
-                formatted_prompt = enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+                formatted_prompt = enforce_prompt_format(
+                    formatted_tags, resolution, aspect_ratio, negative_prompt
+                )
                 return formatted_prompt
         except Exception as e:
             logging.error(f"Error generating prompt with Gemini: {e}")
             # Return a formatted version of the simple tags
             # Use the final processed negative_prompt variable
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+            return enforce_prompt_format(
+                formatted_tags, resolution, aspect_ratio, negative_prompt
+            )
     except Exception as e:
         logging.error(f"Error in generate_prompt_gemini: {e}")
         formatted_tags_str = ", ".join(tags)
         # Return a formatted version of the simple tags
         # Use the final processed negative_prompt variable
-        return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", negative_prompt)
+        return enforce_prompt_format(
+            formatted_tags_str, "3840x2160", "16:9", negative_prompt
+        )
+
 
 def generate_prompt_random(tags, user_prefs):
     """Generate a random prompt with selected tags and user preferences."""
@@ -527,9 +612,9 @@ def generate_prompt_random(tags, user_prefs):
         if lens_type:
             quality_enhancers.append(f"{lens_type} lens")
         if time_of_day:
-            quality_enhancers.append(time_of_day.replace('_', ' '))
+            quality_enhancers.append(time_of_day.replace("_", " "))
         if lighting_type:
-            quality_enhancers.append(lighting_type.replace('_', ' '))
+            quality_enhancers.append(lighting_type.replace("_", " "))
 
         # Add quality enhancers if available
         if quality_enhancers:
@@ -541,72 +626,78 @@ def generate_prompt_random(tags, user_prefs):
         return ", ".join(tags)  # Fallback to basic tags if error occurs
 
 
-
 def mask_sensitive_data_in_url(url):
     """Masks sensitive data in URLs before logging and decodes HTML entities."""
     if isinstance(url, str):
         url = html.unescape(url)
-        if 'key=' in url:
-            parts = url.split('key=')
-            url = parts[0] + 'key=<HIDDEN>'
-        if 'client_id=' in url:
-            parts = url.split('client_id=')
-            url = parts[0] + 'client_id=<HIDDEN>'
+        if "key=" in url:
+            parts = url.split("key=")
+            url = parts[0] + "key=<HIDDEN>"
+        if "client_id=" in url:
+            parts = url.split("client_id=")
+            url = parts[0] + "client_id=<HIDDEN>"
     return url
+
 
 def sanitize_prompt(prompt):
     """Sanitize the prompt using bleach."""
     allowed_tags = []
     allowed_attributes = {}
-    sanitized_prompt = bleach.clean(prompt, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+    sanitized_prompt = bleach.clean(
+        prompt, tags=allowed_tags, attributes=allowed_attributes, strip=True
+    )
     return sanitized_prompt
+
 
 def create_filename_from_prompt(prompt, max_length=30):
     """Create a descriptive filename from the prompt.
-    
+
     Args:
         prompt: The prompt to create a filename from
         max_length: Maximum length of the descriptive part of the filename
-        
+
     Returns:
         A sanitized, shortened filename based on the prompt
     """
     # Remove special characters and replace spaces with underscores
-    sanitized = re.sub(r'[^\w\s-]', '', prompt.lower())
-    sanitized = re.sub(r'[-\s]+', '_', sanitized)
-    
+    sanitized = re.sub(r"[^\w\s-]", "", prompt.lower())
+    sanitized = re.sub(r"[-\s]+", "_", sanitized)
+
     # Truncate to the maximum length
     if len(sanitized) > max_length:
         # Try to cut at a word boundary
-        sanitized = sanitized[:max_length].rsplit('_', 1)[0]
-    
+        sanitized = sanitized[:max_length].rsplit("_", 1)[0]
+
     # Add a unique identifier (first 8 chars of the hash)
     hash_object = hashlib.sha256(prompt.encode())
     short_hash = hash_object.hexdigest()[:8]
-    
+
     return f"{sanitized}_{short_hash}.png"
+
 
 def extract_subject_from_prompt(prompt):
     """Extract the main subject from a prompt using Gemini.
-    
+
     Args:
         prompt: The prompt to extract the subject from
-        
+
     Returns:
         A string containing the main subject of the prompt
     """
     if not GEMINI_API_KEY:
-        logging.warning("No Gemini API key configured, using fallback filename generation")
+        logging.warning(
+            "No Gemini API key configured, using fallback filename generation"
+        )
         return None
-        
+
     try:
         # Use the same approach as generate_prompt_gemini
         import google.generativeai as genai
-        
+
         # Set up the model
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
-        
+        model = genai.GenerativeModel("gemini-2.5-pro-exp-03-25")
+
         # Create the analysis request
         analysis_prompt = f"""
         Extract the main subject or theme from this wallpaper description in 2-5 words.
@@ -615,22 +706,22 @@ def extract_subject_from_prompt(prompt):
         
         Description: {prompt}
         """
-        
+
         # Get the response
         response = model.generate_content(
             contents=analysis_prompt
-        ) # Added closing parenthesis
+        )  # Added closing parenthesis
 
-        if response and hasattr(response, 'candidates') and response.candidates:
+        if response and hasattr(response, "candidates") and response.candidates:
             text = response.candidates[0].content.parts[0].text
             subject = text.strip()
             # Clean up any quotes or extra formatting
-            subject = subject.replace('"', '').replace("'", "")
-            
+            subject = subject.replace('"', "").replace("'", "")
+
             # Sanitize for filename use
-            subject = re.sub(r'[^\w\s-]', '', subject.lower())
-            subject = re.sub(r'[-\s]+', '_', subject)
-            
+            subject = re.sub(r"[^\w\s-]", "", subject.lower())
+            subject = re.sub(r"[-\s]+", "_", subject)
+
             logging.debug(f"Extracted subject from prompt: {subject}")
             return subject
         else:
@@ -640,11 +731,12 @@ def extract_subject_from_prompt(prompt):
         logging.error(f"Error extracting subject with Gemini: {e}")
         return None
 
+
 def get_generated_image_path(prompt):
     """Get the cache path for the generated image."""
     # Try to extract a meaningful subject from the prompt
     subject = extract_subject_from_prompt(prompt)
-    
+
     if subject:
         # Use the extracted subject for the filename
         hash_object = hashlib.sha256(prompt.encode())
@@ -653,7 +745,7 @@ def get_generated_image_path(prompt):
     else:
         # Fall back to the original method
         filename = create_filename_from_prompt(prompt)
-    
+
     # Ensure the genimage directory exists with absolute path
     genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
     try:
@@ -664,9 +756,10 @@ def get_generated_image_path(prompt):
         # Fallback to relative path if absolute path fails
         genimage_dir = "genimage"
         os.makedirs(genimage_dir, exist_ok=True)
-        
+
     # Return absolute path to ensure consistency
     return os.path.join(genimage_dir, filename)
+
 
 def list_sorted_genimages(directory):
     """List and sort image files in a directory by modification time."""
@@ -676,10 +769,16 @@ def list_sorted_genimages(directory):
         os.makedirs(abs_dir, exist_ok=True)
 
         # Get list of image files with full paths for sorting
-        files_with_paths = [os.path.join(abs_dir, f) for f in os.listdir(abs_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        files_with_paths = [
+            os.path.join(abs_dir, f)
+            for f in os.listdir(abs_dir)
+            if f.lower().endswith((".png", ".jpg", ".jpeg"))
+        ]
 
         # Sort by modification time (newest first)
-        sorted_files_with_paths = sorted(files_with_paths, key=os.path.getmtime, reverse=True)
+        sorted_files_with_paths = sorted(
+            files_with_paths, key=os.path.getmtime, reverse=True
+        )
 
         # Return just the filenames
         image_filenames = [os.path.basename(f) for f in sorted_files_with_paths]
@@ -690,108 +789,157 @@ def list_sorted_genimages(directory):
         return []
 
 
-
 def detect_linux_desktop_environment():
     """Detect the Linux desktop environment."""
     # Check environment variables
-    desktop_env = os.environ.get('XDG_CURRENT_DESKTOP', '')
+    desktop_env = os.environ.get("XDG_CURRENT_DESKTOP", "")
     if desktop_env:
         return desktop_env.upper()
-    
+
     # Check for common processes
     try:
-        output = subprocess.check_output(['ps', '-e'], text=True)
-        if 'gnome-session' in output:
-            return 'GNOME'
-        elif 'kwin' in output:
-            return 'KDE'
-        elif 'xfce4-session' in output:
-            return 'XFCE'
-        elif 'mate-session' in output:
-            return 'MATE'
-        elif 'cinnamon-session' in output:
-            return 'CINNAMON'
-        elif 'i3' in output:
-            return 'I3'
-        elif 'sway' in output:
-            return 'SWAY'
+        output = subprocess.check_output(["ps", "-e"], text=True)
+        if "gnome-session" in output:
+            return "GNOME"
+        elif "kwin" in output:
+            return "KDE"
+        elif "xfce4-session" in output:
+            return "XFCE"
+        elif "mate-session" in output:
+            return "MATE"
+        elif "cinnamon-session" in output:
+            return "CINNAMON"
+        elif "i3" in output:
+            return "I3"
+        elif "sway" in output:
+            return "SWAY"
     except (subprocess.SubprocessError, FileNotFoundError):
         pass
-    
-    return 'UNKNOWN'
+
+    return "UNKNOWN"
+
 
 def set_wallpaper(image_path):
     """Set the wallpaper using the appropriate method for the current desktop environment."""
     try:
         os_name = platform.system()
-        
+
         # Ensure we have an absolute path from the project directory
         if not os.path.isabs(image_path):
             # Convert relative path to absolute path based on the project directory
             absolute_path = os.path.abspath(image_path)
         else:
             absolute_path = image_path
-        
+
         # Save the original path for later verification
         original_path = image_path
-        
+
         if os_name == "Windows":
             SPI_SETDESKWALLPAPER = 0x0014
             SPIF_UPDATEINIFILE = 0x01
             SPIF_SENDWININICHANGE = 0x02
             # Success
-            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, image_path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+            ctypes.windll.user32.SystemParametersInfoW(
+                SPI_SETDESKWALLPAPER,
+                0,
+                image_path,
+                SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE,
+            )
             logging.debug("Wallpaper set successfully on Windows")
             return True
         elif os_name == "Darwin":
             script = f'tell application "Finder" to set desktop picture to POSIX file "{absolute_path}"'
             command = f"osascript -e '{script}'"
-            subprocess.run(shlex.split(command), check=True, capture_output=True, text=True)
+            subprocess.run(
+                shlex.split(command), check=True, capture_output=True, text=True
+            )
             logging.debug("Wallpaper set successfully on macOS")
             return True
         elif os_name == "Linux":
             file_uri = "file://" + absolute_path
-            
+
             # Detect desktop environment
             desktop_env = detect_linux_desktop_environment()
             print_info(f"Detected Linux desktop environment: {desktop_env}")
-            
-            if desktop_env in ['GNOME', 'UBUNTU:GNOME', 'UNITY', 'UBUNTU']:
+
+            if desktop_env in ["GNOME", "UBUNTU:GNOME", "UNITY", "UBUNTU"]:
                 # GNOME, Unity
-                command = ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", file_uri]
+                command = [
+                    "gsettings",
+                    "set",
+                    "org.gnome.desktop.background",
+                    "picture-uri",
+                    file_uri,
+                ]
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 # For GNOME 42+ with dark mode support
                 try:
-                    command = ["gsettings", "set", "org.gnome.desktop.background", "picture-uri-dark", file_uri]
+                    command = [
+                        "gsettings",
+                        "set",
+                        "org.gnome.desktop.background",
+                        "picture-uri-dark",
+                        file_uri,
+                    ]
                     subprocess.run(command, check=True, capture_output=True, text=True)
                 except subprocess.CalledProcessError:
                     pass  # Ignore if not supported
-                logging.debug(f"Wallpaper set successfully on Linux using path: {absolute_path}")
+                logging.debug(
+                    f"Wallpaper set successfully on Linux using path: {absolute_path}"
+                )
                 logging.debug(f"Original path was: {original_path}")
                 return True
-            elif desktop_env == 'CINNAMON':
+            elif desktop_env == "CINNAMON":
                 # Cinnamon
-                command = ["gsettings", "set", "org.cinnamon.desktop.background", "picture-uri", file_uri]
+                command = [
+                    "gsettings",
+                    "set",
+                    "org.cinnamon.desktop.background",
+                    "picture-uri",
+                    file_uri,
+                ]
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 logging.debug("Wallpaper set successfully on Linux")
                 return True
-            elif desktop_env == 'MATE':
+            elif desktop_env == "MATE":
                 # MATE
-                command = ["gsettings", "set", "org.mate.background", "picture-filename", absolute_path]
+                command = [
+                    "gsettings",
+                    "set",
+                    "org.mate.background",
+                    "picture-filename",
+                    absolute_path,
+                ]
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 logging.debug("Wallpaper set successfully on Linux")
                 return True
-            elif desktop_env == 'XFCE':
+            elif desktop_env == "XFCE":
                 # XFCE
                 try:
                     # Get the current monitor
-                    output = subprocess.check_output(["xfconf-query", "-c", "xfce4-desktop", "-l"], text=True)
-                    monitors = [line for line in output.split('\n') if line.endswith("last-image")]
-                    
+                    output = subprocess.check_output(
+                        ["xfconf-query", "-c", "xfce4-desktop", "-l"], text=True
+                    )
+                    monitors = [
+                        line
+                        for line in output.split("\n")
+                        if line.endswith("last-image")
+                    ]
+
                     if monitors:
                         for monitor in monitors:
-                            command = ["xfconf-query", "-c", "xfce4-desktop", "-p", monitor, "-s", absolute_path]
-                            subprocess.run(command, check=True, capture_output=True, text=True)
+                            command = [
+                                "xfconf-query",
+                                "-c",
+                                "xfce4-desktop",
+                                "-p",
+                                monitor,
+                                "-s",
+                                absolute_path,
+                            ]
+                            subprocess.run(
+                                command, check=True, capture_output=True, text=True
+                            )
                         logging.debug("Wallpaper set successfully on Linux")
                         return True
                     else:
@@ -800,7 +948,7 @@ def set_wallpaper(image_path):
                 except (subprocess.SubprocessError, FileNotFoundError):
                     print_warning("Failed to set wallpaper using xfconf-query")
                     return False
-            elif desktop_env in ['KDE', 'PLASMA', 'PLASMA:KDE']:
+            elif desktop_env in ["KDE", "PLASMA", "PLASMA:KDE"]:
                 # KDE Plasma
                 try:
                     script = f"""
@@ -812,14 +960,20 @@ def set_wallpaper(image_path):
                         d.writeConfig("Image", "{absolute_path}");
                     }}
                     """
-                    command = ["qdbus", "org.kde.plasmashell", "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", script]
+                    command = [
+                        "qdbus",
+                        "org.kde.plasmashell",
+                        "/PlasmaShell",
+                        "org.kde.PlasmaShell.evaluateScript",
+                        script,
+                    ]
                     subprocess.run(command, check=True, capture_output=True, text=True)
                     logging.debug("Wallpaper set successfully on Linux")
                     return True
                 except (subprocess.SubprocessError, FileNotFoundError):
                     print_warning("Failed to set wallpaper using KDE Plasma method")
                     return False
-            elif desktop_env in ['I3', 'SWAY']:
+            elif desktop_env in ["I3", "SWAY"]:
                 # i3/sway - try feh first, then nitrogen
                 try:
                     command = ["feh", "--bg-fill", absolute_path]
@@ -829,7 +983,9 @@ def set_wallpaper(image_path):
                 except (subprocess.SubprocessError, FileNotFoundError):
                     try:
                         command = ["nitrogen", "--set-zoom-fill", absolute_path]
-                        subprocess.run(command, check=True, capture_output=True, text=True)
+                        subprocess.run(
+                            command, check=True, capture_output=True, text=True
+                        )
                         logging.debug("Wallpaper set successfully on Linux")
                         return True
                     except (subprocess.SubprocessError, FileNotFoundError):
@@ -838,33 +994,43 @@ def set_wallpaper(image_path):
             else:
                 # Try common methods as fallback
                 success = False
-                
+
                 # Try gsettings (GNOME/Unity/Cinnamon)
                 try:
-                    command = ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", file_uri]
+                    command = [
+                        "gsettings",
+                        "set",
+                        "org.gnome.desktop.background",
+                        "picture-uri",
+                        file_uri,
+                    ]
                     subprocess.run(command, check=True, capture_output=True, text=True)
                     success = True
                 except (subprocess.SubprocessError, FileNotFoundError):
                     pass
-                
+
                 # Try feh (works with many window managers)
                 if not success:
                     try:
                         command = ["feh", "--bg-fill", absolute_path]
-                        subprocess.run(command, check=True, capture_output=True, text=True)
+                        subprocess.run(
+                            command, check=True, capture_output=True, text=True
+                        )
                         success = True
                     except (subprocess.SubprocessError, FileNotFoundError):
                         pass
-                
+
                 # Try nitrogen (another common wallpaper setter)
                 if not success:
                     try:
                         command = ["nitrogen", "--set-zoom-fill", absolute_path]
-                        subprocess.run(command, check=True, capture_output=True, text=True)
+                        subprocess.run(
+                            command, check=True, capture_output=True, text=True
+                        )
                         success = True
                     except (subprocess.SubprocessError, FileNotFoundError):
                         pass
-                
+
                 if success:
                     print_info("Wallpaper set using fallback method")
                     logging.debug("Wallpaper set successfully on Linux")
@@ -872,7 +1038,7 @@ def set_wallpaper(image_path):
                 else:
                     print_warning("Could not set wallpaper with any known method")
                     return False
-            
+
         else:
             logging.warning(f"Unsupported operating system: {os_name}")
             return False
@@ -891,40 +1057,50 @@ def set_wallpaper(image_path):
         logging.error(f"Unexpected error setting wallpaper: {e}")
         return False
 
+
 def sanitize_log_content(content):
     """Sanitize content for logging by removing sensitive data."""
-    return re.sub(r'api_key=[\w-]+', 'api_key=REDACTED', content)
+    return re.sub(r"api_key=[\w-]+", "api_key=REDACTED", content)
+
 
 def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"):
     """Save prompts to a JSON file."""
     with open(filename, "w") as f:
-        json.dump({
-            "gemini_prompt": gemini_prompt,
-            "enhanced_prompt": enhanced_prompt,
-            "timestamp": datetime.now().isoformat()
-        }, f, indent=4)
+        json.dump(
+            {
+                "gemini_prompt": gemini_prompt,
+                "enhanced_prompt": enhanced_prompt,
+                "timestamp": datetime.now().isoformat(),
+            },
+            f,
+            indent=4,
+        )
+
 
 # Note: configure_advanced_options() has been moved to wallpaper_settings.py
 
+
 class GenerationHistory:
     """Class to manage the wallpaper generation history."""
-    
+
     def __init__(self, history_file="generation_history.json"):
         """Initialize the history object."""
         self.history = []
         # Use absolute path for history file
         if not os.path.isabs(history_file):
-            self.history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), history_file)
+            self.history_file = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), history_file
+            )
         else:
             self.history_file = history_file
         logging.debug(f"Generation history file path: {self.history_file}")
         self.load_history()
-    
+
     def load_history(self):
         """Load history from file."""
         try:
             if os.path.exists(self.history_file):
-                with open(self.history_file, 'r') as f:
+                with open(self.history_file, "r") as f:
                     data = json.load(f)
                     if isinstance(data, list):
                         self.history = data
@@ -933,18 +1109,22 @@ class GenerationHistory:
                         self.history = []
                 logging.debug(f"Loaded {len(self.history)} history entries")
             else:
-                logging.debug(f"No history file found at {self.history_file}, creating new history")
+                logging.debug(
+                    f"No history file found at {self.history_file}, creating new history"
+                )
                 self.history = []
         except Exception as e:
             logging.error(f"Error loading history: {e}")
             self.history = []
-    
+
     def save_history(self):
         """Save history to file."""
         try:
-            with open(self.history_file, 'w') as f:
+            with open(self.history_file, "w") as f:
                 json.dump(self.history, f, indent=4)
-            logging.debug(f"Saved {len(self.history)} history entries to {self.history_file}")
+            logging.debug(
+                f"Saved {len(self.history)} history entries to {self.history_file}"
+            )
             # Verify the file was saved correctly
             if os.path.exists(self.history_file):
                 logging.debug(f"Verified history file exists at {self.history_file}")
@@ -955,12 +1135,12 @@ class GenerationHistory:
             # Try to save to a fallback location
             try:
                 fallback_path = "generation_history_fallback.json"
-                with open(fallback_path, 'w') as f:
+                with open(fallback_path, "w") as f:
                     json.dump(self.history, f, indent=4)
                 logging.debug(f"Saved history to fallback location: {fallback_path}")
             except Exception as fallback_e:
                 logging.error(f"Error saving to fallback location: {fallback_e}")
-    
+
     def add_entry(self, entry_data):
         """Add a new generation entry to history."""
         try:
@@ -969,8 +1149,10 @@ class GenerationHistory:
             if entry_data.get("enhanced_prompt"):
                 image_path = get_generated_image_path(entry_data["enhanced_prompt"])
                 image_filename = os.path.basename(image_path)
-                logging.debug(f"Adding history entry with image filename: {image_filename}")
-            
+                logging.debug(
+                    f"Adding history entry with image filename: {image_filename}"
+                )
+
             entry = {
                 "date": datetime.now().isoformat(),
                 "prompt": entry_data.get("prompt", ""),
@@ -980,15 +1162,15 @@ class GenerationHistory:
                 "settings": {
                     "user_preferences": entry_data.get("user_preferences", {}),
                     "imagen_settings": entry_data.get("imagen_settings", {}),
-                    "wallpaper_settings": entry_data.get("wallpaper_settings", {})
+                    "wallpaper_settings": entry_data.get("wallpaper_settings", {}),
                 },
-                "output": entry_data.get("output", "")
+                "output": entry_data.get("output", ""),
             }
-            
+
             # Insert at beginning to show most recent first
             self.history.insert(0, entry)
             self.history = self.history[:50]  # Keep only last 50 entries
-            
+
             # Save immediately to ensure it's persisted
             self.save_history()
             logging.debug(f"Added entry to history, current count: {len(self.history)}")
@@ -1010,123 +1192,154 @@ class GenerationHistory:
             for i, entry in enumerate(self.history, 1):
                 print(f"\nGeneration #{i}")
                 print("-" * 13)
-                
+
                 # Always show date and original prompt
                 print(f"Date: {entry.get('date', 'Not recorded')}")
                 print(f"Original Prompt: {entry.get('prompt', 'Not recorded')}")
-                
+
                 # Only show enhanced prompt if it exists and is different from original
-                if entry.get('enhanced_prompt') and entry['enhanced_prompt'] != entry.get('prompt'):
+                if entry.get("enhanced_prompt") and entry[
+                    "enhanced_prompt"
+                ] != entry.get("prompt"):
                     print(f"Enhanced Prompt: {entry['enhanced_prompt']}")
-                
+
                 # Only show Gemini prompt if it exists and is different from original
-                if entry.get('gemini_prompt') and entry['gemini_prompt'] != entry.get('prompt'):
+                if entry.get("gemini_prompt") and entry["gemini_prompt"] != entry.get(
+                    "prompt"
+                ):
                     print(f"Gemini Prompt: {entry['gemini_prompt']}")
-                
+
                 # Show settings if they exist
-                if entry.get('settings'):
+                if entry.get("settings"):
                     print("\nSettings Used:")
-                    settings = entry['settings']
-                    
+                    settings = entry["settings"]
+
                     # User preferences
-                    if settings.get('user_preferences'):
+                    if settings.get("user_preferences"):
                         print("User Preferences:")
-                        for key, value in settings['user_preferences'].items():
+                        for key, value in settings["user_preferences"].items():
                             if value:  # Only show non-empty values
                                 print(f"  {key}: {value}")
-                    
+
                     # Imagen settings
-                    if settings.get('imagen_settings'):
+                    if settings.get("imagen_settings"):
                         print("\nImagen Settings:")
-                        for key, value in settings['imagen_settings'].items():
+                        for key, value in settings["imagen_settings"].items():
                             if value is not None:  # Show even if False
                                 print(f"  {key}: {value}")
-                    
+
                     # Wallpaper settings
-                    if settings.get('wallpaper_settings'):
+                    if settings.get("wallpaper_settings"):
                         print("\nWallpaper Settings:")
-                        for key, value in settings['wallpaper_settings'].items():
+                        for key, value in settings["wallpaper_settings"].items():
                             if value is not None:  # Show even if False
                                 print(f"  {key}: {value}")
-                
+
                 # Show the image file if available
-                if entry.get('image_filename'):
-                    image_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage", entry['image_filename'])
+                if entry.get("image_filename"):
+                    image_file = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "genimage",
+                        entry["image_filename"],
+                    )
                     print(f"\nImage Filename: {entry['image_filename']}")
-                    
+
                     # Check if the file exists
                     if os.path.exists(image_file):
                         print(f"Image exists at: {image_file}")
                     else:
-                        print(f"⚠️ Image file not found at expected location: {image_file}")
-                        
+                        print(
+                            f"⚠️ Image file not found at expected location: {image_file}"
+                        )
+
                         # Try to find the file
-                        basename = entry['image_filename']
+                        basename = entry["image_filename"]
                         home_dir = os.path.expanduser("~")
                         possible_home_path = os.path.join(home_dir, basename)
-                        
+
                         if os.path.exists(possible_home_path):
-                            print(f"✓ Found image in home directory: {possible_home_path}")
+                            print(
+                                f"✓ Found image in home directory: {possible_home_path}"
+                            )
                         else:
-                            print(f"✗ Image file not found in home directory: {possible_home_path}")
-                elif entry.get('enhanced_prompt'):
+                            print(
+                                f"✗ Image file not found in home directory: {possible_home_path}"
+                            )
+                elif entry.get("enhanced_prompt"):
                     # Fallback for entries created before this feature was added
-                    image_path = get_generated_image_path(entry['enhanced_prompt'])
+                    image_path = get_generated_image_path(entry["enhanced_prompt"])
                     if os.path.exists(image_path):
                         print(f"\nImage Filename: {os.path.basename(image_path)}")
                         print(f"Image exists at: {image_path}")
-                
+
                 print("-" * 40)
         except Exception as e:
             logging.error(f"Error displaying history: {e}")
             print(f"Error displaying history: {e}")
 
+
 # Initialize history at module level
 generation_history = GenerationHistory()
+
 
 def generate_random_style_mix():
     """Generate a random style mix using either AI or predefined categories."""
     # First try using AI style generation if available
     try:
         from ai_style_generator import generate_random_style
+
         if GEMINI_API_KEY:
             ai_style = generate_random_style()
             if ai_style:
                 return ai_style
     except (ImportError, Exception) as e:
         logging.debug(f"AI style generation not available: {e}")
-    
+
     # Fallback to predefined categories
     settings = user_prefs.imagen_settings
     style_settings = settings.get("style_settings", {})
-    
+
     # Import style categories from configuration
     from config import style_categories as default_style_categories
-    
+
     # Use custom categories if available, otherwise use defaults
     style_categories = style_settings.get("style_categories", default_style_categories)
-    
+
     # Save default categories if needed
     if not style_settings.get("style_categories"):
         style_settings["style_categories"] = default_style_categories
         user_prefs.imagen_settings["style_settings"] = style_settings
         user_prefs.save_preferences()
-    
+
     # Select a random category
     category = random.choice(list(style_categories.keys()))
     num_styles = random.randint(2, 3)
     available_styles = style_categories[category]
-    selected_styles = random.sample(available_styles, min(num_styles, len(available_styles)))
+    selected_styles = random.sample(
+        available_styles, min(num_styles, len(available_styles))
+    )
     return " + ".join(selected_styles)
+
 
 # Import get_preferences from wallpaper_settings
 from wallpaper_settings import get_preferences
+
 # Import use_user_preferences from prompt_generator
 from prompt_generator import use_user_preferences
 
-def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=None, resolution=None, color_scheme=None, lighting=None, generate_only=False):
+
+def generate_wallpaper(
+    prompt_type=None,
+    custom_prompt=None,
+    mood=None,
+    style=None,
+    resolution=None,
+    color_scheme=None,
+    lighting=None,
+    generate_only=False,
+):
     """Generate wallpaper based on given parameters.
-    
+
     Args:
         prompt_type: Type of prompt to generate ('gemini', 'random', 'custom')
         custom_prompt: Custom prompt text if prompt_type is 'custom'
@@ -1139,8 +1352,8 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
     """
     # Fetch the LATEST preferences right before generation
     user_prefs = get_preferences()
-    global generation_history # Keep global for history
-    
+    global generation_history  # Keep global for history
+
     # Create settings dictionary with all necessary parameters
     current_settings = {
         "prompt_type": prompt_type,
@@ -1151,18 +1364,18 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         "color_scheme": color_scheme,
         "lighting": lighting,
         "imagen_settings": user_prefs.imagen_settings.copy(),
-        "wallpaper_settings": user_prefs.wallpaper_settings.copy()
+        "wallpaper_settings": user_prefs.wallpaper_settings.copy(),
     }
-    
+
     enhanced_prompt = None
     gemini_prompt = None
-    
+
     # Step 1: Generate or get the prompt
     if prompt_type == "custom" and custom_prompt:
         print_info("Processing custom prompt...")
         sanitized_prompt = sanitize_prompt(custom_prompt)
         gemini_prompt = sanitized_prompt
-        
+
         # Check if we should use user preferences
         if use_user_preferences:
             enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
@@ -1181,11 +1394,12 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         print_info("Generating random prompt...")
         # Use select_random_tags to get a subset of tags rather than all tags
         random_tags = select_random_tags()
-        
+
         # Check if we should use user preferences
         if use_user_preferences:
             # Use the imported function from prompt_generator.py
             from prompt_generator import generate_prompt_random as generator_random
+
             gemini_prompt = generator_random(random_tags, user_prefs)
             # Enhance the random prompt to make it more detailed
             enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
@@ -1193,6 +1407,7 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         else:
             # Use the imported function from prompt_generator.py
             from prompt_generator import generate_prompt_random as generator_random
+
             gemini_prompt = generator_random(random_tags)
             # Enhance the random prompt to make it more detailed
             enhanced_prompt = enhance_custom_prompt(gemini_prompt)
@@ -1200,46 +1415,64 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
     else:  # gemini
         print_section("Generating AI Prompt")
         print_info("Using Google's Gemini AI to create a unique wallpaper prompt...")
-        all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
-        
+        all_tags = (
+            nature_tags
+            + space_tags
+            + sea_tags
+            + flowers_tags
+            + urban_tags
+            + fantasy_tags
+            + abstract_tags
+        )
+
         # If user has preferred genres, prioritize those
         user_tags = []
         if use_user_preferences and user_prefs.preferred_genres:
             user_tags.extend(user_prefs.preferred_genres)
-            print_info(f"Using your preferred genres: {', '.join(user_prefs.preferred_genres)}")
-        
+            print_info(
+                f"Using your preferred genres: {', '.join(user_prefs.preferred_genres)}"
+            )
+
         # If specific mood was provided, add related tags
         if mood:
-            mood_related = [tag for tag in mood_tags if mood in tag or tag.startswith(mood)]
+            mood_related = [
+                tag for tag in mood_tags if mood in tag or tag.startswith(mood)
+            ]
             if mood_related:
                 user_tags.extend(mood_related[:2])
                 print_info(f"Adding tags for your selected mood: {mood}")
-        
+
         # If specific style was provided, add related tags
         if style:
             # from prompt_config import style_to_tags # Removed local import
-            if style in style_to_tags: # Use the top-level imported style_to_tags
+            if style in style_to_tags:  # Use the top-level imported style_to_tags
                 available_tags = style_to_tags[style]
-                user_tags.extend(random.sample(available_tags, min(2, len(available_tags))))
+                user_tags.extend(
+                    random.sample(available_tags, min(2, len(available_tags)))
+                )
                 print_info(f"Adding tags for your selected style: {style}")
-        
+
         # If we have user tags, use them, otherwise use all tags
         tags_to_use = user_tags if user_tags else all_tags
-        
+
         show_spinner("Analyzing your preferences and generating ideas...", 1)
-        
+
         # Check if we should use user preferences
         if use_user_preferences:
-            # Use the imported function from prompt_generator.py 
+            # Use the imported function from prompt_generator.py
             from prompt_generator import generate_prompt_gemini as generator_gemini
+
             gemini_prompt = generator_gemini(tags_to_use, user_prefs)
         else:
             # Use the imported function from prompt_generator.py
             from prompt_generator import generate_prompt_gemini as generator_gemini
+
             gemini_prompt = generator_gemini(tags_to_use)
-        
+
         if not gemini_prompt:
-            print_warning("Gemini encountered an issue. Generating a random prompt instead...")
+            print_warning(
+                "Gemini encountered an issue. Generating a random prompt instead..."
+            )
             if use_user_preferences:
                 gemini_prompt = generate_prompt_random(tags_to_use, user_prefs)
             else:
@@ -1247,10 +1480,10 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             print_info("Here's your random prompt:")
         else:
             print_success("AI prompt generated successfully!")
-            
+
         enhanced_prompt = gemini_prompt
         print_info("Review your prompt below:")
-    
+
     # Step 2: Display the prompt and collect confirmation before building the negative prompt or generating the image
 
     wait_for_user = True
@@ -1258,18 +1491,26 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
     if enhanced_prompt:
         # Build combined prompt with negative prompt for user review before confirmation
         from prompt_generator import enhance_negative_prompt
+
         user_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
         enhanced_user_negative_prompt = enhance_negative_prompt(user_negative_prompt)
-        negative_prompt = enhanced_user_negative_prompt if enhanced_user_negative_prompt else ""
+        negative_prompt = (
+            enhanced_user_negative_prompt if enhanced_user_negative_prompt else ""
+        )
         combined_prompt_for_review = f"{enhanced_prompt}. Avoid: {negative_prompt}"
-        
+
         print_section("Generated Prompt (for your confirmation)")
         print_info(combined_prompt_for_review)
 
         if generate_only:
-            save_choice = get_validated_input("Would you like to save this prompt to a file? (y/n)", ["y", "n"])
+            save_choice = get_validated_input(
+                "Would you like to save this prompt to a file? (y/n)", ["y", "n"]
+            )
             if save_choice.lower() == "y":
-                filename = get_validated_input("Enter filename (or press Enter for default 'saved_prompt.txt'): ", allow_empty=True)
+                filename = get_validated_input(
+                    "Enter filename (or press Enter for default 'saved_prompt.txt'): ",
+                    allow_empty=True,
+                )
                 if not filename:
                     filename = "saved_prompt.txt"
                 try:
@@ -1282,42 +1523,65 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
 
         for attempt in range(3):
             save_prompts_to_json(gemini_prompt, enhanced_prompt)
-            confirmation = get_validated_input(f"Proceed with this prompt? (yes/no) (Attempt {attempt + 1}/3)", ["yes", "no", "y", "n"])
+            confirmation = get_validated_input(
+                f"Proceed with this prompt? (yes/no) (Attempt {attempt + 1}/3)",
+                ["yes", "no", "y", "n"],
+            )
             if confirmation in ["yes", "y"]:
                 prompt_confirmed = True
                 break
             else:
                 # Allow regeneration/edition logic
                 if prompt_type == "custom":
-                    custom_prompt = get_validated_input("Enter your custom prompt", allow_empty=False)
+                    custom_prompt = get_validated_input(
+                        "Enter your custom prompt", allow_empty=False
+                    )
                     sanitized_prompt = sanitize_prompt(custom_prompt)
                     gemini_prompt = sanitized_prompt
                     if use_user_preferences:
-                        enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
+                        enhanced_prompt = enhance_custom_prompt(
+                            sanitized_prompt, user_prefs
+                        )
                     else:
                         enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
                 elif prompt_type == "random":
                     random_tags = select_random_tags()
                     if use_user_preferences:
                         gemini_prompt = generate_prompt_random(random_tags, user_prefs)
-                        enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
+                        enhanced_prompt = enhance_custom_prompt(
+                            gemini_prompt, user_prefs
+                        )
                         print(f"Enhanced random prompt: {enhanced_prompt}")
                     else:
                         gemini_prompt = generate_prompt_random(random_tags)
                         enhanced_prompt = enhance_custom_prompt(gemini_prompt)
                         print(f"Enhanced random prompt: {enhanced_prompt}")
                 else:
-                    all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
+                    all_tags = (
+                        nature_tags
+                        + space_tags
+                        + sea_tags
+                        + flowers_tags
+                        + urban_tags
+                        + fantasy_tags
+                        + abstract_tags
+                    )
                     if use_user_preferences:
                         gemini_prompt = generate_prompt_gemini(all_tags, user_prefs)
                         if not gemini_prompt:
-                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
+                            print_warning(
+                                "Failed to generate prompt with Gemini, using random tags instead."
+                            )
                             random_tags = select_random_tags()
-                            gemini_prompt = generate_prompt_random(random_tags, user_prefs)
+                            gemini_prompt = generate_prompt_random(
+                                random_tags, user_prefs
+                            )
                     else:
                         gemini_prompt = generate_prompt_gemini(all_tags)
                         if not gemini_prompt:
-                            print_warning("Failed to generate prompt with Gemini, using random tags instead.")
+                            print_warning(
+                                "Failed to generate prompt with Gemini, using random tags instead."
+                            )
                             random_tags = select_random_tags()
                             gemini_prompt = generate_prompt_random(random_tags)
                     enhanced_prompt = gemini_prompt
@@ -1333,70 +1597,84 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
 
     # Only now, after explicit confirmation, build the negative prompt pipeline and add to history
     # Prepare tags etc. from context (re-extract if needed for this context)
-    tags_for_neg = tags_to_use if prompt_type == "gemini" else select_random_tags() if prompt_type == "random" else []
-    generation_history.add_entry({
-        "prompt": custom_prompt if custom_prompt else gemini_prompt,
-        "enhanced_prompt": enhanced_prompt,
-        "gemini_prompt": gemini_prompt,
-        "user_preferences": {
-            "preferred_genres": user_prefs.preferred_genres,
-            "preferred_styles": user_prefs.preferred_styles,
-            "preferred_moods": user_prefs.preferred_moods,
-            "negative_prompts": user_prefs.negative_prompts,
-            "aspect_ratio": user_prefs.aspect_ratio,
-        },
-        "imagen_settings": user_prefs.imagen_settings,
-        "wallpaper_settings": user_prefs.wallpaper_settings,
-        "output": None
-    })
-    
+    tags_for_neg = (
+        tags_to_use
+        if prompt_type == "gemini"
+        else select_random_tags() if prompt_type == "random" else []
+    )
+    generation_history.add_entry(
+        {
+            "prompt": custom_prompt if custom_prompt else gemini_prompt,
+            "enhanced_prompt": enhanced_prompt,
+            "gemini_prompt": gemini_prompt,
+            "user_preferences": {
+                "preferred_genres": user_prefs.preferred_genres,
+                "preferred_styles": user_prefs.preferred_styles,
+                "preferred_moods": user_prefs.preferred_moods,
+                "negative_prompts": user_prefs.negative_prompts,
+                "aspect_ratio": user_prefs.aspect_ratio,
+            },
+            "imagen_settings": user_prefs.imagen_settings,
+            "wallpaper_settings": user_prefs.wallpaper_settings,
+            "output": None,
+        }
+    )
+
     # Step 3: Generate the image
     if not GEMINI_API_KEY:
-        print_error("No Gemini API key configured - please check your environment variables")
+        print_error(
+            "No Gemini API key configured - please check your environment variables"
+        )
         return False
-    
+
     try:
         from google import genai
         from google.genai import types
+
         try:
             from PIL import Image
+
             PIL_AVAILABLE = True
         except ImportError:
             PIL_AVAILABLE = False
-            print_warning("PIL not installed. Some image processing features may be limited.")
+            print_warning(
+                "PIL not installed. Some image processing features may be limited."
+            )
             print_info("To install PIL: pip install pillow")
         from io import BytesIO
 
         print_info("Generating image with Imagen 3...")
         show_spinner("Generating image...", 2)
-        
+
         client = genai.Client(api_key=GEMINI_API_KEY)
-        
+
         cache_path = get_generated_image_path(enhanced_prompt)
         print_info(f"Image will be saved as: {os.path.basename(cache_path)}")
-        
+
         if os.path.exists(cache_path):
             print_info("Using cached image")
             image_path = cache_path
         else:
             print_info("Requesting new image from Imagen 3...")
-            
+
             # Validate aspect ratio format
             aspect_ratio = user_prefs.aspect_ratio
             valid_ratios = ["16:9", "4:3", "1:1", "9:16"]
             if aspect_ratio not in valid_ratios:
-                print_warning(f"Invalid aspect ratio: {aspect_ratio}. Using default 16:9.")
+                print_warning(
+                    f"Invalid aspect ratio: {aspect_ratio}. Using default 16:9."
+                )
                 aspect_ratio = "16:9"
                 user_prefs.aspect_ratio = aspect_ratio
                 user_prefs.save_preferences()
-            
+
             try:
                 # Append the enhanced negative prompt to the prompt text
                 negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
                 if GEMINI_API_KEY and enhanced_prompt:
                     try:
                         genai.configure(api_key=GEMINI_API_KEY)
-                        model_version = 'imagen-3.0-generate-002'  # Change model to imagen-3.0-generate-002
+                        model_version = "imagen-3.0-generate-002"  # Change model to imagen-3.0-generate-002
                         negative_prompt_instruction = f"""
                         Given the following wallpaper prompt description, generate a concise negative prompt listing undesirable elements to avoid in the image generation.
                         The negative prompt should be a comma-separated list of visual artifacts, errors, or unwanted features.
@@ -1407,27 +1685,41 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                         """
                         # Wait briefly to ensure prompt generation stability
                         import time
+
                         time.sleep(2.0)  # Increased wait time for stability
-                        model_version = 'gemini-2.0-flash'
+                        model_version = "gemini-2.0-flash"
                         # Generate enhanced negative prompt using the current enhanced prompt as input
-                        response = genai.GenerativeModel(model_version).generate_content(negative_prompt_instruction)
+                        response = genai.GenerativeModel(
+                            model_version
+                        ).generate_content(negative_prompt_instruction)
                         if response and response.text:
                             negative_prompt = response.text.strip()
                             print_info(f"Enhanced negative prompt: {negative_prompt}")
                         else:
                             # Inform user only once about fallback negative prompt
-                            print_info(f"No enhanced negative prompt returned, using fallback negative prompt.")
+                            print_info(
+                                f"No enhanced negative prompt returned, using fallback negative prompt."
+                            )
                     except Exception as e:
-                        logging.error(f"Error enhancing negative prompt with Gemini: {e}")
+                        logging.error(
+                            f"Error enhancing negative prompt with Gemini: {e}"
+                        )
                         # Fallback to user preference negative prompt if enhancement fails
                         if negative_prompt:
                             # Suppress repeated fallback message to reduce clutter
                             pass
                 # Get user's configured negative prompt and enhance it
-                user_configured_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
+                user_configured_negative_prompt = user_prefs.imagen_settings.get(
+                    "negative_prompt", ""
+                )
                 from prompt_generator import enhance_negative_prompt
-                enhanced_user_negative_prompt = enhance_negative_prompt(user_configured_negative_prompt)
-                logging.info(f"Enhanced user negative prompt: {enhanced_user_negative_prompt}")
+
+                enhanced_user_negative_prompt = enhance_negative_prompt(
+                    user_configured_negative_prompt
+                )
+                logging.info(
+                    f"Enhanced user negative prompt: {enhanced_user_negative_prompt}"
+                )
 
                 # Generate negative prompt based on the main prompt
                 generated_negative_prompt_from_main = ""
@@ -1444,29 +1736,50 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                         """
                         # Wait briefly to ensure prompt generation stability
                         import time
+
                         time.sleep(2.0)  # Increased wait time for stability
-                        model_version = 'gemini-2.0-flash'
-                        response = genai.GenerativeModel(model_version).generate_content(negative_prompt_instruction)
+                        model_version = "gemini-2.0-flash"
+                        response = genai.GenerativeModel(
+                            model_version
+                        ).generate_content(negative_prompt_instruction)
                         if response and response.text:
                             generated_negative_prompt_from_main = response.text.strip()
-                            logging.info(f"Generated negative prompt from main prompt: {generated_negative_prompt_from_main}")
+                            logging.info(
+                                f"Generated negative prompt from main prompt: {generated_negative_prompt_from_main}"
+                            )
                         else:
-                            logging.info(f"No negative prompt generated from main prompt.")
+                            logging.info(
+                                f"No negative prompt generated from main prompt."
+                            )
                     except Exception as e:
-                        logging.error(f"Error generating negative prompt from main prompt with Gemini: {e}")
+                        logging.error(
+                            f"Error generating negative prompt from main prompt with Gemini: {e}"
+                        )
 
                 # Combine all negative prompts, ensuring uniqueness
                 all_negative_terms = set()
                 if enhanced_user_negative_prompt:
-                    all_negative_terms.update(term.strip() for term in enhanced_user_negative_prompt.split(',') if term.strip())
+                    all_negative_terms.update(
+                        term.strip()
+                        for term in enhanced_user_negative_prompt.split(",")
+                        if term.strip()
+                    )
                 if generated_negative_prompt_from_main:
-                    all_negative_terms.update(term.strip() for term in generated_negative_prompt_from_main.split(',') if term.strip())
+                    all_negative_terms.update(
+                        term.strip()
+                        for term in generated_negative_prompt_from_main.split(",")
+                        if term.strip()
+                    )
 
                 final_negative_prompt = ", ".join(sorted(list(all_negative_terms)))
-                logging.info(f"Final combined negative prompt for Imagen: {final_negative_prompt}")
+                logging.info(
+                    f"Final combined negative prompt for Imagen: {final_negative_prompt}"
+                )
 
                 # Combine main prompt with the final negative prompt for the API call
-                combined_prompt_for_api = f"{enhanced_prompt}. Avoid: {final_negative_prompt}"
+                combined_prompt_for_api = (
+                    f"{enhanced_prompt}. Avoid: {final_negative_prompt}"
+                )
                 # Commented out to avoid duplicate prompt output
                 # print_info(f"Final combined prompt sent to image generation:\n{combined_prompt_for_api}")
 
@@ -1495,77 +1808,105 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                     logging.error(f"Error listing models: {e}")
 
                 # Use the updated model version
-                model_version = 'imagen-3.0-generate-002'
+                model_version = "imagen-3.0-generate-002"
 
                 # Log the configuration details
                 logging.info(f"Using model: {model_version}")
                 logging.info(f"Aspect ratio: {aspect_ratio}")
                 logging.info(f"Negative prompt: {negative_prompt}")
-                logging.info(f"Number of images: {user_prefs.imagen_settings['number_of_images']}")
+                logging.info(
+                    f"Number of images: {user_prefs.imagen_settings['number_of_images']}"
+                )
                 if user_prefs.imagen_settings["seed"] is not None:
                     logging.info(f"Seed: {user_prefs.imagen_settings['seed']}")
 
                 # Generate the image passing negative_prompt as a separate argument
                 response = client.models.generate_images(
-                    model=model_version,
-                    prompt=combined_prompt_for_api,
-                    config=config
+                    model=model_version, prompt=combined_prompt_for_api, config=config
                 )
-                
-                if response and hasattr(response, 'generated_images'):
+
+                if response and hasattr(response, "generated_images"):
                     if response.generated_images:
                         for i, generated_image in enumerate(response.generated_images):
                             # Create temp file with absolute path in project directory
-                            temp_image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"generated_image_{i}.png")
+                            temp_image_path = os.path.join(
+                                os.path.dirname(os.path.abspath(__file__)),
+                                f"generated_image_{i}.png",
+                            )
                             with open(temp_image_path, "wb") as f:
                                 f.write(generated_image.image.image_bytes)
-                        
+
                         # Log the paths being used
                         logging.debug(f"Temporary image path: {temp_image_path}")
                         logging.info(f"Target cache path: {cache_path}")
-                        
+
                         # Make sure the directory exists using absolute path
                         cache_dir = os.path.dirname(os.path.abspath(cache_path))
                         os.makedirs(cache_dir, exist_ok=True)
                         logging.info(f"Ensuring cache directory exists: {cache_dir}")
-                        
+
                         try:
                             # Copy instead of rename to avoid issues with files being in different filesystems
                             shutil.copy2(temp_image_path, cache_path)
-                            
+
                             # Verify the file was copied correctly
                             if os.path.exists(cache_path):
-                                print_success(f"Image generated and saved as: {os.path.basename(cache_path)}")
-                                logging.info(f"Image successfully saved to: {cache_path}")
-                                
+                                print_success(
+                                    f"Image generated and saved as: {os.path.basename(cache_path)}"
+                                )
+                                logging.info(
+                                    f"Image successfully saved to: {cache_path}"
+                                )
+
                                 # Update generation history with the image filename
-                                if generation_history.history and len(generation_history.history) > 0:
+                                if (
+                                    generation_history.history
+                                    and len(generation_history.history) > 0
+                                ):
                                     filename = os.path.basename(cache_path)
-                                    generation_history.history[0]["image_filename"] = filename
-                                    logging.info(f"Updating history with image filename: {filename}")
+                                    generation_history.history[0][
+                                        "image_filename"
+                                    ] = filename
+                                    logging.info(
+                                        f"Updating history with image filename: {filename}"
+                                    )
                                     generation_history.save_history()
-                                
+
                                 # Remove the temporary file after successful copy
                                 try:
                                     os.remove(temp_image_path)
-                                    logging.info(f"Temporary file removed: {temp_image_path}")
+                                    logging.info(
+                                        f"Temporary file removed: {temp_image_path}"
+                                    )
                                 except Exception as e:
                                     # Non-critical error, just log it
-                                    logging.warning(f"Could not remove temporary file {temp_image_path}: {e}")
+                                    logging.warning(
+                                        f"Could not remove temporary file {temp_image_path}: {e}"
+                                    )
                             else:
-                                print_warning(f"Image was generated but may not have been saved properly to {cache_path}")
-                                logging.error(f"Failed to save image to {cache_path}, file does not exist after copy")
+                                print_warning(
+                                    f"Image was generated but may not have been saved properly to {cache_path}"
+                                )
+                                logging.error(
+                                    f"Failed to save image to {cache_path}, file does not exist after copy"
+                                )
                                 # Keep the temp file as a backup
-                                print_info(f"Temporary file preserved at {temp_image_path}")
+                                print_info(
+                                    f"Temporary file preserved at {temp_image_path}"
+                                )
                         except Exception as e:
                             print_warning(f"Error saving image to final location: {e}")
-                            logging.error(f"Exception while saving image to {cache_path}: {e}")
+                            logging.error(
+                                f"Exception while saving image to {cache_path}: {e}"
+                            )
                             print_info(f"Temporary file preserved at {temp_image_path}")
                             # Use the temp file as the cache path
                             cache_path = temp_image_path
                     else:
                         print_error("Failed to generate image - no images returned")
-                        logging.error(f"Empty response from Imagen 3 for prompt: {enhanced_prompt}")
+                        logging.error(
+                            f"Empty response from Imagen 3 for prompt: {enhanced_prompt}"
+                        )
                         return False
                 else:
                     print_error("Failed to generate image - invalid response format")
@@ -1573,35 +1914,41 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                     return False
             except AttributeError as e:
                 print_error(f"Error with Gemini client: {e}")
-                print_info("This might be due to an API version mismatch. Check your google-generativeai package version.")
+                print_info(
+                    "This might be due to an API version mismatch. Check your google-generativeai package version."
+                )
                 return False
     except Exception as e:
         error_msg = str(e)
         if "billed users" in error_msg:
             print_error("Image generation requires a Google Cloud billing account")
-            print_info("Please visit https://ai.google.dev/tutorials/setup to set up billing")
+            print_info(
+                "Please visit https://ai.google.dev/tutorials/setup to set up billing"
+            )
         else:
             print_error(f"Error generating image: {error_msg}")
         return False
-    
+
     # Step 4: Set the wallpaper
     try:
         print_section("Preview and Set Wallpaper")
-        
+
         # Make sure we're using an absolute path
         if not os.path.isabs(cache_path):
             cache_path = os.path.abspath(cache_path)
-        
+
         # Make sure the file exists before previewing/setting it
         if not os.path.exists(cache_path):
             logging.warning(f"Wallpaper file not found at {cache_path} before preview")
             print_warning(f"Wallpaper file may be missing: {cache_path}")
             return False
-        
+
         # Check if preview should be skipped
         # Check both direct attribute and wallpaper_settings for backward compatibility
-        skip_preview = getattr(user_prefs, 'skip_preview', False) or user_prefs.wallpaper_settings.get('skip_preview', False)
-        
+        skip_preview = getattr(
+            user_prefs, "skip_preview", False
+        ) or user_prefs.wallpaper_settings.get("skip_preview", False)
+
         if skip_preview:
             print_info("Preview skipped. Applying wallpaper directly...")
             logging.info("Image preview skipped due to user preference")
@@ -1610,28 +1957,36 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
             print_info("Preview your new wallpaper before setting it...")
             print_info("Preview your new wallpaper before setting it...")
             logging.info(f"Previewing wallpaper with path: {cache_path}")
-            
-            gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
+
+            gui_backend = user_prefs.wallpaper_settings.get("gui_preview_backend", "qt")
             preview_func = None
-            
-            if gui_backend == 'qt':
+
+            if gui_backend == "qt":
                 try:
                     from qt_preview import preview_image_gui as preview_func
                 except ImportError:
-                    print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+                    print_warning(
+                        "Qt preview backend selected but PySide6 (or PyQt5/6) not found."
+                    )
                     print_info("Please install PySide6: pip install PySide6")
                     print_info("Falling back to no preview.")
                     preview_func = None
-            elif gui_backend == 'tkinter':
-                 try:
-                     from tkinter_preview import preview_image_gui as preview_func
-                 except ImportError:
-                     print_warning("Tkinter preview backend selected but Tkinter not available.")
-                     print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
-                     print_info("Falling back to no preview.")
-                     preview_func = None
+            elif gui_backend == "tkinter":
+                try:
+                    from tkinter_preview import preview_image_gui as preview_func
+                except ImportError:
+                    print_warning(
+                        "Tkinter preview backend selected but Tkinter not available."
+                    )
+                    print_info(
+                        "Tkinter is usually included with Python, but may require a separate package on some Linux distributions."
+                    )
+                    print_info("Falling back to no preview.")
+                    preview_func = None
             else:
-                print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+                print_warning(
+                    f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview."
+                )
                 preview_func = None
 
             set_wallpaper_confirmed = False
@@ -1641,7 +1996,9 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                     if set_wallpaper_confirmed:
                         # The GUI has already set the wallpaper, so we can return
                         print_success("Wallpaper successfully applied!")
-                        print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
+                        print_info(
+                            f"Your desktop is now displaying: {os.path.basename(cache_path)}"
+                        )
                         logging.info(f"Wallpaper successfully set to: {cache_path}")
                         return True
                 except Exception as e:
@@ -1649,50 +2006,59 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
                     print_info("Please check that your system supports GUI preview")
                     set_wallpaper_confirmed = False
             else:
-                print_info("GUI preview is not available or failed to load. Skipping preview.")
-                set_wallpaper_confirmed = False # Ensure this is False if preview isn't used
+                print_info(
+                    "GUI preview is not available or failed to load. Skipping preview."
+                )
+                set_wallpaper_confirmed = (
+                    False  # Ensure this is False if preview isn't used
+                )
 
             if set_wallpaper_confirmed:
                 logging.info("User confirmed to set the wallpaper after preview")
             else:
-                logging.info("User decided not to set the wallpaper after preview, or preview was skipped/failed.")
-        
+                logging.info(
+                    "User decided not to set the wallpaper after preview, or preview was skipped/failed."
+                )
+
         # If preview was skipped, failed, or user chose not to set from preview
         if not skip_preview and not set_wallpaper_confirmed:
-             # If preview was attempted but user didn't confirm, or it failed
-             print_info("Wallpaper not set. You can find the generated image at:")
-             print_info(cache_path)
-             return True # Still return True since image generation was successful
+            # If preview was attempted but user didn't confirm, or it failed
+            print_info("Wallpaper not set. You can find the generated image at:")
+            print_info(cache_path)
+            return True  # Still return True since image generation was successful
         elif set_wallpaper_confirmed:
-             # If preview was skipped but set_wallpaper_confirmed is True (e.g. via CLI arg)
-             result = set_wallpaper(cache_path)
-             if result:
-                 print_success("Wallpaper successfully applied!")
-                 print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
-                 logging.info(f"Wallpaper successfully set to: {cache_path}")
-                 return True
-             else:
-                 print_warning("Wallpaper may not have been set correctly.")
-                 print_info("Please check your desktop settings manually.")
-                 return False
+            # If preview was skipped but set_wallpaper_confirmed is True (e.g. via CLI arg)
+            result = set_wallpaper(cache_path)
+            if result:
+                print_success("Wallpaper successfully applied!")
+                print_info(
+                    f"Your desktop is now displaying: {os.path.basename(cache_path)}"
+                )
+                logging.info(f"Wallpaper successfully set to: {cache_path}")
+                return True
+            else:
+                print_warning("Wallpaper may not have been set correctly.")
+                print_info("Please check your desktop settings manually.")
+                return False
         elif skip_preview:
-             # If preview was explicitly skipped via setting/CLI arg
-             result = set_wallpaper(cache_path)
-             if result:
-                 print_success("Wallpaper successfully applied!")
-                 print_info(f"Your desktop is now displaying: {os.path.basename(cache_path)}")
-                 logging.info(f"Wallpaper successfully set to: {cache_path}")
-                 return True
-             else:
-                 print_warning("Wallpaper may not have been set correctly.")
-                 print_info("Please check your desktop settings manually.")
-                 return False
+            # If preview was explicitly skipped via setting/CLI arg
+            result = set_wallpaper(cache_path)
+            if result:
+                print_success("Wallpaper successfully applied!")
+                print_info(
+                    f"Your desktop is now displaying: {os.path.basename(cache_path)}"
+                )
+                logging.info(f"Wallpaper successfully set to: {cache_path}")
+                return True
+            else:
+                print_warning("Wallpaper may not have been set correctly.")
+                print_info("Please check your desktop settings manually.")
+                return False
         else:
-             # Should not reach here if logic is correct, but as a fallback
-             print_info("Wallpaper not set. You can find the generated image at:")
-             print_info(cache_path)
-             return True # Still return True since image generation was successful
-
+            # Should not reach here if logic is correct, but as a fallback
+            print_info("Wallpaper not set. You can find the generated image at:")
+            print_info(cache_path)
+            return True  # Still return True since image generation was successful
 
     except subprocess.CalledProcessError as e:
         print_error("Failed to set wallpaper due to a system command error")
@@ -1702,161 +2068,178 @@ def generate_wallpaper(prompt_type=None, custom_prompt=None, mood=None, style=No
         if e.stderr:
             print_error(f"Command error: {e.stderr}")
         print_info("Please ensure your system supports automatic wallpaper changes.")
-        
+
     except OSError as e:
         print_error("Operating system error while setting wallpaper")
         print_info(f"Error details: {e}")
         print_info("Please check file permissions and system settings.")
-        
+
     except ValueError as e:
         print_error("Invalid configuration while setting wallpaper")
         print_info(f"Error details: {e}")
         print_info("Please verify your system's wallpaper settings.")
-        
+
     except Exception as e:
         print_error("Unexpected error while setting wallpaper")
         print_info(f"Error details: {e}")
-        print_info("Please check your system's compatibility with automatic wallpaper changes.")
-    
+        print_info(
+            "Please check your system's compatibility with automatic wallpaper changes."
+        )
+
     return False
+
 
 def view_history():
     """View the wallpaper generation history."""
     history = GenerationHistory()
     history.view_history()
 
+
 def add_to_history(entry):
     """Add an entry to the generation history."""
     history = GenerationHistory()
     history.add_entry(entry)
+
 
 def configure_logging(level=logging.INFO):
     """Configure logging with file and console handlers."""
     # Configure file handler
     file_handler = logging.FileHandler("wallpaper_generator.log")
     file_handler.setLevel(level)
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    )
+
     # Get root logger and clear any existing handlers
     root_logger = logging.getLogger()
     root_logger.handlers = []
-    
+
     # Set new level and add file handler only
     root_logger.setLevel(level)
     root_logger.addHandler(file_handler)
-    
+
     logging.debug("Logging configured with level: %s", level)
+
 
 # Global flag to track if we're in the process of exiting
 exiting = False
 
 # Removed local signal handler; global handler in graceful_exit.py will manage exit.
 
+
 def main():
     """Main function handling command-line arguments."""
     global user_prefs
-    
+
     # Signal handler registration removed; handled globally by graceful_exit.py
-    
+
     # Removed redundant atexit handler; preference saving on interrupt
     # is handled by the signal handler in graceful_exit.py.
     # Normal exit (option 5) saves preferences explicitly.
-    
+
     args = parse_arguments()
-    
+
     # Configure logging
     log_level = logging.DEBUG if args.debug else logging.INFO
     configure_logging(log_level)
-    
+
     # Import use_user_preferences and set_prompt_preferences from prompt_generator
     from prompt_generator import use_user_preferences, set_prompt_preferences
-    
+
     # Load user preferences
     user_prefs = load_user_preferences()
-    
+
     # Check if we should use user preferences
     if args.dont_use_user_prefs:
         # Don't use user preferences if specified
         set_prompt_preferences(False)
-    
+
     # Apply command-line settings if provided
     if args.resolution:
         user_prefs.resolution = args.resolution
     if args.aspect_ratio:
         user_prefs.aspect_ratio = args.aspect_ratio
-    
+
     # Store whether to skip preview
-    user_prefs.skip_preview = args.skip_preview if hasattr(args, 'skip_preview') else False
+    user_prefs.skip_preview = (
+        args.skip_preview if hasattr(args, "skip_preview") else False
+    )
     # Also update wallpaper_settings for consistency
-    user_prefs.wallpaper_settings['skip_preview'] = user_prefs.skip_preview
-    
+    user_prefs.wallpaper_settings["skip_preview"] = user_prefs.skip_preview
+
     # Import preview functionality
     preview_func = None
     gui_backend = None
     try:
-        gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
+        gui_backend = user_prefs.wallpaper_settings.get("gui_preview_backend", "qt")
     except Exception:
-        gui_backend = 'qt'
-    
-    if gui_backend == 'qt':
+        gui_backend = "qt"
+
+    if gui_backend == "qt":
         try:
             from qt_preview import preview_image_gui as preview_func
         except ImportError:
-            print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+            print_warning(
+                "Qt preview backend selected but PySide6 (or PyQt5/6) not found."
+            )
             print_info("Please install PySide6: pip install PySide6")
             print_info("Falling back to no preview.")
             preview_func = None
-    elif gui_backend == 'tkinter':
+    elif gui_backend == "tkinter":
         try:
             from tkinter_preview import preview_image_gui as preview_func
         except ImportError:
             print_warning("Tkinter preview backend selected but Tkinter not available.")
-            print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+            print_info(
+                "Tkinter is usually included with Python, but may require a separate package on some Linux distributions."
+            )
             print_info("Falling back to no preview.")
             preview_func = None
     else:
-        print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+        print_warning(
+            f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview."
+        )
         preview_func = None
-    
+
     # List and preview images if requested
     if args.list_images:
         # Get list of images using helper function
         image_files = list_sorted_genimages("genimage")
-        
+
         if not image_files:
             print_warning("No images found in the genimage directory.")
             return
-        
+
         print_section("Generated Images")
         print_info(f"Found {len(image_files)} images in the genimage directory.")
-        
+
         # Display the images with their numbers
         for i, image_file in enumerate(image_files, 1):
             creation_time = datetime.fromtimestamp(
                 os.path.getmtime(os.path.join(genimage_dir, image_file))
             ).strftime("%Y-%m-%d %H:%M:%S")
             print(f"{i}: {image_file} - Generated: {creation_time}")
-        
+
         # Ask user which image to preview
         try:
             choice = get_validated_input(
-                f"Enter image number to preview (1-{len(image_files)}) or 'q' to quit", 
-                [str(i) for i in range(1, len(image_files) + 1)] + ['q']
+                f"Enter image number to preview (1-{len(image_files)}) or 'q' to quit",
+                [str(i) for i in range(1, len(image_files) + 1)] + ["q"],
             )
-            
-            if choice.lower() == 'q':
+
+            if choice.lower() == "q":
                 return
-            
+
             # Preview the selected image
             image_path = os.path.join(genimage_dir, image_files[int(choice) - 1])
             print_info(f"Previewing image: {image_files[int(choice) - 1]}")
-            
+
             # Use GUI preview
             if preview_func:
                 result = preview_func(image_path, set_wallpaper)
             else:
                 result = False
-            
+
             # If user chooses to set as wallpaper, do so
             if result:
                 print_info(f"Setting image as wallpaper: {image_path}")
@@ -1864,33 +2247,39 @@ def main():
                     print_success("Wallpaper set successfully!")
                 else:
                     print_error("Failed to set wallpaper")
-            
+
         except (ValueError, IndexError) as e:
             print_error(f"Invalid selection: {e}")
-        
+
         return
-    
+
     # Preview latest image if requested
     if args.preview_latest:
         # Get the latest image in genimage directory
-        genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
+        genimage_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "genimage"
+        )
         try:
             image_files = sorted(
-                [f for f in os.listdir(genimage_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))],
+                [
+                    f
+                    for f in os.listdir(genimage_dir)
+                    if f.lower().endswith((".png", ".jpg", ".jpeg"))
+                ],
                 key=lambda x: os.path.getmtime(os.path.join(genimage_dir, x)),
-                reverse=True
+                reverse=True,
             )
-            
+
             if not image_files:
                 print_warning("No images found in the genimage directory.")
                 return
-            
+
             # Get the latest image
             latest_image = image_files[0]
             image_path = os.path.join(genimage_dir, latest_image)
-            
+
             print_info(f"Previewing latest image: {latest_image}")
-            
+
             # Preview image with GUI
             if preview_func:
                 result = preview_func(image_path, set_wallpaper)
@@ -1898,24 +2287,24 @@ def main():
                 result = False
             if result:
                 print_success("Wallpaper set successfully!")
-            
+
         except (FileNotFoundError, IndexError) as e:
             print_error(f"Error accessing latest image: {e}")
-        
+
         return
-    
+
     # Preview specific image if requested
     if args.preview_image:
         image_path = args.preview_image
         # Use absolute path if needed
         if not os.path.isabs(image_path):
             image_path = os.path.abspath(image_path)
-        
+
         print_info(f"Previewing image: {image_path}")
         if not os.path.exists(image_path):
             print_error(f"Image file not found: {image_path}")
             return
-        
+
         # Preview image with GUI
         if preview_func:
             result = preview_func(image_path, set_wallpaper)
@@ -1924,7 +2313,7 @@ def main():
         if result:
             print_success("Wallpaper set successfully!")
         return
-    
+
     # Check for command-line specific operations
     if args.test_prompt:
         # Check if we should use user preferences
@@ -1934,7 +2323,7 @@ def main():
             generated_prompt = generate_prompt_gemini([args.test_prompt])
         print(f"Generated prompt: {generated_prompt}")
         return
-    
+
     if args.test_custom_prompt:
         if use_user_preferences:
             enhanced_prompt = enhance_custom_prompt(args.test_custom_prompt, user_prefs)
@@ -1942,7 +2331,7 @@ def main():
             enhanced_prompt = enhance_custom_prompt(args.test_custom_prompt)
         print(f"Enhanced prompt: {enhanced_prompt}")
         return
-    
+
     if args.prompt or args.random:
         # Generate with command-line parameters
         if args.no_generate:
@@ -1973,49 +2362,94 @@ def main():
             else:  # --random
                 generate_wallpaper(prompt_type="random")
         return
-    
+
     # No command-line arguments provided, check dependencies and start UI
     check_dependencies()
     main_menu.run_main_menu()
+
 
 def show_ascii_art():
     """Display ASCII art header."""
     print("\n" + "=" * 80)
     print(" " * 29 + "AI Wallpaper Generator" + " " * 29)
     print("=" * 80 + "\n")
-    print_info("Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI.")
+    print_info(
+        "Welcome to the AI Wallpaper Generator! This tool helps you create stunning wallpapers using AI."
+    )
 
 
 def select_random_tags():
     """Select a random set of tags from all available tag categories."""
-    all_tags = nature_tags + space_tags + sea_tags + flowers_tags + urban_tags + fantasy_tags + abstract_tags
+    all_tags = (
+        nature_tags
+        + space_tags
+        + sea_tags
+        + flowers_tags
+        + urban_tags
+        + fantasy_tags
+        + abstract_tags
+    )
     num_tags = random.randint(3, 6)  # Select between 3-6 tags
     return random.sample(all_tags, min(num_tags, len(all_tags)))
+
 
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="AI Wallpaper Generator")
     parser.add_argument("--prompt", help="Custom prompt for wallpaper generation")
-    parser.add_argument("--random", action="store_true", help="Generate a random wallpaper")
-    parser.add_argument("--test-prompt", help="Test prompt generation without creating an image")
+    parser.add_argument(
+        "--random", action="store_true", help="Generate a random wallpaper"
+    )
+    parser.add_argument(
+        "--test-prompt", help="Test prompt generation without creating an image"
+    )
     parser.add_argument("--test-custom-prompt", help="Test custom prompt enhancement")
     parser.add_argument("--resolution", help="Set resolution (e.g., '3840x2160')")
     parser.add_argument("--aspect-ratio", help="Set aspect ratio (e.g., '16:9')")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--dont-use-user-prefs", action="store_true", help="Do not use user preferences for prompt generation")
-    parser.add_argument("--no-generate", action="store_true", help="Don't generate the image, just show the prompt")
-    parser.add_argument("--no-preset", action="store_true", help="Skip loading the last preset on startup")
-    parser.add_argument("--skip-preview", action="store_true", help="Skip the image preview and set wallpaper directly")
-    parser.add_argument("--preview-image", help="Preview an image using the GUI without setting as wallpaper")
-    parser.add_argument("--preview-latest", action="store_true", help="Preview the latest generated image without setting as wallpaper")
-    parser.add_argument("--list-images", action="store_true", help="List all generated images and preview one by number")
+    parser.add_argument(
+        "--dont-use-user-prefs",
+        action="store_true",
+        help="Do not use user preferences for prompt generation",
+    )
+    parser.add_argument(
+        "--no-generate",
+        action="store_true",
+        help="Don't generate the image, just show the prompt",
+    )
+    parser.add_argument(
+        "--no-preset",
+        action="store_true",
+        help="Skip loading the last preset on startup",
+    )
+    parser.add_argument(
+        "--skip-preview",
+        action="store_true",
+        help="Skip the image preview and set wallpaper directly",
+    )
+    parser.add_argument(
+        "--preview-image",
+        help="Preview an image using the GUI without setting as wallpaper",
+    )
+    parser.add_argument(
+        "--preview-latest",
+        action="store_true",
+        help="Preview the latest generated image without setting as wallpaper",
+    )
+    parser.add_argument(
+        "--list-images",
+        action="store_true",
+        help="List all generated images and preview one by number",
+    )
     return parser.parse_args()
+
 
 def load_user_preferences():
     """Load user preferences using initialize_settings from wallpaper_settings."""
     # Import here to avoid circular imports
     from wallpaper_settings import initialize_settings
+
     return initialize_settings()
 
 
