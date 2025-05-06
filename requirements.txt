@@ -8,3 +8,8 @@ PyQt6>=6.4.0
 numpy>=1.24.0
 opencv-python-headless>=4.7.0.72
 scikit-image
+clrprint>=1.2.6
+PyQt5>=5.15.0
+
+# Note: 'clrprint' and 'PyQt5' added based on project imports in ui_utils.py and qt_preview.py respectively.
+# If both PyQt5 and PyQt6 are required/coexist, both are listed. If only one is needed for production, consider removing the other.

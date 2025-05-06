@@ -62,7 +62,7 @@ presets/*
 presets.json
 preset_backups/
 *.preset
-history/*
+history/history.db
 !history/.gitkeep
 history_backups/
 

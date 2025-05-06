@@ -80,7 +80,8 @@ def run_main_menu():
         elif choice == "4":
             run_tools_menu()
         elif choice == "5":
-            from wallpaper_generator import view_history
+            # Import view_history from the new SQLite-backed module
+            from history.history_manager import view_history
 
             view_history()
         elif choice.upper() == "E":
