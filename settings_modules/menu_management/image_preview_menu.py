@@ -8,20 +8,26 @@ from typing import List
 from datetime import datetime
 import os
 from ui_utils import (
-    print_section, print_info, print_warning, print_error, print_success,
-    get_validated_input
+    print_section,
+    print_info,
+    print_warning,
+    print_error,
+    print_success,
+    get_validated_input,
 )
+
 
 def run_image_preview_menu():
     """
     Display and preview recent generated images.
-    
+
     Returns:
         None
     """
     try:
         # Get list of images using helper function
         from wallpaper_generator import list_sorted_genimages
+
         image_files = list_sorted_genimages("genimage")
 
         if not image_files:
@@ -49,41 +55,50 @@ def run_image_preview_menu():
         gui_backend = None
         try:
             from settings_modules.settings_manager import get_preferences
-            user_prefs = get_preferences()
-            gui_backend = user_prefs.wallpaper_settings.get('gui_preview_backend', 'qt')
-        except Exception:
-            gui_backend = 'qt'
 
-        if gui_backend == 'qt':
+            user_prefs = get_preferences()
+            gui_backend = user_prefs.wallpaper_settings.get("gui_preview_backend", "qt")
+        except Exception:
+            gui_backend = "qt"
+
+        if gui_backend == "qt":
             try:
                 from qt_preview import preview_image_gui as preview_func
             except ImportError:
-                print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+                print_warning(
+                    "Qt preview backend selected but PySide6 (or PyQt5/6) not found."
+                )
                 print_info("Please install PySide6: pip install PySide6")
                 print_info("Falling back to no preview.")
                 preview_func = None
-        elif gui_backend == 'tkinter':
+        elif gui_backend == "tkinter":
             try:
                 from tkinter_preview import preview_image_gui as preview_func
             except ImportError:
-                print_warning("Tkinter preview backend selected but Tkinter not available.")
-                print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+                print_warning(
+                    "Tkinter preview backend selected but Tkinter not available."
+                )
+                print_info(
+                    "Tkinter is usually included with Python, but may require a separate package on some Linux distributions."
+                )
                 print_info("Falling back to no preview.")
                 preview_func = None
         else:
-            print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+            print_warning(
+                f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview."
+            )
             preview_func = None
 
         # Ask user which image to preview in a loop until they quit
         try:
             while True:
-                valid_choices = [str(i) for i in range(1, max_display + 1)] + ['q']
+                valid_choices = [str(i) for i in range(1, max_display + 1)] + ["q"]
                 choice = get_validated_input(
                     f"Enter image number to preview (1-{max_display}) or 'q' to quit",
-                    valid_choices
+                    valid_choices,
                 )
 
-                if choice.lower() == 'q':
+                if choice.lower() == "q":
                     return
 
                 # Preview the selected image - need full path
@@ -93,6 +108,7 @@ def run_image_preview_menu():
                 # Preview image with GUI
                 if preview_func:
                     from wallpaper_generator import set_wallpaper
+
                     result = preview_func(image_path, set_wallpaper)
                     if result:
                         print_success("Wallpaper set successfully!")

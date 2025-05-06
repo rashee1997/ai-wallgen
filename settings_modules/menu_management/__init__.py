@@ -14,12 +14,11 @@ from .advanced_options_menu import configure_advanced_options
 
 __all__ = [
     # Main menu
-    'manage_preferences',
-    
+    "manage_preferences",
     # Category menus
-    'manage_genres',
-    'manage_styles',
-    'manage_moods',
-    'manage_wallpaper_settings',
-    'configure_advanced_options',
+    "manage_genres",
+    "manage_styles",
+    "manage_moods",
+    "manage_wallpaper_settings",
+    "configure_advanced_options",
 ]

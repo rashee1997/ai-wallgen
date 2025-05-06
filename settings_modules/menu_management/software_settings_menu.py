@@ -1,9 +1,15 @@
 import logging
 from ui_utils import (
-    print_section, print_option, print_info, print_success, print_warning,
-    print_error, get_validated_input
+    print_section,
+    print_option,
+    print_info,
+    print_success,
+    print_warning,
+    print_error,
+    get_validated_input,
 )
 from ..settings_manager import get_preferences
+
 
 def manage_software_settings():
     """
@@ -16,11 +22,26 @@ def manage_software_settings():
     software_settings = user_prefs.imagen_settings.get("software_settings", {})
 
     suite_options = [
-        "Blender", "Maya", "Cinema 4D", "3ds Max", "Unreal Engine",
-        "ZBrush", "Houdini", "SketchUp", "KeyShot", "Custom"
+        "Blender",
+        "Maya",
+        "Cinema 4D",
+        "3ds Max",
+        "Unreal Engine",
+        "ZBrush",
+        "Houdini",
+        "SketchUp",
+        "KeyShot",
+        "Custom",
     ]
     renderer_options = [
-        "Cycles", "Eevee", "Arnold", "Octane", "Redshift", "V-Ray", "Corona", "Custom"
+        "Cycles",
+        "Eevee",
+        "Arnold",
+        "Octane",
+        "Redshift",
+        "V-Ray",
+        "Corona",
+        "Custom",
     ]
 
     while True:
@@ -38,31 +59,45 @@ def manage_software_settings():
         if choice == "1":
             for idx, val in enumerate(suite_options, 1):
                 print_option(str(idx), val)
-            idx_map = {str(i+1): v for i, v in enumerate(suite_options)}
+            idx_map = {str(i + 1): v for i, v in enumerate(suite_options)}
             idx_map["1"] = suite_options[0]
-            suite_choice = get_validated_input("Choose suite (or 'b' to cancel):", [str(i+1) for i in range(len(suite_options))] + ["b"])
+            suite_choice = get_validated_input(
+                "Choose suite (or 'b' to cancel):",
+                [str(i + 1) for i in range(len(suite_options))] + ["b"],
+            )
             if suite_choice != "b":
-                suite_val = suite_options[int(suite_choice)-1]
+                suite_val = suite_options[int(suite_choice) - 1]
                 if suite_val == "Custom":
-                    suite_val = get_validated_input("Enter custom suite:", allow_empty=False)
+                    suite_val = get_validated_input(
+                        "Enter custom suite:", allow_empty=False
+                    )
                 software_settings["suite"] = suite_val
                 print_success(f"Suite set to {suite_val}")
         elif choice == "2":
             for idx, val in enumerate(renderer_options, 1):
                 print_option(str(idx), val)
-            idx_map = {str(i+1): v for i, v in enumerate(renderer_options)}
+            idx_map = {str(i + 1): v for i, v in enumerate(renderer_options)}
             idx_map["1"] = renderer_options[0]
-            renderer_choice = get_validated_input("Choose renderer (or 'b' to cancel):", [str(i+1) for i in range(len(renderer_options))] + ["b"])
+            renderer_choice = get_validated_input(
+                "Choose renderer (or 'b' to cancel):",
+                [str(i + 1) for i in range(len(renderer_options))] + ["b"],
+            )
             if renderer_choice != "b":
-                renderer_val = renderer_options[int(renderer_choice)-1]
+                renderer_val = renderer_options[int(renderer_choice) - 1]
                 if renderer_val == "Custom":
-                    renderer_val = get_validated_input("Enter custom renderer:", allow_empty=False)
+                    renderer_val = get_validated_input(
+                        "Enter custom renderer:", allow_empty=False
+                    )
                 software_settings["renderer"] = renderer_val
                 print_success(f"Renderer set to {renderer_val}")
         elif choice == "3":
-            version_val = get_validated_input("Enter version string (e.g. '3.6', '2024', 'R25'):", allow_empty=True)
+            version_val = get_validated_input(
+                "Enter version string (e.g. '3.6', '2024', 'R25'):", allow_empty=True
+            )
             software_settings["version"] = version_val if version_val else None
-            print_success(f"Version set to {version_val if version_val else '[Not Set]'}")
+            print_success(
+                f"Version set to {version_val if version_val else '[Not Set]'}"
+            )
         elif choice == "c":
             software_settings["suite"] = None
             software_settings["renderer"] = None

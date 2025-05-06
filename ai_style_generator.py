@@ -1,27 +1,36 @@
 import os
+import sys
+import time
+import logging
+from typing import Optional, Dict
+
 import google.generativeai as genai
 from wallpaper_settings import get_preferences
-import sys
-from ui_utils import print_warning, print_section, print_info, get_validated_input, print_success
-import logging
-from typing import Optional, Dict, Any
-import json
-import time
+from ui_utils import (
+    print_warning,
+    print_section,
+    print_info,
+    get_validated_input,
+    print_success,
+)
 
-# Configure logging
+# Configure logging for this module
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# Configuration constants
+# --- Constants ---
+
 DEFAULT_MODEL = "gemini-2.5-flash-preview-04-17"
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 
-# Global state
+# --- Global State ---
+
 class GeminiState:
+    """Tracks Gemini initialization and related state."""
     def __init__(self):
         self.initialized = False
         self.api_key = None
@@ -31,19 +40,22 @@ class GeminiState:
 
 gemini_state = GeminiState()
 
-# Load configuration from environment
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        gemini_state.api_key = GEMINI_API_KEY
-        gemini_state.initialized = True
-        logger.info("Successfully initialized Gemini with API key")
-    except Exception as e:
-        logger.error(f"Failed to initialize Gemini: {e}")
-        gemini_state.last_error = str(e)
-else:
-    logger.warning("GEMINI_API_KEY environment variable not set. AI style generation will not work.")
+def _attempt_init_from_env():
+    """Initialize Gemini from environment variable if available."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if api_key:
+        try:
+            genai.configure(api_key=api_key)
+            gemini_state.api_key = api_key
+            gemini_state.initialized = True
+            logger.info("Successfully initialized Gemini with API key from environment.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini: {e}")
+            gemini_state.last_error = str(e)
+    else:
+        logger.warning("GEMINI_API_KEY environment variable not set. AI style generation will not work.")
+
+_attempt_init_from_env()
 
 def initialize_gemini(api_key: str) -> bool:
     """
@@ -55,58 +67,49 @@ def initialize_gemini(api_key: str) -> bool:
         gemini_state.api_key = api_key
         gemini_state.initialized = True
         gemini_state.retry_count = 0
-        logger.info("Successfully initialized Gemini with new API key")
+        logger.info("Successfully initialized Gemini with new API key.")
         return True
     except Exception as e:
         logger.error(f"Failed to initialize Gemini: {e}")
         gemini_state.last_error = str(e)
         return False
 
-def generate_style_prompt(category: str = None, style_type: str = "simple") -> str:
+def generate_style_prompt(category: Optional[str] = None, style_type: str = "simple") -> str:
     """
-    Generate a prompt for Gemini to create a random artistic style or descriptor.
-    If category is provided, constrain to that art style family.
-    If style_type is "simple", generate a style modifier (e.g. "vibrant cyberpunk neon").
-    If style_type is "detailed", ask for a richer style title plus 1-2 characteristic notes.
-    
-    Args:
-        category: Optional category to constrain the style generation
-        style_type: Type of style to generate ('simple' or 'detailed')
-    
-    Returns:
-        str: The generated prompt
+    Construct a prompt for Gemini to generate an art style or descriptor.
+
+    :param category: Optional art style category constraint.
+    :param style_type: 'simple' for a basic style, 'detailed' for a name + description.
+    :return: Prompt string for Gemini.
     """
     base = "You are an expert AI art style generator. "
-    if category == "illustration_cubist":
+    if category and category == "illustration_cubist":
         base += (
-            f"Limit the style to the 'cubist' style of illustration. "
-            f"Focus on the distinctive characteristics, techniques, or traditions of cubism in illustration."
+            "Limit the style to the 'cubist' style of illustration. "
+            "Focus on the distinctive characteristics, techniques, or traditions of cubism in illustration."
         )
     elif category:
         base += (
             f"Limit the style to the '{category}' category of art/design. "
-            f"Focus on the distinctive characteristics, techniques, or traditions of this category."
+            "Focus on the distinctive characteristics, techniques, or traditions of this category."
         )
-    
+
     if style_type == "simple":
         core = (
-            "Generate a single cohesive artistic style description that represents ONE clear visual concept. "
-            "The style must be simple and focused, avoiding multiple descriptive elements or comma-separated concepts. "
-            "Example good response: 'vibrant cyberpunk neon' "
-            "Example bad response: 'dark gothic, medieval architecture, with misty atmosphere' "
-            "Focus on ONE primary visual style without combining multiple themes or elements. "
-            "Keep it concise and avoid any additional explanations or variations."
+            "Generate one clear, focused artistic style description representing a single visual concept. "
+            "No multiple descriptive elements or comma-separated themes. "
+            "Good: 'vibrant cyberpunk neon'. "
+            "Bad: 'dark gothic, medieval architecture, with misty atmosphere'. "
+            "Focus on one main style. Output only the style phrase."
         )
     else:
         core = (
-            "Suggest a unique, evocative style name (2-4 words) as would be used for an AI art preset. "
-            "Below the name, in one sentence, describe 1-2 visual or technical hallmarks of this style, inspired by its category."
-            "Output structure: Name on first line; description on second line."
+            "Suggest a style name (2-4 words) suitable for an AI art preset, then—in one sentence on a new line—describe 1-2 visual or technical hallmarks of this style inspired by its category."
+            "First line: name. Second line: description."
         )
-    
     return base + core
 
-def generate_random_style(category: str = None, style_type: str = "simple") -> Optional[Dict[str, str]]:
+def generate_random_style(category: Optional[str] = None, style_type: str = "simple") -> Optional[Dict[str, str]]:
     """
     Use Gemini to generate a random style, optionally for a specific canonical category.
     Implements retry logic and improved error handling.
@@ -121,37 +124,32 @@ def generate_random_style(category: str = None, style_type: str = "simple") -> O
     """
     if not gemini_state.initialized:
         raise RuntimeError("Gemini model is not initialized. Please initialize with your API key first.")
-    
+
     prompt = generate_style_prompt(category, style_type)
-    
+
     for attempt in range(MAX_RETRIES):
         try:
             logger.info(f"Generating style (attempt {attempt + 1}/{MAX_RETRIES})")
             model = genai.GenerativeModel(DEFAULT_MODEL)
             response = model.generate_content(prompt)
-            
-            if not response:
-                logger.warning("No response received from Gemini")
-                continue
-                
+
             style_text = None
             if hasattr(response, 'text') and response.text:
                 style_text = response.text.strip()
             elif hasattr(response, 'candidates') and response.candidates:
                 style_text = response.candidates[0].content.parts[0].text.strip()
-            
-            if not style_text:
-                logger.warning("No style text found in response")
+            else:
+                logger.warning("No valid response from Gemini.")
                 continue
-                
+
             style_text = style_text.strip(' "\'\n\r')
-            
+
             if style_type == "simple":
                 return {"name": style_text, "description": ""}
-            elif "\n" in style_text:
+            if "\n" in style_text:
                 name, desc = style_text.split("\n", 1)
                 return {"name": name.strip(), "description": desc.strip()}
-            
+
         except Exception as e:
             gemini_state.retry_count += 1
             logger.error(f"Error generating style (attempt {attempt + 1}): {e}")
@@ -159,12 +157,11 @@ def generate_random_style(category: str = None, style_type: str = "simple") -> O
                 logger.info(f"Retrying in {RETRY_DELAY} seconds...")
                 time.sleep(RETRY_DELAY)
             else:
-                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts")
-                return None
-    
+                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts.")
+
     return None
 
-def generate_random_style_by_category(category: str):
+def generate_random_style_by_category(category: str) -> Optional[Dict[str, str]]:
     """
     Generate a random style strictly within a given canonical category (for use in templates/UI).
     Returns the style string.
@@ -172,19 +169,17 @@ def generate_random_style_by_category(category: str):
     return generate_random_style(category=category, style_type="simple")
 def canonicalize_style_name(style_name: str) -> str:
     """
-    Map a generated/entered style string to a canonical category for validation or downstream use.
-    Uses a more efficient and maintainable approach with dictionaries and sets.
-    
-    Args:
-        style_name: The style name to categorize
-    
-    Returns:
-        str: The canonical category name
+    Map a generated/entered style string to a canonical category name.
+
+    This matches incoming style to one of the system-recognized art categories, based on
+    word/phrase presence.
+
+    :param style_name: Human/computer-generated style string
+    :return: Canonical category, or "unknown"
     """
-    # Convert to lowercase and split into words for better matching
     words = set(style_name.lower().split())
-    
-    # Define category mappings using sets for efficient lookup
+
+    # Define sets for efficient category lookup
     category_mappings = {
         "oil_painting": {
             "oil", "impasto", "baroque", "impression", "post-impression", "romanticism",
@@ -216,12 +211,9 @@ def canonicalize_style_name(style_name: str) -> str:
         "fantasy": {"fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "castle"},
         "sci_fi": {"sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"}
     }
-    
-    # Check each category for matching terms
     for category, terms in category_mappings.items():
         if any(term in words for term in terms):
             return category
-    
     return "unknown"
 
 def handle_style_generation(user_prefs):

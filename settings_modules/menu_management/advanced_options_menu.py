@@ -6,8 +6,14 @@ import re
 import logging
 from typing import List, Tuple, Dict, Any, Optional
 from ui_utils import (
-    print_section, print_option, print_info, print_success,
-    print_warning, print_error, get_validated_input, print_colored
+    print_section,
+    print_option,
+    print_info,
+    print_success,
+    print_warning,
+    print_error,
+    get_validated_input,
+    print_colored,
 )
 from config import available_genres, STYLE_CATEGORIES
 from ..settings_manager import get_preferences
@@ -19,7 +25,9 @@ except ImportError:
 
 try:
     from ai_style_generator import (
-        handle_style_generation, initialize_gemini, AI_STYLE_GEN_AVAILABLE
+        handle_style_generation,
+        initialize_gemini,
+        AI_STYLE_GEN_AVAILABLE,
     )
 except ImportError:
     AI_STYLE_GEN_AVAILABLE = False
@@ -37,6 +45,7 @@ from .color_menu import manage_color_settings
 from .negative_prompt_menu import manage_negative_prompt
 from .imagen_settings_menu import manage_imagen_settings
 from .software_settings_menu import manage_software_settings
+
 
 def configure_advanced_options():
     """
@@ -61,10 +70,10 @@ def configure_advanced_options():
         print_option("15", "Reset to Default")
         print_option("16", "Software Settings & Renderer")
         print_option("b", "Back")
-        
+
         valid_options = [str(i) for i in range(1, 17)] + ["b"]
         choice = get_validated_input("Choose: ", valid_options)
-        
+
         menu_map = {
             "1": manage_genres,
             "2": manage_styles,
@@ -81,7 +90,7 @@ def configure_advanced_options():
             "13": view_current_settings,
             "14": generate_ai_preset,
             "15": reset_to_default,
-            "16": manage_software_settings
+            "16": manage_software_settings,
         }
         if choice in menu_map:
             menu_map[choice]()
@@ -100,6 +109,7 @@ def manage_prompt_generation_settings():
     else:
         print_warning("Prompt generator module not available.")
 
+
 def reset_all_settings_to_none():
     """
     Reset all user preferences settings to None or initial state.
@@ -116,23 +126,24 @@ def reset_all_settings_to_none():
     print_success("All settings have been reset to None.")
 
 
-
-
 def view_current_settings():
     """
     Display all current settings for the user.
     """
     user_prefs = get_preferences()
     # Display primary attributes for review
-    print_info("Preferred Genres: " + str(getattr(user_prefs, 'preferred_genres', [])))
-    print_info("Preferred Styles: " + str(getattr(user_prefs, 'preferred_styles', [])))
-    print_info("Preferred Moods: " + str(getattr(user_prefs, 'preferred_moods', [])))
-    print_info("Negative Prompts: " + str(getattr(user_prefs, 'negative_prompts', [])))
-    print_info("Wallpaper Settings: " + str(getattr(user_prefs, 'wallpaper_settings', {})))
-    print_info("Imagen Settings: " + str(getattr(user_prefs, 'imagen_settings', {})))
-    print_info("Aspect Ratio: " + str(getattr(user_prefs, 'aspect_ratio', '')))
-    print_info("Last Preset: " + str(getattr(user_prefs, 'last_preset', '')))
+    print_info("Preferred Genres: " + str(getattr(user_prefs, "preferred_genres", [])))
+    print_info("Preferred Styles: " + str(getattr(user_prefs, "preferred_styles", [])))
+    print_info("Preferred Moods: " + str(getattr(user_prefs, "preferred_moods", [])))
+    print_info("Negative Prompts: " + str(getattr(user_prefs, "negative_prompts", [])))
+    print_info(
+        "Wallpaper Settings: " + str(getattr(user_prefs, "wallpaper_settings", {}))
+    )
+    print_info("Imagen Settings: " + str(getattr(user_prefs, "imagen_settings", {})))
+    print_info("Aspect Ratio: " + str(getattr(user_prefs, "aspect_ratio", "")))
+    print_info("Last Preset: " + str(getattr(user_prefs, "last_preset", "")))
     input("\nPress Enter to continue...")
+
 
 def reset_to_default():
     """
@@ -143,6 +154,7 @@ def reset_to_default():
     user_prefs.save_preferences()
     print_success("Settings reset to default values.")
 
+
 def change_aspect_ratio():
     """
     Change the current preferred wallpaper aspect ratio.
@@ -152,8 +164,10 @@ def change_aspect_ratio():
     print_section("Available Aspect Ratios:")
     for idx, val in enumerate(options, 1):
         print_option(str(idx), val)
-    idx_map = {str(i+1): v for i, v in enumerate(options)}
-    choice = get_validated_input("Choose (or 'b' to cancel): ", list(idx_map.keys()) + ["b"])
+    idx_map = {str(i + 1): v for i, v in enumerate(options)}
+    choice = get_validated_input(
+        "Choose (or 'b' to cancel): ", list(idx_map.keys()) + ["b"]
+    )
     if choice != "b":
         value = idx_map[choice]
         user_prefs.aspect_ratio = value

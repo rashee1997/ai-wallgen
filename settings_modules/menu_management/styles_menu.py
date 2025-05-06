@@ -4,46 +4,99 @@ import os
 import logging
 from typing import List, Tuple
 from ui_utils import (
-    print_section, print_info, print_option, print_success, print_warning,
-    print_error, get_validated_input, print_menu_options, get_menu_choice
+    print_section,
+    print_info,
+    print_option,
+    print_success,
+    print_warning,
+    print_error,
+    get_validated_input,
+    print_menu_options,
+    get_menu_choice,
 )
 from config import STYLE_CATEGORIES
 from ..settings_manager import get_preferences
 
 try:
     from prompt_generator import generate_random_style_mix
+
     PROMPT_GEN_AVAILABLE = True
 except ImportError:
     PROMPT_GEN_AVAILABLE = False
 
 try:
     from ai_style_generator import handle_style_generation, initialize_gemini
+
     AI_STYLE_GEN_AVAILABLE = True
 except ImportError:
     AI_STYLE_GEN_AVAILABLE = False
 
+
 def manage_styles():
     """Manage user's preferred styles for wallpaper generation."""
-    user_prefs = get_preferences() # Get preferences object here
+    user_prefs = get_preferences()  # Get preferences object here
     predefined_style_categories = {
         "Artistic & Painterly": [
-            "oil_painting", "watercolor", "pastel", "impressionism", "expressionism", "pointillism", "divisionism", "art_nouveau", "art_deco", "cubism", "constructivism", "futurism", "surrealism", "pop_art", "ukiyo_e", "woodcut"
+            "oil_painting",
+            "watercolor",
+            "pastel",
+            "impressionism",
+            "expressionism",
+            "pointillism",
+            "divisionism",
+            "art_nouveau",
+            "art_deco",
+            "cubism",
+            "constructivism",
+            "futurism",
+            "surrealism",
+            "pop_art",
+            "ukiyo_e",
+            "woodcut",
         ],
         "Drawing & Sketching": [
-            "pencil_sketch", "charcoal", "ink_drawing", "sketch", "line_art"
+            "pencil_sketch",
+            "charcoal",
+            "ink_drawing",
+            "sketch",
+            "line_art",
         ],
         "Digital & Modern": [
-            "digital_art", "minimalist", "abstract", "geometric", "low_poly", "pixel_art", "glitch_art", "vaporwave", "retrowave"
+            "digital_art",
+            "minimalist",
+            "abstract",
+            "geometric",
+            "low_poly",
+            "pixel_art",
+            "glitch_art",
+            "vaporwave",
+            "retrowave",
         ],
         "Photographic & Realistic": [
-            "photograph", "cinematic", "hyperrealism", "realism", "double_exposure", "landscape"
+            "photograph",
+            "cinematic",
+            "hyperrealism",
+            "realism",
+            "double_exposure",
+            "landscape",
         ],
         "Illustrative & Cartoon": [
-            "cartoon", "comic_book", "manga", "anime", "graffiti", "paper_cut", "stained_glass"
+            "cartoon",
+            "comic_book",
+            "manga",
+            "anime",
+            "graffiti",
+            "paper_cut",
+            "stained_glass",
         ],
         "Themed & Fantasy": [
-            "fantasy", "sci_fi", "cyberpunk", "steampunk", "gothic", "isometric"
-        ]
+            "fantasy",
+            "sci_fi",
+            "cyberpunk",
+            "steampunk",
+            "gothic",
+            "isometric",
+        ],
     }
     while True:
         try:
@@ -82,7 +135,8 @@ def manage_styles():
                     print_success(f"Set preferred style to '{style}'")
             elif style_choice == "5":
                 confirm = get_validated_input(
-                    "Are you sure you want to clear the preferred style? (y/n)", ["y", "n"]
+                    "Are you sure you want to clear the preferred style? (y/n)",
+                    ["y", "n"],
                 )
                 if confirm == "y":
                     user_prefs.clear_style()
@@ -102,7 +156,10 @@ def manage_styles():
                         print_warning("Generated random style mix was empty.")
             elif style_choice == "2":
                 try:
-                    from ai_style_generator import handle_style_generation, initialize_gemini
+                    from ai_style_generator import (
+                        handle_style_generation,
+                        initialize_gemini,
+                    )
 
                     if "GEMINI_API_KEY" in os.environ:
                         initialize_gemini(os.environ["GEMINI_API_KEY"])
@@ -141,12 +198,17 @@ def manage_styles():
                     print_option("6", "Custom Movement")
                     print_option("b", "Back")
 
-                    movement_choice = get_validated_input("Select art movement (0-6, b)", ["0", "1", "2", "3", "4", "5", "6", "b"])
+                    movement_choice = get_validated_input(
+                        "Select art movement (0-6, b)",
+                        ["0", "1", "2", "3", "4", "5", "6", "b"],
+                    )
                     if movement_choice == "b":
                         break
 
                     if movement_choice == "0":
-                        user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = None
+                        user_prefs.imagen_settings.setdefault("style_settings", {})[
+                            "art_movement"
+                        ] = None
                         print_success("Art movement set to None")
                         user_prefs.save_preferences()
                         continue
@@ -154,8 +216,12 @@ def manage_styles():
                     if movement_choice == "6":
                         custom_movement = input("Enter custom art movement: ").strip()
                         if custom_movement:
-                            user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = custom_movement
-                            print_success(f"Custom art movement set to: {custom_movement}")
+                            user_prefs.imagen_settings.setdefault("style_settings", {})[
+                                "art_movement"
+                            ] = custom_movement
+                            print_success(
+                                f"Custom art movement set to: {custom_movement}"
+                            )
                             user_prefs.save_preferences()
                         continue
 
@@ -164,36 +230,42 @@ def manage_styles():
                         "2": "Impressionism",
                         "3": "Surrealism",
                         "4": "Cubism",
-                        "5": "Pop Art"
+                        "5": "Pop Art",
                     }
 
-                    user_prefs.imagen_settings.setdefault("style_settings", {})["art_movement"] = movements[movement_choice]
+                    user_prefs.imagen_settings.setdefault("style_settings", {})[
+                        "art_movement"
+                    ] = movements[movement_choice]
                     print_success(f"Art movement set to {movements[movement_choice]}")
                     user_prefs.save_preferences()
             elif style_choice == "7":
-                print_info("Set Style Era (e.g., Modern, Golden Age, Silver Age, or custom):")
+                print_info(
+                    "Set Style Era (e.g., Modern, Golden Age, Silver Age, or custom):"
+                )
                 print_option("1", "Modern")
                 print_option("2", "Golden Age")
                 print_option("3", "Silver Age")
                 print_option("4", "Custom Era")
                 print_option("b", "Back")
-                era_choice = get_validated_input("Select style era (1-4, b)", ["1", "2", "3", "4", "b"])
+                era_choice = get_validated_input(
+                    "Select style era (1-4, b)", ["1", "2", "3", "4", "b"]
+                )
                 if era_choice == "b":
                     pass
                 else:
-                    eras = {
-                        "1": "Modern",
-                        "2": "Golden Age",
-                        "3": "Silver Age"
-                    }
+                    eras = {"1": "Modern", "2": "Golden Age", "3": "Silver Age"}
                     if era_choice == "4":
                         custom_era = input("Enter custom style era: ").strip()
                         if custom_era:
-                            user_prefs.imagen_settings["style_settings"]["style_era"] = custom_era
+                            user_prefs.imagen_settings["style_settings"][
+                                "style_era"
+                            ] = custom_era
                             print_success(f"Style era set to: {custom_era}")
                             user_prefs.save_preferences()
                     else:
-                        user_prefs.imagen_settings["style_settings"]["style_era"] = eras[era_choice]
+                        user_prefs.imagen_settings["style_settings"]["style_era"] = (
+                            eras[era_choice]
+                        )
                         print_success(f"Style era set to: {eras[era_choice]}")
                         user_prefs.save_preferences()
             elif style_choice == "8":
@@ -215,22 +287,51 @@ def manage_styles():
                     print_option("14", "Custom Effects")
                     print_option("b", "Back")
 
-                    effects_choice = get_validated_input("Select post-processing effects (1-14, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "b"])
+                    effects_choice = get_validated_input(
+                        "Select post-processing effects (1-14, b)",
+                        [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7",
+                            "8",
+                            "9",
+                            "10",
+                            "11",
+                            "12",
+                            "13",
+                            "14",
+                            "b",
+                        ],
+                    )
                     if effects_choice == "b":
                         break
 
                     if effects_choice == "13":
-                        user_prefs.imagen_settings["style_settings"]["post_processing"] = []
+                        user_prefs.imagen_settings["style_settings"][
+                            "post_processing"
+                        ] = []
                         print_success("Post-processing effects cleared")
                         user_prefs.save_preferences()
                         continue
 
                     if effects_choice == "14":
-                        custom_effects = input("Enter custom post-processing effects (comma-separated): ").strip()
+                        custom_effects = input(
+                            "Enter custom post-processing effects (comma-separated): "
+                        ).strip()
                         if custom_effects:
-                            effects_list = [e.strip() for e in custom_effects.split(",")]
-                            user_prefs.imagen_settings["style_settings"]["post_processing"] = effects_list
-                            print_success(f"Custom post-processing effects set to: {', '.join(effects_list)}")
+                            effects_list = [
+                                e.strip() for e in custom_effects.split(",")
+                            ]
+                            user_prefs.imagen_settings["style_settings"][
+                                "post_processing"
+                            ] = effects_list
+                            print_success(
+                                f"Custom post-processing effects set to: {', '.join(effects_list)}"
+                            )
                             user_prefs.save_preferences()
                         continue
 
@@ -246,32 +347,79 @@ def manage_styles():
                         "9": ["sharpening"],
                         "10": ["tone_mapping"],
                         "11": ["hdr"],
-                        "12": ["light_leaks"]
+                        "12": ["light_leaks"],
                     }
 
-                    user_prefs.imagen_settings["style_settings"]["post_processing"] = effects[effects_choice]
-                    print_success(f"Post-processing effects set to {effects[effects_choice][0]}")
+                    user_prefs.imagen_settings["style_settings"]["post_processing"] = (
+                        effects[effects_choice]
+                    )
+                    print_success(
+                        f"Post-processing effects set to {effects[effects_choice][0]}"
+                    )
                     user_prefs.save_preferences()
             elif style_choice == "9":
                 predefined_style_categories = {
                     "Artistic & Painterly": [
-                        "oil_painting", "watercolor", "pastel", "impressionism", "expressionism", "pointillism", "divisionism", "art_nouveau", "art_deco", "cubism", "constructivism", "futurism", "surrealism", "pop_art", "ukiyo_e", "woodcut"
+                        "oil_painting",
+                        "watercolor",
+                        "pastel",
+                        "impressionism",
+                        "expressionism",
+                        "pointillism",
+                        "divisionism",
+                        "art_nouveau",
+                        "art_deco",
+                        "cubism",
+                        "constructivism",
+                        "futurism",
+                        "surrealism",
+                        "pop_art",
+                        "ukiyo_e",
+                        "woodcut",
                     ],
                     "Drawing & Sketching": [
-                        "pencil_sketch", "charcoal", "ink_drawing", "sketch", "line_art"
+                        "pencil_sketch",
+                        "charcoal",
+                        "ink_drawing",
+                        "sketch",
+                        "line_art",
                     ],
                     "Digital & Modern": [
-                        "digital_art", "minimalist", "abstract", "geometric", "low_poly", "pixel_art", "glitch_art", "vaporwave", "retrowave"
+                        "digital_art",
+                        "minimalist",
+                        "abstract",
+                        "geometric",
+                        "low_poly",
+                        "pixel_art",
+                        "glitch_art",
+                        "vaporwave",
+                        "retrowave",
                     ],
                     "Photographic & Realistic": [
-                        "photograph", "cinematic", "hyperrealism", "realism", "double_exposure", "landscape"
+                        "photograph",
+                        "cinematic",
+                        "hyperrealism",
+                        "realism",
+                        "double_exposure",
+                        "landscape",
                     ],
                     "Illustrative & Cartoon": [
-                        "cartoon", "comic_book", "manga", "anime", "graffiti", "paper_cut", "stained_glass"
+                        "cartoon",
+                        "comic_book",
+                        "manga",
+                        "anime",
+                        "graffiti",
+                        "paper_cut",
+                        "stained_glass",
                     ],
                     "Themed & Fantasy": [
-                        "fantasy", "sci_fi", "cyberpunk", "steampunk", "gothic", "isometric"
-                    ]
+                        "fantasy",
+                        "sci_fi",
+                        "cyberpunk",
+                        "steampunk",
+                        "gothic",
+                        "isometric",
+                    ],
                 }
                 while True:
                     print_info("Select a style category:")
@@ -280,7 +428,9 @@ def manage_styles():
                         print_info(f"{i}. {category}")
                     print_option("b", "Back")
 
-                    cat_choice = input("Enter category number or 'b' to go back: ").strip()
+                    cat_choice = input(
+                        "Enter category number or 'b' to go back: "
+                    ).strip()
                     if cat_choice == "b":
                         break
                     if not cat_choice.isdigit():
@@ -288,7 +438,9 @@ def manage_styles():
                         continue
                     cat_index = int(cat_choice)
                     if cat_index < 1 or cat_index > len(categories):
-                        print_warning("Invalid number. Please select a valid category number.")
+                        print_warning(
+                            "Invalid number. Please select a valid category number."
+                        )
                         continue
 
                     selected_category = categories[cat_index - 1]
@@ -300,15 +452,21 @@ def manage_styles():
                             print_info(f"{j}. {style}")
                         print_option("b", "Back")
 
-                        style_choice_sub = input("Enter style number or 'b' to go back: ").strip()
+                        style_choice_sub = input(
+                            "Enter style number or 'b' to go back: "
+                        ).strip()
                         if style_choice_sub == "b":
                             break
                         if not style_choice_sub.isdigit():
-                            print_warning("Invalid input. Please enter a number or 'b'.")
+                            print_warning(
+                                "Invalid input. Please enter a number or 'b'."
+                            )
                             continue
                         style_index = int(style_choice_sub)
                         if style_index < 1 or style_index > len(styles_in_category):
-                            print_warning("Invalid number. Please select a valid style number.")
+                            print_warning(
+                                "Invalid number. Please select a valid style number."
+                            )
                             continue
 
                         selected_style = styles_in_category[style_index - 1]
