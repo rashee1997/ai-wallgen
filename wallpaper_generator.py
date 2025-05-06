@@ -143,9 +143,62 @@ else:
     print_warning("\nGEMINI_API_KEY environment variable not set.")
     print_info("AI image generation will not be available.\n")
 
-# Create a cache for generated prompts
-prompt_cache = {}
+import collections
 
+# Create a cache for generated prompts
+class LRUCache(collections.OrderedDict):
+    def __init__(self, capacity=100):
+        super().__init__()
+        self.capacity = capacity
+
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key, value):
+        if key in self:
+            self.move_to_end(key)
+        super().__setitem__(key, value)
+        if len(self) > self.capacity:
+            oldest = next(iter(self))
+            del self[oldest]
+            logging.info(f"Evicted oldest prompt_cache entry: {oldest}")
+
+prompt_cache = LRUCache(capacity=100)
+
+# Ensure temporary image files are deleted after use
+import atexit
+import tempfile
+
+_temp_files = set()
+
+def _cleanup_temp_files():
+    for temp_file in list(_temp_files):
+        try:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                logging.info(f"Temporary file removed at exit: {temp_file}")
+            _temp_files.discard(temp_file)
+        except Exception as e:
+            logging.warning(f"Failed to remove temporary file at exit: {temp_file}, error: {e}")
+
+atexit.register(_cleanup_temp_files)
+
+def create_temp_image_file():
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    temp_file.close()  # Close the file handle immediately to avoid leaks
+    _temp_files.add(temp_file.name)
+    return temp_file.name  # Return the file path string instead of the file object
+
+def remove_temp_image_file(path):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+            _temp_files.discard(path)
+            logging.info(f"Temporary file removed: {path}")
+    except Exception as e:
+        logging.warning(f"Could not remove temporary file {path}: {e}")
 # Ensure cache directories exist
 os.makedirs("cache", exist_ok=True)
 os.makedirs("genimage", exist_ok=True)
