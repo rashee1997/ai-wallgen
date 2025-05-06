@@ -195,6 +195,8 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     style_name = style_name.replace('colour', 'color')
     # Normalize spaced variant "water color" to "watercolor"
     style_name = style_name.replace('water color', 'watercolor')
+    # Remove extra spaces
+    style_name = re.sub(r'\s+', ' ', style_name).strip()
     style_lower = style_name.lower()
 
     # Split and normalize tokens for hybrid detection
@@ -204,7 +206,8 @@ def categorize_style(style_name: Union[str, Dict]) -> Union[str, List[str]]:
     # --- Hybrid/Compound Style Mapping (Token-based) ---
     # Use imported hybrid_styles from style_category_catalog.py
     for hybrid_set, hybrid_cat in hybrid_styles.items():
-        if hybrid_set == tokens_set:
+        # Change exact match to subset match: if hybrid_set is subset of tokens_set
+        if hybrid_set.issubset(tokens_set):
             logging.info(f"Matched token-based hybrid style: {hybrid_cat} for '{style_name}'")
             return hybrid_cat
 

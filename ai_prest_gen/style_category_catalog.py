@@ -89,6 +89,10 @@ categories_keywords = {
     "illustration_graphic": ["illustration", "cartoon", "cartoony", "graphic novel"],
     "illustration_childrens": ["children's book", "picture book", "kids illustration"],
     "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
+    "illustration_cubist": ["cubist illustration", "geometric illustration", "fragmented illustration", "cubist", "cubism"],
+    "illustration_surreal": ["surreal illustration", "dreamlike illustration", "fantastical illustration", "surreal"],
+    "illustration_steampunk": ["steampunk illustration", "victorian sci-fi illustration", "industrial fantasy illustration", "steampunk"],
+
     "ink_punk": ["ink punk", "inkpunk", "hand-drawn sketchy", "unfinished look"],
 
     # --- Portrait Categories ---
@@ -200,6 +204,9 @@ categories_keywords = {
     "nightcore": ["nightcore", "fast paced art", "high energy art", "vibrant neon art"],
     "optic_art": ["optic art", "op art", "optical illusion art", "visual trickery"],
     "claymation": ["claymation", "stop motion", "clay animation", "clay figure animation"],
+    "art_deco_revival": ["art deco revival", "art deco revival", "art deco style", "art deco architecture"],
+    "isometric": ["isometric", "isometric view", "axonometric"],
+    "steampunk": ["steampunk", "victorian sci-fi", "industrial fantasy"],
     "unknown": []
 
 }
@@ -207,7 +214,8 @@ categories_keywords = {
 preferred_order = [
     "illustration_pixar", "illustration_disney", "illustration_vintage_cartoon",
     "illustration_anime_manga", "illustration_comic", "illustration_pixel",
-    "illustration_graphic", "illustration_childrens", "illustration_fantasy"
+    "illustration_graphic", "illustration_childrens", "illustration_fantasy",
+    "illustration_cubist", "illustration_surreal", "illustration_steampunk"
 ]
 
 # The list of all style categories for random generation
@@ -366,5 +374,25 @@ def instructions_for_category(style_category, base_style):
         - Style: Monochrome or limited color palette, focusing on line clarity.
         - Composition: Balanced use of negative space and precise line work.
         - Mood: Minimalist, graphic, stylized, elegant."""
+    elif style_category == "illustration_cubist":
+        return """*   **Illustration Cubist Focus:**
+        - Style: Fragmented, geometric forms with multiple perspectives.
+        - Technique: Emphasis on line work and abstract shapes.
+        - Mood: Analytical, abstract, and modernist."""
+    elif style_category == "illustration_surreal":
+        return """*   **Illustration Surreal Focus:**
+        - Style: Dreamlike, fantastical imagery with unexpected juxtapositions.
+        - Technique: Fluid line work and imaginative coloring.
+        - Mood: Mysterious, whimsical, and thought-provoking."""
+    elif style_category == "illustration_steampunk":
+        return """*   **Illustration Steampunk Focus:**
+        - Style: Victorian-era industrial aesthetics with mechanical elements.
+        - Technique: Detailed line work and muted color palettes.
+        - Mood: Nostalgic, adventurous, and intricate."""
+    elif style_category == "illustration_graphic":
+        return """*   **Illustration Graphic Focus:**
+        - Style: Bold shapes, flat colors, modern design elements.
+        - Technique: Clean lines, high contrast, and graphic composition.
+        - Mood: Contemporary, stylized, and impactful."""
     else:
         return "*   **General Guidance:** Choose settings matching the style, mood, and technical parameters."

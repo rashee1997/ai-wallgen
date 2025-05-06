@@ -77,7 +77,12 @@ def generate_style_prompt(category: str = None, style_type: str = "simple") -> s
         str: The generated prompt
     """
     base = "You are an expert AI art style generator. "
-    if category:
+    if category == "illustration_cubist":
+        base += (
+            f"Limit the style to the 'cubist' style of illustration. "
+            f"Focus on the distinctive characteristics, techniques, or traditions of cubism in illustration."
+        )
+    elif category:
         base += (
             f"Limit the style to the '{category}' category of art/design. "
             f"Focus on the distinctive characteristics, techniques, or traditions of this category."
@@ -200,6 +205,9 @@ def canonicalize_style_name(style_name: str) -> str:
         "illustration_pixel": {"pixel", "8-bit", "16-bit", "pixelated"},
         "illustration_anime_manga": {"anime", "manga", "shojo", "shonen", "seinen"},
         "illustration_comic": {"comic", "graphic novel"},
+        "illustration_cubist": {"cubist", "geometric", "fragmented"},
+        "illustration_surreal": {"surreal", "dreamlike", "fantastical"},
+        "illustration_steampunk": {"steampunk", "victorian", "industrial fantasy"},
         "photographic": {"photo", "realistic", "photograph", "film", "kodak", "dslr", "cinematic", "fujifilm", "shot on", "hyperreal"},
         "game_style": {"game", "engine", "unreal", "unity", "fps", "rpg", "rendered", "in-engine"},
         "digital_art": {"digital", "vector", "glitch", "vaporwave", "retrowave", "3d", "render"},

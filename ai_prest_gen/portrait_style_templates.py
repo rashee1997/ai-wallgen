@@ -200,12 +200,15 @@ def get_portrait_template(style_category: str) -> Dict[str, Any]:
         imagen_settings["quality_settings"]["resolution"] = "[ phone, social-media ]"
         imagen_settings["color_settings"]["palette_type"] = "[ trendy, filtered, real-life ]"
 
+
+
     else:
         # Fallback for unknown portrait styles
         imagen_settings["other_portrait_settings"] = {
             "notable_features": "[ key features ]",
             "notes": "[ description/notes ]"
         }
+
 
     # Add the imagen_settings to the base template
     base_template["imagen_settings"] = imagen_settings

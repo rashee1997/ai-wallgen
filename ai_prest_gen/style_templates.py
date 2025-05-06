@@ -563,10 +563,9 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     elif style_category == "surrealism":
         imagen_settings["surrealism_settings"] = {
             "conceptual_approach": "dreamlike, bizarre, unexpected juxtapositions",
-            "color_scheme": "muted, contrasting, symbolic",
+            "color_scheme": "[ muted, contrasting, symbolic ]",
             "composition": "layered, symbolic, narrative",
-            "mood": "mysterious, uncanny, thought-provoking",
-            "aesthetic_blend": "Surreal, dreamlike imagery with symbolic elements."
+            "mood": "[ mysterious, uncanny, thought-provoking ]"
         }
         imagen_settings["lighting_settings"]["lighting_type"] = "[ dramatic, chiaroscuro ]"
         imagen_settings["color_settings"]["palette_type"] = "[ muted, contrasting ]"
@@ -586,7 +585,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
             "simplicity_level": "extreme",
             "geometric_elements": ["circles", "lines", "squares"],
             "negative_space": "abundant",
-            "line_type": "clean, precise",
+            "line_type": "[ clean, precise ]",
             "color_count": "very limited",
             "composition_balance": "asymmetric or symmetric"
         }
@@ -609,6 +608,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         }
         imagen_settings["composition_settings"]["camera_angle"] = "[ game camera perspective ]"
         imagen_settings["composition_settings"]["view_mode"] = "[ first-person/third-person/isometric/top-down ]"
+        # Add polygonal detail for game styles
         imagen_settings["style_settings"]["poly_detail"] = "[ high/low/stylized ]"
         imagen_settings["style_settings"]["game_genre"] = "[ RPG/FPS/strategy/etc ]"
         imagen_settings["style_settings"]["game_era"] = "[ 8-bit/16-bit/modern/next-gen ]"
@@ -987,18 +987,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, reflective ]"
 
     elif style_category == "cyberpunk_portrait":
-        # Cyberpunk portrait style settings
-        imagen_settings["cyberpunk_settings"] = {
-            "character_type": ["hacker", "cybernetic", "corporate", "street samurai"],
-            "costuming": ["tech-infused", "streetwear", "corporate", "military"],
-            "cybernetic_elements": ["cybernetic implants", "digital overlays", "glowing tattoos", "enhanced eyes"],
-            "environment": ["urban", "industrial", "corporate", "underground"],
-            "mood": ["cold", "dystopian", "rebellious", "mysterious"]
-        }
-        imagen_settings["composition_settings"]["view_mode"] = "[ close-up, portrait ]"
-        imagen_settings["lighting_settings"]["light_quality"] = "[ harsh, neon, digital ]"
-    elif style_category == "cyberpunk_portrait":
-        # Cyberpunk portrait style settings
+        # Cyberpunk portrait style settings (deduplicated)
         imagen_settings["cyberpunk_settings"] = {
             "character_type": ["hacker", "cybernetic", "corporate", "street samurai"],
             "costuming": ["tech-infused", "streetwear", "corporate", "military"],
@@ -1032,6 +1021,66 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         }
         imagen_settings["composition_settings"]["view_mode"] = "[ technical, focused ]"
         imagen_settings["lighting_settings"]["light_quality"] = "[ digital, neon, technical ]"
+
+    elif style_category == "illustration_cubist":
+        imagen_settings["illustration_cubist_settings"] = {
+            "line_work": "[ style ]",
+            "coloring_technique": "[ technique ]",
+            "visual_style": "[ realistic/stylized/cartoony ]",
+            "detail_level": "[ detailed/simplified ]",
+            "subject_treatment": "[ literal/metaphorical ]"
+        }
+
+    elif style_category == "illustration_surreal":
+        imagen_settings["illustration_surreal_settings"] = {
+            "line_work": "[ style ]",
+            "coloring_technique": "[ technique ]",
+            "visual_style": "[ realistic/stylized/cartoony ]",
+            "detail_level": "[ detailed/simplified ]",
+            "subject_treatment": "[ literal/metaphorical ]"
+        }
+
+    elif style_category == "illustration_steampunk":
+        imagen_settings["illustration_steampunk_settings"] = {
+            "line_work": "[ style ]",
+            "coloring_technique": "[ technique ]",
+            "visual_style": "[ realistic/stylized/cartoony ]",
+            "detail_level": "[ detailed/simplified ]",
+            "subject_treatment": "[ literal/metaphorical ]"
+        }
+
+    elif style_category == "art_deco_revival":
+        imagen_settings["art_deco_revival_settings"] = {
+            "geometric_shapes": ["streamlined", "zigzag", "stepped"],
+            "ornate_details": ["sunbursts", "zigzags", "chevrons"],
+            "color_palette": ["gold", "black", "cream"],
+            "material_usage": ["chrome", "glass", "lacquer"]
+        }
+
+    elif style_category == "isometric":
+        imagen_settings["isometric_settings"] = {
+            "view_angle": ["45 degrees", "30 degrees"],
+            "object_arrangement": ["organized", "stacked", "layered"],
+            "color_palette": ["pastel", "muted", "vibrant"],
+            "detail_level": ["high", "medium", "low"]
+        }
+
+    elif style_category == "steampunk":
+        imagen_settings["steampunk_settings"] = {
+            "mechanical_elements": ["[ mechanical elements ]"],
+            "material_usage": ["[ material usage ]"],
+            "color_palette": ["[ color palette ]"],
+            "lighting_style": "[ lighting style ]"
+        }
+
+    elif style_category == "illustration_cubist":
+        imagen_settings["illustration_cubist_settings"] = {
+            "line_work": "[ style ]",
+            "coloring_technique": "[ technique ]",
+            "visual_style": "[ realistic/stylized/cartoony ]",
+            "detail_level": "[ detailed/simplified ]",
+            "subject_treatment": "[ literal/metaphorical ]"
+        }
 
     elif style_category == "game_retro":
         # Retro game style settings
