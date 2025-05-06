@@ -330,79 +330,11 @@ def generate_prompt_gemini(tags, user_prefs):
         # Consolidated Dynamic Negative Prompt Assembly (Refactored):
 
         # --- Step 1: Gather sources ---
-        # User preferences
-        user_negative_prompt = settings.get("negative_prompt", "")
-        user_terms = set(
-            term.strip() for term in user_negative_prompt.split(",") if term.strip()
-        )
+        # Compose a concise, AI-friendly negative prompt using new logic
+        from prompt_generator import enhance_negative_prompt
 
-        # Default system negatives
-        default_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs, poorly drawn face, twisted limbs, distorted face, bad proportions, bad anatomy"
-        default_terms = set(
-            term.strip() for term in default_negative_prompt.split(",") if term.strip()
-        )
+        negative_prompt = enhance_negative_prompt(settings.get("negative_prompt", ""))
 
-        # AI enhancement - covers general "artifact" and edge-case negatives
-        try:
-            from prompt_generator import enhance_negative_prompt
-
-            enhanced_user = (
-                enhance_negative_prompt(user_negative_prompt)
-                if user_negative_prompt
-                else ""
-            )
-            ai_terms = (
-                set(term.strip() for term in enhanced_user.split(",") if term.strip())
-                if enhanced_user
-                else set()
-            )
-        except Exception as e:
-            logging.warning(f"Avoided AI negative enhancement due to error: {e}")
-            ai_terms = set()
-
-        # Inferred subject/confounder negatives (Gemini-powered)
-        # Use text of the current (about-to-be-generated) positive prompt to extract subject-based negatives
-        try:
-            from prompt_generator import infer_subject_negatives_gemini
-
-            # Compose a temp positive prompt context from current tags plus user preference context for inference
-            # (This is before Gemini prompt full generation, but we can use tags + settings as a mini positive prompt)
-            subject_context = ", ".join(tags)
-            subject_negatives = set(infer_subject_negatives_gemini(subject_context))
-        except Exception as e:
-            logging.warning(f"Subject-specific Gemini negative inference failed: {e}")
-            subject_negatives = set()
-
-        # --- Step 2: Merge/deduplicate/reduce ---
-        # Priority: Subject-negatives > AI-enhanced > user terms > defaults. But should not drop core artifact protection.
-        all_terms = (
-            list(subject_negatives)
-            + list(ai_terms)
-            + list(user_terms)
-            + list(default_terms)
-        )
-        # Deduplicate and trim to unique, keep relative order of preference
-        seen = set()
-        ordered_unique = []
-        for term in all_terms:
-            key = term.lower()
-            if key and key not in seen:
-                seen.add(key)
-                ordered_unique.append(term)
-            if len(ordered_unique) >= 15:
-                break
-        # If <10, pad with defaults (system always needs some negatives)
-        min_neg = 10
-        if len(ordered_unique) < min_neg:
-            for term in default_terms:
-                key = term.lower()
-                if key not in seen:
-                    ordered_unique.append(term)
-                    if len(ordered_unique) >= min_neg:
-                        break
-
-        # --- Step 3: Assemble final string ---
-        negative_prompt = ", ".join(ordered_unique[:15])
 
         # Use PROMPT_INSTRUCTIONS from prompt_config.py with proper formatting
         instruction_context = PROMPT_INSTRUCTIONS.format(
@@ -1153,8 +1085,6 @@ def generate_wallpaper(
     """
     # Fetch the LATEST preferences right before generation
     user_prefs = get_preferences()
-    global generation_history  # Keep global for history
-
     # Create settings dictionary with all necessary parameters
     current_settings = {
         "prompt_type": prompt_type,
@@ -1171,7 +1101,8 @@ def generate_wallpaper(
     enhanced_prompt = None
     gemini_prompt = None
 
-    # Step 1: Generate or get the prompt
+    # Import add_to_history from new module
+    from history.history_manager import add_to_history
     if prompt_type == "custom" and custom_prompt:
         print_info("Processing custom prompt...")
         sanitized_prompt = sanitize_prompt(custom_prompt)
@@ -1403,7 +1334,7 @@ def generate_wallpaper(
         if prompt_type == "gemini"
         else select_random_tags() if prompt_type == "random" else []
     )
-    generation_history.add_entry(
+    add_to_history(
         {
             "prompt": custom_prompt if custom_prompt else gemini_prompt,
             "enhanced_prompt": enhanced_prompt,
@@ -1487,7 +1418,7 @@ def generate_wallpaper(
                         # Wait briefly to ensure prompt generation stability
                         import time
 
-                        time.sleep(2.0)  # Increased wait time for stability
+                        # Removed extra sleep -- no meaningful wait needed before sending prompt
                         model_version = "gemini-2.0-flash"
                         # Generate enhanced negative prompt using the current enhanced prompt as input
                         response = genai.GenerativeModel(
@@ -1538,7 +1469,7 @@ def generate_wallpaper(
                         # Wait briefly to ensure prompt generation stability
                         import time
 
-                        time.sleep(2.0)  # Increased wait time for stability
+                        # Removed extra sleep -- no meaningful wait needed before sending prompt
                         model_version = "gemini-2.0-flash"
                         response = genai.GenerativeModel(
                             model_version
@@ -1660,20 +1591,8 @@ def generate_wallpaper(
                                 )
 
                                 # Update generation history with the image filename
-                                if (
-                                    generation_history.history
-                                    and len(generation_history.history) > 0
-                                ):
-                                    filename = os.path.basename(cache_path)
-                                    generation_history.history[0][
-                                        "image_filename"
-                                    ] = filename
-                                    logging.info(
-                                        f"Updating history with image filename: {filename}"
-                                    )
-                                    generation_history.save_history()
-
-                                # Remove the temporary file after successful copy
+                                # No longer update history file/image_filename in new SQLite-based system
+                                # Just remove the temp file after successful copy
                                 try:
                                     os.remove(temp_image_path)
                                     logging.info(
