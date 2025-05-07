@@ -561,6 +561,21 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                                         json.dump(final_preset, f, indent=4)
                                     print_success(f"Generated unique preset: '{final_preset['preset_name']}'")
                                     print_success(f"Saved to: {preset_path}")
+                                    
+                                    # Also save to TinyDB database
+                                    try:
+                                        # Import here to avoid circular imports
+                                        from settings_modules.preset_management_tinydb import save_preset_tinydb
+                                        db_save_result = save_preset_tinydb(final_preset, final_preset['preset_name'])
+                                        if db_save_result:
+                                            logging.info(f"Preset '{final_preset['preset_name']}' also saved to database")
+                                        else:
+                                            logging.warning(f"Failed to save preset '{final_preset['preset_name']}' to database")
+                                    except ImportError as ie:
+                                        logging.warning(f"Could not import save_preset_tinydb: {ie}")
+                                    except Exception as dbe:
+                                        logging.warning(f"Error saving preset '{final_preset['preset_name']}' to database: {dbe}")
+                                    
                                     return preset_path
                                 else:
                                     print_warning("Preset saving cancelled by user.")

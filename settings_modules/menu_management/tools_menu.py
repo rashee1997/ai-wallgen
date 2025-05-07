@@ -44,15 +44,18 @@ def run_tools_menu():
         )
         if choice == "_INTERRUPTED_":
             return  # Exit if interrupted
+        if choice == "_EOF_":
+            print_info("Input closed. Returning to main menu.")
+            return
 
         if choice == "b":
             return
 
         if choice == "1":
             # Manage presets
-            from settings_modules.preset_management import manage_presets
+            from settings_modules.preset_management_tinydb import manage_presets_tinydb
 
-            manage_presets()
+            manage_presets_tinydb()
         elif choice == "2":
             # View generation history
             from wallpaper_generator import view_history

@@ -152,6 +152,9 @@ def get_menu_choice(prompt: str, valid_choices: List[str], allow_empty: bool = F
     except KeyboardInterrupt:
         print("\nOperation interrupted.")
         return "_INTERRUPTED_"
+    except EOFError:
+        print("\nInput closed. Exiting menu.")
+        return "_EOF_"
 
 def show_ascii_art():
     """

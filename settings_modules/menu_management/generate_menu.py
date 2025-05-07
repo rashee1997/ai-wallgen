@@ -20,7 +20,7 @@ from ui_utils import (
 
 # Import from other internal modules
 from settings_modules.settings_manager import get_preferences
-from settings_modules.preset_management import load_preset
+from settings_modules.preset_management_tinydb import load_preset_tinydb
 from settings_modules.menu_management.advanced_options_menu import (
     configure_advanced_options,
 )
@@ -69,7 +69,7 @@ def run_generate_menu(generate_only: bool = False):
 
         if choice == "5":
             # Load preset menu
-            settings = load_preset()
+            settings = load_preset_tinydb()
             if settings:
                 from wallpaper_generator import generate_wallpaper
 

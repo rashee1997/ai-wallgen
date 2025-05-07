@@ -2130,6 +2130,11 @@ def parse_args():
         action="store_true",
         help="List all generated images and preview one by number",
     )
+    parser.add_argument(
+        "--test-search-presets",
+        action="store_true",
+        help="Test the preset search functionality from CLI",
+    )
     return parser.parse_args()
 
 

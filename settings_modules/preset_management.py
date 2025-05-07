@@ -550,7 +550,7 @@ def load_preset():
 
 def save_preset(settings: Dict[str, Any], preset_name: str) -> bool:
     """
-    Save settings to a preset file.
+    Save settings to a preset file and TinyDB database.
 
     Args:
         settings: Dictionary containing settings to save
@@ -560,12 +560,27 @@ def save_preset(settings: Dict[str, Any], preset_name: str) -> bool:
         bool: True if successful, False otherwise
     """
     try:
+        # Save to file system
         preset_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets") # Consistent path finding
         os.makedirs(preset_dir, exist_ok=True) # Ensure presets directory exists
         preset_path = os.path.join(preset_dir, f"{preset_name}.json")
 
         with open(preset_path, "w") as f:
             json.dump(settings, f, indent=4)
+            
+        # Also save to TinyDB database
+        try:
+            from .preset_management_tinydb import save_preset_tinydb
+            db_save_result = save_preset_tinydb(settings, preset_name)
+            if not db_save_result:
+                logging.warning(f"Preset '{preset_name}' saved to file but failed to save to database")
+        except ImportError as ie:
+            logging.warning(f"Could not import save_preset_tinydb: {ie}")
+            logging.warning(f"Preset '{preset_name}' saved to file but not to database")
+        except Exception as dbe:
+            logging.warning(f"Error saving preset '{preset_name}' to database: {dbe}")
+            logging.warning(f"Preset '{preset_name}' saved to file but not to database")
+            
         return True
     except (IOError, OSError) as e:
         print_error(f"Error saving preset '{preset_name}': {e}")
