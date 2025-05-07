@@ -103,3 +103,5 @@ prompt
 generate_prompts.json
 docs/git-commit-guide.md
 bkup/
+prompt_gen/
+wall_gen/
