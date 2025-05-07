@@ -14,7 +14,6 @@ import subprocess
 import shlex
 import logging
 import sys
-import time
 import threading
 import re
 
@@ -1891,47 +1890,390 @@ exiting = False
 # Removed local signal handler; global handler in graceful_exit.py will manage exit.
 
 
+def generate_prompt(tags, user_prefs, prompt_type):
+    """Generate prompt based on type."""
+    from prompt_generator import generate_prompt_gemini, generate_prompt_random, enhance_custom_prompt, enhance_negative_prompt
+
+    if prompt_type == "custom":
+        print_info("Processing custom prompt...")
+        sanitized_prompt = sanitize_prompt(tags)
+        gemini_prompt = sanitized_prompt
+
+        if use_user_preferences:
+            enhanced_prompt = enhance_custom_prompt(sanitized_prompt, user_prefs)
+        else:
+            enhanced_prompt = enhance_custom_prompt(sanitized_prompt)
+
+        if not enhanced_prompt:
+            print_warning("Failed to enhance custom prompt, using original prompt.")
+            enhanced_prompt = sanitized_prompt
+
+        if enhanced_prompt is None:
+            enhanced_prompt = sanitized_prompt
+
+    elif prompt_type == "random":
+        print_info("Generating random prompt...")
+        random_tags = select_random_tags()
+
+        if use_user_preferences:
+            gemini_prompt = generate_prompt_random(random_tags, user_prefs)
+            enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
+            print(f"Enhanced random prompt: {enhanced_prompt}")
+        else:
+            gemini_prompt = generate_prompt_random(random_tags)
+            enhanced_prompt = enhance_custom_prompt(gemini_prompt)
+            print(f"Enhanced random prompt: {enhanced_prompt}")
+
+    else:  # gemini
+        print_section("Generating AI Prompt")
+        print_info("Using Google's Gemini AI to create a unique wallpaper prompt...")
+        all_tags = (
+            nature_tags
+            + space_tags
+            + sea_tags
+            + flowers_tags
+            + urban_tags
+            + fantasy_tags
+            + abstract_tags
+        )
+
+        user_tags = []
+        if use_user_preferences and user_prefs.preferred_genres:
+            user_tags.extend(user_prefs.preferred_genres)
+            print_info(f"Using your preferred genres: {', '.join(user_prefs.preferred_genres)}")
+
+        if tags:
+            mood = tags if isinstance(tags, str) else None
+            if mood:
+                mood_related = [tag for tag in mood_tags if mood in tag or tag.startswith(mood)]
+                if mood_related:
+                    user_tags.extend(mood_related[:2])
+                    print_info(f"Adding tags for your selected mood: {mood}")
+
+        if tags:
+            style = tags if isinstance(tags, str) else None
+            if style and style in style_to_tags:
+                available_tags = style_to_tags[style]
+                user_tags.extend(random.sample(available_tags, min(2, len(available_tags))))
+                print_info(f"Adding tags for your selected style: {style}")
+
+        tags_to_use = user_tags if user_tags else all_tags
+
+        show_spinner("Analyzing your preferences and generating ideas...", 1)
+
+        if use_user_preferences:
+            gemini_prompt = generate_prompt_gemini(tags_to_use, user_prefs)
+        else:
+            gemini_prompt = generate_prompt_gemini(tags_to_use)
+
+        if not gemini_prompt:
+            print_warning("Gemini encountered an issue. Generating a random prompt instead...")
+            if use_user_preferences:
+                gemini_prompt = generate_prompt_random(tags_to_use, user_prefs)
+            else:
+                gemini_prompt = generate_prompt_random(tags_to_use)
+            print_info("Here's your random prompt:")
+        else:
+            print_success("AI prompt generated successfully!")
+
+        enhanced_prompt = gemini_prompt
+        print_info("Review your prompt below:")
+
+    return enhanced_prompt
+
+
+def preview_and_set_wallpaper(image_path, user_prefs):
+    """Preview the image and set wallpaper based on user preferences."""
+    print_section("Preview and Set Wallpaper")
+
+    if not os.path.isabs(image_path):
+        image_path = os.path.abspath(image_path)
+
+    if not os.path.exists(image_path):
+        logging.warning(f"Wallpaper file not found at {image_path} before preview")
+        print_warning(f"Wallpaper file may be missing: {image_path}")
+        return False
+
+    skip_preview = getattr(user_prefs, "skip_preview", False) or user_prefs.wallpaper_settings.get("skip_preview", False)
+
+    if skip_preview:
+        print_info("Preview skipped. Applying wallpaper directly...")
+        logging.info("Image preview skipped due to user preference")
+        set_wallpaper_confirmed = True
+    else:
+        print_info("Preview your new wallpaper before setting it...")
+        logging.info(f"Previewing wallpaper with path: {image_path}")
+
+        gui_backend = user_prefs.wallpaper_settings.get("gui_preview_backend", "qt")
+        preview_func = None
+
+        if gui_backend == "qt":
+            try:
+                from qt_preview import preview_image_gui as preview_func
+            except ImportError:
+                print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
+                print_info("Please install PySide6: pip install PySide6")
+                print_info("Falling back to no preview.")
+                preview_func = None
+        elif gui_backend == "tkinter":
+            try:
+                from tkinter_preview import preview_image_gui as preview_func
+            except ImportError:
+                print_warning("Tkinter preview backend selected but Tkinter not available.")
+                print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
+                print_info("Falling back to no preview.")
+                preview_func = None
+        else:
+            print_warning(f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview.")
+            preview_func = None
+
+        set_wallpaper_confirmed = False
+        if preview_func:
+            try:
+                set_wallpaper_confirmed = preview_func(image_path, set_wallpaper)
+                if set_wallpaper_confirmed:
+                    print_success("Wallpaper successfully applied!")
+                    print_info(f"Your desktop is now displaying: {os.path.basename(image_path)}")
+                    logging.info(f"Wallpaper successfully set to: {image_path}")
+                    return True
+            except Exception as e:
+                print_error(f"GUI preview failed: {e}")
+                print_info("Please check that your system supports GUI preview")
+                set_wallpaper_confirmed = False
+        else:
+            print_info("GUI preview is not available or failed to load. Skipping preview.")
+            set_wallpaper_confirmed = False
+
+        if set_wallpaper_confirmed:
+            logging.info("User confirmed to set the wallpaper after preview")
+        else:
+            logging.info("User decided not to set the wallpaper after preview, or preview was skipped/failed.")
+
+    if not skip_preview and not set_wallpaper_confirmed:
+        print_info("Wallpaper not set. You can find the generated image at:")
+        print_info(image_path)
+        return True
+    elif set_wallpaper_confirmed:
+        result = set_wallpaper(image_path)
+        if result:
+            print_success("Wallpaper successfully applied!")
+            print_info(f"Your desktop is now displaying: {os.path.basename(image_path)}")
+            logging.info(f"Wallpaper successfully set to: {image_path}")
+            return True
+        else:
+            print_warning("Wallpaper may not have been set correctly.")
+            print_info("Please check your desktop settings manually.")
+            return False
+    elif skip_preview:
+        result = set_wallpaper(image_path)
+        if result:
+            print_success("Wallpaper successfully applied!")
+            print_info(f"Your desktop is now displaying: {os.path.basename(image_path)}")
+            logging.info(f"Wallpaper successfully set to: {image_path}")
+            return True
+        else:
+            print_warning("Wallpaper may not have been set correctly.")
+            print_info("Please check your desktop settings manually.")
+            return False
+    else:
+        print_info("Wallpaper not set. You can find the generated image at:")
+        print_info(image_path)
+        return True
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="AI Wallpaper Generator")
+    parser.add_argument("--prompt", help="Custom prompt for wallpaper generation")
+    parser.add_argument(
+        "--random", action="store_true", help="Generate a random wallpaper"
+    )
+    parser.add_argument(
+        "--test-prompt", help="Test prompt generation without creating an image"
+    )
+    parser.add_argument("--test-custom-prompt", help="Test custom prompt enhancement")
+    parser.add_argument("--resolution", help="Set resolution (e.g., '3840x2160')")
+    parser.add_argument("--aspect-ratio", help="Set aspect ratio (e.g., '16:9')")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--dont-use-user-prefs",
+        action="store_true",
+        help="Do not use user preferences for prompt generation",
+    )
+    parser.add_argument(
+        "--no-generate",
+        action="store_true",
+        help="Don't generate the image, just show the prompt",
+    )
+    parser.add_argument(
+        "--no-preset",
+        action="store_true",
+        help="Skip loading the last preset on startup",
+    )
+    parser.add_argument(
+        "--skip-preview",
+        action="store_true",
+        help="Skip the image preview and set wallpaper directly",
+    )
+    parser.add_argument(
+        "--preview-image",
+        help="Preview an image using the GUI without setting as wallpaper",
+    )
+    parser.add_argument(
+        "--preview-latest",
+        action="store_true",
+        help="Preview the latest generated image without setting as wallpaper",
+    )
+    parser.add_argument(
+        "--list-images",
+        action="store_true",
+        help="List all generated images and preview one by number",
+    )
+    return parser.parse_args()
+
+
+def configure_logging(level=logging.INFO):
+    """Configure logging with file and console handlers."""
+    # Configure file handler
+    file_handler = logging.FileHandler("wallpaper_generator.log")
+    file_handler.setLevel(level)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    )
+
+    # Get root logger and clear any existing handlers
+    root_logger = logging.getLogger()
+    root_logger.handlers = []
+
+    # Set new level and add file handler only
+    root_logger.setLevel(level)
+    root_logger.addHandler(file_handler)
+
+    logging.debug("Logging configured with level: %s", level)
+
+
+def handle_list_images(user_prefs, preview_func):
+    """Handle listing and previewing images."""
+    image_files = list_sorted_genimages("genimage")
+
+    if not image_files:
+        print_warning("No images found in the genimage directory.")
+        return
+
+    print_section("Generated Images")
+    print_info(f"Found {len(image_files)} images in the genimage directory.")
+
+    for i, image_file in enumerate(image_files, 1):
+        creation_time = datetime.fromtimestamp(
+            os.path.getmtime(os.path.join("genimage", image_file))
+        ).strftime("%Y-%m-%d %H:%M:%S")
+        print(f"{i}: {image_file} - Generated: {creation_time}")
+
+    try:
+        choice = get_validated_input(
+            f"Enter image number to preview (1-{len(image_files)}) or 'q' to quit",
+            [str(i) for i in range(1, len(image_files) + 1)] + ["q"],
+        )
+
+        if choice.lower() == "q":
+            return
+
+        image_path = os.path.join("genimage", image_files[int(choice) - 1])
+        print_info(f"Previewing image: {image_files[int(choice) - 1]}")
+
+        if preview_func:
+            result = preview_func(image_path, set_wallpaper)
+        else:
+            result = False
+
+        if result:
+            print_info(f"Setting image as wallpaper: {image_path}")
+            if set_wallpaper(image_path):
+                print_success("Wallpaper set successfully!")
+            else:
+                print_error("Failed to set wallpaper")
+
+    except (ValueError, IndexError) as e:
+        print_error(f"Invalid selection: {e}")
+
+
+def handle_preview_latest(user_prefs, preview_func):
+    """Handle previewing the latest generated image."""
+    genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
+    try:
+        image_files = sorted(
+            [
+                f
+                for f in os.listdir(genimage_dir)
+                if f.lower().endswith((".png", ".jpg", ".jpeg"))
+            ],
+            key=lambda x: os.path.getmtime(os.path.join(genimage_dir, x)),
+            reverse=True,
+        )
+
+        if not image_files:
+            print_warning("No images found in the genimage directory.")
+            return
+
+        latest_image = image_files[0]
+        image_path = os.path.join(genimage_dir, latest_image)
+
+        print_info(f"Previewing latest image: {latest_image}")
+
+        if preview_func:
+            result = preview_func(image_path, set_wallpaper)
+        else:
+            result = False
+        if result:
+            print_success("Wallpaper set successfully!")
+
+    except (FileNotFoundError, IndexError) as e:
+        print_error(f"Error accessing latest image: {e}")
+
+
+def handle_preview_image(image_path, preview_func):
+    """Handle previewing a specific image."""
+    if not os.path.isabs(image_path):
+        image_path = os.path.abspath(image_path)
+
+    print_info(f"Previewing image: {image_path}")
+    if not os.path.exists(image_path):
+        print_error(f"Image file not found: {image_path}")
+        return
+
+    if preview_func:
+        result = preview_func(image_path, set_wallpaper)
+    else:
+        result = False
+    if result:
+        print_success("Wallpaper set successfully!")
+
+
 def main():
     """Main function handling command-line arguments."""
     global user_prefs
 
-    # Signal handler registration removed; handled globally by graceful_exit.py
+    args = parse_args()
 
-    # Removed redundant atexit handler; preference saving on interrupt
-    # is handled by the signal handler in graceful_exit.py.
-    # Normal exit (option 5) saves preferences explicitly.
-
-    args = parse_arguments()
-
-    # Configure logging
     log_level = logging.DEBUG if args.debug else logging.INFO
     configure_logging(log_level)
 
-    # Import use_user_preferences and set_prompt_preferences from prompt_generator
     from prompt_generator import use_user_preferences, set_prompt_preferences
 
-    # Load user preferences
     user_prefs = load_user_preferences()
 
-    # Check if we should use user preferences
     if args.dont_use_user_prefs:
-        # Don't use user preferences if specified
         set_prompt_preferences(False)
 
-    # Apply command-line settings if provided
     if args.resolution:
         user_prefs.resolution = args.resolution
     if args.aspect_ratio:
         user_prefs.aspect_ratio = args.aspect_ratio
 
-    # Store whether to skip preview
-    user_prefs.skip_preview = (
-        args.skip_preview if hasattr(args, "skip_preview") else False
-    )
-    # Also update wallpaper_settings for consistency
+    user_prefs.skip_preview = args.skip_preview if hasattr(args, "skip_preview") else False
     user_prefs.wallpaper_settings["skip_preview"] = user_prefs.skip_preview
 
-    # Import preview functionality
     preview_func = None
     gui_backend = None
     try:
@@ -1939,148 +2281,19 @@ def main():
     except Exception:
         gui_backend = "qt"
 
-    if gui_backend == "qt":
-        try:
-            from qt_preview import preview_image_gui as preview_func
-        except ImportError:
-            print_warning(
-                "Qt preview backend selected but PySide6 (or PyQt5/6) not found."
-            )
-            print_info("Please install PySide6: pip install PySide6")
-            print_info("Falling back to no preview.")
-            preview_func = None
-    elif gui_backend == "tkinter":
-        try:
-            from tkinter_preview import preview_image_gui as preview_func
-        except ImportError:
-            print_warning("Tkinter preview backend selected but Tkinter not available.")
-            print_info(
-                "Tkinter is usually included with Python, but may require a separate package on some Linux distributions."
-            )
-            print_info("Falling back to no preview.")
-            preview_func = None
-    else:
-        print_warning(
-            f"Unknown GUI preview backend specified: {gui_backend}. Falling back to no preview."
-        )
-        preview_func = None
-
-    # List and preview images if requested
     if args.list_images:
-        # Get list of images using helper function
-        image_files = list_sorted_genimages("genimage")
-
-        if not image_files:
-            print_warning("No images found in the genimage directory.")
-            return
-
-        print_section("Generated Images")
-        print_info(f"Found {len(image_files)} images in the genimage directory.")
-
-        # Display the images with their numbers
-        for i, image_file in enumerate(image_files, 1):
-            creation_time = datetime.fromtimestamp(
-                os.path.getmtime(os.path.join(genimage_dir, image_file))
-            ).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"{i}: {image_file} - Generated: {creation_time}")
-
-        # Ask user which image to preview
-        try:
-            choice = get_validated_input(
-                f"Enter image number to preview (1-{len(image_files)}) or 'q' to quit",
-                [str(i) for i in range(1, len(image_files) + 1)] + ["q"],
-            )
-
-            if choice.lower() == "q":
-                return
-
-            # Preview the selected image
-            image_path = os.path.join(genimage_dir, image_files[int(choice) - 1])
-            print_info(f"Previewing image: {image_files[int(choice) - 1]}")
-
-            # Use GUI preview
-            if preview_func:
-                result = preview_func(image_path, set_wallpaper)
-            else:
-                result = False
-
-            # If user chooses to set as wallpaper, do so
-            if result:
-                print_info(f"Setting image as wallpaper: {image_path}")
-                if set_wallpaper(image_path):
-                    print_success("Wallpaper set successfully!")
-                else:
-                    print_error("Failed to set wallpaper")
-
-        except (ValueError, IndexError) as e:
-            print_error(f"Invalid selection: {e}")
-
+        handle_list_images(user_prefs, preview_func)
         return
 
-    # Preview latest image if requested
     if args.preview_latest:
-        # Get the latest image in genimage directory
-        genimage_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "genimage"
-        )
-        try:
-            image_files = sorted(
-                [
-                    f
-                    for f in os.listdir(genimage_dir)
-                    if f.lower().endswith((".png", ".jpg", ".jpeg"))
-                ],
-                key=lambda x: os.path.getmtime(os.path.join(genimage_dir, x)),
-                reverse=True,
-            )
-
-            if not image_files:
-                print_warning("No images found in the genimage directory.")
-                return
-
-            # Get the latest image
-            latest_image = image_files[0]
-            image_path = os.path.join(genimage_dir, latest_image)
-
-            print_info(f"Previewing latest image: {latest_image}")
-
-            # Preview image with GUI
-            if preview_func:
-                result = preview_func(image_path, set_wallpaper)
-            else:
-                result = False
-            if result:
-                print_success("Wallpaper set successfully!")
-
-        except (FileNotFoundError, IndexError) as e:
-            print_error(f"Error accessing latest image: {e}")
-
+        handle_preview_latest(user_prefs, preview_func)
         return
 
-    # Preview specific image if requested
     if args.preview_image:
-        image_path = args.preview_image
-        # Use absolute path if needed
-        if not os.path.isabs(image_path):
-            image_path = os.path.abspath(image_path)
-
-        print_info(f"Previewing image: {image_path}")
-        if not os.path.exists(image_path):
-            print_error(f"Image file not found: {image_path}")
-            return
-
-        # Preview image with GUI
-        if preview_func:
-            result = preview_func(image_path, set_wallpaper)
-        else:
-            result = False
-        if result:
-            print_success("Wallpaper set successfully!")
+        handle_preview_image(args.preview_image, preview_func)
         return
 
-    # Check for command-line specific operations
     if args.test_prompt:
-        # Check if we should use user preferences
         if use_user_preferences:
             generated_prompt = generate_prompt_gemini([args.test_prompt], user_prefs)
         else:
@@ -2097,37 +2310,30 @@ def main():
         return
 
     if args.prompt or args.random:
-        # Generate with command-line parameters
         if args.no_generate:
-            # Only generate/test prompt, but don't generate image
             if args.prompt:
                 if use_user_preferences:
                     enhanced_prompt = enhance_custom_prompt(args.prompt, user_prefs)
                 else:
                     enhanced_prompt = enhance_custom_prompt(args.prompt)
                 print(f"Enhanced prompt: {enhanced_prompt}")
-            else:  # --random
-                # Use select_random_tags to get a subset of tags rather than all tags
+            else:
                 random_tags = select_random_tags()
                 if use_user_preferences:
                     gemini_prompt = generate_prompt_random(random_tags, user_prefs)
-                    # Enhance the random prompt to make it more detailed
                     enhanced_prompt = enhance_custom_prompt(gemini_prompt, user_prefs)
                     print(f"Enhanced random prompt: {enhanced_prompt}")
                 else:
                     gemini_prompt = generate_prompt_random(random_tags)
-                    # Enhance the random prompt to make it more detailed
                     enhanced_prompt = enhance_custom_prompt(gemini_prompt)
                     print(f"Enhanced random prompt: {enhanced_prompt}")
         else:
-            # Generate wallpaper
             if args.prompt:
                 generate_wallpaper(prompt_type="custom", custom_prompt=args.prompt)
-            else:  # --random
+            else:
                 generate_wallpaper(prompt_type="random")
         return
 
-    # No command-line arguments provided, check dependencies and start UI
     check_dependencies()
     main_menu.run_main_menu()
 
