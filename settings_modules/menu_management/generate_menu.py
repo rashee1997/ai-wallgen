@@ -59,12 +59,12 @@ def run_generate_menu(generate_only: bool = False):
         print_menu_options(menu_options)
 
         choice = get_menu_choice(
-            "Select option (1-5, B)", ["1", "2", "3", "4", "5", "B"]
+            "Select option (1-5, B)", ["1", "2", "3", "4", "5", "B", "b"]
         )
         if choice == "_INTERRUPTED_":
-            return  # Exit if interrupted
+            raise KeyboardInterrupt
 
-        if choice == "B":
+        if choice.lower() == "b":
             return
 
         if choice == "5":
