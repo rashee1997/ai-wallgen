@@ -159,7 +159,6 @@ except ImportError as e:
     preferred_order = ["default", "unknown"]
     catalog_all_categories = ["default", "unknown"]
     def instructions_for_category(cat, style): return "No specific instructions available."
-    def get_template_for_category(cat): return {}
 
 
 # --- Configuration ---

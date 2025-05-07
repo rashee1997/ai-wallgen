@@ -1,1 +1,1 @@
-# Marks ai_prest_gen as a Python package
+# This file makes ai_prest_gen a Python package

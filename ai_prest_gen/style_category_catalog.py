@@ -283,7 +283,16 @@ hybrid_categories_keywords: Dict[str, List[Tuple[str, ...]]] = {
 
 # --- General Category Keywords ---
 # Maps broader categories to a list of identifying keywords/phrases (normalized lowercase).
-categories_keywords: Dict[str, List[str]] = {
+def normalize_style_name(style_name: str) -> str:
+    name = str(style_name).lower()
+    name = name.replace('_', ' ').replace('-', ' ')
+    name = name.replace('colour', 'color') # UK to US English
+    name = name.replace('water color', 'watercolor') # Spaced variant
+    name = name.replace('sci fi', 'scifi') # Common abbreviation
+    name = re.sub(r'\s+', ' ', name).strip() # Remove extra spaces
+    return name
+
+categories_keywords_raw: Dict[str, List[str]] = {
     # Portraits
     "photographic_portrait": ["photographic portrait", "photo realistic portrait", "dslr portrait"],
     "traditional_portrait": ["traditional portrait painting", "classic painted portrait", "oil on canvas portrait"],
@@ -415,6 +424,12 @@ categories_keywords: Dict[str, List[str]] = {
     "ascii_art": ["ascii text picture", "character art graphic", "terminal art image"],
     "default": ["standard style", "generic artwork", "basic visual design"],
     "unknown": ["undefined art style", "other category", "unclassified visual"],
+}
+
+# Normalize all keywords for improved matching
+categories_keywords: Dict[str, List[str]] = {
+    cat: [normalize_style_name(keyword) for keyword in keywords]
+    for cat, keywords in categories_keywords_raw.items()
 }
 
 # --- All Categories List (Dynamically Generated) ---
