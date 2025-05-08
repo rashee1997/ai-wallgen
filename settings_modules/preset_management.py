@@ -569,10 +569,11 @@ def save_preset(settings: Dict[str, Any], preset_name: str) -> bool:
             json.dump(settings, f, indent=4)
             
         # Also save to TinyDB database
+        db_save_success = False # Initialize success flag
         try:
             from .preset_management_tinydb import save_preset_tinydb
-            db_save_result = save_preset_tinydb(settings, preset_name)
-            if not db_save_result:
+            db_save_success = save_preset_tinydb(settings, preset_name)
+            if not db_save_success:
                 logging.warning(f"Preset '{preset_name}' saved to file but failed to save to database")
         except ImportError as ie:
             logging.warning(f"Could not import save_preset_tinydb: {ie}")
@@ -581,7 +582,7 @@ def save_preset(settings: Dict[str, Any], preset_name: str) -> bool:
             logging.warning(f"Error saving preset '{preset_name}' to database: {dbe}")
             logging.warning(f"Preset '{preset_name}' saved to file but not to database")
             
-        return True
+        return db_save_success # Return the result of the database save
     except (IOError, OSError) as e:
         print_error(f"Error saving preset '{preset_name}': {e}")
         logging.exception(f"Error in save_preset for {preset_name}")

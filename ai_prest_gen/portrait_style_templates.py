@@ -1,216 +1,218 @@
 """Portrait Style Templates Module for AI Preset Generator
 
-This module provides style-specific template generation for different portrait
-art styles to ensure settings are appropriate for each style category.
+This module provides detailed portrait style templates with concrete default values.
 """
 
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any
 
 def get_portrait_template(style_category: str) -> Dict[str, Any]:
     """
     Return the appropriate JSON template based on a specific portrait style category.
+    All placeholders are replaced with concrete default values.
     """
-    # Base template with common fields all styles have
+    style_category = style_category.lower() # Normalize for matching
+
     base_template = {
-        "preset_name": "[ evocative name ]",
-        "moods": ["[ one mood ]"],
-        "aspect_ratio": "16:9",
-        "description": "AI: create a description of this preset here."
+        "preset_name": f"{style_category.replace('_', ' ').title()} Portrait",
+        "moods": ["Expressive"],
+        "aspect_ratio": "3:4",
+        "description": f"A detailed portrait preset in the {style_category.replace('_', ' ')} style, focusing on character and mood."
     }
 
-    # Common settings for all categories
     imagen_settings = {
         "style_settings": {
-            "art_movement": "[ fitting movement ]",
-            "post_processing": ["[ 0-1 effect ]"],
-            "style_era": "[ appropriate era/period ]"
+            "art_movement": "Contemporary Portraiture",
+            "post_processing": ["subtle skin smoothing", "sharpening eyes"],
+            "style_era": "Modern"
         },
         "lighting_settings": {
-            "lighting_type": "[ appropriate lighting ]",
-            "light_quality": "[ description ]",
-            "light_direction": "[ direction of main light ]"
+            "lighting_type": "Studio Lighting",
+            "light_quality": "Soft and Diffused",
+            "light_direction": "Front-Side (45 degrees)"
         },
         "composition_settings": {
-            "technique": "[ composition technique ]",
-            "focal_point": "[ main focus of composition ]"
+            "technique": "Close-up Headshot",
+            "focal_point": "Eyes and Facial Expression"
         },
         "color_settings": {
-            "color_scheme": "[ fitting scheme ]",
-            "palette_type": "[ appropriate type ]",
-            "color_temperature": "[ warm/cool/etc ]",
-            "color_contrast": "[ high/low/medium ]"
+            "color_scheme": "Natural Skin Tones",
+            "palette_type": "Realistic and Balanced",
+            "color_temperature": "Neutral",
+            "color_contrast": "Medium"
         },
         "detail_settings": {
-            "detail_level": "[ high/medium/low ]",
-            "texture_quality": "[ realistic/stylized/smooth ]"
+            "detail_level": "High",
+            "texture_quality": "Realistic Skin Texture"
         },
         "environment_settings": {
-            "weather": "[ current weather ]",
-            "season": "[ current season ]",
-            "location_type": "[ indoor/outdoor/etc ]",
-            "atmospheric_effects": ["[ fog/rain/etc ]"]
+            "weather": "N/A",
+            "season": "N/A",
+            "location_type": "Studio Backdrop (neutral)",
+            "atmospheric_effects": ["none"]
         },
         "quality_settings": {
-            "resolution": "[ target resolution e.g., 3840x2160 ]",
-            "rendering_quality": "[ high/photorealistic/etc ]"
+            "resolution": "4000x5000",
+            "rendering_quality": "Photorealistic"
         },
-        "negative_prompt": "[GENERATE_NEGATIVE_PROMPT_BASED_ON_STYLE]"
+        "negative_prompt": "blurry, deformed, extra limbs, poorly drawn face, bad anatomy, signature, text, watermark, low quality, unrealistic features (unless style dictates), distorted eyes",
+        "style_negative_prompt": "clashing art styles, inconsistent lighting for portraiture, unflattering angles, generic look"
     }
 
-    # --- Portrait Style Specific Settings ---
+    PORTRAIT_CAMERA_SETTINGS = {
+        "camera_model": "DSLR (e.g., Canon EOS 5D Mark IV)", "lens_type": "Prime Lens (e.g., 85mm)",
+        "aperture": "f/1.8", "focal_length": "85mm", "shutter_speed": "1/160s", "iso": "ISO 100",
+        "filter_type": "None", "depth_of_field": "Shallow (bokeh background)", "white_balance": "Daylight (5500K)",
+        "focus_mode": "Eye Autofocus (Eye AF)", "exposure_mode": "Manual (M)", "image_stabilization": "In-Lens (IS)",
+        "metering_mode": "Spot Metering (on face)", "flash_mode": "Off-Camera Flash (Softbox Key Light)",
+        "shooting_mode": "Single Shot", "focus_point_selection": "Single Point AF (on eye)",
+        "image_format": "RAW", "color_space": "Adobe RGB"
+    }
+
     if style_category == "photographic_portrait":
-        imagen_settings["camera_settings"] = {
-            "camera_model": "[ DSLR, Mirrorless, Medium Format ]",
-            "lens_type": "[ prime, telephoto ]",
-            "aperture": "[ f/1.2 - f/4 ]",
-            "focal_length": "[ 50mm - 135mm ]",
-            "shutter_speed": "[ 1/125s - 1/250s ]",
-            "iso": "[ 100 - 800 ]",
-            "filter_type": "[ polarizer, diffusion ]",
-            "depth_of_field": "shallow",
-            "white_balance": "[ auto, daylight, studio ]",
-            "focus_mode": "autofocus",
-            "exposure_mode": "aperture priority",
-            "image_stabilization": "optical",
-            "metering_mode": "spot",
-            "flash_mode": "[ off, fill-in ]"
-        }
-        imagen_settings["lighting_settings"]["lighting_type"] = "studio, natural, softbox"
-        imagen_settings["lighting_settings"]["light_quality"] = "soft, diffused"
-        imagen_settings["lighting_settings"]["light_direction"] = "[ front, side, butterfly ]"
-        imagen_settings["style_settings"]["photo_style"] = "portrait"
-        imagen_settings["composition_settings"]["camera_angle"] = "eye-level"
-        imagen_settings["quality_settings"]["rendering_quality"] = "photorealistic, high detail"
+        imagen_settings["camera_settings"] = PORTRAIT_CAMERA_SETTINGS.copy()
+        imagen_settings["lighting_settings"]["lighting_type"] = "Studio Strobe with Softbox"
+        imagen_settings["lighting_settings"]["light_quality"] = "Soft and Diffused with Catchlights"
+        imagen_settings["style_settings"]["photo_style"] = "Contemporary Photographic Portrait"
+        imagen_settings["quality_settings"]["rendering_quality"] = "High-Fidelity Photorealistic"
+        imagen_settings["detail_settings"]["texture_quality"] = "Natural Skin Pores and Hair Detail"
+        imagen_settings["color_settings"]["palette_type"] = "Accurate and Rich Skin Tones"
+        imagen_settings["environment_settings"]["location_type"] = "Studio with Plain Backdrop (e.g., grey, white)"
 
     elif style_category == "traditional_portrait":
+        base_template["aspect_ratio"] = "4:5"
         imagen_settings["medium_settings"] = {
-            "painting_medium": "[ oil paint, watercolor, pastel, charcoal ]",
-            "canvas_type": "[ canvas, linen, paper ]",
-            "brushwork": "[ visible, blended, impasto ]",
-            "texture": "[ textured, smooth ]",
-            "layering_technique": "[ glazing, scumbling, washes ]",
-            "stroke_style": "[ expressive, delicate ]",
-            "detail_approach": "[ high, medium ]"
+            "painting_medium": "Oil Paint", "support_type": "Canvas",
+            "brushwork_style": "Visible Brushstrokes with Blending", "texture_application": "Textured Canvas with Layered Paint",
+            "layering_technique": "Glazing and Scumbling", "stroke_style": "Expressive and Deliberate",
+            "detail_approach": "High Realism with Artistic Interpretation"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "natural, dramatic"
-        imagen_settings["lighting_settings"]["light_quality"] = "chiaroscuro, soft"
-        imagen_settings["style_settings"]["brush_style"] = "[ realistic, impressionist ]"
-        imagen_settings["style_settings"]["painter_influence"] = "[ Rembrandt, Sargent, Degas ]"
-        imagen_settings["style_settings"]["period"] = "[ Renaissance, Baroque, Impressionist ]"
-        imagen_settings["color_settings"]["palette_type"] = "[ warm, muted, rich ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Natural Window Light (North Light)"
+        imagen_settings["lighting_settings"]["light_quality"] = "Chiaroscuro with Soft Transitions"
+        imagen_settings["style_settings"]["art_movement"] = "Realism (e.g., 19th Century)"
+        imagen_settings["style_settings"]["painter_influence"] = "John Singer Sargent"
+        imagen_settings["style_settings"]["period"] = "Late 19th Century"
+        imagen_settings["color_settings"]["palette_type"] = "Warm Earth Tones and Rich Colors"
+        imagen_settings["detail_settings"]["texture_quality"] = "Painted Fabric Textures, Rendered Skin and Hair"
 
-    elif style_category == "futuristic_portrait":
-        imagen_settings["sci_fi_settings"] = {
-            "character_type": "[ cybernetic, augmented, alien ]",
-            "costuming": "[ tech-wear, armored, sleek ]",
-            "cybernetic_elements": "[ implants, glowing eyes, digital tattoos ]",
-            "environment": "[ futuristic interior, neon city backdrop ]",
-            "mood": "[ stoic, intense, mysterious ]"
+    elif style_category == "futuristic_portrait" or style_category == "cyberpunk_portrait":
+        base_template["aspect_ratio"] = "16:9"
+        imagen_settings["futuristic_elements"] = {
+            "character_archetype": "Cyborg with Visible Augmentations", "costuming_details": "Tech-wear with Integrated LED Elements",
+            "cybernetic_enhancements": "Glowing Optical Sensors and Data Ports", "background_setting": "Neon-drenched Cityscape Alleyway",
+            "dominant_mood": "Stoic and Intense"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "neon, holographic, artificial"
-        imagen_settings["lighting_settings"]["light_quality"] = "harsh, high contrast"
-        imagen_settings["color_settings"]["palette_type"] = "[ neon, metallic, dark ]"
-        imagen_settings["detail_settings"]["detail_level"] = "high, intricate"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Neon Glow and Holographic Projections"
+        imagen_settings["lighting_settings"]["light_quality"] = "Harsh Contrast with Rim Lighting"
+        imagen_settings["color_settings"]["palette_type"] = "Electric Blues, Purples, and Cyans with Metallic Sheens"
+        imagen_settings["detail_settings"]["detail_level"] = "Intricate Tech Details and Textures"
+        imagen_settings["detail_settings"]["texture_quality"] = "Metallic Surfaces, Carbon Fiber, Glowing Circuits"
+        imagen_settings["style_settings"]["art_movement"] = "Cyberpunk Art"
 
     elif style_category == "illustration_portrait":
-        imagen_settings["illustration_settings"] = {
-            "line_work": "[ clean, sketchy, bold ]",
-            "coloring_technique": "[ flat color, cell shading, soft shading ]",
-            "visual_style": "[ stylized, cartoony, realistic ]",
-            "detail_level": "[ detailed, simplified ]",
-            "subject_treatment": "[ expressive, narrative ]"
+        base_template["aspect_ratio"] = "4:5"
+        imagen_settings["illustration_specifics"] = {
+            "line_work_style": "Clean and Crisp Outlines", "coloring_method": "Cel Shading with Soft Gradient Highlights",
+            "overall_visual_style": "Stylized Realism (Anime-inspired)", "level_of_detail": "Medium, focusing on character expression",
+            "subject_portrayal": "Expressive Character with a Narrative Hint"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "stylized, ambient"
-        imagen_settings["color_settings"]["palette_type"] = "[ vibrant, limited, thematic ]"
-        imagen_settings["style_settings"]["drawing_approach"] = "stylized"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Stylized Rim Lighting and Ambient Occlusion"
+        imagen_settings["color_settings"]["palette_type"] = "Vibrant and Saturated Thematic Palette"
+        imagen_settings["style_settings"]["art_movement"] = "Contemporary Digital Illustration"
+        imagen_settings["style_settings"]["drawing_approach"] = "Stylized Graphic"
 
     elif style_category == "pop_portrait":
-        imagen_settings["pop_surrealism_settings"] = {
-            "motif": "[ pop culture icons, lowbrow elements ]",
-            "juxtaposition": "[ playful, unexpected ]",
-            "narrative_element": "[ subtle, overt ]",
-            "color_palette": "[ saturated, vivid, contrasting ]"
+        base_template["aspect_ratio"] = "1:1"
+        imagen_settings["pop_art_elements"] = {
+            "iconic_motifs": "Bold Graphic Shapes and Pop Culture Reference", "element_juxtaposition": "Playful and Unexpected Combination",
+            "narrative_style": "Subtle Social Commentary", "color_palette_pop": "Highly Saturated Primary Colors with Ben Day Dots"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "flat, graphic"
-        imagen_settings["color_settings"]["palette_type"] = "bold, vibrant"
-        imagen_settings["style_settings"]["art_movement"] = "Pop Art, Lowbrow"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Flat Graphic Lighting (Minimal Shadows)"
+        imagen_settings["color_settings"]["palette_type"] = "Bold Primaries and High Contrast"
+        imagen_settings["style_settings"]["art_movement"] = "Pop Art (Warhol Influence)"
+        imagen_settings["detail_settings"]["texture_quality"] = "Smooth Flat Colors, Screen-Print Look"
 
     elif style_category == "environmental_portrait":
-        imagen_settings["environmental_settings"] = {
-            "location_context": "[ subject's environment, workplace, home, urban, nature ]",
-            "props": "[ key items related to subject ]",
-            "storytelling_elements": "[ tell story with surroundings ]"
+        base_template["aspect_ratio"] = "16:9"
+        imagen_settings["camera_settings"] = PORTRAIT_CAMERA_SETTINGS.copy()
+        imagen_settings["camera_settings"]["lens_type"] = "Wide-Angle Prime (e.g., 35mm)"
+        imagen_settings["camera_settings"]["aperture"] = "f/4.0"
+        imagen_settings["camera_settings"]["depth_of_field"] = "Medium to Deep"
+        imagen_settings["environmental_context"] = {
+            "location_significance": "Subject's Workplace (e.g., artist studio, workshop)",
+            "contextual_props": "Tools of Trade and Personal Belongings relevant to subject",
+            "storytelling_focus": "Conveying personality and profession through surroundings"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "natural, contextual, ambient"
-        imagen_settings["lighting_settings"]["light_quality"] = "realistic, available light"
-        imagen_settings["lighting_settings"]["light_direction"] = "[ window, side, backlit ]"
-        imagen_settings["composition_settings"]["camera_angle"] = "environment-integrated"
-        imagen_settings["style_settings"]["photo_style"] = "environmental"
-        imagen_settings["quality_settings"]["rendering_quality"] = "realistic, documentary"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Natural Available Light (Large Window)"
+        imagen_settings["lighting_settings"]["light_quality"] = "Realistic to the Environment, Softly Directional"
+        imagen_settings["composition_settings"]["technique"] = "Subject Integrated with Background, Leading Lines from Environment"
+        imagen_settings["style_settings"]["photo_style"] = "Environmental Portraiture"
+        imagen_settings["quality_settings"]["rendering_quality"] = "Realistic Documentary Feel"
 
     elif style_category == "caricature_portrait":
-        imagen_settings["caricature_settings"] = {
-            "exaggeration_focus": "[ facial features, gestures, expressions ]",
-            "humor_style": "[ satirical, playful ]",
-            "line_quality": "[ bold, sketchy, exaggerated ]"
+        base_template["aspect_ratio"] = "3:4"
+        imagen_settings["caricature_elements"] = {
+            "exaggeration_targets": "Prominent Facial Features (e.g., nose, eyes) and Characteristic Expressions",
+            "humor_approach": "Playful and Satirical", "line_art_quality": "Bold and Expressive Outlines with Dynamic Curves"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "cartoon, graphic"
-        imagen_settings["lighting_settings"]["light_quality"] = "flat, simple"
-        imagen_settings["color_settings"]["palette_type"] = "vibrant, loud, exaggerated"
-        imagen_settings["style_settings"]["art_movement"] = "Caricature, cartoon"
-        imagen_settings["composition_settings"]["technique"] = "[ exaggeration, distortion ]"
-        imagen_settings["detail_settings"]["texture_quality"] = "stylized"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Cartoonish Graphic Lighting with Rim Highlights"
+        imagen_settings["color_settings"]["palette_type"] = "Vibrant and Loud Exaggerated Colors"
+        imagen_settings["style_settings"]["art_movement"] = "Caricature Art and Cartooning"
+        imagen_settings["composition_settings"]["technique"] = "Extreme Exaggeration and Comedic Distortion"
+        imagen_settings["detail_settings"]["texture_quality"] = "Stylized Smooth Shading"
 
     elif style_category == "conceptual_portrait":
-        imagen_settings["conceptual_settings"] = {
-            "concept_theme": "[ identity, metaphor, symbolism, surrealism ]",
-            "visual_motifs": "[ objects, patterns, overlays ]",
-            "abstraction_level": "[ representational, abstract ]"
+        base_template["aspect_ratio"] = "1:1"
+        imagen_settings["conceptual_elements"] = {
+            "central_concept_or_theme": "Identity and Metaphorical Representation",
+            "symbolic_visual_motifs": "Specific Objects and Textural Overlays representing an idea",
+            "degree_of_abstraction": "Representational with Strong Symbolic Layers"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "artificial, dramatic, conceptual"
-        imagen_settings["lighting_settings"]["light_quality"] = "moody, mysterious"
-        imagen_settings["color_settings"]["palette_type"] = "[ muted, high-contrast, symbolic ]"
-        imagen_settings["composition_settings"]["technique"] = "concept-driven, creative"
-        imagen_settings["style_settings"]["art_movement"] = "Conceptual Art, Surrealism"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Artificial and Controlled Dramatic Lighting"
+        imagen_settings["lighting_settings"]["light_quality"] = "Moody and Mysterious with High Contrast"
+        imagen_settings["color_settings"]["palette_type"] = "Muted and Desaturated with Symbolic Accent Color"
+        imagen_settings["composition_settings"]["technique"] = "Concept-driven Unconventional Framing with Negative Space"
+        imagen_settings["style_settings"]["art_movement"] = "Conceptual Art and Fine Art Photography"
 
     elif style_category == "fashion_portrait":
-        imagen_settings["fashion_settings"] = {
-            "clothing_style": "[ haute couture, casual, editorial, avant-garde ]",
-            "makeup_style": "[ bold, natural, stylized ]",
-            "pose_direction": "[ directed, dynamic, expressive ]"
+        base_template["aspect_ratio"] = "2:3"
+        imagen_settings["camera_settings"] = PORTRAIT_CAMERA_SETTINGS.copy()
+        imagen_settings["camera_settings"]["lens_type"] = "Telephoto Prime (e.g., 135mm)"
+        imagen_settings["camera_settings"]["aperture"] = "f/2.8"
+        imagen_settings["fashion_shoot_elements"] = {
+            "apparel_style_focus": "Haute Couture Editorial", "hair_and_makeup_style": "Bold and Artistic High Fashion Makeup",
+            "posing_and_direction": "Dynamic and Expressive Editorial Poses"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "studio, runway, editorial"
-        imagen_settings["lighting_settings"]["light_quality"] = "high-fashion, diffusion"
-        imagen_settings["color_settings"]["palette_type"] = "[ bold, trendy, monochrome ]"
-        imagen_settings["style_settings"]["photo_style"] = "fashion, editorial"
-        imagen_settings["composition_settings"]["camera_angle"] = "dynamic, fashion-driven"
-        imagen_settings["quality_settings"]["resolution"] = "high, magazine-quality"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Studio Strobes with Beauty Dish and Reflectors"
+        imagen_settings["lighting_settings"]["light_quality"] = "High-Fashion Crisp with Soft Falloff"
+        imagen_settings["color_settings"]["palette_type"] = "Bold and Trendy with Artistic Color Grading"
+        imagen_settings["style_settings"]["photo_style"] = "Fashion Editorial Portraiture"
+        imagen_settings["composition_settings"]["camera_angle"] = "Dynamic Fashion-driven Angles (e.g., low angle for power)"
+        imagen_settings["quality_settings"]["resolution"] = "High-Resolution Magazine Quality"
+        imagen_settings["environment_settings"]["location_type"] = "Minimalist Studio Set or Unique Architectural Backdrop"
 
     elif style_category == "selfie_portrait":
-        imagen_settings["selfie_settings"] = {
-            "device_type": "[ smartphone, front camera ]",
-            "pose_type": "[ candid, posed, spontaneous ]",
-            "filters": "[ none, beauty, trend-based ]",
-            "background": "[ casual, personal, social ]"
+        base_template["aspect_ratio"] = "9:16"
+        imagen_settings["selfie_characteristics"] = {
+            "capture_device_hint": "Smartphone Front Camera", "posing_style": "Candid and Spontaneous with a Specific Trend Pose",
+            "digital_filters_or_effects": "Subtle Beauty Filter and Popular Social Media Color Filter",
+            "typical_background": "Casual Home Setting or Travel Location Landmark"
         }
-        imagen_settings["lighting_settings"]["lighting_type"] = "natural, mixed"
-        imagen_settings["lighting_settings"]["light_quality"] = "ambient, variable"
-        imagen_settings["style_settings"]["photo_style"] = "selfie"
-        imagen_settings["composition_settings"]["camera_angle"] = "arm's length, high-angle"
-        imagen_settings["quality_settings"]["resolution"] = "[ phone, social-media ]"
-        imagen_settings["color_settings"]["palette_type"] = "[ trendy, filtered, real-life ]"
+        imagen_settings["lighting_settings"]["lighting_type"] = "Natural Ambient Light (e.g., near window)"
+        imagen_settings["lighting_settings"]["light_quality"] = "Variable, often Soft if indoors or Golden Hour if outdoors"
+        imagen_settings["style_settings"]["photo_style"] = "Modern Selfie Aesthetic"
+        imagen_settings["composition_settings"]["camera_angle"] = "Arm's Length High-Angle"
+        imagen_settings["quality_settings"]["resolution"] = "Typical Smartphone Resolution (e.g., 12MP)"
+        imagen_settings["color_settings"]["palette_type"] = "Real-life Colors Enhanced by Filters"
+        imagen_settings["moods"] = ["Playful and Casual"]
 
-
-
-    else:
-        # Fallback for unknown portrait styles
-        imagen_settings["other_portrait_settings"] = {
-            "notable_features": "[ key features ]",
-            "notes": "[ description/notes ]"
+    else: # Fallback for any other unlisted portrait style
+        imagen_settings["other_portrait_specifics"] = {
+            "notable_features": f"Unique characteristics defining a {style_category.replace('_', ' ')} portrait.",
+            "primary_medium_hint": "Digital Painting", "artistic_intent": f"To capture the essence of a {style_category.replace('_', ' ')} portrait.",
+            "notes": f"Settings should be tailored to the specific nuances of the {style_category.replace('_', ' ')} portrait style."
         }
+        base_template["preset_name"] = f"{style_category.replace('_', ' ').title()} (Custom Portrait Style)"
+        imagen_settings["style_settings"]["art_movement"] = style_category.replace('_', ' ').title()
 
-
-    # Add the imagen_settings to the base template
-    base_template["imagen_settings"] = imagen_settings
-
-    return base_template
+    final_template = {**base_template, "imagen_settings": imagen_settings}
+    return final_template

@@ -1,10 +1,13 @@
 """
-Style Category Catalog for AI Preset Generator (Enhanced V3)
+Style Category Catalog for AI Preset Generator (Merged & Improved)
 
-This module contains the data structures used for categorizing style names.
-It includes:
+This module contains the merged and refined data structures for categorizing
+style names, combining the strengths of the user's original upload and the
+enhanced V3 catalog. It aims for maximum style detection coverage.
+
+Includes:
 - A comprehensive preferred order for resolving category conflicts.
-- Definitions for hybrid (compound) styles (token-based and keyword-based).
+- Definitions for hybrid styles (token-based and keyword-based).
 - Extensive keywords for identifying various art styles and categories.
 - Instructions for the AI when generating presets for specific categories.
 - A list of all defined categories for reference.
@@ -12,11 +15,11 @@ It includes:
 import re
 from typing import Dict, List, Set, Tuple, Union
 
-# --- Comprehensive Preferred Order of Categories ---
-# This list is crucial for disambiguation. More specific categories MUST come before broader ones.
-# This order is synthesized from style_templates.py, portrait_style_templates.py, and user-provided catalogs.
+# --- Comprehensive Preferred Order of Categories (Merged) ---
+# Prioritizes specific styles, hybrids, portraits, then broader categories.
+# Combines V3 order with unique entries from the restored version.
 preferred_order: List[str] = [
-    # Highly Specific Hybrids/Fusions
+    # Highly Specific Hybrids/Fusions (From V3 & Restored)
     "pop_surrealism_ascii",
     "abstract_expressionism_cubism_fusion",
     "anime_oilpainting",
@@ -30,27 +33,28 @@ preferred_order: List[str] = [
     "psychedelic_surrealism",
     "morphism_surreal",
     "kinetic_ascii",
-    "collage_digital_overlay", # More specific than digital_collage
+    "collage_digital_overlay",
     "pixel_patchwork",
     "tradigital_mixed_media",
-    "hybrid_traditional_digital", # Similar to above, order might not matter much between these two
-    "digital_traditional_fusion", # Similar to above
+    "hybrid_traditional_digital",
+    "digital_traditional_fusion",
+    "cubism_mixed", # From restored, specific mixed media
 
-    # Specific Portraits
+    # Specific Portraits (From V3 & Restored)
     "caricature_portrait",
     "selfie_portrait",
     "environmental_portrait",
     "fashion_portrait",
     "conceptual_portrait",
     "cyberpunk_portrait",
-    "futuristic_portrait", # Includes sci_fi_portrait
+    "futuristic_portrait",
     "pop_portrait",
     "illustration_portrait",
     "photographic_portrait",
     "traditional_portrait",
     "fantasy_portrait",
 
-    # Specific Thematic/Technical Styles
+    # Specific Thematic/Technical Styles (From V3 & Restored)
     "noir_photography",
     "art_deco_revival",
     "augmented_reality_art", # Includes vr_ar_art
@@ -67,46 +71,49 @@ preferred_order: List[str] = [
     "phygital_hybrid",
     "screen_printing_bold",
     "synesthesia_art",
-    "ink_punk", # Specific illustrative style
+    "ink_punk",
 
-    # Game Styles
+    # Game Styles (From V3 & Restored)
     "game_cel_shaded",
     "game_retro", # (8-bit, 16-bit, pixel game art)
+    "game_3d", # From restored
+    "game_indie", # From restored
     "game_style", # General (Unity, Unreal, FPS, RPG etc.)
 
-    # Cyberpunk (non-portrait)
+    # Cyberpunk (non-portrait) (From V3 & Restored)
     "cyberpunk_action",
     "cyberpunk_cityscape",
     "cyberpunk_technology",
     "cyberpunk", # General
 
-    # Fantasy (non-portrait)
+    # Fantasy (non-portrait) (From V3 & Restored)
     "fantasy_battle",
     "fantasy_cityscape",
     "fantasy_landscape",
     "whimsical_fantasy",
     "fantasy", # General
 
-    # Sci-Fi (non-portrait)
-    "sci_fi_futuristic", # More specific than sci_fi
+    # Sci-Fi (non-portrait) (From V3 & Restored)
+    "sci_fi_futuristic",
     "sci_fi", # General
 
-    # Specific Mediums/Techniques
+    # Specific Mediums/Techniques (From V3 & Restored)
     "claymation",
     "digital_collage", # If not collage_digital_overlay
     "experimental_mixed_media",
     "patchwork_fabric",
     "patchwork_collage", # If not pixel_patchwork
+    "mixed_media_collage", # From restored, broader than patchwork/digital
     "papercraft", # General papercraft (if not quilling)
     "ascii_art", # If not kinetic_ascii or pop_surrealism_ascii
     "line_art", # Distinct from general drawing
 
-    # Illustration Styles (non-portrait)
+    # Illustration Styles (non-portrait) (From V3 & Restored)
     "illustration_pixar",
     "illustration_disney",
     "illustration_tom_jerry",
     "illustration_vintage_cartoon",
-    "illustration_anime_manga", # Broad anime/manga illustration
+    "illustration_anime_manga",
     "illustration_comic",
     "illustration_pixel", # if not game_retro or retro_pixel_vaporwave
     "illustration_steampunk",
@@ -117,39 +124,39 @@ preferred_order: List[str] = [
     "illustration_graphic", # General graphic illustration
     "illustration", # Broadest illustration
 
-    # Painting Styles (Specific Mediums)
+    # Painting Styles (Specific Mediums) (From V3 & Restored)
     "oil_painting", # if not anime_oilpainting
     "watercolor", # if not watercolor_pencil
     "pastel",
     "acrylic_painting",
     "digital_painting",
 
-    # Drawing Styles (Specific Mediums)
+    # Drawing Styles (Specific Mediums) (From V3 & Restored)
     "pencil_sketch",
     "ink_drawing", # if not ink_punk or line_art
     "charcoal",
     "drawing", # Broadest drawing
 
-    # Photographic Styles (non-portrait)
+    # Photographic Styles (non-portrait) (From V3 & Restored)
     "street_photography",
     "documentary", # Photo style
-    "cinematic", # Can be photo or 3D; specific photo types are higher
+    "cinematic",
     "photographic", # General photographic
 
-    # Abstract & Conceptual (non-portrait)
+    # Abstract & Conceptual (non-portrait) (From V3 & Restored)
     "minimalist_geometric",
     "minimalist", # or "minimal"
     "geometric", # if not minimalist_geometric
     "constructivism",
-    "low_poly", # Often 3D but can be abstract geometric
-    "abstract_conceptual",
-    "abstract", # General abstract
+    "low_poly",
+    "abstract_conceptual", # Includes abstract from restored
+    "abstract", # Keep as fallback if needed
 
-    # Other Distinct Styles
+    # Other Distinct Styles (From V3 & Restored)
     "pop_surrealism", # if not pop_surrealism_ascii or pop_portrait
-    "surrealism", # if not psychedelic_surrealism or illustration_surreal
-    "cubism", # if not various cubism fusions or illustration_cubist
-    "expressionism", # if not part of a fusion
+    "surrealism", # if not specific hybrids/illustrations
+    "cubism", # if not specific hybrids/illustrations
+    "expressionism",
     "fauvism",
     "art_nouveau",
     "art_deco", # if not art_deco_revival
@@ -164,17 +171,17 @@ preferred_order: List[str] = [
     "folk_art",
     "mediterranean_style",
 
-    # Material/Sculptural
+    # Material/Sculptural (From V3 & Restored)
     "material_sculptural",
     "sculpture",
 
-    # Broad Digital/Traditional Categories (Fallbacks)
-    "3d_render", # CGI, modeling (if not game_style or specific 3D like low_poly)
+    # Broad Digital/Traditional Categories (Fallbacks) (From V3 & Restored)
+    "3d_render", # CGI, modeling
     "vector_art",
     "digital_art", # General digital art
     "traditional_painting_drawing", # Very broad
 
-    # Meta/Other
+    # Meta/Other (From V3 & Restored)
     "animal_inspired",
     "space_art",
     "robot_art",
@@ -182,15 +189,17 @@ preferred_order: List[str] = [
     "default",
     "unknown"
 ]
+# De-duplicate the list while preserving order (important after merging)
+seen_order = set()
+preferred_order = [x for x in preferred_order if not (x in seen_order or seen_order.add(x))]
 
-# --- Hybrid Style Definitions (Token-based) ---
-# Key: frozenset of normalized style name parts, Value: target hybrid category.
-# Order within the frozenset does not matter.
+
+# --- Hybrid Style Definitions (Token-based - Merged) ---
 hybrid_styles: Dict[frozenset[str], str] = {
-    # From user's catalog & previous context
+    # From V3
     frozenset(["abstract", "expressionism", "cubism"]): "abstract_expressionism_cubism_fusion",
     frozenset(["anime", "oil", "painting"]): "anime_oilpainting",
-    frozenset(["anime", "oilpaint"]): "anime_oilpainting", # Variant
+    frozenset(["anime", "oilpaint"]): "anime_oilpainting",
     frozenset(["collage", "digital", "overlay"]): "collage_digital_overlay",
     frozenset(["cubism", "futurism"]): "cubism_futurism",
     frozenset(["digital", "pixel", "traditional"]): "digital_pixel_traditional",
@@ -205,12 +214,12 @@ hybrid_styles: Dict[frozenset[str], str] = {
     frozenset(["scientific", "technological", "hybrid"]): "scientific_technological_hybrid",
     frozenset(["tradigital", "mixed", "media"]): "tradigital_mixed_media",
     frozenset(["watercolor", "pencil"]): "watercolor_pencil",
-    frozenset(["watercolour", "pencil"]): "watercolor_pencil", # UK spelling
+    frozenset(["watercolour", "pencil"]): "watercolor_pencil",
     frozenset(["dreamcore", "weirdcore"]): "dreamcore_weirdcore",
     frozenset(["minimalist", "geometric"]): "minimalist_geometric",
-    frozenset(["minimal", "geometric"]): "minimalist_geometric", # Variant
+    frozenset(["minimal", "geometric"]): "minimalist_geometric",
     frozenset(["photorealism", "glitch"]): "photorealism_glitch",
-    frozenset(["photorealistic", "glitch"]): "photorealism_glitch", # Variant
+    frozenset(["photorealistic", "glitch"]): "photorealism_glitch",
     frozenset(["luna", "photo"]): "luna_photo",
     frozenset(["pop", "art", "portrait"]): "pop_portrait",
     frozenset(["cyberpunk", "city"]): "cyberpunk_cityscape",
@@ -219,13 +228,13 @@ hybrid_styles: Dict[frozenset[str], str] = {
     frozenset(["fantasy", "landscape"]): "fantasy_landscape",
     frozenset(["fantasy", "portrait"]): "fantasy_portrait",
     frozenset(["fantasy", "city"]): "fantasy_cityscape",
-    frozenset(["sci", "fi", "futuristic"]): "sci_fi_futuristic", # Ensure 'scifi' normalization handles this
-    frozenset(["scifi", "futuristic"]): "sci_fi_futuristic", # Alternative
+    frozenset(["sci", "fi", "futuristic"]): "sci_fi_futuristic",
+    frozenset(["scifi", "futuristic"]): "sci_fi_futuristic",
     frozenset(["sci", "fi", "portrait"]): "futuristic_portrait",
-    frozenset(["scifi", "portrait"]): "futuristic_portrait", # Alternative
+    frozenset(["scifi", "portrait"]): "futuristic_portrait",
     frozenset(["mixed", "media", "collage"]): "mixed_media_collage",
     frozenset(["mixed", "media", "journaling"]): "mixed_media_journaling",
-    frozenset(["sketchbook", "mixed", "media"]): "mixed_media_journaling", # Alias
+    frozenset(["sketchbook", "mixed", "media"]): "mixed_media_journaling",
     frozenset(["whimsical", "mixed", "media"]): "whimsical_mixed_media",
     frozenset(["whimsical", "fantasy"]): "whimsical_fantasy",
     frozenset(["screen", "printing", "bold"]): "screen_printing_bold",
@@ -244,13 +253,17 @@ hybrid_styles: Dict[frozenset[str], str] = {
     frozenset(["selfie", "portrait"]): "selfie_portrait",
     frozenset(["experimental", "mixed", "media"]): "experimental_mixed_media",
     frozenset(["vr", "ar", "art"]): "augmented_reality_art",
-    frozenset(["virtual", "reality", "art"]): "augmented_reality_art", # Alias for VR
-    frozenset(["augmented", "reality", "art"]): "augmented_reality_art", # Alias for AR
+    frozenset(["virtual", "reality", "art"]): "augmented_reality_art",
+    frozenset(["augmented", "reality", "art"]): "augmented_reality_art",
+    # From Restored (if not already present)
+    frozenset({'pop', 'surrealism'}): 'pop_surrealism', # Already present in V3 keywords
+    frozenset({'traditional', 'digital'}): 'hybrid_traditional_digital', # Already present
+    frozenset({'collage', 'digital'}): 'collage_digital_overlay', # Already present
+    frozenset({'sci-fi', 'futuristic'}): 'sci_fi_futuristic', # Already present
 }
 
-# --- Keyword-based Hybrid Category Definitions ---
-# For cases where tokenization might not be ideal or for more complex phrases.
-# Key: target hybrid category, Value: list of keyword tuples (all keywords in a tuple must be present).
+# --- Keyword-based Hybrid Category Definitions (Merged) ---
+# Using V3 structure (List of Tuples) and merging keywords
 hybrid_categories_keywords: Dict[str, List[Tuple[str, ...]]] = {
     "kinetic_ascii": [("kinetic", "ascii")],
     "watercolor_pencil": [("watercolor", "pencil"), ("watercolour", "pencil sketch"), ("watercolor", "pencil sketch")],
@@ -259,41 +272,39 @@ hybrid_categories_keywords: Dict[str, List[Tuple[str, ...]]] = {
     "minimalist_geometric": [("minimalist", "geometric"), ("minimal", "geometric"), ("minimalism", "geometric")],
     "pop_surrealism_ascii": [("pop surrealism", "ascii")],
     "dreamcore_weirdcore": [("dreamcore", "weirdcore")],
-    "patchwork_collage": [("patchwork", "collage")],
-    "tradigital_mixed_media": [("tradigital", "mixed media")],
-    "whimsical_mixed_media": [("whimsical", "mixed media")],
-    "cubism_mixed": [("cubism", "mixed media")],
-    "pixel_patchwork": [("pixel", "patchwork")],
-    "phygital_hybrid": [("phygital", "hybrid")],
-    "screen_printing_bold": [("screen printing", "bold graphic"), ("serigraphy", "bold")],
+    "patchwork_collage": [("patchwork", "collage"), ("fabric", "collage"), ("paper", "collage")], # Added from restored keywords
+    "paper_quilling": [("paper", "quilling"), ("quilling", "art"), ("rolled", "paper"), ("coil", "paper")], # Added from restored
+    "tradigital_mixed_media": [("tradigital", "mixed media"), ("tradigital", "art")], # Added from restored
+    "whimsical_mixed_media": [("whimsical", "mixed media"), ("whimsical", "art"), ("dreamy", "mixed media"), ("fantasy", "mixed media")], # Added from restored
+    "sci_fi_futuristic": [("sci-fi", "futuristic"), ("science fiction", "futuristic"), ("futuristic", "digital art"), ("cyberpunk", "futuristic"), ("dystopian", "futuristic")], # Merged
+    "mediterranean_style": [("mediterranean", "style"), ("sunny", "coastal"), ("vivid", "mediterranean")], # Added from restored
+    "morphism_surreal": [("morphism", "surreal"), ("surreal", "morphing"), ("fantastical", "transformation")], # Added from restored
+    "cubism_mixed": [("cubism", "mixed media"), ("cubist", "mixed media"), ("angular", "mixed media")], # Added from restored
+    "pixel_patchwork": [("pixel", "patchwork"), ("voxel", "patchwork"), ("low poly", "pixel")], # Added from restored
+    "phygital_hybrid": [("phygital", "hybrid"), ("physical", "digital", "hybrid"), ("ar", "physical")], # Added from restored
+    "screen_printing_bold": [("screen printing", "bold graphic"), ("serigraphy", "bold print"), ("tactile", "print")], # Added from restored
     "mixed_media_journaling": [("mixed media", "journaling"), ("art", "journaling"), ("sketchbook", "mixed media")],
-    "digital_pixel_traditional": [("digital pixel", "traditional art"), ("pixel art", "traditional painting")],
-    "cubism_futurism": [("cubism", "futurism")],
-    "digital_traditional_fusion": [("digital", "traditional", "fusion"), ("digital painting", "traditional elements")],
-    "retro_pixel_vaporwave": [("retro pixel", "vaporwave"), ("pixel art", "vaporwave aesthetic")],
-    "psychedelic_surrealism": [("psychedelic", "surrealism"), ("trippy", "surreal")],
-    "hybrid_traditional_digital": [("hybrid", "traditional", "digital"), ("traditional art", "digital enhancement")],
-    "installation_art": [("installation", "art"), ("art installation", "immersive art piece")],
-    "scientific_technological_hybrid": [("scientific", "technological", "hybrid"), ("data driven", "art"), ("algorithmic", "art installation")],
-    "augmented_reality_art": [("augmented reality", "art"), ("ar", "art"), ("mixed reality", "art piece"), ("vr", "art experience")],
-    "abstract_expressionism_cubism_fusion": [("abstract expressionism", "cubism"), ("expressionist", "cubist forms")],
-    "collage_digital_overlay": [("collage", "digital overlay"), ("photomontage", "digital effects")],
-    "experimental_mixed_media": [("experimental", "mixed media"), ("avant garde", "combined media")],
+    "digital_pixel_traditional": [("digital pixel", "traditional art"), ("pixel art", "traditional painting"), ("pixel", "paint", "hybrid")], # Added from restored
+    "patchwork_fabric": [("patchwork", "fabric"), ("fabric", "collage"), ("textile", "patchwork")], # Added from restored
+    "mixed_media_collage": [("mixed media", "collage"), ("collage", "art"), ("assemblage", "mixed media"), ("combined", "media")], # Added from restored
+    "whimsical_fantasy": [("whimsical", "fantasy"), ("fantasy", "whimsical"), ("dreamlike", "whimsical")], # Added from restored
+    "cubism_futurism": [("cubism", "futurism"), ("angular", "futurism"), ("geometric", "futurism")],
+    "digital_traditional_fusion": [("digital", "traditional", "fusion"), ("hybrid", "digital", "traditional"), ("mixed media", "fusion")], # Added from restored
+    "retro_pixel_vaporwave": [("retro pixel", "vaporwave"), ("pixel art", "vaporwave aesthetic"), ("synthwave", "pixel")], # Added from restored
+    "psychedelic_surrealism": [("psychedelic", "surrealism"), ("trippy", "surreal art"), ("dreamlike", "psychedelic")], # Added from restored
+    "hybrid_traditional_digital": [("hybrid", "traditional", "digital"), ("traditional", "digital", "fusion"), ("mixed", "traditional", "digital")], # Added from restored
+    "installation_art": [("installation", "art"), ("immersive", "art"), ("spatial", "art"), ("mixed media", "installation")], # Added from restored
+    "scientific_technological_hybrid": [("scientific", "technological", "hybrid"), ("data driven", "art"), ("algorithmic", "art"), ("ai", "art"), ("ar", "tech art"), ("vr", "tech art")], # Added from restored
+    "augmented_reality_art": [("augmented reality", "art"), ("ar", "art"), ("mixed reality", "art"), ("interactive", "digital art")], # Added from restored
+    "abstract_expressionism_cubism_fusion": [("abstract expressionism", "cubism"), ("abstract", "cubism", "fusion"), ("expressionist", "cubism")], # Added from restored
+    "collage_digital_overlay": [("collage", "digital overlay"), ("digital", "collage"), ("photo manipulation", "collage")], # Added from restored
+    "experimental_mixed_media": [("experimental", "mixed media"), ("avant-garde", "mixed media"), ("boundary pushing", "mixed media")], # Added from restored
 }
 
-# --- General Category Keywords ---
-# Maps broader categories to a list of identifying keywords/phrases (normalized lowercase).
-def normalize_style_name(style_name: str) -> str:
-    name = str(style_name).lower()
-    name = name.replace('_', ' ').replace('-', ' ')
-    name = name.replace('colour', 'color') # UK to US English
-    name = name.replace('water color', 'watercolor') # Spaced variant
-    name = name.replace('sci fi', 'scifi') # Common abbreviation
-    name = re.sub(r'\s+', ' ', name).strip() # Remove extra spaces
-    return name
-
-categories_keywords_raw: Dict[str, List[str]] = {
-    # Portraits
+# --- General Category Keywords (Merged) ---
+# Combines keywords from both V3 and Restored catalogs for broader matching.
+# Duplicates are removed automatically by converting to set and back to list.
+_categories_keywords_v3 = { # Copied from V3 for merging
     "photographic_portrait": ["photographic portrait", "photo realistic portrait", "dslr portrait"],
     "traditional_portrait": ["traditional portrait painting", "classic painted portrait", "oil on canvas portrait"],
     "futuristic_portrait": ["futuristic character portrait", "scifi human portrait", "future concept portrait"],
@@ -306,8 +317,6 @@ categories_keywords_raw: Dict[str, List[str]] = {
     "fashion_portrait": ["fashion photography portrait", "editorial model shot", "vogue style image", "beauty shot"],
     "selfie_portrait": ["selfie style", "phone self portrait", "social media selfie"],
     "fantasy_portrait": ["fantasy character portrait", "elf face", "wizard depiction", "mythical being portrait"],
-
-    # Specific Styles
     "noir_photography": ["noir film photography", "black and white crime photo", "chiaroscuro detective"],
     "digital_collage": ["digital collage art", "photomontage composition", "layered digital graphics"],
     "claymation": ["claymation style", "stop motion clay model", "plasticine animation"],
@@ -336,35 +345,25 @@ categories_keywords_raw: Dict[str, List[str]] = {
     "glitch_art": ["glitch effect art", "databending images", "digital distortion graphics"],
     "retrowave": ["retrowave design style", "synthwave visuals", "outrun aesthetic graphics", "80s neon future"],
     "vaporwave": ["vaporwave art style", "90s internet aesthetic", "glitchy pastel nostalgia", "classical statue glitch"],
-    "mediterranean_style": ["mediterranean painting", "tuscan landscape art", "greek island scenery"],
+    "mediterranean_style": ["mediterranean painting", "tuscan scenery", "greek island visuals"],
     "animal_inspired": ["animal-inspired patterns", "animal motif artwork", "wildlife themed design"],
     "space_art": ["space exploration art", "astronomical illustration", "cosmic nebula painting", "galaxy artwork"],
     "robot_art": ["robot concept design", "mech warrior art", "cybernetic android illustration", "mecha drawing"],
-
-    # Game Styles
     "game_cel_shaded": ["cel shaded game graphics", "toon shaded 3d models", "anime style video game"],
     "game_retro": ["retro video game art", "8-bit pixel graphics", "16-bit game design", "classic arcade style"],
     "game_style": ["video game concept art", "game environment design", "game character model", "unity game screenshot", "unreal engine visuals"],
-
-    # Cyberpunk
     "cyberpunk_cityscape": ["cyberpunk city skyline", "neon lit urban future", "blade runner style city"],
-    "cyberpunk_action": ["cyberpunk combat art", "sci-fi gunfight scene", "futuristic battle concept"],
+    "cyberpunk_action": ["cyberpunk combat art", "sci-fi gunfight scene", "future fight concept"],
     "cyberpunk_technology": ["cyberpunk ui design", "holographic interface art", "future tech gadgets display"],
     "cyberpunk": ["cyberpunk genre art", "high tech low life visuals", "dystopian neon future"],
-
-    # Fantasy
     "fantasy_battle": ["epic fantasy battle art", "mythical combat illustration", "dragon fight scene"],
     "fantasy_cityscape": ["magical city concept", "elven architecture design", "dwarven city illustration", "floating fantasy city"],
     "fantasy_landscape": ["enchanted forest painting", "mystical mountain range art", "alien planet environment"],
     "whimsical_fantasy": ["whimsical fairy tale art", "dreamy fantasy illustration", "lighthearted magical scene"],
     "fantasy": ["high fantasy art", "mythical creature illustration", "epic world building art", "sword and sorcery visuals"],
-
-    # Sci-Fi
     "sci_fi_futuristic": ["advanced scifi technology", "space opera concept art", "far future civilization design"],
     "sci_fi": ["science fiction concept art", "futuristic vehicle design", "alien planet exploration", "spaceship interior"],
-
-    # Illustration
-    "illustration_pixar": ["pixar style 3d animation", "pixar character concept"],
+    "illustration_pixar": ["pixar animation style", "pixar character concept"],
     "illustration_disney": ["disney animation style", "classic disney character art"],
     "illustration_tom_jerry": ["tom and jerry style cartoon", "hanna-barbera character design"],
     "illustration_vintage_cartoon": ["vintage cartoon animation", "rubber hose style art", "1930s character art"],
@@ -378,64 +377,146 @@ categories_keywords_raw: Dict[str, List[str]] = {
     "illustration_surreal": ["surreal narrative illustration", "dreamlike character art"],
     "illustration_fantasy": ["fantasy story illustration", "mythical creature drawing"],
     "illustration": ["general illustrative art", "stylized representational art", "narrative drawing"],
-
-    # Painting
-    "oil_painting": ["oil painting artwork", "oil on canvas piece", "traditional oil medium"],
-    "watercolor": ["watercolor wash painting", "watercolour illustration", "aquarelle landscape"],
+    "oil_painting": ["oil painting technique", "oil on canvas art", "traditional oils"],
+    "watercolor": ["watercolor painting", "watercolour art", "aquarelle technique"],
     "pastel": ["pastel portrait drawing", "pastel landscape art", "soft pastel technique", "oil pastel artwork"],
     "acrylic_painting": ["acrylic abstract painting", "acrylic on board", "modern acrylic art"],
     "digital_painting": ["digital painting illustration", "photoshop concept art", "procreate character design", "painterly digital art"],
-
-    # Drawing
     "pencil_sketch": ["graphite pencil sketch", "detailed pencil drawing", "realistic pencil portrait"],
     "ink_drawing": ["pen and ink illustration", "ink wash drawing", "black and white ink art", "hatching ink technique"],
-    "charcoal": ["charcoal figure drawing", "charcoal landscape sketch", "expressive charcoal art"],
+    "charcoal": ["charcoal drawing medium", "charcoal art piece", "charcoal portrait sketch"],
     "line_art": ["clean line art", "outline illustration", "inking comic art", "vector line drawing"],
     "drawing": ["hand-drawn illustration", "traditional sketch artwork", "observational drawing"],
-
-    # Photographic
     "street_photography": ["candid street photography", "urban environment photos", "city life documentation"],
-    "documentary": ["documentary photo series", "photojournalistic story", "reportage photography style"],
+    "documentary": ["documentary photo series", "photojournalistic story", "reportage imagery"],
     "cinematic": ["cinematic shot composition", "film still photography", "movie scene aesthetic", "dramatic lighting photo"],
-    "photographic": ["realistic photograph", "dslr camera image", "high quality photo print"],
-
-    # Abstract & Conceptual
+    "photographic": ["general photographic style", "realistic photo image", "dslr camera shot"],
     "constructivism": ["constructivist poster design", "geometric avant-garde art", "russian constructivism"],
     "low_poly": ["low poly 3d art", "faceted polygon design", "geometric minimalist 3d"],
     "abstract_conceptual": ["abstract conceptual painting", "idea-based visual representation", "symbolic abstract forms"],
-    "abstract": ["abstract expressionist art", "non-objective painting", "geometric abstract patterns design"],
+    "abstract": ["abstract artwork", "non-objective painting", "abstract geometric patterns design"],
     "expressionism": ["expressionist painting", "emotive art style", "german expressionism"],
     "fauvism": ["fauvist color painting", "wild beast art movement", "matisse style fauvism"],
     "art_nouveau": ["art nouveau design", "jugendstil illustration", "organic flowing lines art"],
     "art_deco": ["art deco architecture", "gatsby style design", "modernist geometric patterns"],
-
-    # Material/Sculptural
     "material_sculptural": ["mixed material sculpture", "3d form installation", "textured sculptural art"],
     "sculpture": ["bronze sculpture", "marble statue", "clay modeling figure", "wood carving art"],
-
-    # Broad Digital/Traditional
-    "3d_render": ["3d architectural render", "cgi product visualization", "computer graphics animation still", "photorealistic 3d scene"],
-    "vector_art": ["vector illustration design", "adobe illustrator graphics", "scalable vector logo"],
-    "digital_art": ["general digital artwork", "computer generated art piece", "digital media creation"],
+    "3d_render": ["3d render cgi", "computer generated imagery", "blender 3d scene", "maya character model", "3d visualization"],
+    "vector_art": ["vector graphics illustration", "adobe illustrator art", "scalable vector design"],
+    "digital_art": ["general digital artwork", "computer created art piece", "digital media creation"],
     "traditional_painting_drawing": ["classic art techniques", "traditional art media painting", "non-digital drawing methods"],
-
-    # Other techniques/themes
     "papercraft": ["3d papercraft model", "paper art sculpture", "kirigami cut paper", "origami animal"],
     "ascii_art": ["ascii text picture", "character art graphic", "terminal art image"],
     "default": ["standard style", "generic artwork", "basic visual design"],
     "unknown": ["undefined art style", "other category", "unclassified visual"],
 }
-
-# Normalize all keywords for improved matching
-categories_keywords: Dict[str, List[str]] = {
-    cat: [normalize_style_name(keyword) for keyword in keywords]
-    for cat, keywords in categories_keywords_raw.items()
+_categories_keywords_restored = { # Copied from Restored for merging
+    "3d_render": ["3d", "3d render", "3d modeling", "3d model", "3d illustration", "cgi", "c.g.i", "cg render", "clay render", "octane render", "arnold render", "blender", "maya", "cinema 4d", "unreal engine", "3ds max", "zbrush", "keyshot", "pixar style 3d", "toon 3d", "stylized 3d", "photoreal 3d", "3d portrait", "3d scene", "3d composition", "3d character", "3d environment"],
+    "digital_collage": ["digital collage", "collage", "layered composition", "cut and paste", "scanned elements", "digital scraps", "montage", "composite", "mixed material collage"],
+    "noir_photography": ["noir", "noir photography", "film noir", "black and white", "high contrast", "grainy", "low key lighting", "shadowy", "moody", "hardboiled"],
+    "fractal_generative_art": ["fractal", "generative", "mandelbrot", "julia set", "recursion", "algorithmic art", "mathematical", "iterative pattern", "fractal gradient"],
+    "folk_art": ["folk art", "traditional motif", "ethnic art", "decorative", "regional", "naive art", "cultural art", "handcrafted look", "ornamental"],
+    "vr_ar_art": ["vr art", "ar art", "virtual reality", "augmented reality", "360 art", "immersive art", "3d immersive", "interactive media", "xr experience"],
+    "sketchbook_mixed_media": ["sketchbook", "mixed media sketch", "pencil and ink", "wash and mark", "journaling art", "studio work-in-progress", "scribble layered", "inline notes", "informal study"],
+    "line_art": ["line art", "lineart", "clean lines", "ink lines", "digital line art", "line drawing"],
+    "illustration_pixar": ["pixar", "pixar style", "pixar animation"],
+    "illustration_disney": ["disney", "disney style", "disney animation"],
+    "illustration_tom_jerry": ["tom & jerry", "tom and jerry", "hanna-barbera"],
+    "illustration_vintage_cartoon": ["vintage cartoon", "rubber hose", "1930s cartoon", "classic cartoon"],
+    "illustration_anime_manga": ["anime", "manga", "shonen", "shojo", "seinen", "japanese animation"],
+    "illustration_comic": ["comic", "comic book", "comic strip", "sequential art"],
+    "illustration_pixel": ["pixel art", "8-bit", "16-bit", "pixelated", "retro game art"],
+    "illustration_graphic": ["illustration", "cartoon", "cartoony", "graphic novel"],
+    "illustration_childrens": ["children's book", "picture book", "kids illustration"],
+    "illustration_fantasy": ["fantasy illustration", "mythical", "magical creatures"],
+    "illustration_cubist": ["cubist illustration", "geometric illustration", "fragmented illustration", "cubist", "cubism"],
+    "illustration_surreal": ["surreal illustration", "dreamlike illustration", "fantastical illustration", "surreal"],
+    "illustration_steampunk": ["steampunk illustration", "victorian sci-fi illustration", "industrial fantasy illustration", "steampunk"],
+    "ink_punk": ["ink punk", "inkpunk", "hand-drawn sketchy", "unfinished look"],
+    "photographic_portrait": ["photographic portrait", "photo portrait", "realistic portrait"],
+    "traditional_portrait": ["traditional portrait", "oil portrait", "watercolor portrait", "pastel portrait", "charcoal portrait"],
+    "futuristic_portrait": ["futuristic portrait", "sci-fi portrait", "cyberpunk portrait"],
+    "illustration_portrait": ["illustration portrait", "cartoon portrait", "anime portrait", "manga portrait"],
+    "pop_portrait": ["pop portrait", "pop art portrait"],
+    "environmental_portrait": ["environmental portrait", "on-location portrait", "location portrait", "in environment", "surroundings portrait", "contextual portrait"],
+    "caricature_portrait": ["caricature", "caricature portrait", "exaggerated portrait", "satirical portrait", "comic portrait"],
+    "conceptual_portrait": ["conceptual portrait", "concept portrait", "symbolic portrait", "metaphorical portrait", "abstract portrait", "idea-driven portrait"],
+    "fashion_portrait": ["fashion portrait", "editorial portrait", "runway portrait", "stylish portrait", "high-fashion portrait", "magazine portrait"],
+    "selfie_portrait": ["selfie", "selfie portrait", "self-portrait", "arm's length portrait", "smartphone portrait", "front camera portrait"],
+    "oil_painting": ["oil painting", "oil paint", "impasto", "alla prima", "wet-on-wet"],
+    "watercolor": ["watercolor", "watercolour", "wet-on-wet", "wet-on-dry"],
+    "pastel": ["pastel", "pastel drawing", "pastel painting"],
+    "charcoal": ["charcoal sketch", "charcoal drawing", "charcoal art"],
+    "pencil_sketch": ["pencil", "pencil sketch", "graphite", "pencil drawing"],
+    "ink_drawing": ["ink drawing", "ink sketch", "pen and ink", "line drawing", "line art", "ink wash"],
+    "acrylic_painting": ["acrylic", "acrylic paint", "acrylic painting"],
+    "digital_painting": ["digital painting", "digital illustration", "digital art"],
+    "traditional_painting_drawing": ["impressionist", "renaissance", "baroque", "rococo", "acrylic", "tempera", "art nouveau", "art deco", "cubism", "constructivism", "futurism", "pointillism", "divisionism", "ukiyo-e", "woodcut", "linocut", "etching"],
+    "realism": ["realism", "realistic", "photoreal", "hyperrealism", "photorealistic"],
+    "abstract": ["abstract", "abstract art", "non-representational"],
+    "expressionism": ["expressionism", "expressionist", "emotional art"],
+    "surrealism": ["surrealism", "surreal", "dreamlike", "fantastical"],
+    "cubism": ["cubism", "cubist", "geometric abstraction"],
+    "fauvism": ["fauvism", "fauvist", "wild beasts"],
+    "art_nouveau": ["art nouveau", "new art", "modern style"],
+    "art_deco": ["art deco", "decop", "modernist"],
+    "art_deco_revival": ["art deco revival", "art deco revival", "art deco style", "art deco architecture"],
+    "constructivism": ["constructivism", "constructivist", "industrial art"],
+    "low_poly": ["low poly", "low polygon", "polygonal art"],
+    "isometric": ["isometric", "isometric view", "axonometric"],
+    "digital_art": ["digital art", "digital painting", "vector art", "glitch art", "vaporwave", "retrowave", "rendered", "digital illustration", "digital media"],
+    "psychedelic": ["psychedelic", "trippy", "hallucinogenic", "psychedelia", "acid art"],
+    "cyberpunk": ["cyberpunk", "cyberpunk art", "futuristic", "neon city"],
+    "retrowave": ["retrowave", "vaporwave", "80s revival", "synthwave"],
+    "glitch_art": ["glitch art", "glitch effect", "digital glitch", "error art"],
+    "vector_art": ["vector art", "vector illustration", "vector graphics"],
+    "game_style": ["game style", "game art", "game engine", "unity", "unreal", "unreal engine", "unity engine", "pubg", "cyberpunk game", "fps", "rpg", "in-engine", "cel-shaded", "cyberpunk cityscape"],
+    "game_retro": ["retro game", "8-bit", "16-bit", "pixel art", "chunky pixels"],
+    "game_cel_shaded": ["cel-shaded", "toon shading", "anime style", "cartoon style"],
+    "game_3d": ["3d game", "3d engine", "realistic game", "next-gen game"],
+    "game_indie": ["indie game", "indie art", "hand-drawn game"],
+    "photographic": ["photo", "photograph", "photographic", "shot on", "dslr", "camera", "realistic", "film", "kodak", "fujifilm", "cinematic", "hyperrealism", "realism", "portrait photography", "landscape photography", "street photography"],
+    "cinematic": ["cinematic", "film look", "movie style", "motion picture"],
+    "documentary": ["documentary", "documentary style", "journalistic"],
+    "street_photography": ["street photography", "urban photography", "candid photography"],
+    "fantasy": ["fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "fairy tale", "castle", "fantasy landscape"],
+    "sci_fi": ["sci-fi", "science fiction", "spaceship", "space opera"],
+    "space_art": ["space art", "astronomy art", "cosmic", "galaxy"],
+    "robot_art": ["robot art", "mech art", "cybernetic", "mecha"],
+    "steampunk": ["steampunk", "victorian sci-fi", "industrial fantasy"],
+    "dystopian": ["dystopian", "post-apocalyptic", "dark future", "ruined world"],
+    "papercraft": ["papercraft", "paper cut", "folded paper", "layered paper", "glued paper"],
+    "luna_photo": ["luna photo", "double exposure", "surreal photographic", "ethereal photo"],
+    "pop_surrealism": ["pop surrealism", "lowbrow art", "cartoon surrealism", "fantastical pop art"],
+    "synesthesia_art": ["synesthesia art", "color sound fusion", "sensory blending art"],
+    "weirdcore": ["weirdcore", "surreal glitch", "dreamlike glitch", "uncanny art"],
+    "dreamcore": ["dreamcore", "dreamlike aesthetic", "ethereal dream art"],
+    "ferrofluid": ["ferrofluid", "magnetic fluid art", "liquid metal art"],
+    "animal_inspired": ["animal inspired", "animal motif", "fauna art", "wildlife art"],
+    "ascii_art": ["ascii art", "text art", "character art", "typographic art"],
+    "biopunk": ["biopunk", "biological cyberpunk", "genetic art", "bio-tech art"],
+    "kinetic_art": ["kinetic art", "moving art", "dynamic sculpture", "motion art"],
+    "nightcore": ["nightcore", "fast paced art", "high energy art", "vibrant neon art"],
+    "optic_art": ["optic art", "op art", "optical illusion art", "visual trickery"],
+    "claymation": ["claymation", "stop motion", "clay animation", "clay figure animation"],
+    "unknown": []
 }
 
-# --- All Categories List (Dynamically Generated) ---
+categories_keywords: Dict[str, List[str]] = {}
+for cat, keywords in _categories_keywords_v3.items():
+    categories_keywords.setdefault(cat, []).extend(keywords)
+for cat, keywords in _categories_keywords_restored.items():
+    categories_keywords.setdefault(cat, []).extend(keywords)
+
+# De-duplicate keywords within each category
+for cat in categories_keywords:
+    seen_keywords = set()
+    categories_keywords[cat] = [kw for kw in categories_keywords[cat] if not (kw in seen_keywords or seen_keywords.add(kw))]
+
+# --- All Categories List (Dynamically Generated - Merged) ---
 def get_all_defined_categories() -> List[str]:
-    """Returns a sorted list of all unique category names defined in this catalog."""
-    _all_cats: Set[str] = set(preferred_order)
+    """Returns a sorted list of all unique category names defined in this merged catalog."""
+    _all_cats: Set[str] = set(preferred_order) # Start with merged preferred order
     _all_cats.update(hybrid_styles.values())
     _all_cats.update(hybrid_categories_keywords.keys())
     _all_cats.update(categories_keywords.keys())
@@ -443,10 +524,11 @@ def get_all_defined_categories() -> List[str]:
 
 all_categories: List[str] = get_all_defined_categories()
 
-# --- Instructions for AI based on Category ---
+# --- Instructions for AI based on Category (Merged) ---
+# Using the more detailed V3 version and adding/merging instructions from restored if needed
 def instructions_for_category(category: str, base_style: str) -> str:
     """Return specific instructions for the AI based on the detected style category."""
-    category = category.lower() # Ensure lowercase for matching
+    category = category.lower()
     base_style_clean = base_style.replace('_', ' ').title()
     default_instruction = (
         f"Emphasize the core characteristics of '{base_style_clean}'. "
@@ -459,8 +541,8 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "for skin tones and mood. Detail should be fitting for the specific portrait style."
     )
 
-    cat_instructions: Dict[str, str] = {
-        # Portraits
+    # Base instructions from V3 (more comprehensive)
+    cat_instructions_v3: Dict[str, str] = {
         "photographic_portrait": f"{portrait_base_instruction} Prioritize realism, natural skin textures, and appropriate depth of field. Camera settings (aperture, lens) are crucial.",
         "traditional_portrait": f"{portrait_base_instruction} Emulate classical painting techniques. Consider medium (oil, watercolor, etc.), brushwork, and traditional lighting (Rembrandt, Chiaroscuro).",
         "futuristic_portrait": f"{portrait_base_instruction} Incorporate sci-fi or cyberpunk elements: cybernetics, neon lighting, advanced tech aesthetics. Mood: stoic, intense, mysterious.",
@@ -473,8 +555,6 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "fashion_portrait": f"{portrait_base_instruction} Showcase clothing, style, and attitude. Posing, makeup, and lighting should be editorial and impactful. Can be studio or location.",
         "selfie_portrait": f"{portrait_base_instruction} Capture the informal, often spontaneous feel of a self-taken photo. Consider phone camera aesthetics, common filters, and casual backgrounds.",
         "fantasy_portrait": f"{portrait_base_instruction} Depict characters from fantasy genres (elves, wizards, warriors). Include magical elements, ornate costumes, and an epic or mystical mood.",
-
-        # Hybrids & Fusions
         "abstract_expressionism_cubism_fusion": "Combine gestural, emotive brushwork of abstract expressionism with the fragmented, multi-perspective forms of cubism. Dynamic and layered.",
         "anime_oilpainting": "Merge anime/manga character styles (large eyes, distinct hair) with the rich textures, blending, and volumetric lighting of oil painting. Avoid flat cel-shading.",
         "minimalist_geometric": "Focus on extreme simplicity using basic geometric shapes (lines, circles, squares). Emphasis on negative space. Limited color palette, often monochrome or pastels.",
@@ -494,8 +574,6 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "digital_pixel_traditional": "Merge pixel art aesthetics with traditional painting or drawing techniques. For example, a painted scene with pixelated characters, or a pixel art base with painted textures.",
         "scientific_technological_hybrid": "Art that integrates scientific data, concepts, or technological processes (like AI, algorithms, biotech) into its visual form or creation method.",
         "morphism_surreal": "Focus on surreal transformations where objects or figures fluidly morph into one another or into abstract shapes. Dreamlike and fantastical.",
-
-        # Specific Styles
         "noir_photography": "Monochrome, deep shadows, moody lighting, strong contrasts. Motif: Dramatic, cinematic, shadow play, mysterious subject matter. Film grain and analog authenticity. Mood: Suspenseful, introspective, classic.",
         "digital_collage": "Assemble disparate digital elements (photos, textures, graphics) into a cohesive new image. Emphasize layering, juxtaposition, and possibly surreal or abstract compositions.",
         "claymation": "Emulate the look of stop-motion clay animation. Visible textures like fingerprints or tool marks are good. Characters often have simple, expressive forms. Lighting is usually practical/studio.",
@@ -520,8 +598,6 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "screen_printing_bold": "Emulate the look of screen printing (serigraphy). Bold graphics, flat areas of color (often limited palette), high contrast, and a slightly tactile, layered appearance.",
         "synesthesia_art": "Attempt to visually represent the experience of synesthesia (e.g., seeing sounds, tasting colors). Abstract, with color, shape, and movement used to evoke sensory crossovers.",
         "weirdcore": "Similar to dreamcore but often more unsettling, absurd, or amateurish in aesthetic. Uses found images, low-quality digital artifacts, and nonsensical juxtapositions to create an uncanny feeling.",
-
-        # General Styles
         "cyberpunk_cityscape": "Vast, dense futuristic city with towering skyscrapers, abundant neon signs, holographic ads, rain, and a gritty, dystopian atmosphere. Night or perpetual twilight scenes are common.",
         "fantasy_landscape": "Depict magical, otherworldly environments: enchanted forests, floating islands, mystical mountains, ancient ruins. Lighting can be ethereal, with god rays or magical glows.",
         "line_art": "Focus on clean, precise outlines. Minimal to no shading or color fills. Emphasis is on the quality and expressiveness of the line itself. Can be technical or illustrative.",
@@ -536,8 +612,103 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "illustration_anime_manga": "Distinctive character designs (large eyes, stylized hair), cel-shaded or soft shading, dynamic action poses or emotional close-ups. Backgrounds can be detailed or stylistic.",
         "illustration_comic": "Bold outlines, panel layouts (even if single image), dynamic compositions, often with dramatic lighting or action. Consider specific eras (Golden Age, Modern).",
         "illustration_pixel": "Low-resolution aesthetic, composed of individual pixels. Limited color palette typical of retro games (8-bit, 16-bit). Can be for characters, scenes, or UI elements.",
+        "patchwork_collage": """* **Patchwork Collage Focus:**
+        - Technique: Combine different textures/patterns like fabric scraps, paper cutouts. Layering.
+        - Texture: Visible seams, fabric weave, paper edges, tactile feel.
+        - Colors: Varied, can be harmonious or contrasting based on 'patches'.
+        - Mood: Handcrafted, textured, eclectic, potentially folk-art inspired.""", # From restored
+        "whimsical_mixed_media": """* **Whimsical Mixed Media Focus:**
+        - Motifs: mythical creatures, soft colors, playful elements, stars
+        - Texture: light airy layered textures
+        - Color Palette: pastel dreamy colors
+        - Aesthetic Blend: Lighthearted, dreamy compositions with fantasy elements and playful accents.""", # Merged
+        "mediterranean_style": """* **Mediterranean Style Focus:**
+        - Environment: sunny coastal scenes vibrant landscapes
+        - Color Palette: warm bright natural colors (blues, whites, terracotta)
+        - Lighting: bright natural sunlight warm glow
+        - Aesthetic Blend: Vivid, colorful depictions of Mediterranean life, architecture, and scenery.""", # Merged
+        "morphism_surreal": """* **Morphism Surreal Focus:**
+        - Transformation Style: surreal fluid fantastical morphing
+        - Color Palette: vibrant dreamlike colors
+        - Composition: morphing shapes illogical progressions
+        - Aesthetic Blend: Surreal transformations where objects fluidly blend or change form with fantastical and dreamlike qualities.""", # Merged
+        "cubism_mixed": """* **Cubism Mixed Focus:**
+        - Form Style: angular fragmented forms with multiple perspectives
+        - Color Palette: muted earthy tones with bold accents
+        - Composition: geometric abstraction with layered planes and mixed media textures
+        - Aesthetic Blend: Classic Cubist style principles combined with mixed media elements and modern influences.""", # Merged
+        "pixel_patchwork": """* **Pixel Patchwork Focus:**
+        - Pixel Style: pixel art combined with voxel art elements
+        - Color Palette: limited vibrant 8-bit palette
+        - Texture: blocky geometric pixelated texture
+        - Aesthetic Blend: Pixelated and geometric patchwork style combining digital retro motifs with quilt-like composition.""", # Merged
+        "phygital_hybrid": """* **Phygital Hybrid Focus:**
+        - Media Fusion: physical sculpture combined with augmented reality digital art
+        - Technology: AR tracking with 3D printing elements
+        - Aesthetic Blend: Hybrid physical/digital artwork blending real object presence with interactive virtual elements.""", # Merged
+        "screen_printing_bold": """* **Screen Printing Bold Focus:**
+        - Print Style: bold graphic tactile screen print
+        - Color Palette: limited high contrast colors (e.g., 2-3 colors)
+        - Texture: flat layered ink texture with slight misregistration effect
+        - Aesthetic Blend: Bold graphic prints reminiscent of serigraphy with tactile qualities and strong visual contrasts.""", # Merged
+        "digital_pixel_traditional": """* **Digital Pixel Traditional Focus:**
+        - Media Fusion: digital pixel art characters combined with traditional painted background
+        - Color Palette: vibrant mixed palette (pixelated foreground, painterly background)
+        - Texture: pixelated character texture contrasted with painterly background texture
+        - Aesthetic Blend: Fusion of distinct pixel art style for subjects and traditional painting techniques for environment.""", # Merged
+        "patchwork_fabric": """* **Patchwork Fabric Focus:**
+        - Material: various fabric textiles
+        - Assembly: sewn and layered fabric patches
+        - Texture: soft tactile fabric textures
+        - Color Palette: warm earthy fabric colors
+        - Aesthetic Blend: Textile patchwork art with warm, tactile qualities and visible stitching.""", # Merged
+        "mixed_media_collage": """* **Mixed Media Collage Focus:**
+        - Media: paper cutouts, acrylic paint, found objects, fabric scraps
+        - Texture: highly layered tactile textures
+        - Color Palette: varied eclectic color palette
+        - Aesthetic Blend: Eclectic collage combining diverse physical media and textures into a cohesive piece.""", # Merged
+        "whimsical_fantasy": """* **Whimsical Fantasy Focus:**
+        - Motifs: fantasy creatures (fairies, sprites), pastel colors, dreamy atmosphere, sparkling elements
+        - Texture: soft layered textures with glittery effects
+        - Color Palette: pastel soft color palette
+        - Aesthetic Blend: Dreamy fantasy illustration style with playful characters and soft, whimsical elements.""", # Merged
+        "cubism_futurism": """* **Cubism Futurism Focus:**
+        - Form Style: angular geometric dynamic forms
+        - Color Palette: muted metallic colors with dynamic lines
+        - Composition: layered fragmented planes suggesting motion
+        - Aesthetic Blend: Fusion of cubist fragmentation and futurist dynamism/speed.""", # Merged
+        "digital_traditional_fusion": """* **Digital Traditional Fusion Focus:**
+        - Media Fusion: digital painting techniques combined with traditional drawing aesthetics
+        - Texture: layered digital textures mimicking traditional media
+        - Color Palette: varied rich color palette blending digital and traditional hues
+        - Aesthetic Blend: Rich fusion of digital painting capabilities and traditional artistic sensibilities.""", # Merged
+        "retro_pixel_vaporwave": """* **Retro Pixel Vaporwave Focus:**
+        - Style: retro pixel art combined with vaporwave aesthetics
+        - Color Palette: neon pastel vibrant vaporwave colors
+        - Texture: pixelated texture with glitch effects
+        - Aesthetic Blend: Retro pixel art (e.g., 16-bit style) infused with vaporwave elements like neon grids, classical statues, and glitch artifacts.""", # Merged
+        "psychedelic_surrealism": """* **Psychedelic Surrealism Focus:**
+        - Motifs: trippy surreal dreamlike imagery
+        - Color Palette: vibrant neon contrasting psychedelic colors
+        - Visual Effects: glowing elements, morphing shapes, fractal patterns
+        - Aesthetic Blend: Intense, swirling psychedelic visuals combined with illogical surreal dreamscapes and transformations.""", # Merged
+        "digital_painting": "* **Digital Painting Focus:** Flexible techniques (painting, vector, 3D non-game), studio/atmospheric lighting, digital effects, full color range.", # From restored
+        "traditional_painting_drawing": "* **Traditional Medium:** Emphasize texture/brushwork, natural/atmospheric light, consider historical movements, traditional palettes.", # From restored
+        "abstract_conceptual": "* **Abstract Focus:** Non-representational form, expressive color, unconventional composition, modern art influences.", # From restored
+        "abstract": "* **Abstract Focus:** Non-representational form, expressive color, unconventional composition, modern art influences.", # Alias
         "default": default_instruction
     }
-    # Fallback for categories not explicitly listed
-    return cat_instructions.get(category, default_instruction + f" Pay close attention to the nuances of '{base_style_clean}' when generating settings.")
+
+    # Get instruction from the merged dictionary, fallback to default
+    instruction = cat_instructions_v3.get(category)
+
+    # If not found in V3, check the simpler restored instructions (less likely needed now but for safety)
+    if not instruction:
+         if category == "watercolor_pencil": instruction = cat_instructions_v3.get("watercolor_pencil") # Already covered
+         elif category == "minimalist_geometric": instruction = cat_instructions_v3.get("minimalist_geometric") # Already covered
+         elif category == "patchwork_collage": instruction = cat_instructions_v3.get("patchwork_collage") # Already covered
+         # ... add other specific fallbacks from restored if necessary ...
+         else: instruction = default_instruction + f" Pay close attention to the nuances of '{base_style_clean}' when generating settings."
+
+    return instruction
 

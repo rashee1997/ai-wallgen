@@ -13,4 +13,4 @@ tinydb>=4.7.0
 rapidfuzz>=2.13.7
 
 # Note: 'clrprint' and 'PyQt5' added based on project imports in ui_utils.py and qt_preview.py respectively.
-# PyQt6 removed as per user request.
+

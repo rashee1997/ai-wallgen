@@ -92,6 +92,31 @@ def dynamic_technical_context(settings: Dict[str, Any], aspect_ratio: str = "16:
         elif key == "resolution":
             return None
             
+        # Handle camera settings explicitly
+        camera_keys = [
+            "camera model",
+            "lens type",
+            "aperture",
+            "special lens",
+            "focal length",
+            "shutter speed",
+            "iso",
+            "filter type",
+            "depth of field",
+            "white balance",
+            "focus mode",
+            "exposure mode",
+            "image stabilization",
+            "metering mode",
+            "flash mode",
+            "shooting mode",
+            "focus point selection",
+            "image format",
+            "color space",
+        ]
+        if key in camera_keys:
+            return f"captured with {val} {key}"
+            
         # Handle non-standard settings with flexible matching
         if "setting" in key or "preference" in key or "option" in key:
             return f"with {val} {key.replace('_', ' ')} that"
