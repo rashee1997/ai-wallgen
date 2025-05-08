@@ -61,7 +61,6 @@ A terminal-based tool for generating wallpapers using Google's Imagen 3 model vi
 
 [Features](#✨-key-features) • [Installation](#🚀-prerequisites) • [System Components](#🧩-system-components) • [Quick Usage](#⚡-quick-usage) • [Documentation](#📚-documentation) • [License](#📝-license)
 
-<!-- Trending Tags -->
 <p align="center">
   <code>#ai-image-generation</code> •
   <code>#gemini-api</code> •
@@ -95,24 +94,23 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-- 🤖 **AI-Powered Generation:** Generate wallpapers using Google's Imagen 3 model via Gemini API.
-- 🔀 **Multiple Generation Methods:** Choose from AI-generated, random, or custom prompts.
-- 🛠️ **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
-- 🧩 **AI Preset Generation:** Automatically generate coherent setting presets using AI, with CLI commands for generation, listing, loading, and deletion.
-- 🎨 **AI Style Generation:** Generate unique artistic styles using AI, with CLI options for category selection, detailed output, and saving to preferences.
-- ✍️ **Detailed Prompt Engineering:** Sophisticated prompt enhancement techniques for optimal results.
-- 🖼️ **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter), with options for terminal or GUI previews.
-- 💻 **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments, with options to skip preview and apply wallpapers directly.
-- 🕑 **Generation History:** View previously generated wallpapers along with the settings used.
-- 💻 **Terminal-Based UI:** Simple, text-based interface for interactive use.
-- ⌨️ **Command-Line Interface:** Control generation, presets, styles, image previews, and advanced options directly via CLI arguments.
+- <img src="https://api.iconify.design/mdi/brain.svg?color=%236200ea" alt="AI Icon" width="20" height="20" style="vertical-align:middle;"> **AI-Powered Generation:** Generate wallpapers using Google's Imagen 3 model via Gemini API.
+- <img src="https://api.iconify.design/mdi/shuffle-variant.svg?color=%2303a9f4" alt="Methods Icon" width="20" height="20" style="vertical-align:middle;"> **Multiple Generation Methods:** Choose from AI-generated, random, or custom prompts.
+- <img src="https://api.iconify.design/mdi/tune.svg?color=%23ff9800" alt="Settings Icon" width="20" height="20" style="vertical-align:middle;"> **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
+- <img src="https://api.iconify.design/mdi/creation.svg?color=%234caf50" alt="Preset Icon" width="20" height="20" style="vertical-align:middle;"> **AI Preset Generation:** Automatically generate coherent setting presets using AI, with CLI commands for generation, listing, loading, and deletion.
+- <img src="https://api.iconify.design/mdi/palette-swatch-outline.svg?color=%23e91e63" alt="Style Icon" width="20" height="20" style="vertical-align:middle;"> **AI Style Generation:** Generate unique artistic styles using AI, with CLI options for category selection, detailed output, and saving to preferences.
+- <img src="https://api.iconify.design/mdi/pencil-circle-outline.svg?color=%232196f3" alt="Prompt Icon" width="20" height="20" style="vertical-align:middle;"> **Detailed Prompt Engineering:** Sophisticated prompt enhancement techniques for optimal results.
+- <img src="https://api.iconify.design/mdi/image-outline.svg?color=%23795548" alt="Preview Icon" width="20" height="20" style="vertical-align:middle;"> **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter), with options for terminal or GUI previews.
+- <img src="https://api.iconify.design/mdi/desktop-mac-dashboard.svg?color=%23607d8b" alt="Platform Icon" width="20" height="20" style="vertical-align:middle;"> **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments, with options to skip preview and apply wallpapers directly.
+- <img src="https://api.iconify.design/mdi/history.svg?color=%239c27b0" alt="History Icon" width="20" height="20" style="vertical-align:middle;"> **Generation History:** View previously generated wallpapers along with the settings used.
+- <img src="https://api.iconify.design/mdi/console-line.svg?color=%233f51b5" alt="Terminal Icon" width="20" height="20" style="vertical-align:middle;"> **Terminal-Based UI:** Simple, text-based interface for interactive use.
+- <img src="https://api.iconify.design/mdi/keyboard-settings-outline.svg?color=%23009688" alt="CLI Icon" width="20" height="20" style="vertical-align:middle;"> **Command-Line Interface:** Control generation, presets, styles, image previews, and advanced options directly via CLI arguments.
 
 ---
 
 ## 🛠️ Advanced: Adding Custom Keys in User Preferences (Dynamic Settings)
 
-**Wallgen supports unlimited customization!**  
-You can add any custom settings/key–value pairs (at any depth) in your `user_preferences.json` or via the UI/settings menus, and *all* such fields will be automatically discovered and included in prompt generation, thanks to dynamic flattening of settings.
+**Wallgen supports unlimited customization!** You can add any custom settings/key–value pairs (at any depth) in your `user_preferences.json` or via the UI/settings menus, and *all* such fields will be automatically discovered and included in prompt generation, thanks to dynamic flattening of settings.
 
 This lets you extend Imagen settings, styles, or user metadata with no code changes.
 
@@ -264,6 +262,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 <div align="center">
 <a href="https://github.com/rashee1997" target="_blank" rel="noopener noreferrer" style="text-decoration:none; border-radius: 12px; padding: 6px 12px; background-color: #e55353; color: white; font-weight: 600; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: inline-flex; align-items: center; gap: 6px;">
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-  Made with ❤️ by Rasheed
+  Made with by Rasheed
 </a>
 </div>
