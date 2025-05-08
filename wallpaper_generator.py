@@ -20,14 +20,14 @@ import re
 # Removed duplicate import of signal; signal handling is managed by graceful_exit.py
 
 # Import graceful exit handler early to register the signal handler
-import graceful_exit
+from wall_gen import graceful_exit
 import hashlib
 import html
 import shutil
 from urllib.parse import quote
 
 # Import utility functions
-from file_utils import get_generated_image_path
+import wall_gen.file_utils
 from datetime import datetime
 from typing import Optional, Dict, List, Any, Tuple
 import argparse
@@ -38,27 +38,27 @@ import ctypes
 import google.generativeai as genai
 
 # Local application imports
-from settings_modules.settings_import_export import export_settings, import_settings
-from settings_modules.settings_utils import (
+from wall_gen.settings_modules.settings_import_export import export_settings, import_settings
+from wall_gen.settings_modules.settings_utils import (
     update_history_with_filenames,
     load_last_genre,
     save_last_genre,
 )
-from settings_modules.settings_manager import initialize_settings, get_preferences
-from settings_modules.menu_management import main_menu
-from settings_modules.preset_management import (
+from wall_gen.settings_modules.settings_manager import initialize_settings, get_preferences
+from wall_gen.settings_modules.menu_management import main_menu
+from wall_gen.settings_modules.preset_management import (
     manage_presets,
     load_preset,
     save_preset,
     delete_preset,
 )
-from settings_modules.user_preferences import UserPreferences
+from wall_gen.settings_modules.user_preferences import UserPreferences
 
 # The following functions are now called from within the menu management modules,
 # so they do not need to be imported directly in wallpaper_generator.py:
 # manage_genres, manage_styles, manage_moods, manage_wallpaper_settings, manage_imagen_settings, configure_advanced_options
 
-from config import (
+from wall_gen.config import (
     nature_tags,
     space_tags,
     sea_tags,
@@ -72,7 +72,7 @@ from config import (
     CUSTOM_PROMPT_INSTRUCTIONS,
     style_to_tags,  # Added style_to_tags import
 )
-from ui_utils import (
+from wall_gen.ui_utils import (
     print_header,
     print_section,
     print_option,
@@ -86,19 +86,25 @@ from ui_utils import (
     print_breadcrumb,
     print_colored,
 )
-from prompt_generator import (
+# Import directly from submodules instead of the re-exporting prompt_generator.py
+from wall_gen.prompt_modules.core import (
     generate_prompt_gemini,
-    generate_prompt_random,
-    enhance_custom_prompt,
+    # generate_prompt_random, # Likely moved
+    # enhance_custom_prompt, # Likely moved
     enforce_prompt_format,
-    select_random_tags,
-    generate_random_style_mix,
+    # select_random_tags, # Likely in tag_utils
+    # generate_random_style_mix, # Likely in random_generator
     set_prompt_preferences,
     use_user_preferences,
-    SimplePrefs,
-    enhance_negative_prompt,
-    infer_subject_negatives_gemini,
+    # SimplePrefs, # Likely in types
+    # enhance_negative_prompt, # Likely in negative_prompt
+    # infer_subject_negatives_gemini, # Likely in negative_prompt
 )
+from wall_gen.prompt_modules.random_generator import generate_prompt_random, generate_random_style_mix
+from wall_gen.prompt_modules.custom_generator import enhance_custom_prompt
+from wall_gen.prompt_modules.tag_utils import select_random_tags
+from wall_gen.prompt_modules.negative_prompt import enhance_negative_prompt, infer_subject_negatives_gemini
+from wall_gen.prompt_modules.types import SimplePrefs
 
 # Configure logging
 logging.basicConfig(
@@ -383,7 +389,7 @@ def generate_prompt_gemini(tags, user_prefs):
 
         # --- Step 1: Gather sources ---
         # Compose a concise, AI-friendly negative prompt using new logic
-        from prompt_generator import enhance_negative_prompt
+        from wall_gen.prompt_generator import enhance_negative_prompt
 
         negative_prompt = enhance_negative_prompt(settings.get("negative_prompt", ""))
 
@@ -719,7 +725,7 @@ def extract_subject_from_prompt(prompt):
 def get_generated_image_path(prompt):
     """Get the cache path for the generated image."""
     # Try to extract a meaningful subject from the prompt
-    subject = extract_subject_from_prompt(prompt)
+    subject = wall_gen.file_utils.extract_subject_from_prompt_for_filename(prompt)
 
     if subject:
         # Use the extracted subject for the filename
@@ -728,7 +734,7 @@ def get_generated_image_path(prompt):
         filename = f"{subject}_{short_hash}.png"
     else:
         # Fall back to the original method
-        filename = create_filename_from_prompt(prompt)
+        filename = wall_gen.file_utils.create_filename_from_prompt(prompt)
 
     # Ensure the genimage directory exists with absolute path
     genimage_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "genimage")
@@ -1065,7 +1071,7 @@ def save_prompts_to_json(gemini_prompt, enhanced_prompt, filename="prompts.json"
 
 
 # Import new history manager using sqlite3 (instead of the old JSON-based approach)
-from history.history_manager import add_to_history, view_history
+from wall_gen.history.history_manager import add_to_history, view_history
 
 def generate_random_style_mix():
     """Generate a random style mix using either AI or predefined categories."""
@@ -1085,7 +1091,7 @@ def generate_random_style_mix():
     style_settings = settings.get("style_settings", {})
 
     # Import style categories from configuration
-    from config import style_categories as default_style_categories
+    from wall_gen.config import style_categories as default_style_categories
 
     # Use custom categories if available, otherwise use defaults
     style_categories = style_settings.get("style_categories", default_style_categories)
@@ -1107,10 +1113,10 @@ def generate_random_style_mix():
 
 
 # Import get_preferences from wallpaper_settings
-from wallpaper_settings import get_preferences
+from wall_gen.settings_modules.settings_manager import get_preferences # Corrected import
 
 # Import use_user_preferences from prompt_generator
-from prompt_generator import use_user_preferences
+from wall_gen.prompt_generator import use_user_preferences
 
 
 def generate_wallpaper(
@@ -1154,7 +1160,7 @@ def generate_wallpaper(
     gemini_prompt = None
 
     # Import add_to_history from new module
-    from history.history_manager import add_to_history
+    from wall_gen.history.history_manager import add_to_history
     if prompt_type == "custom" and custom_prompt:
         print_info("Processing custom prompt...")
         sanitized_prompt = sanitize_prompt(custom_prompt)
@@ -1182,7 +1188,7 @@ def generate_wallpaper(
         # Check if we should use user preferences
         if use_user_preferences:
             # Use the imported function from prompt_generator.py
-            from prompt_generator import generate_prompt_random as generator_random
+            from wall_gen.prompt_generator import generate_prompt_random as generator_random
 
             gemini_prompt = generator_random(random_tags, user_prefs)
             # Enhance the random prompt to make it more detailed
@@ -1190,7 +1196,7 @@ def generate_wallpaper(
             print(f"Enhanced random prompt: {enhanced_prompt}")
         else:
             # Use the imported function from prompt_generator.py
-            from prompt_generator import generate_prompt_random as generator_random
+            from wall_gen.prompt_generator import generate_prompt_random as generator_random
 
             gemini_prompt = generator_random(random_tags)
             # Enhance the random prompt to make it more detailed
@@ -1244,12 +1250,12 @@ def generate_wallpaper(
         # Check if we should use user preferences
         if use_user_preferences:
             # Use the imported function from prompt_generator.py
-            from prompt_generator import generate_prompt_gemini as generator_gemini
+            from wall_gen.prompt_generator import generate_prompt_gemini as generator_gemini
 
             gemini_prompt = generator_gemini(tags_to_use, user_prefs)
         else:
             # Use the imported function from prompt_generator.py
-            from prompt_generator import generate_prompt_gemini as generator_gemini
+            from wall_gen.prompt_generator import generate_prompt_gemini as generator_gemini
 
             gemini_prompt = generator_gemini(tags_to_use)
 
@@ -1274,7 +1280,7 @@ def generate_wallpaper(
     prompt_confirmed = False
     if enhanced_prompt:
         # Build combined prompt with negative prompt for user review before confirmation
-        from prompt_generator import enhance_negative_prompt
+        from wall_gen.prompt_generator import enhance_negative_prompt
 
         user_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", "")
         enhanced_user_negative_prompt = enhance_negative_prompt(user_negative_prompt)
@@ -1496,7 +1502,7 @@ def generate_wallpaper(
                 user_configured_negative_prompt = user_prefs.imagen_settings.get(
                     "negative_prompt", ""
                 )
-                from prompt_generator import enhance_negative_prompt
+                from wall_gen.prompt_generator import enhance_negative_prompt
 
                 enhanced_user_negative_prompt = enhance_negative_prompt(
                     user_configured_negative_prompt
@@ -1735,7 +1741,7 @@ def generate_wallpaper(
 
             if gui_backend == "qt":
                 try:
-                    from qt_preview import preview_image_gui as preview_func
+                    from wall_gen.qt_preview import preview_image_gui as preview_func
                 except ImportError:
                     print_warning(
                         "Qt preview backend selected but PySide6 (or PyQt5/6) not found."
@@ -1745,7 +1751,7 @@ def generate_wallpaper(
                     preview_func = None
             elif gui_backend == "tkinter":
                 try:
-                    from tkinter_preview import preview_image_gui as preview_func
+                    from wall_gen.tkinter_preview import preview_image_gui as preview_func
                 except ImportError:
                     print_warning(
                         "Tkinter preview backend selected but Tkinter not available."
@@ -1892,8 +1898,10 @@ exiting = False
 
 def generate_prompt(tags, user_prefs, prompt_type):
     """Generate prompt based on type."""
-    from prompt_generator import generate_prompt_gemini, generate_prompt_random, enhance_custom_prompt, enhance_negative_prompt
+    # Remove internal imports like:
+    # from wall_gen.prompt_generator import generate_prompt_gemini, generate_prompt_random, enhance_custom_prompt, enhance_negative_prompt # Module moved to wall_gen
 
+    # Use the functions already imported at the top level
     if prompt_type == "custom":
         print_info("Processing custom prompt...")
         sanitized_prompt = sanitize_prompt(tags)
@@ -2009,7 +2017,7 @@ def preview_and_set_wallpaper(image_path, user_prefs):
 
         if gui_backend == "qt":
             try:
-                from qt_preview import preview_image_gui as preview_func
+                from wall_gen.qt_preview import preview_image_gui as preview_func
             except ImportError:
                 print_warning("Qt preview backend selected but PySide6 (or PyQt5/6) not found.")
                 print_info("Please install PySide6: pip install PySide6")
@@ -2017,7 +2025,7 @@ def preview_and_set_wallpaper(image_path, user_prefs):
                 preview_func = None
         elif gui_backend == "tkinter":
             try:
-                from tkinter_preview import preview_image_gui as preview_func
+                from wall_gen.tkinter_preview import preview_image_gui as preview_func
             except ImportError:
                 print_warning("Tkinter preview backend selected but Tkinter not available.")
                 print_info("Tkinter is usually included with Python, but may require a separate package on some Linux distributions.")
@@ -2264,7 +2272,8 @@ def main():
     log_level = logging.DEBUG if args.debug else logging.INFO
     configure_logging(log_level)
 
-    from prompt_generator import use_user_preferences, set_prompt_preferences
+    # Remove internal import:
+    # from wall_gen.prompt_generator import use_user_preferences, set_prompt_preferences # Module moved to wall_gen
 
     user_prefs = load_user_preferences()
 
@@ -2423,7 +2432,7 @@ def parse_arguments():
 def load_user_preferences():
     """Load user preferences using initialize_settings from wallpaper_settings."""
     # Import here to avoid circular imports
-    from wallpaper_settings import initialize_settings
+    from wall_gen.settings_modules.settings_manager import initialize_settings # Corrected import
 
     return initialize_settings()
 

@@ -46,13 +46,13 @@
 
 ---
 
-A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API.  
-Create desktop wallpapers with customizable prompts and settings.
+A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API. Create desktop wallpapers with customizable prompts and settings.
 
-> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development.  
-> Features may change, and some functionality might be incomplete or experimental.
+> **Note**: The codebase has been recently modularized. The main entry point is now `run_wallgen.py`.
 
-[Features](#✨-key-features) • [Installation](#🚀-prerequisites) • [Documentation](#📚-documentation) • [License](#📝-license)
+> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
+
+[Features](#✨-key-features) • [Installation](#🚀-prerequisites) • [System Components](#🧩-system-components) • [Quick Usage](#⚡-quick-usage) • [Documentation](#📚-documentation) • [License](#📝-license)
 
 <!-- Trending Tags -->
 <p align="center">
@@ -155,38 +155,38 @@ For complete setup instructions, including installation steps for different oper
 
 ## 🧩 System Components
 
-Wallgen's main components include:
+The application is structured as follows:
 
-- **Core Generator:** `wallpaper_generator.py`
-- **Settings Management:** `settings_modules/`
-- **AI Preset Generator:** `ai_preset_generator.py`
-- **AI Style Generator:** `ai_style_generator.py`
-- **Prompt Engineering:** `prompt_generator.py`, `config.py`
-- **Image Preview:** `qt_preview.py`, `tkinter_preview.py`
-- **UI Utilities:** `ui_utils.py`
-- **API Client:** Integrated with Gemini API
+- **Main Entry Point:** `run_wallgen.py` (Handles CLI args, initialization, orchestration)
+- **Core Logic Package:** `wall_gen/`
+    - **Services:** `prompt_service.py`, `image_service.py`, `wallpaper_service.py`, `preview_service.py`
+    - **Utilities:** `app_utils.py`, `cache_utils.py`, `file_utils.py`, `ui_utils.py`, `image_editor.py`, `graceful_exit.py`
+    - **Configuration:** `config.py`
+    - **Sub-packages:** `settings_modules/`, `history/`, `prompt_modules/`, `preview_backends/`
+- **Root Modules:** `prompt_generator.py` (Facade), `ai_style_generator.py`, `ai_prest_gen/` (Preset Generation CLI/Logic), `no_preferences_prompt.py`
+- **Data/Assets:** `presets/`, `genimage/`, `cache/`, `asset/`
 
 ---
 
 ## ⚡ Quick Usage
 
-After installation, run the application. Run without arguments for the interactive menu:
+After installation, run the application using the new entry point. Run without arguments for the interactive menu:
 
 ```bash
-python wallpaper_generator.py
+python run_wallgen.py
 ```
 
 ### Common Commands
 
 ```bash
 # Generate with a random prompt
-python wallpaper_generator.py --random
+python run_wallgen.py --random
 
 # Generate with a custom prompt
-python wallpaper_generator.py --prompt "mountain landscape at sunset"
+python run_wallgen.py --prompt "mountain landscape at sunset"
 
 # Specify resolution (if supported by your API tier)
-python wallpaper_generator.py --prompt "forest scene" --resolution "1920x1080"
+python run_wallgen.py --prompt "forest scene" --resolution "1920x1080"
 ```
 
 **AI Preset Generation:**
@@ -224,16 +224,16 @@ python ai_style_generator.py --detailed --save
 
 ```bash
 # Preview the latest generated wallpaper
-python wallpaper_generator.py --preview-latest
+python run_wallgen.py --preview-latest
 
 # Preview a specific image file
-python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png"
+python run_wallgen.py --preview-image "genimage/abstract_pattern_87654321.png"
 
 # List all generated images and preview one by number
-python wallpaper_generator.py --list-images
+python run_wallgen.py --list-images
 
 # Generate a wallpaper and immediately set it as desktop background
-python wallpaper_generator.py --prompt "mountain landscape with lakes" --skip-preview
+python run_wallgen.py --prompt "mountain landscape with lakes" --skip-preview
 ```
 
 For more examples and usage options, see the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).

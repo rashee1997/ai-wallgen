@@ -85,10 +85,10 @@ Wallgen requires a Google Gemini API key to function:
 
 ### Basic Usage
 
-The basic syntax for running AI Wallgen from the command line is:
+The basic syntax for running AI Wallgen from the command line using the new entry point is:
 
 ```bash
-python wallpaper_generator.py [OPTIONS]
+python run_wallgen.py [OPTIONS]
 ```
 
 If no options are provided, AI Wallgen will start in interactive mode with the main menu.
@@ -99,11 +99,12 @@ If no options are provided, AI Wallgen will start in interactive mode with the m
 
 | Option | Description |
 |:------:|:------------|
-| `--prompt TEXT` | Custom prompt for wallpaper generation |
-| `--random` | Generate a random wallpaper |
-| `--test-prompt TEXT` | Test prompt generation without creating an image |
-| `--test-custom-prompt TEXT` | Test custom prompt enhancement |
-| `--dont-use-user-prefs` | Do not use user preferences for prompt generation |
+| `--prompt TEXT` | Generate wallpaper using a custom prompt text. |
+| `--random` | Generate a random wallpaper based on preferences or general tags. |
+| `--preset TEXT` | Generate wallpaper using a saved preset name. |
+| `--test-prompt TEXT` | Test prompt generation for a subject without creating an image. |
+| `--test-custom-prompt TEXT` | Test custom prompt enhancement without creating an image. |
+| `--dont-use-user-prefs` | Ignore saved user preferences for prompt generation. |
 
 ##### The `--prompt` Option
 
@@ -111,12 +112,12 @@ The `--prompt` option allows you to specify a custom text prompt for generating 
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --prompt "your custom text prompt here"
+python run_wallgen.py --prompt "your custom text prompt here"
 ```
 
 **Example:**
 ```bash
-python wallpaper_generator.py --prompt "mountain landscape with snow peaks at sunset"
+python run_wallgen.py --prompt "mountain landscape with snow peaks at sunset"
 ```
 
 **What happens:**
@@ -134,13 +135,13 @@ python wallpaper_generator.py --prompt "mountain landscape with snow peaks at su
 **Examples with combinations:**
 ```bash
 # Generate a wallpaper with custom prompt and specific resolution
-python wallpaper_generator.py --prompt "cyberpunk city at night with neon lights" --resolution 1920x1080
+python run_wallgen.py --prompt "cyberpunk city at night with neon lights" --resolution 1920x1080
 
 # Generate a custom prompt image with a square aspect ratio
-python wallpaper_generator.py --prompt "abstract geometric patterns in vibrant colors" --aspect-ratio 1:1
+python run_wallgen.py --prompt "abstract geometric patterns in vibrant colors" --aspect-ratio 1:1
 
 # Generate from a prompt without using saved preferences
-python wallpaper_generator.py --prompt "forest with fog and sunbeams" --dont-use-user-prefs
+python run_wallgen.py --prompt "forest with fog and sunbeams" --dont-use-user-prefs
 ```
 
 #### The `--random` Option
@@ -149,7 +150,7 @@ The `--random` option generates a wallpaper using randomly selected tags and AI 
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --random
+python run_wallgen.py --random
 ```
 
 **What happens:**
@@ -168,16 +169,16 @@ python wallpaper_generator.py --random
 **Examples with combinations:**
 ```bash
 # Generate a random wallpaper with specific resolution
-python wallpaper_generator.py --random --resolution 3840x2160
+python run_wallgen.py --random --resolution 3840x2160
 
 # Generate a random wallpaper with square aspect ratio
-python wallpaper_generator.py --random --aspect-ratio 1:1
+python run_wallgen.py --random --aspect-ratio 1:1
 
 # Generate a random wallpaper without using your saved preferences
-python wallpaper_generator.py --random --dont-use-user-prefs
+python run_wallgen.py --random --dont-use-user-prefs
 
 # See the random prompt that would be generated without actually creating an image
-python wallpaper_generator.py --random --no-generate
+python run_wallgen.py --random --no-generate
 ```
 
 #### The `--test-prompt` Option
@@ -186,12 +187,12 @@ The `--test-prompt` option allows you to test how AI Wallgen transforms a simple
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --test-prompt "subject or concept"
+python run_wallgen.py --test-prompt "subject or concept"
 ```
 
 **Example:**
 ```bash
-python wallpaper_generator.py --test-prompt "forest"
+python run_wallgen.py --test-prompt "forest"
 ```
 
 **What happens:**
@@ -209,13 +210,13 @@ python wallpaper_generator.py --test-prompt "forest"
 **Examples with combinations:**
 ```bash
 # Test a prompt with a simple concept
-python wallpaper_generator.py --test-prompt "ocean"
+python run_wallgen.py --test-prompt "ocean"
 
 # Test a prompt with a more specific idea
-python wallpaper_generator.py --test-prompt "cyberpunk cityscape"
+python run_wallgen.py --test-prompt "cyberpunk cityscape"
 
 # Test a prompt without using saved preferences
-python wallpaper_generator.py --test-prompt "mountains" --dont-use-user-prefs
+python run_wallgen.py --test-prompt "mountains" --dont-use-user-prefs
 ```
 
 #### The `--test-custom-prompt` Option
@@ -224,12 +225,12 @@ The `--test-custom-prompt` option allows you to see how AI Wallgen would enhance
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --test-custom-prompt "your detailed prompt here"
+python run_wallgen.py --test-custom-prompt "your detailed prompt here"
 ```
 
 **Example:**
 ```bash
-python wallpaper_generator.py --test-custom-prompt "a misty mountain range at sunrise with golden light"
+python run_wallgen.py --test-custom-prompt "a misty mountain range at sunrise with golden light"
 ```
 
 **What happens:**
@@ -251,13 +252,13 @@ python wallpaper_generator.py --test-custom-prompt "a misty mountain range at su
 **Examples with combinations:**
 ```bash
 # Test enhancement of a landscape prompt
-python wallpaper_generator.py --test-custom-prompt "desert landscape with red rock formations under a blue sky"
+python run_wallgen.py --test-custom-prompt "desert landscape with red rock formations under a blue sky"
 
 # Test enhancement of a detailed artistic prompt
-python wallpaper_generator.py --test-custom-prompt "cyberpunk city at night with neon signs and flying cars in the rain"
+python run_wallgen.py --test-custom-prompt "cyberpunk city at night with neon signs and flying cars in the rain"
 
 # Test enhancement without using saved preferences
-python wallpaper_generator.py --test-custom-prompt "underwater coral reef with colorful fish" --dont-use-user-prefs
+python run_wallgen.py --test-custom-prompt "underwater coral reef with colorful fish" --dont-use-user-prefs
 ```
 
 #### The `--dont-use-user-prefs` Option
@@ -266,8 +267,8 @@ The `--dont-use-user-prefs` option allows you to generate prompts and images wit
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --prompt "your prompt" --dont-use-user-prefs
-python wallpaper_generator.py --random --dont-use-user-prefs
+python run_wallgen.py --prompt "your prompt" --dont-use-user-prefs
+python run_wallgen.py --random --dont-use-user-prefs
 ```
 
 **What happens:**
@@ -285,19 +286,19 @@ python wallpaper_generator.py --random --dont-use-user-prefs
 **Examples with combinations:**
 ```bash
 # Generate a custom prompt image without applying your preferences
-python wallpaper_generator.py --prompt "forest landscape" --dont-use-user-prefs
+python run_wallgen.py --prompt "forest landscape" --dont-use-user-prefs
 
 # Generate a random wallpaper ignoring your preferred styles and settings
-python wallpaper_generator.py --random --dont-use-user-prefs
+python run_wallgen.py --random --dont-use-user-prefs
 
 # Test how a prompt would be enhanced without your preferences
-python wallpaper_generator.py --test-prompt "cityscape" --dont-use-user-prefs
+python run_wallgen.py --test-prompt "cityscape" --dont-use-user-prefs
 
 # Test custom prompt enhancement without applying your saved preferences
-python wallpaper_generator.py --test-custom-prompt "mountain valley with river" --dont-use-user-prefs
+python run_wallgen.py --test-custom-prompt "mountain valley with river" --dont-use-user-prefs
 
 # View a random prompt without generating an image or using preferences
-python wallpaper_generator.py --random --no-generate --dont-use-user-prefs
+python run_wallgen.py --random --no-generate --dont-use-user-prefs
 ```
 
 ---
@@ -315,14 +316,14 @@ These options allow you to control the dimensions of the generated wallpapers to
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --resolution "WIDTHxHEIGHT"
-python wallpaper_generator.py --aspect-ratio "RATIO"
+python run_wallgen.py --resolution "WIDTHxHEIGHT"
+python run_wallgen.py --aspect-ratio "RATIO"
 ```
 
 **Examples:**
 ```bash
-python wallpaper_generator.py --resolution "1920x1080"
-python wallpaper_generator.py --aspect-ratio "16:9"
+python run_wallgen.py --resolution "1920x1080"
+python run_wallgen.py --aspect-ratio "16:9"
 ```
 
 **What happens:**
@@ -368,16 +369,16 @@ python wallpaper_generator.py --aspect-ratio "16:9"
 **Examples with combinations:**
 ```bash
 # Generate a 4K wallpaper with a custom prompt
-python wallpaper_generator.py --prompt "sunset over mountains" --resolution "3840x2160"
+python run_wallgen.py --prompt "sunset over mountains" --resolution "3840x2160"
 
 # Generate a random wallpaper with ultrawide aspect ratio
-python wallpaper_generator.py --random --aspect-ratio "21:9"
+python run_wallgen.py --random --aspect-ratio "21:9"
 
 # Test a prompt with square format
-python wallpaper_generator.py --test-prompt "abstract geometric patterns" --aspect-ratio "1:1"
+python run_wallgen.py --test-prompt "abstract geometric patterns" --aspect-ratio "1:1"
 
 # Generate a mobile wallpaper
-python wallpaper_generator.py --prompt "starry night sky" --aspect-ratio "9:16"
+python run_wallgen.py --prompt "starry night sky" --aspect-ratio "9:16"
 ```
 
 ---
@@ -395,8 +396,8 @@ The `--no-generate` option allows you to generate and view prompts without proce
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --prompt "your prompt" --no-generate
-python wallpaper_generator.py --random --no-generate
+python run_wallgen.py --prompt "your prompt" --no-generate
+python run_wallgen.py --random --no-generate
 ```
 
 **What happens:**
@@ -414,13 +415,13 @@ python wallpaper_generator.py --random --no-generate
 **Examples with combinations:**
 ```bash
 # Preview how a custom prompt would be enhanced
-python wallpaper_generator.py --prompt "mountain landscape with a castle" --no-generate
+python run_wallgen.py --prompt "mountain landscape with a castle" --no-generate
 
 # See what random prompt would be generated without creating an image
-python wallpaper_generator.py --random --no-generate
+python run_wallgen.py --random --no-generate
 
 # Preview enhancement without using saved preferences
-python wallpaper_generator.py --prompt "city skyline at night" --no-generate --dont-use-user-prefs
+python run_wallgen.py --prompt "city skyline at night" --no-generate --dont-use-user-prefs
 ```
 
 #### The `--no-preset` Option
@@ -429,7 +430,7 @@ The `--no-preset` option is defined in the command line parser but appears to no
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --no-preset
+python run_wallgen.py --no-preset-load
 ```
 
 > **⚠️ Note:**
@@ -455,7 +456,7 @@ The `--skip-preview` option allows you to bypass the image preview step and auto
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --prompt "your prompt" --skip-preview
+python run_wallgen.py --prompt "your prompt" --skip-preview
 ```
 
 **What happens:**
@@ -471,10 +472,10 @@ python wallpaper_generator.py --prompt "your prompt" --skip-preview
 **Examples with combinations:**
 ```bash
 # Generate a random wallpaper and apply it immediately
-python wallpaper_generator.py --random --skip-preview
+python run_wallgen.py --random --skip-preview
 
 # Generate a custom prompt wallpaper at 4K resolution and apply it immediately
-python wallpaper_generator.py --prompt "mountain landscape with lakes" --resolution 3840x2160 --skip-preview
+python run_wallgen.py --prompt "mountain landscape with lakes" --resolution 3840x2160 --skip-preview
 ```
 
 #### The `--preview-image` Option
@@ -483,7 +484,7 @@ The `--preview-image` option allows you to preview any existing image file in th
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --preview-image "path/to/image.png"
+python run_wallgen.py --preview-image "path/to/image.png"
 ```
 
 **What happens:**
@@ -500,10 +501,10 @@ python wallpaper_generator.py --preview-image "path/to/image.png"
 **Examples with combinations:**
 ```bash
 # Preview a specific image in the terminal (if GUI preview is not configured)
-python wallpaper_generator.py --preview-image "genimage/mountain_sunset_12345678.png"
+python run_wallgen.py --preview-image "genimage/mountain_sunset_12345678.png"
 
 # Preview an image using the configured GUI window
-python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png"
+python run_wallgen.py --preview-image "genimage/abstract_pattern_87654321.png"
 ```
 
 #### The `--preview-latest` Option
@@ -512,7 +513,7 @@ The `--preview-latest` option allows you to quickly preview the most recently ge
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --preview-latest
+python run_wallgen.py --preview-latest
 ```
 
 **What happens:**
@@ -529,10 +530,10 @@ python wallpaper_generator.py --preview-latest
 **Examples with combinations:**
 ```bash
 # Preview the latest generated image in the terminal (if GUI preview is not configured)
-python wallpaper_generator.py --preview-latest
+python run_wallgen.py --preview-latest
 
 # Preview the latest image using the configured GUI window
-python wallpaper_generator.py --preview-latest
+python run_wallgen.py --preview-latest
 ```
 
 #### The `--list-images` Option
@@ -541,7 +542,7 @@ The `--list-images` option displays a chronological list of all generated wallpa
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --list-images
+python run_wallgen.py --list-images
 ```
 
 **What happens:**
@@ -559,7 +560,7 @@ python wallpaper_generator.py --list-images
 **Examples with combinations:**
 ```bash
 # List all images and allow selection for preview (terminal or GUI based on settings)
-python wallpaper_generator.py --list-images
+python run_wallgen.py --list-images
 ```
 
 ### Debug Options
@@ -575,7 +576,7 @@ The `--debug` option enables detailed debug logging to help identify issues when
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --debug
+python run_wallgen.py --debug
 ```
 
 **What happens:**
@@ -593,13 +594,13 @@ python wallpaper_generator.py --debug
 **Examples with combinations:**
 ```bash
 # Debug an issue with custom prompt generation
-python wallpaper_generator.py --prompt "sunset over mountains" --debug
+python run_wallgen.py --prompt "sunset over mountains" --debug
 
 # Debug random prompt generation
-python wallpaper_generator.py --random --debug
+python run_wallgen.py --random --debug
 
 # Test prompt enhancement with debug logging
-python wallpaper_generator.py --test-custom-prompt "forest with fog" --debug
+python run_wallgen.py --test-custom-prompt "forest with fog" --debug
 ```
 
 #### The `--verbose` Option
@@ -608,7 +609,7 @@ The `--verbose` option enables verbose output, which currently functions similar
 
 **Usage:**
 ```bash
-python wallpaper_generator.py --verbose
+python run_wallgen.py --verbose
 ```
 
 > **💡 Tips:**
@@ -690,17 +691,17 @@ python ai_style_generator.py --detailed --save
 
 ### Image Preview and Management
 ```bash
-# List all generated images and preview them in the GUI
-python wallpaper_generator.py --list-images --gui-preview
+# List all generated images and preview them (GUI if available)
+python run_wallgen.py --list-images
 
 # Generate a wallpaper and immediately set it as desktop background
-python wallpaper_generator.py --prompt "mountain landscape with lakes" --skip-preview
+python run_wallgen.py --prompt "mountain landscape with lakes" --skip-preview
 
 # Preview the most recently generated wallpaper
-python wallpaper_generator.py --preview-latest
+python run_wallgen.py --preview-latest
 
-# Preview a specific image file using the GUI
-python wallpaper_generator.py --preview-image "genimage/abstract_pattern_87654321.png" --gui-preview
+# Preview a specific image file using the GUI (if configured)
+python run_wallgen.py --preview-image "genimage/abstract_pattern_87654321.png"
 ```
 
 Below are some practical combinations of command-line options to help you accomplish specific tasks more efficiently:
@@ -709,57 +710,57 @@ Below are some practical combinations of command-line options to help you accomp
 
 ```bash
 # Generate a 4K wallpaper with a custom prompt
-python wallpaper_generator.py --prompt "mountain landscape with lakes at sunset" --resolution 3840x2160
+python run_wallgen.py --prompt "mountain landscape with lakes at sunset" --resolution 3840x2160
 
 # Generate a dual-monitor wallpaper with ultra-wide aspect ratio
-python wallpaper_generator.py --random --aspect-ratio 32:9 --resolution 7680x2160
+python run_wallgen.py --random --aspect-ratio 32:9 --resolution 7680x2160
 
 # Generate a 1080p random wallpaper without applying your saved preferences
-python wallpaper_generator.py --random --resolution 1920x1080 --dont-use-user-prefs
+python run_wallgen.py --random --resolution 1920x1080 --dont-use-user-prefs
 ```
 
 ### Testing and Iteration
 
 ```bash
 # Preview several random prompts quickly without generating images
-python wallpaper_generator.py --random --no-generate
+python run_wallgen.py --random --no-generate
 
 # Test how a prompt would be enhanced with and without your preferences
-python wallpaper_generator.py --test-custom-prompt "forest path in autumn" 
-python wallpaper_generator.py --test-custom-prompt "forest path in autumn" --dont-use-user-prefs
+python run_wallgen.py --test-custom-prompt "forest path in autumn" 
+python run_wallgen.py --test-custom-prompt "forest path in autumn" --dont-use-user-prefs
 
 # Quickly test multiple prompt concepts
-python wallpaper_generator.py --test-prompt "ocean"
-python wallpaper_generator.py --test-prompt "mountains"
-python wallpaper_generator.py --test-prompt "cityscape"
+python run_wallgen.py --test-prompt "ocean"
+python run_wallgen.py --test-prompt "mountains"
+python run_wallgen.py --test-prompt "cityscape"
 ```
 
 ### Specialized Use Cases
 
 ```bash
 # Generate mobile wallpapers
-python wallpaper_generator.py --prompt "starry night with silhouette of trees" --aspect-ratio 9:16 --resolution 1080x1920
+python run_wallgen.py --prompt "starry night with silhouette of trees" --aspect-ratio 9:16 --resolution 1080x1920
 
 # Generate square art for social media
-python wallpaper_generator.py --prompt "abstract geometric patterns in blue and gold" --aspect-ratio 1:1 --resolution 2048x2048
+python run_wallgen.py --prompt "abstract geometric patterns in blue and gold" --aspect-ratio 1:1 --resolution 2048x2048
 
 # Debug issues with prompt generation
-python wallpaper_generator.py --prompt "fantasy castle on a floating island" --debug
+python run_wallgen.py --prompt "fantasy castle on a floating island" --debug
 ```
 
 ### Advanced Workflows
 
 ```bash
 # Generate image series with the same settings but different prompts
-python wallpaper_generator.py --prompt "winter landscape with snow" --resolution 2560x1440
-python wallpaper_generator.py --prompt "spring landscape with cherry blossoms" --resolution 2560x1440
-python wallpaper_generator.py --prompt "summer landscape with green fields" --resolution 2560x1440
-python wallpaper_generator.py --prompt "autumn landscape with colorful leaves" --resolution 2560x1440
+python run_wallgen.py --prompt "winter landscape with snow" --resolution 2560x1440
+python run_wallgen.py --prompt "spring landscape with cherry blossoms" --resolution 2560x1440
+python run_wallgen.py --prompt "summer landscape with green fields" --resolution 2560x1440
+python run_wallgen.py --prompt "autumn landscape with colorful leaves" --resolution 2560x1440
 
 # Test how different aspect ratios affect the same prompt
-python wallpaper_generator.py --prompt "sci-fi cityscape" --aspect-ratio 16:9 --no-generate
-python wallpaper_generator.py --prompt "sci-fi cityscape" --aspect-ratio 21:9 --no-generate
-python wallpaper_generator.py --prompt "sci-fi cityscape" --aspect-ratio 1:1 --no-generate
+python run_wallgen.py --prompt "sci-fi cityscape" --aspect-ratio 16:9 --no-generate
+python run_wallgen.py --prompt "sci-fi cityscape" --aspect-ratio 21:9 --no-generate
+python run_wallgen.py --prompt "sci-fi cityscape" --aspect-ratio 1:1 --no-generate
 ```
 
 ---

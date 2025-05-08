@@ -450,8 +450,11 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
             print_error(f"Could not initialize AI model '{model_name}'.")
             return False
 
-        instruction_header = f"Select settings that work well with \"{base_style}\" (category: {style_category}):"
-        category_instructions = instructions_for_category(style_category, base_style)
+        # --- Get category instructions ---
+        # Extract style name string if base_style is a dict from AI generation
+        style_name_for_instructions = base_style.get('name', '') if isinstance(base_style, dict) else base_style
+        category_instructions = instructions_for_category(style_category, style_name_for_instructions)
+        instruction_header = f"Select settings that work well with \"{style_name_for_instructions}\" (category: {style_category}):" # Use extracted name
 
         # --- Get Template: Use the consolidated function ---
         template = get_template_for_category(style_category) # Only call this function
@@ -473,17 +476,17 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
 
         # --- Build Prompt (Reinforced Instructions) ---
         prompt = f"""
-        Generate settings for a wallpaper with style: "{base_style}"
+        Generate settings for a wallpaper with style: "{style_name_for_instructions}" # Use extracted name
 
         Instructions:
-        1. Create a unique `preset_name` inspired by the style "{base_style}" and category "{style_category}".
+        1. Create a unique `preset_name` inspired by the style "{style_name_for_instructions}" and category "{style_category}". # Use extracted name
         2. Create a `description` field describing the preset.
         3. Choose ONE mood for the "moods" list.
         4. Follow the specific guidance for the detected category "{style_category}":
            {instruction_header}
            {category_instructions}
         5. For `negative_prompt`, generate text avoiding elements conflicting with the *category* "{style_category}".
-        6. For `style_negative_prompt`, generate text avoiding elements conflicting with the *base style* "{base_style}".
+        6. For `style_negative_prompt`, generate text avoiding elements conflicting with the *base style* "{style_name_for_instructions}". # Use extracted name
         7. Ensure `aspect_ratio` is "16:9".
         8. Fill in ALL fields from the template below with specific, fitting values. Do NOT leave default template values unchanged unless they are truly appropriate. Do NOT use placeholders.
         9. **CRITICAL:** Ensure the output JSON includes ALL top-level keys (`preset_name`, `moods`, `aspect_ratio`, `description`, `styles`, `imagen_settings`) and ALL nested dictionaries (`style_settings`, `lighting_settings`, `composition_settings`, `color_settings`, `detail_settings`, `environment_settings`, `quality_settings`, `camera_settings` if present in the template, etc.) exactly as they appear in the template structure provided below. Do not omit any sections.
@@ -531,27 +534,33 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                             final_preset["description"] = generated_settings.get("description", template["description"])
                             final_preset["aspect_ratio"] = "16:9"
 
-                            final_preset["imagen_settings"] = template.get("imagen_settings", {}).copy()
+                            # --- Merge imagen_settings, handling camera_settings specifically ---
                             ai_imagen = generated_settings.get("imagen_settings")
-
-                            # --- Merge camera_settings dynamically, allowing AI to override template ---
-                            if "camera_settings" in template.get("imagen_settings", {}):
-                                # Start with a deep copy of template camera_settings to avoid mutation
+                            if isinstance(ai_imagen, dict):
+                                # Start with a deep copy of template imagen_settings
                                 import copy
-                                merged_camera_settings = copy.deepcopy(template["imagen_settings"]["camera_settings"])
-                                # Merge AI-generated camera_settings if present
-                                if isinstance(ai_imagen, dict) and "camera_settings" in ai_imagen:
-                                    deep_update(merged_camera_settings, ai_imagen["camera_settings"])
-                                final_preset["imagen_settings"]["camera_settings"] = merged_camera_settings
-                                # Merge other AI imagen_settings excluding camera_settings
-                                if isinstance(ai_imagen, dict):
-                                    temp_ai_imagen = ai_imagen.copy()
-                                    temp_ai_imagen.pop("camera_settings", None)
-                                    deep_update(final_preset["imagen_settings"], temp_ai_imagen)
-                            elif isinstance(ai_imagen, dict):
-                                # No camera_settings in template, merge normally
-                                deep_update(final_preset["imagen_settings"], ai_imagen)
-                            # --- End dynamic camera_settings merge ---
+                                merged_imagen_settings = copy.deepcopy(template.get("imagen_settings", {}))
+
+                                # Merge AI settings into the copy using deep_update
+                                # Ensure deep_update is available (it should be imported from file_utils or defined locally)
+                                if 'deep_update' in locals() or 'deep_update' in globals():
+                                     deep_update(merged_imagen_settings, ai_imagen)
+                                else: # Fallback basic update if deep_update not found
+                                     merged_imagen_settings.update(ai_imagen)
+                                     logging.warning("deep_update function not found, using basic dict.update for imagen_settings merge.")
+
+
+                                # Ensure camera_settings key exists if it was in either template or AI response,
+                                # but only if camera_settings itself is intended for this style category
+                                # (The removal logic later handles inappropriate camera settings)
+                                if "camera_settings" in template.get("imagen_settings", {}) or "camera_settings" in ai_imagen:
+                                     merged_imagen_settings.setdefault("camera_settings", {}) # Ensure key exists if relevant
+
+                                final_preset["imagen_settings"] = merged_imagen_settings
+                            else:
+                                # If AI didn't provide imagen_settings or it wasn't a dict, use template's
+                                final_preset["imagen_settings"] = template.get("imagen_settings", {}).copy()
+                            # --- End imagen_settings merge ---
 
 
 

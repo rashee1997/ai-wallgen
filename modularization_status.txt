@@ -1,0 +1,34 @@
+# Modularization Status (as of 2025-05-08 16:41)
+
+## Completed Steps:
+
+- [X] 0: Prepare `wall_gen` Directory Structure (Created `wall_gen/__init__.py`)
+- [X] 2: Create `wall_gen/prompt_service.py` (Created file with refactored logic)
+- [X] 3: Create `wall_gen/image_service.py` (Created file with API logic)
+- [X] 4: Create `wall_gen/wallpaper_service.py` (Created file with OS wallpaper logic)
+- [X] 5: Create `wall_gen/preview_service.py` (Created file with preview logic)
+- [X] 6: Relocate and Enhance `wall_gen/file_utils.py` (Moved and updated file)
+- [X] 7: Create `wall_gen/cache_utils.py` (Created file with LRUCache and init function)
+- [X] 8: Create `wall_gen/app_utils.py` (Created file with general utilities)
+- [X] 9 (Part 1): Relocate `wall_gen/config.py` (Copied content to new location)
+- [X] 11 (Part 1): Relocate `wall_gen/ui_utils.py` (Copied content to new location)
+- [X] 12 (Revised): Relocate `wall_gen/history/` package (Copied directory, created __init__.py)
+- [X] 13 (Revised): Relocate `wall_gen/settings_modules/` package (Copied directory, skipped __init__.py write)
+- [X] 14: Relocate Preview Backends (Created `preview_backends/`, Relocated `image_editor.py`, Copied `qt_preview.py`, Copied `tkinter_preview.py`, Updated `qt_preview.py` import)
+- [X] 15 (Part 2): Relocate `wall_gen/graceful_exit.py` (Copied content to new location)
+
+## Skipped / Deferred Steps:
+
+- [ ] 9 (Part 2): Delete original `config.py` (Deferred by user)
+- [ ] 10: Relocate `prompt_generator.py` (Cancelled by user - stays in root)
+- [ ] 11 (Part 2): Delete original `ui_utils.py` (Deferred)
+- [ ] 12 (Deletion): Delete original `history/` directory (Deferred - copy used instead of move)
+- [ ] 13 (Deletion): Delete original `settings_modules/` directory (Deferred - copy used instead of move)
+- [ ] 14 (Deletions): Delete original `image_editor.py`, `qt_preview.py`, `tkinter_preview.py` (Deferred)
+- [ ] 15 (Deletion): Delete original `graceful_exit.py` (Deferred)
+
+## Remaining Steps:
+
+- [ ] 1: Refactor `wallpaper_generator.py` (Root) - Update logic and imports to use modules from `wall_gen/`.
+- [ ] 16: Review All Import Statements (Final check after Step 1).
+- [ ] Deferred Deletions: Decide whether to delete original files/directories from root later.
