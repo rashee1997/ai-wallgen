@@ -108,17 +108,18 @@ def save_preset_fallback(preset_data: Dict[str, Any], preset_name_base: str) -> 
 
 # Attempt actual imports, falling back to above definitions
 try:
-    from wallpaper_settings import UserPreferences, get_preferences, initialize_settings
+    from wall_gen.settings_modules.user_preferences import UserPreferences
+    from wall_gen.settings_modules.settings_manager import get_preferences, initialize_settings
     SETTINGS_AVAILABLE = True
 except ImportError:
     SETTINGS_AVAILABLE = False
     UserPreferences = UserPreferencesPlaceholder
     get_preferences = get_preferences_fallback
     initialize_settings = initialize_settings_fallback
-    _print_warning_fallback("wallpaper_settings.py not found. Using placeholder UserPreferences.")
+    _print_warning_fallback("wall_gen.settings_modules modules not found. Using placeholder UserPreferences.")
 
 try:
-    from ui_utils import get_validated_input, print_section, print_option, print_info, print_error, print_success, print_warning
+    from wall_gen.ui_utils import get_validated_input, print_section, print_option, print_info, print_error, print_success, print_warning
     UI_UTILS_AVAILABLE = True
 except ImportError:
     UI_UTILS_AVAILABLE = False
@@ -129,7 +130,7 @@ except ImportError:
     print_error = _print_error_fallback
     print_success = _print_success_fallback
     print_warning = _print_warning_fallback
-    _print_warning_fallback("ui_utils not found. Using basic print/input for UI.")
+    _print_warning_fallback("wall_gen.ui_utils not found. Using basic print/input for UI.")
 
 try:
     from ai_style_generator import generate_random_style, initialize_gemini as initialize_style_gemini
@@ -141,7 +142,7 @@ except ImportError:
     _print_warning_fallback("Could not import ai_style_generator. AI style generation feature disabled.")
 
 try:
-    from file_utils import deep_update
+    from wall_gen.file_utils import deep_update
     FILE_UTILS_AVAILABLE = True
 except ImportError:
     FILE_UTILS_AVAILABLE = False
@@ -157,14 +158,14 @@ except ImportError:
                 target[key] = value
         return target
 
-    _print_warning_fallback("file_utils not found. Using custom recursive deep_update.")
+    _print_warning_fallback("wall_gen.file_utils not found. Using custom recursive deep_update.")
 
 try:
-    from config import STYLE_CATEGORIES # As per user upload
+    from wall_gen.config import STYLE_CATEGORIES # Configuration moved to wall_gen
     CONFIG_STYLE_CATEGORIES_AVAILABLE = True
 except ImportError:
     CONFIG_STYLE_CATEGORIES_AVAILABLE = False
-    _print_warning_fallback("Could not import STYLE_CATEGORIES from config.py. Using empty dictionary.")
+    _print_warning_fallback("Could not import STYLE_CATEGORIES from wall_gen.config. Using empty dictionary.")
     STYLE_CATEGORIES = {} # Provide default empty dict
 
 try:
@@ -196,13 +197,13 @@ except ImportError as e:
 # --- Import save_preset from preset_management ---
 try:
     # Attempt to import the specific save_preset function
-    from settings_modules.preset_management import save_preset
+    from wall_gen.settings_modules.preset_management import save_preset
     SAVE_PRESET_AVAILABLE = True
 except ImportError:
     SAVE_PRESET_AVAILABLE = False
     # Assign the fallback function if the import fails
     save_preset = save_preset_fallback
-    _print_warning_fallback("settings_modules.preset_management.save_preset not found. Using fallback save.")
+    _print_warning_fallback("wall_gen.settings_modules.preset_management.save_preset not found. Using fallback save.")
 
 
 # --- Configuration ---
@@ -688,12 +689,12 @@ class PresetManagementPlaceholder:
 
 try:
     # Import the whole module for applying presets
-    from settings_modules import preset_management
+    from wall_gen.settings_modules import preset_management
     PRESET_MGMT_AVAILABLE = True
 except ImportError:
     PRESET_MGMT_AVAILABLE = False
     preset_management = PresetManagementPlaceholder()
-    _print_warning_fallback("settings_modules.preset_management not found. Preset application will be simulated.")
+    _print_warning_fallback("wall_gen.settings_modules.preset_management not found. Preset application will be simulated.")
 
 
 # --- Main Function ---

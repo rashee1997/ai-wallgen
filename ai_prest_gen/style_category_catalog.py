@@ -104,6 +104,7 @@ preferred_order: List[str] = [
     "patchwork_fabric",
     "patchwork_collage", # If not pixel_patchwork
     "mixed_media_collage", # From restored, broader than patchwork/digital
+    "traditional_collage",        # NEW
     "papercraft", # General papercraft (if not quilling)
     "ascii_art", # If not kinetic_ascii or pop_surrealism_ascii
     "line_art", # Distinct from general drawing
@@ -129,12 +130,15 @@ preferred_order: List[str] = [
     "watercolor", # if not watercolor_pencil
     "pastel",
     "acrylic_painting",
+    "gouache_painting",           # NEW
+    "tempera_painting",           # NEW
     "digital_painting",
 
     # Drawing Styles (Specific Mediums) (From V3 & Restored)
     "pencil_sketch",
     "ink_drawing", # if not ink_punk or line_art
     "charcoal",
+    "woodcut_print",              # NEW
     "drawing", # Broadest drawing
 
     # Photographic Styles (non-portrait) (From V3 & Restored)
@@ -174,6 +178,8 @@ preferred_order: List[str] = [
     # Material/Sculptural (From V3 & Restored)
     "material_sculptural",
     "sculpture",
+    "mosaic_art",                 # NEW
+    "stained_glass_art",          # NEW
 
     # Broad Digital/Traditional Categories (Fallbacks) (From V3 & Restored)
     "3d_render", # CGI, modeling
@@ -502,13 +508,25 @@ _categories_keywords_restored = { # Copied from Restored for merging
     "unknown": []
 }
 
+# Add new keywords here, before the categories_keywords initialization loop
+_new_traditional_keywords = {
+    "gouache_painting": ["gouache", "gouache painting", "opaque watercolor", "bodycolor", "designer's gouache"],
+    "tempera_painting": ["tempera", "tempera painting", "egg tempera", "casein tempera"],
+    "mosaic_art": ["mosaic", "mosaic art", "tessellation", "tesserae", "tile mosaic", "glass mosaic", "stone mosaic", "byzantine mosaic", "roman mosaic"],
+    "stained_glass_art": ["stained glass", "stained glass art", "leaded glass", "cathedral glass", "glass painting (traditional)"],
+    "woodcut_print": ["woodcut", "woodcut print", "woodblock print", "relief print wood", "xylography"],
+    "traditional_collage": ["traditional collage", "physical collage", "paper collage", "fabric collage", "analog collage", "assemblage art", "found object collage", "cut and paste (physical)"]
+}
+
 categories_keywords: Dict[str, List[str]] = {}
 for cat, keywords in _categories_keywords_v3.items():
     categories_keywords.setdefault(cat, []).extend(keywords)
-for cat, keywords in _categories_keywords_restored.items():
+for cat, keywords in _categories_keywords_restored.items(): # This will include the "unknown" placeholder
+    categories_keywords.setdefault(cat, []).extend(keywords)
+for cat, keywords in _new_traditional_keywords.items(): # Add new traditional keywords
     categories_keywords.setdefault(cat, []).extend(keywords)
 
-# De-duplicate keywords within each category
+# De-duplicate keywords within each category (ensure this loop runs AFTER all additions)
 for cat in categories_keywords:
     seen_keywords = set()
     categories_keywords[cat] = [kw for kw in categories_keywords[cat] if not (kw in seen_keywords or seen_keywords.add(kw))]
@@ -696,7 +714,60 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "traditional_painting_drawing": "* **Traditional Medium:** Emphasize texture/brushwork, natural/atmospheric light, consider historical movements, traditional palettes.", # From restored
         "abstract_conceptual": "* **Abstract Focus:** Non-representational form, expressive color, unconventional composition, modern art influences.", # From restored
         "abstract": "* **Abstract Focus:** Non-representational form, expressive color, unconventional composition, modern art influences.", # Alias
-        "default": default_instruction
+        "default": default_instruction,
+        "gouache_painting": (
+            f"For '{base_style_clean}', emphasize its unique opaque watercolor quality. "
+            "Characteristics: matte finish, vibrant flat colors, ability to layer light over dark. "
+            "Lighting: Even, diffused to show off matte surface. "
+            "Colors: Opaque, bold, good for illustration or expressive work. "
+            "Detail: Can range from graphic shapes to fine details. "
+            "Avoid: Streaky application, unintended transparency, overly shiny effects."
+        ),
+        "tempera_painting": (
+            f"For '{base_style_clean}', capture the essence of tempera, often egg tempera. "
+            "Characteristics: Matte or subtle satin sheen, luminous colors, fine detail, cross-hatching for modeling. "
+            "Lighting: Soft, clear, directional to show form. "
+            "Colors: Rich, can be built up in thin layers. Historically important palette. "
+            "Detail: Excellent for precise lines and intricate work. "
+            "Avoid: Oily look, modern impasto, smudging (it dries fast)."
+        ),
+        "mosaic_art": (
+            f"For '{base_style_clean}', focus on the assembled nature of mosaic. "
+            "Characteristics: Composed of small pieces (tesserae – tiles, glass, stone), visible grout lines, textured surface. "
+            "Lighting: Directional to highlight texture and individual pieces. "
+            "Colors: Segmented, can be vibrant or earthy depending on materials. "
+            "Composition: Often figurative, geometric, or decorative patterns. "
+            "Avoid: Smooth, painted appearance; indistinct tesserae; blended colors between pieces."
+        ),
+        "stained_glass_art": (
+            f"For '{base_style_clean}', convey the effect of light passing through colored glass. "
+            "Characteristics: Translucent, vibrant jewel-like colors, strong black outlines (leading). "
+            "Lighting: Backlit, emphasizing transmitted light, potential for caustics or light rays. "
+            "Colors: Pure, luminous, often with high contrast. "
+            "Composition: Figurative or abstract, designed by lead lines. "
+            "Avoid: Opaque appearance, muddy colors, missing lead lines, front lighting that negates translucency."
+        ),
+        "woodcut_print": (
+            f"For '{base_style_clean}', emulate the relief printmaking technique of woodcut. "
+            "Characteristics: Bold lines, strong contrast (often black and white), visible wood grain texture sometimes, areas of flat color if multi-block. "
+            "Lighting: Not directly applicable; style is about ink on paper. "
+            "Colors: Typically monochromatic or limited color palette. "
+            "Composition: Graphic, relies on positive/negative space. "
+            "Avoid: Fine shading, photographic realism, pencil sketch appearance, excessive detail not typical of the medium."
+        ),
+        "traditional_collage": (
+            f"For '{base_style_clean}', emphasize the physical assembly of materials. "
+            "Characteristics: Layered paper, fabric, found objects; visible cut or torn edges; varied textures. "
+            "Lighting: Soft studio lighting to show texture and slight depth between layers. "
+            "Colors: Eclectic, depends on the source materials. "
+            "Composition: Juxtaposition of disparate elements. "
+            "Avoid: Digital appearance, seamless blending of elements, flat look without depth cues. Distinguish from purely digital collage."
+        ),
+        "whimsical_mixed_media": """* **Whimsical Mixed Media Focus:**
+        - Motifs: mythical creatures, soft colors, playful elements, stars
+        - Texture: light airy layered textures
+        - Color Palette: pastel dreamy colors
+        - Aesthetic Blend: Lighthearted, dreamy compositions with fantasy elements and playful accents."""
     }
 
     # Get instruction from the merged dictionary, fallback to default
