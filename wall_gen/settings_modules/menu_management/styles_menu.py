@@ -65,6 +65,9 @@ def manage_styles():
         ],
         "Digital & Modern": [
             "digital_art",
+            "digital_painting",
+            "3d_render",
+            "vector_art",
             "minimalist",
             "abstract",
             "geometric",
@@ -73,6 +76,8 @@ def manage_styles():
             "glitch_art",
             "vaporwave",
             "retrowave",
+            "isometric",
+            "ascii_art",
         ],
         "Photographic & Realistic": [
             "photograph",
@@ -388,6 +393,9 @@ def manage_styles():
                     ],
                     "Digital & Modern": [
                         "digital_art",
+                        "digital_painting",
+                        "3d_render",
+                        "vector_art",
                         "minimalist",
                         "abstract",
                         "geometric",
@@ -396,6 +404,8 @@ def manage_styles():
                         "glitch_art",
                         "vaporwave",
                         "retrowave",
+                        "isometric",
+                        "ascii_art",
                     ],
                     "Photographic & Realistic": [
                         "photograph",
