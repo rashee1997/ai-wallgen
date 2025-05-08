@@ -48,6 +48,13 @@
 
 A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API. Create desktop wallpapers with customizable prompts and settings.
 
+## Recent Changes
+
+- Major refactor to modularize the codebase into multiple packages and modules for better maintainability and extensibility.
+- Added AI-powered preset and style generation features.
+- Enhanced CLI with new options and improved user experience.
+- See [CHANGELOG.md](CHANGELOG.md) for detailed version history and updates.
+
 > **Note**: The codebase has been recently modularized. The main entry point is now `run_wallgen.py`.
 
 > **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
@@ -245,7 +252,6 @@ For more examples and usage options, see the [Installation and CLI Guide](docs/I
 - [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) — Detailed installation and command-line usage
 - [Git Commit Guide](docs/git-commit-guide.md) — Guidelines for writing Git commit messages
 - [Changelog](CHANGELOG.md) — Version history and updates
-
 
 ---
 
