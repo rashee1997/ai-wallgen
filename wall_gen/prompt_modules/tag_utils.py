@@ -24,13 +24,13 @@ def select_random_tags(user_prefs: Optional[Any] = None) -> List[str]:
     """
     # Import from core to avoid circular imports
     try:
-        from prompt_modules.core import use_user_preferences
+        from .core import use_user_preferences
     except ImportError:
         use_user_preferences = True
     
     # Import here to avoid circular imports
     try:
-        from config import (
+        from ..config import (
             nature_tags, space_tags, sea_tags, flowers_tags, urban_tags, fantasy_tags, 
             abstract_tags, mood_tags, weather_tags, time_tags, season_tags, color_tags,
             material_tags, lighting_tags, pattern_tags, terrain_tags, emotion_tags, 
@@ -168,16 +168,16 @@ def generate_random_style_mix(user_prefs: Optional[Any] = None) -> str:
         str: A string containing a combination of artistic styles, joined with " + "
     """
     # Import here to avoid circular imports
-    from prompt_modules.core import use_user_preferences
+    from .core import use_user_preferences
 
     # If user_prefs is not provided and we should use preferences, get them from global
     if user_prefs is None and use_user_preferences:
         # Import here to avoid circular imports
         try:
-            from wallpaper_generator import user_prefs as global_user_prefs
-            user_prefs = global_user_prefs
+            from ..settings_modules import get_preferences
+            user_prefs = get_preferences()
         except ImportError:
-            # Fallback if wallpaper_generator is not available
+            # Fallback if settings_modules is not available
             pass
     
     # Define default style categories
@@ -196,7 +196,7 @@ def generate_random_style_mix(user_prefs: Optional[Any] = None) -> str:
     
     # Try to import STYLE_CATEGORIES from config
     try:
-        from config import STYLE_CATEGORIES
+        from ..config import STYLE_CATEGORIES
         if STYLE_CATEGORIES:
             default_style_categories = STYLE_CATEGORIES
     except (ImportError, AttributeError):

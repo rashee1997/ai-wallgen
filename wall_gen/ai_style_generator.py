@@ -5,8 +5,10 @@ import logging
 from typing import Optional, Dict
 
 import google.generativeai as genai
-from wallpaper_settings import get_preferences
-from ui_utils import (
+# NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
+from wall_gen.wallpaper_settings import get_preferences # UserPreferences is obtained via this
+from wall_gen import gemini_config # Import the new centralized configuration
+from wall_gen.ui_utils import (
     print_warning,
     print_section,
     print_info,
@@ -15,64 +17,35 @@ from ui_utils import (
 )
 
 # Configure logging for this module
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # BasicConfig should ideally be called once at app entry.
+#     level=logging.INFO, # Assuming it's handled by app_utils or main script.
+#     format="%(asctime)s - %(levelname)s - %(message)s"
+# )
+logger = logging.getLogger(__name__) # Get logger instance
 
 # --- Constants ---
-
-DEFAULT_MODEL = "gemini-2.5-flash-preview-04-17"
+# DEFAULT_MODEL is now in gemini_config
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 
 # --- Global State ---
+# GeminiState class and gemini_state instance are removed.
+# Initialization and state are handled by gemini_config.
 
-class GeminiState:
-    """Tracks Gemini initialization and related state."""
-    def __init__(self):
-        self.initialized = False
-        self.api_key = None
-        self.model = None
-        self.last_error = None
-        self.retry_count = 0
-
-gemini_state = GeminiState()
-
-def _attempt_init_from_env():
-    """Initialize Gemini from environment variable if available."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        try:
-            genai.configure(api_key=api_key)
-            gemini_state.api_key = api_key
-            gemini_state.initialized = True
-            logger.info("Successfully initialized Gemini with API key from environment.")
-        except Exception as e:
-            logger.error(f"Failed to initialize Gemini: {e}")
-            gemini_state.last_error = str(e)
-    else:
-        logger.warning("GEMINI_API_KEY environment variable not set. AI style generation will not work.")
-
-_attempt_init_from_env()
+# _attempt_init_from_env() is removed. gemini_config handles auto-init.
 
 def initialize_gemini(api_key: str) -> bool:
     """
-    Initialize the Gemini model with the provided API key.
+    Initialize the Gemini model globally using the centralized configuration.
     Returns True if initialization was successful, False otherwise.
     """
-    try:
-        genai.configure(api_key=api_key)
-        gemini_state.api_key = api_key
-        gemini_state.initialized = True
-        gemini_state.retry_count = 0
-        logger.info("Successfully initialized Gemini with new API key.")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to initialize Gemini: {e}")
-        gemini_state.last_error = str(e)
-        return False
+    logger.info(f"Attempting to initialize Gemini globally with provided API key.")
+    success = gemini_config.initialize_gemini_globally(api_key_override=api_key)
+    if success:
+        logger.info("Gemini globally initialized successfully with new API key.")
+    else:
+        logger.error(f"Failed to initialize Gemini globally: {gemini_config.get_last_error()}")
+    return success
 
 def generate_style_prompt(category: Optional[str] = None, style_type: str = "simple") -> str:
     """
@@ -128,25 +101,36 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
         Optional[Dict[str, str]]: The generated style as a dictionary with 'name' and 'description' keys,
         or None if generation fails
     """
-    if not gemini_state.initialized:
-        raise RuntimeError("Gemini model is not initialized. Please initialize with your API key first.")
+    user_prefs = get_preferences() # Get user_prefs to pass to model selection
+    if not gemini_config.is_initialized():
+        # Attempt to initialize if not already (e.g. if env var was set after module load)
+        if not gemini_config.initialize_gemini_globally():
+            error_msg = gemini_config.get_last_error() or "Unknown initialization error."
+            logger.error(f"Gemini not initialized for generate_random_style: {error_msg}")
+            raise RuntimeError(f"Gemini model is not initialized. Please initialize globally or ensure GEMINI_API_KEY is set. Last error: {error_msg}")
 
     prompt = generate_style_prompt(category, style_type)
+    selected_model_name = gemini_config.get_selected_gemini_model(user_prefs)
+    logger.info(f"Using Gemini model for style generation: {selected_model_name}")
 
     for attempt in range(MAX_RETRIES):
         try:
-            logger.info(f"Generating style (attempt {attempt + 1}/{MAX_RETRIES})")
-            model = genai.GenerativeModel(DEFAULT_MODEL)
+            logger.info(f"Generating style (attempt {attempt + 1}/{MAX_RETRIES}) with model {selected_model_name}")
+            model = genai.GenerativeModel(selected_model_name)
             response = model.generate_content(prompt)
 
             style_text = None
             if hasattr(response, 'text') and response.text:
                 style_text = response.text.strip()
-            elif hasattr(response, 'candidates') and response.candidates:
+            elif hasattr(response, 'candidates') and response.candidates and \
+                 hasattr(response.candidates[0], 'content') and hasattr(response.candidates[0].content, 'parts') and \
+                 response.candidates[0].content.parts and hasattr(response.candidates[0].content.parts[0], 'text'):
                 style_text = response.candidates[0].content.parts[0].text.strip()
             else:
-                logger.warning("No valid response from Gemini.")
-                continue
+                logger.warning("No valid response text or candidates structure from Gemini.")
+                # Log the full response if possible and not too large, for debugging
+                # logger.debug(f"Full Gemini response: {response}")
+                continue # Try next attempt or fail
 
             style_text = style_text.strip(' "\'\n\r')
 
@@ -155,10 +139,14 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
             if "\n" in style_text:
                 name, desc = style_text.split("\n", 1)
                 return {"name": name.strip(), "description": desc.strip()}
+            else: # Handle case where detailed is expected but only one line is returned
+                logger.warning(f"Expected detailed style (name+desc) but got single line: '{style_text}'. Using as name.")
+                return {"name": style_text, "description": "Description not provided by AI."}
+
 
         except Exception as e:
-            gemini_state.retry_count += 1
-            logger.error(f"Error generating style (attempt {attempt + 1}): {e}")
+            # gemini_state.retry_count removed
+            logger.error(f"Error generating style (attempt {attempt + 1}): {e}", exc_info=True)
             if attempt < MAX_RETRIES - 1:
                 delay = RETRY_DELAY * (2 ** attempt)  # Exponential backoff
                 logger.info(f"Retrying in {delay} seconds...")
@@ -248,9 +236,13 @@ def handle_style_generation(user_prefs):
     Each style is generated in a random (non-repeating) canonical category for greater diversity.
     """
     import random
-    if not gemini_state.initialized:
-        print_warning("Gemini model is not initialized. Please ensure GEMINI_API_KEY environment variable is set.")
-        return
+    if not gemini_config.is_initialized():
+        # Attempt to initialize if not already
+        if not gemini_config.initialize_gemini_globally():
+            error_msg = gemini_config.get_last_error() or "Unknown initialization error."
+            print_warning(f"Gemini model is not initialized: {error_msg}. Please ensure GEMINI_API_KEY is set or provide key.")
+            return
+    # user_prefs is already passed to this function
     all_categories = [
         "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
         "minimalist", "geometric", "illustration_pixel", "illustration_anime_manga", "illustration_comic",
@@ -333,7 +325,8 @@ def main():
       --export FILENAME       Export the generated style to a file (JSON or text).
     """
     import argparse
-    from wallpaper_settings import initialize_settings, get_preferences
+    # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
+    from wall_gen.wallpaper_settings import initialize_settings, get_preferences
 
     user_prefs = initialize_settings()
     parser = argparse.ArgumentParser(description='Generate an AI art style description')

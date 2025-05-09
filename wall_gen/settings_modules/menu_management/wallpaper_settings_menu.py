@@ -10,7 +10,7 @@ from wall_gen.ui_utils import (
     print_warning,
     get_validated_input,
 )
-from ..settings_manager import get_preferences
+from wall_gen.settings_modules.settings_manager import get_preferences
 
 
 def manage_wallpaper_settings():

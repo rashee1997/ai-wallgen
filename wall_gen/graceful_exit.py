@@ -1,4 +1,9 @@
 # wall_gen/graceful_exit.py
+"""
+Handles graceful exit on KeyboardInterrupt.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
+"""
 import signal
 import sys
 import logging

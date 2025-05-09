@@ -8,16 +8,29 @@ import re
 import logging
 import os
 from typing import List, Dict, Any, Optional, Union, Set
+from .. import gemini_config # Added for centralized Gemini config
+from .types import SimplePrefs # To handle cases where user_prefs might be None
+
+# It's better if UserPreferences can be fetched if not provided.
+# Attempting to import get_preferences for this purpose.
+try:
+    from ..settings_modules import get_preferences as get_global_user_prefs
+except ImportError:
+    # Fallback if direct import from settings_modules fails
+    get_global_user_prefs = None
+    logging.warning("Could not import get_preferences from ..settings_modules in negative_prompt.py; user_prefs may need to be passed explicitly.")
 
 
-def infer_subject_negatives_gemini(positive_prompt: str) -> List[str]:
+def infer_subject_negatives_gemini(positive_prompt: str, user_prefs: Optional[Any] = None) -> List[str]:
     """
     Use Gemini to infer subject-specific negative prompt terms from the positive prompt text.
     Returns a list of negative prompt terms suitable for merging and deduplication.
     Implements caching to avoid repeated calls for the same prompt.
+    Now uses selected Gemini model from gemini_config.
     
     Args:
         positive_prompt (str): The positive prompt to infer negatives from
+        user_prefs (Optional[Any]): User preferences instance. If None, attempts to fetch globally or uses SimplePrefs.
         
     Returns:
         List[str]: A list of negative prompt terms
@@ -28,22 +41,39 @@ def infer_subject_negatives_gemini(positive_prompt: str) -> List[str]:
         logging.warning("google.generativeai module not found. Some features will be disabled.")
         return []
         
-    gemini_api_key = os.environ.get("GEMINI_API_KEY")
-    if not gemini_api_key:
-        logging.warning("No Gemini API key configured for subject negative inference.")
-        return []
+    # Ensure Gemini is initialized
+    if not gemini_config.is_initialized():
+        if not gemini_config.initialize_gemini_globally():
+            logging.error(f"Gemini not initialized for infer_subject_negatives_gemini: {gemini_config.get_last_error()}")
+            return []
+
+    # Handle user_prefs
+    effective_user_prefs = user_prefs
+    if effective_user_prefs is None:
+        if get_global_user_prefs:
+            effective_user_prefs = get_global_user_prefs()
+        if effective_user_prefs is None: # If still None, use SimplePrefs
+            effective_user_prefs = SimplePrefs()
+            logging.debug("infer_subject_negatives_gemini: using SimplePrefs as user_prefs was None.")
+
+
+    selected_model_name = gemini_config.get_selected_gemini_model(effective_user_prefs)
+    
+    # Cache key should now include the selected model name
+    cache_key_parts = [positive_prompt, selected_model_name]
+    cache_key = "_".join(cache_key_parts) # Simpler cache key
 
     # Simple in-memory cache to avoid repeated calls for the same prompt
     if not hasattr(infer_subject_negatives_gemini, "_cache"):
         infer_subject_negatives_gemini._cache = {}
     cache = infer_subject_negatives_gemini._cache
-    if positive_prompt in cache:
-        logging.debug("Using cached subject negatives for prompt.")
-        return cache[positive_prompt]
+    if cache_key in cache: # Use updated cache_key
+        logging.debug(f"Using cached subject negatives for prompt with model {selected_model_name}.")
+        return cache[cache_key]
 
     try:
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        # genai.configure is handled by gemini_config.initialize_gemini_globally()
+        model = genai.GenerativeModel(selected_model_name)
         instruction = f"""
 Extract a comma-separated list of 3-8 subject-specific negative prompt terms that should be explicitly avoided for the following positive image generation prompt. 
 Focus on subtle, nuanced, and mutually exclusive visual confounders, class confusion, or obvious subject/scene artifacts the model may produce, but do not copy generic negatives (e.g., "blurry, watermark, bad anatomy").
@@ -66,24 +96,24 @@ Negative terms:
                 if term not in seen:
                     seen.add(term)
                     unique_terms.append(term)
-            logging.debug(f"Subject negatives inferred: {unique_terms}")
-            cache[positive_prompt] = unique_terms
+            logging.debug(f"Subject negatives inferred: {unique_terms} using model {selected_model_name}")
+            cache[cache_key] = unique_terms # Use updated cache_key
             return unique_terms
         else:
-            logging.warning("Gemini returned empty response for subject negatives.")
-            cache[positive_prompt] = []
+            logging.warning(f"Gemini returned empty response for subject negatives (model: {selected_model_name}).")
+            cache[cache_key] = [] # Use updated cache_key
             return []
     except Exception as e:
-        logging.error(f"Error inferring subject negatives with Gemini: {e}")
-        cache[positive_prompt] = []
+        logging.error(f"Error inferring subject negatives with Gemini (model: {selected_model_name}): {e}", exc_info=True)
+        cache[cache_key] = [] # Use updated cache_key
         return []
 
 
-def enhance_negative_prompt(negative_prompt_text: str) -> str:
+def enhance_negative_prompt(negative_prompt_text: str, user_prefs: Optional[Any] = None) -> str:
     """
     Builds a negative prompt for image generation:
     - Includes up to 7 unique user-provided terms (from comma-separated input)
-    - Adds up to 4 unique inferred subject-specific negatives (if present, not redundant)
+    - Adds up to 4 unique inferred subject-specific negatives (if present, not redundant), using user_prefs for model selection.
     - Appends vetted technical artifact defaults (if not present): blurry, low quality, nsfw, watermark, out of frame
     The total is capped at 13 entries, priority: user > subject > default, and deduplicated.
     
@@ -92,6 +122,7 @@ def enhance_negative_prompt(negative_prompt_text: str) -> str:
     
     Args:
         negative_prompt_text (str): The negative prompt text to enhance
+        user_prefs (Optional[Any]): User preferences instance, passed to infer_subject_negatives_gemini.
         
     Returns:
         str: The enhanced negative prompt
@@ -101,11 +132,20 @@ def enhance_negative_prompt(negative_prompt_text: str) -> str:
     user_terms = list(dict.fromkeys(user_terms))[:7]  # Remove duplicates and limit to 7
 
     # Try to infer up to 4 subject negatives (optional)
+    # Pass user_prefs to infer_subject_negatives_gemini
+    effective_user_prefs = user_prefs
+    if effective_user_prefs is None:
+        if get_global_user_prefs:
+            effective_user_prefs = get_global_user_prefs()
+        if effective_user_prefs is None:
+            effective_user_prefs = SimplePrefs()
+            logging.debug("enhance_negative_prompt: using SimplePrefs for infer_subject_negatives_gemini.")
+            
     try:
         subject_terms = []
         for t in user_terms:
             if t:  # Only try if user terms look like a subject/concept
-                nt = infer_subject_negatives_gemini(t)
+                nt = infer_subject_negatives_gemini(t, user_prefs=effective_user_prefs) # Pass effective_user_prefs
                 if nt:
                     subject_terms.extend(nt)
         # Deduplicate, but add at most 4 not already covered by user

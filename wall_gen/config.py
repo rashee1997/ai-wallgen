@@ -1,4 +1,9 @@
-"""Consolidated configuration file for AI Wallpaper Generator."""
+# wall_gen/config.py
+"""
+Consolidated configuration file for AI Wallpaper Generator.
+NOTE: This module is primarily for data storage and is imported by other modules
+within the 'wall_gen' package. It's not intended to be run as a standalone script.
+"""
 
 # Define tag lists for prompt generation (from prompt_config.py)
 nature_tags = [

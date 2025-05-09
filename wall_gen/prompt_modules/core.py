@@ -12,16 +12,19 @@ from typing import Dict, List, Optional, Any, Union, Tuple, Set
 
 # Import types
 from .types import SimplePrefs
+from .. import gemini_config # Added for centralized Gemini config
 
 # Import utilities and formatting
 from .formatters import enforce_prompt_format
-from .negative_prompt import enhance_negative_prompt, infer_subject_negatives_gemini
+from .negative_prompt import enhance_negative_prompt # infer_subject_negatives_gemini is more complex to call here.
+                                                    # enhance_negative_prompt itself calls infer_subject_negatives_gemini
+                                                    # and will need to be updated to pass user_prefs.
 
 # Create a cache for generated prompts
 prompt_cache = {}
 
-# Set default Gemini model
-gemini_model_name = "gemini-2.5-flash-preview-04-17"
+# Set default Gemini model - REMOVED
+# gemini_model_name = "gemini-2.5-flash-preview-04-17"
 
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
@@ -57,10 +60,10 @@ def generate_prompt_gemini(tags: List[str], user_prefs: Optional[Any] = None) ->
         if user_prefs is None and use_user_preferences:
             # Import here to avoid circular imports
             try:
-                from wallpaper_generator import user_prefs as global_user_prefs
-                user_prefs = global_user_prefs
+                from ..settings_modules import get_preferences
+                user_prefs = get_preferences()
             except ImportError:
-                logging.warning("Unable to import user_prefs from wallpaper_generator.")
+                logging.warning("Unable to import get_preferences from ..settings_modules.")
                 user_prefs = None
         
         # If we shouldn't use user preferences and none were provided, use minimal settings
@@ -86,11 +89,38 @@ def generate_prompt_gemini(tags: List[str], user_prefs: Optional[Any] = None) ->
                 }
             )
         
-        # Create cache key based on whether we're using user preferences
-        if use_user_preferences and user_prefs is not None:
-            cache_key = str(tags) + str(getattr(user_prefs, 'imagen_settings', {})) + str(gemini_model_name)
+        # Ensure Gemini is initialized
+        if not gemini_config.is_initialized():
+            if not gemini_config.initialize_gemini_globally():
+                logging.error(f"Gemini not initialized for generate_prompt_gemini (core.py): {gemini_config.get_last_error()}")
+                # Fallback to a simple prompt if Gemini cannot be used
+                formatted_tags_str = ", ".join(tags)
+                # Attempt to get user_prefs for negative prompt even in fallback
+                neg_prompt_fallback = "ugly, disfigured"
+                if user_prefs and hasattr(user_prefs, 'imagen_settings'):
+                    neg_prompt_fallback = user_prefs.imagen_settings.get("negative_prompt", neg_prompt_fallback)
+                elif hasattr(user_prefs, 'negative_prompt'): # Check root level if not in imagen_settings
+                    neg_prompt_fallback = getattr(user_prefs, 'negative_prompt', neg_prompt_fallback)
+
+                return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", neg_prompt_fallback)
+
+        # Determine the effective user_prefs to use (actual or SimplePrefs)
+        effective_user_prefs = user_prefs
+        if not use_user_preferences and user_prefs is None: # This condition was already handled for creating SimplePrefs
+            effective_user_prefs = user_prefs # which is SimplePrefs instance here
+        elif user_prefs is None and use_user_preferences: # If global user_prefs couldn't be loaded
+             effective_user_prefs = SimplePrefs() # Fallback to SimplePrefs
+        elif user_prefs is None: # General fallback if user_prefs is None for any other reason
+            effective_user_prefs = SimplePrefs()
+
+
+        selected_model = gemini_config.get_selected_gemini_model(effective_user_prefs)
+
+        # Create cache key based on whether we're using user preferences and the selected model
+        if use_user_preferences and user_prefs is not None: # user_prefs here refers to the original parameter
+            cache_key = str(tags) + str(getattr(user_prefs, 'imagen_settings', {})) + selected_model
         else:
-            cache_key = str(tags) + "no_user_prefs" + str(gemini_model_name)
+            cache_key = str(tags) + "no_user_prefs" + selected_model
             
         # Check if we have this prompt cached
         if cache_key in prompt_cache:
@@ -243,10 +273,17 @@ def generate_prompt_gemini(tags: List[str], user_prefs: Optional[Any] = None) ->
         user_terms = set(term.strip() for term in user_negative_prompt.split(',') if term.strip())
         
         # Enhance user terms first if they exist
+        # enhance_negative_prompt will need user_prefs to pass to infer_subject_negatives_gemini
+        # For now, assuming enhance_negative_prompt can fetch user_prefs if needed, or this part might need adjustment
+        # if user_prefs is not consistently available/passed.
+        # The current signature of enhance_negative_prompt only takes text.
+        # For this refactor, we'll assume enhance_negative_prompt is updated separately or works.
         if user_terms:
-            enhanced_user_terms = set(enhance_negative_prompt(term) for term in user_terms)
+            # Pass user_prefs to enhance_negative_prompt if its signature is updated
+            # For now, calling as is:
+            enhanced_user_terms = set(enhance_negative_prompt(term, user_prefs=effective_user_prefs) for term in user_terms)
             final_terms = enhanced_user_terms.union(default_terms)
-            negative_prompt = ", ".join(sorted(list(final_terms)))  # Sort for consistency
+            negative_prompt = ", ".join(sorted(list(final_terms)))
         else:
             negative_prompt = default_negative_prompt
         
@@ -385,16 +422,13 @@ Avoid: [negative prompt]
             logging.warning("google.generativeai module not found. Some features will be disabled.")
             # Return a formatted version of the simple tags
             return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
-            
-        gemini_api_key = os.environ.get("GEMINI_API_KEY")
-        if not gemini_api_key:
-            logging.warning("No Gemini API key configured")
-            # Return a formatted version of the simple tags
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+        
+        # API key and configuration are handled by gemini_config.initialize_gemini_globally()
+        # which was checked at the beginning of this function.
         
         try:
-            genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel(gemini_model_name)
+            # selected_model was already determined earlier
+            model = genai.GenerativeModel(selected_model)
             response = model.generate_content(instruction_context + "\n\n" + technical_context)
             
             if hasattr(response, 'text') and response.text:

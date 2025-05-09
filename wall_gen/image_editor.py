@@ -1,4 +1,9 @@
 # wall_gen/image_editor.py
+"""
+Image editing functionalities using Pillow, OpenCV, and Scikit-image.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
+"""
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 from typing import Optional, Callable, Any
 import numpy as np

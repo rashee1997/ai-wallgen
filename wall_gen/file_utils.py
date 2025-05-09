@@ -1,5 +1,6 @@
 # wall_gen/file_utils.py
 """Utility functions for file operations, path manipulations, and temp file management."""
+# NOTE: This module assumes the project root is on sys.path for certain imports if not run as part of the wall_gen package.
 
 import os
 import hashlib
@@ -13,7 +14,12 @@ import atexit # For cleanup_all_temp_files registration (though registration its
 from datetime import datetime # For list_sorted_generated_images
 
 import google.generativeai as genai # Needed for extract_subject_from_prompt
-from typing import Dict, Any, List, Set # For type hinting
+from typing import Dict, Any, List, Set, Optional # Added Optional for type hinting user_prefs
+from wall_gen import gemini_config # Import the new centralized configuration
+# wallpaper_settings is not directly used here for UserPreferences,
+# but UserPreferences instance will be passed to functions needing it.
+# NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
+# from wall_gen.wallpaper_settings import get_preferences # If needed directly
 
 # --- Temporary File Management ---
 _temp_files: Set[str] = set()
@@ -81,14 +87,46 @@ def remove_temp_file(path: str):
 
 # --- Filename and Path Generation ---
 
-def extract_subject_from_prompt_for_filename(prompt: str) -> str | None:
+def extract_subject_from_prompt_for_filename(prompt: str, user_prefs=None) -> Optional[str]:
     """
     Extract the main subject from a prompt using Gemini, for filename use.
     (Moved from extract_subject_from_prompt in wallpaper_generator.py, assumes genai is configured)
+    Now uses the selected Gemini model from gemini_config.
+    Args:
+        prompt (str): The prompt to analyze.
+        user_prefs (UserPreferences, optional): User preferences instance. If None, will try to get it.
     """
+    if user_prefs is None:
+        try:
+            # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
+            from wall_gen.wallpaper_settings import get_preferences
+            user_prefs = get_preferences()
+        except ImportError:
+            logging.error("Could not import get_preferences to fetch UserPreferences in file_utils.")
+            # Fallback to a default model if user_prefs cannot be obtained
+            # This is a less ideal scenario.
+            if not gemini_config.is_initialized():
+                if not gemini_config.initialize_gemini_globally():
+                    logging.error(f"Gemini not initialized for filename extraction (no user_prefs): {gemini_config.get_last_error()}")
+                    return None
+            selected_model_name = gemini_config.DEFAULT_GEMINI_MODEL
+            logging.warning(f"UserPreferences not available in file_utils, using default model: {selected_model_name}")
+            model = genai.GenerativeModel(selected_model_name)
+            # Proceed with this default model if user_prefs is truly unavailable here.
+            # Ideally, user_prefs should be passed down or accessible globally in a consistent way.
+    else:
+        if not gemini_config.is_initialized():
+            # Attempt to initialize if not already
+            if not gemini_config.initialize_gemini_globally():
+                error_msg = gemini_config.get_last_error() or "Unknown initialization error."
+                logging.error(f"Gemini not initialized for filename extraction: {error_msg}")
+                return None # Cannot proceed if Gemini isn't initialized
+        
+        selected_model_name = gemini_config.get_selected_gemini_model(user_prefs)
+        logging.info(f"Using Gemini model for filename extraction: {selected_model_name}")
+        model = genai.GenerativeModel(selected_model_name)
+
     try:
-        # genai should be configured by the main application script or app_utils
-        model = genai.GenerativeModel('gemini-2.0-flash') # Using a faster model for this task
         analysis_prompt_text = f"""
         Extract the main subject or theme from this wallpaper description in 2-5 words.
         Only return the extracted subject - no explanations or additional text.

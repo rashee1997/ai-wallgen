@@ -5,9 +5,9 @@ This package contains modules for handling user settings, preferences,
 presets, and menu functionality for the wallpaper generation application.
 """
 
-from .settings_manager import initialize_settings, get_preferences
-from .user_preferences import UserPreferences
-from .menu_management.main_menu import manage_preferences
+from wall_gen.settings_modules.settings_manager import initialize_settings, get_preferences
+from wall_gen.settings_modules.user_preferences import UserPreferences
+from wall_gen.settings_modules.menu_management.main_menu import manage_preferences
 
 __all__ = [
     # Core settings management

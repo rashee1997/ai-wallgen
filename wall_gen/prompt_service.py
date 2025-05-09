@@ -1,12 +1,16 @@
 # wall_gen/prompt_service.py
 """
 Service module for all prompt generation logic.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 import logging
 import random
 import os
 import google.generativeai as genai
 import hashlib # Added for cache key hashing
+from . import gemini_config # Import the new centralized configuration
+# from wallpaper_settings import get_preferences # If UserPreferences needed directly
 
 # Use absolute imports for modules within the wall_gen package
 try:
@@ -14,7 +18,7 @@ try:
     from wall_gen.config import (
         PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS,
         nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
-        fantasy_tags, abstract_tags, mood_tags, style_to_tags
+        fantasy_tags, abstract_tags, mood_tags, style_to_tags, STYLE_CATEGORIES
     )
     # Functions from prompt_generator.py using absolute import
     from wall_gen.prompt_generator import (
@@ -26,34 +30,38 @@ try:
         # infer_subject_negatives_gemini # This was in wallpaper_generator.py, its final place TBD (here or prompt_generator.py)
     )
 except ImportError:
-    logging.warning("Relative imports failed in prompt_service.py during initial load. Ensure wall_gen is a proper package.")
-    # Fallback for environments where relative imports might not work as expected initially - Keep absolute
-    from wall_gen.cache_utils import prompt_cache
-    from wall_gen.config import (
-        PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS,
-        nature_tags, space_tags, sea_tags, flowers_tags, urban_tags,
-        fantasy_tags, abstract_tags, mood_tags, style_to_tags
-    )
-    # Fallback import - Keep absolute
-    from wall_gen.prompt_generator import (
-        enhance_custom_prompt,
-        enforce_prompt_format,
-        set_prompt_preferences,
-        use_user_preferences,
-        enhance_negative_prompt,
-    )
+    # This block is reached if 'wall_gen' is not in sys.path or not installed.
+    # Critical dependencies are missing.
+    logging.critical("Core imports (cache_utils, config, prompt_generator) failed in prompt_service.py. "
+                     "Ensure 'wall_gen' package is correctly installed and in PYTHONPATH.")
+    # Define dummy/fallback versions of critical components if possible, or raise an error.
+    # For this example, we'll let subsequent NameErrors occur if these aren't found,
+    # as the module is unlikely to function.
+    class DummyCache:
+        def __contains__(self, key): return False
+        def __getitem__(self, key): raise KeyError
+        def __setitem__(self, key, value): pass
+    prompt_cache = DummyCache()
+    PROMPT_INSTRUCTIONS, CUSTOM_PROMPT_INSTRUCTIONS = "", ""
+    nature_tags, space_tags, sea_tags, flowers_tags, urban_tags = [], [], [], [], []
+    fantasy_tags, abstract_tags, mood_tags, style_to_tags, STYLE_CATEGORIES = [], [], [], {}, {}
+    def enhance_custom_prompt(p, up=None): return p
+    def enforce_prompt_format(p, r, ar, np): return p
+    def set_prompt_preferences(v): pass
+    def use_user_preferences(): return True
+    def enhance_negative_prompt(p, np): return np
 
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-PROMPT_GEMINI_MODEL_NAME = "gemini-2.0-flash"
+# GEMINI_API_KEY and PROMPT_GEMINI_MODEL_NAME are now managed by gemini_config
+# Initialization is also handled by gemini_config (auto-init on its import)
+# We just need to ensure it's checked before use if not relying on auto-init success.
 
-if GEMINI_API_KEY:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-    except Exception as e:
-        logging.error(f"Failed to configure GenAI in prompt_service: {e}")
-else:
-    logging.warning("GEMINI_API_KEY not set in prompt_service. AI prompt generation will be limited.")
+# Example: Ensure Gemini is initialized before proceeding if critical operations depend on it here.
+# if not gemini_config.is_initialized():
+#     if not gemini_config.initialize_gemini_globally():
+#         logging.error(f"Prompt Service: Failed to initialize Gemini: {gemini_config.get_last_error()}")
+# else:
+#     logging.info("Prompt Service: Gemini already initialized.")
 
 
 def flatten_settings(settings, parent_key="", sep=" - ", ignore_keys=None):
@@ -137,13 +145,24 @@ def _build_gemini_prompt_from_settings(tags, user_prefs):
     (Refactored from local generate_prompt_gemini in wallpaper_generator.py)
     """
     try:
-        if not GEMINI_API_KEY:
-            logging.warning("No Gemini API key for _build_gemini_prompt_from_settings.")
-            formatted_tags = ", ".join(tags)
-            return enforce_prompt_format(formatted_tags, "3840x2160", "16:9", user_prefs.imagen_settings.get("negative_prompt", ""))
+        if not gemini_config.is_initialized():
+            if not gemini_config.initialize_gemini_globally(): # Attempt to initialize
+                logging.error(f"Gemini not initialized for _build_gemini_prompt_from_settings: {gemini_config.get_last_error()}")
+                # Fallback to a simple prompt if Gemini cannot be used
+                formatted_tags_str = ", ".join(tags)
+                return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", user_prefs.imagen_settings.get("negative_prompt", ""))
+        
+        # If still not initialized (e.g. no API key), then fallback.
+        if not gemini_config.is_initialized():
+            logging.warning("Gemini could not be initialized (e.g. no API key). Falling back to basic prompt formatting.")
+            formatted_tags_str = ", ".join(tags)
+            return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", user_prefs.imagen_settings.get("negative_prompt", ""))
 
-        # Consistent cache key generation
-        cache_key_parts = [str(tags), str(user_prefs.imagen_settings), PROMPT_GEMINI_MODEL_NAME]
+        selected_model_name = gemini_config.get_selected_gemini_model(user_prefs)
+        logging.info(f"Using Gemini model for prompt building: {selected_model_name}")
+
+        # Consistent cache key generation, now including the selected model name
+        cache_key_parts = [str(tags), str(user_prefs.imagen_settings), selected_model_name]
         cache_key = hashlib.sha256("".join(cache_key_parts).encode()).hexdigest()
 
         if cache_key in prompt_cache:
@@ -180,15 +199,15 @@ Guidelines:
     The elements to avoid are: {user_negative_prompt if user_negative_prompt else "common artifacts, poor quality, text, watermarks"}.
 
 Example of desired output format:
-A breathtaking landscape of {formatted_tags}, bathed in the {settings.get("lighting_settings", {}).get("time_of_day", "golden hour")} light... (many more details)... {resolution} resolution, {aspect_ratio} aspect ratio.
+A breathtaking landscape of {formatted_tags}, bathed in the {settings.get("lighting_settings", {}).get("time_of_day", "golden hour")} light... (many more details)... {resolution} resolution, {aspect_ratio} aspect_ratio.
 Avoid: blurry, low quality, text, watermarks, ugly.
 ---
 Now, generate the prompt for: "{formatted_tags}"
 """
-        model = genai.GenerativeModel(PROMPT_GEMINI_MODEL_NAME)
+        model = genai.GenerativeModel(selected_model_name) # Use selected model
         response = model.generate_content(instruction_context)
 
-        if response.text:
+        if hasattr(response, 'text') and response.text:
             full_response = response.text.strip()
             final_prompt = enforce_prompt_format(
                 full_response, resolution, aspect_ratio, user_negative_prompt
@@ -198,10 +217,12 @@ Now, generate the prompt for: "{formatted_tags}"
             return final_prompt
         else:
             logging.warning(f"Gemini returned empty response for prompt generation. Tags: {tags}")
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, user_negative_prompt)
+            # Fallback to basic formatting if Gemini fails
+            formatted_tags_str = ", ".join(tags)
+            return enforce_prompt_format(formatted_tags_str, resolution, aspect_ratio, user_negative_prompt)
 
     except Exception as e:
-        logging.error(f"Error in _build_gemini_prompt_from_settings: {e}")
+        logging.error(f"Error in _build_gemini_prompt_from_settings: {e}", exc_info=True)
         formatted_tags_str = ", ".join(tags)
         return enforce_prompt_format(formatted_tags_str, "3840x2160", "16:9", user_prefs.imagen_settings.get("negative_prompt", ""))
 
@@ -267,18 +288,23 @@ def generate_random_style_mix_for_prompt(user_prefs):
     """Generate a random style mix."""
     try:
         # Import ai_style_generator from the root directory
-        from ai_style_generator import generate_random_style 
-        if GEMINI_API_KEY:
-            ai_style = generate_random_style()
+        # Ensure ai_style_generator is also refactored to use gemini_config
+        from wall_gen.ai_style_generator import generate_random_style
+        if gemini_config.is_initialized(): # Check if Gemini is usable
+            # generate_random_style in ai_style_generator now handles its own model selection via gemini_config
+            ai_style = generate_random_style() # It will use get_preferences() internally
             if ai_style:
-                return ai_style
+                return ai_style['name'] if isinstance(ai_style, dict) and 'name' in ai_style else str(ai_style)
+        else:
+            logging.warning("Gemini not initialized, cannot use AI for random style mix.")
     except (ImportError, ModuleNotFoundError, Exception) as e:
-        logging.debug(f"AI style generation not available in prompt_service: {e}")
+        logging.debug(f"AI style generation not available or failed in prompt_service: {e}")
 
     settings = user_prefs.imagen_settings
     style_settings = settings.get("style_settings", {})
     
-    from .config import style_categories as default_style_categories
+    # Use the STYLE_CATEGORIES imported from wall_gen.config
+    default_style_categories = STYLE_CATEGORIES
     current_style_categories = style_settings.get("style_categories", default_style_categories)
 
     if not current_style_categories:

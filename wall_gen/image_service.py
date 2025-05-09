@@ -1,6 +1,8 @@
 # wall_gen/image_service.py
 """
 Service module for interacting with the image generation API (Google Imagen).
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 import os
 import logging

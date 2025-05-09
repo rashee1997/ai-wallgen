@@ -11,6 +11,8 @@ from typing import Dict, List, Optional, Any, Union, Tuple, Set
 
 # Import types
 from .types import SimplePrefs
+from .. import gemini_config # Added for centralized Gemini config
+
 # Import utilities
 from .formatters import enforce_prompt_format
 from .tag_utils import select_random_tags
@@ -34,10 +36,10 @@ def generate_prompt_random(tags: List[str], user_prefs: Optional[Any] = None) ->
         if user_prefs is None and use_user_preferences:
             # Import here to avoid circular imports
             try:
-                from wallpaper_generator import user_prefs as global_user_prefs
-                user_prefs = global_user_prefs
+                from ..settings_modules import get_preferences
+                user_prefs = get_preferences()
             except ImportError:
-                logging.warning("Unable to import user_prefs from wallpaper_generator.")
+                logging.warning("Unable to import get_preferences from ..settings_modules.")
                 user_prefs = None
             
         # If we shouldn't use user preferences and none were provided, use minimal settings
@@ -108,21 +110,25 @@ Your response must follow this exact format:
                 import google.generativeai as genai
             except ImportError:
                 logging.warning("google.generativeai module not found. Some features will be disabled.")
-                # Return formatted version of the basic tags
-                return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
-                
-            gemini_api_key = os.environ.get("GEMINI_API_KEY")
-            if not gemini_api_key:
-                logging.warning("No Gemini API key configured")
-                # Return formatted version of the basic tags
-                return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
+                return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt) # Fallback
+            
+            # Ensure Gemini is initialized
+            if not gemini_config.is_initialized():
+                if not gemini_config.initialize_gemini_globally():
+                    logging.error(f"Gemini not initialized for random prompt enhancement: {gemini_config.get_last_error()}")
+                    return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt) # Fallback
+
+            # Determine effective_user_prefs for model selection (even if it's SimplePrefs here)
+            effective_user_prefs_for_model = user_prefs if user_prefs else SimplePrefs()
+            selected_model_name = gemini_config.get_selected_gemini_model(effective_user_prefs_for_model)
+            logging.info(f"Using Gemini model for random prompt enhancement: {selected_model_name}")
                 
             try:
-                genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
+                # API key and configuration are handled by gemini_config
+                model = genai.GenerativeModel(selected_model_name)
                 response = model.generate_content(instructions)
 
-                if hasattr(response, 'parts') and response.parts:
+                if hasattr(response, 'parts') and response.parts and hasattr(response.parts[0], 'text'):
                     full_response = response.parts[0].text.strip()
 
                     # Find the start of the enhanced prompt after the introductory phrase
@@ -150,15 +156,15 @@ Your response must follow this exact format:
 
         # User preferences are enabled or provided - use Gemini for enhancement
         # Get user preferences
-        if hasattr(user_prefs, 'preferred_styles') and hasattr(user_prefs, 'preferred_moods'):
+        if user_prefs and hasattr(user_prefs, 'preferred_styles') and hasattr(user_prefs, 'preferred_moods'): # Check user_prefs exists
             style = user_prefs.preferred_styles[0] if user_prefs.preferred_styles else None
             mood = user_prefs.preferred_moods[0] if user_prefs.preferred_moods else None
-        else:
+        else: # Handles case where user_prefs might be None (e.g. if global_user_prefs import failed)
             style = None
             mood = None
 
         # Get all settings from imagen_settings
-        settings = user_prefs.imagen_settings if hasattr(user_prefs, 'imagen_settings') else {}
+        settings = user_prefs.imagen_settings if user_prefs and hasattr(user_prefs, 'imagen_settings') else {}
         
         # Extract style-specific settings first as they might be needed below
         digital_settings = settings.get("digital_settings", {})
@@ -260,9 +266,9 @@ Your response must follow this exact format:
 
         # Try to import PROMPT_INSTRUCTIONS
         try:
-            from config import PROMPT_INSTRUCTIONS
+            from ..config import PROMPT_INSTRUCTIONS
         except ImportError:
-            logging.warning("Could not import PROMPT_INSTRUCTIONS from config.")
+            logging.warning("Could not import PROMPT_INSTRUCTIONS from ..config.")
             # Define a fallback instruction if import fails
             PROMPT_INSTRUCTIONS = """
 Generate a detailed and artistic prompt for a high-quality wallpaper image.
@@ -359,18 +365,21 @@ The following elements must be avoided: {negative_prompt}
 
         # Generate prompt using Gemini
         try:
-            gemini_api_key = os.environ.get("GEMINI_API_KEY")
-            if not gemini_api_key:
-                logging.warning("No Gemini API key configured")
-                # Return a formatted version of the simple tags
-                return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+            # Ensure Gemini is initialized
+            if not gemini_config.is_initialized():
+                if not gemini_config.initialize_gemini_globally():
+                    logging.error(f"Gemini not initialized for random prompt (user_prefs path): {gemini_config.get_last_error()}")
+                    return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt) # Fallback
+            
+            effective_user_prefs_for_model = user_prefs if user_prefs else SimplePrefs()
+            selected_model_name = gemini_config.get_selected_gemini_model(effective_user_prefs_for_model)
+            logging.info(f"Using Gemini model for random prompt (user_prefs path): {selected_model_name}")
 
-            genai.configure(api_key=gemini_api_key)
-            # Use gemini-2.0-flash as in the no-prefs path
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            # API key and configuration are handled by gemini_config
+            model = genai.GenerativeModel(selected_model_name)
             response = model.generate_content(instruction_context + "\n\n" + technical_context)
 
-            if response.text:
+            if hasattr(response, 'text') and response.text:
                 full_response = response.text.strip()
 
                 # Parse the response to separate prompt and negative prompt
@@ -430,10 +439,10 @@ def generate_random_style_mix(user_prefs=None):
         if user_prefs is None and use_user_preferences:
             # Import here to avoid circular imports
             try:
-                from wallpaper_generator import user_prefs as global_user_prefs
-                user_prefs = global_user_prefs
+                from ..settings_modules import get_preferences
+                user_prefs = get_preferences()
             except ImportError:
-                logging.warning("Unable to import user_prefs from wallpaper_generator.")
+                logging.warning("Unable to import get_preferences from ..settings_modules.")
                 user_prefs = None
         
         # Define default style categories

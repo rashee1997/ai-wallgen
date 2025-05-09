@@ -32,7 +32,7 @@ from wall_gen.prompt_modules import (
     SimplePrefs
 )
 # For backward compatibility, re-export these variables from the modules
-from wall_gen.prompt_modules.core import prompt_cache, gemini_model_name, use_user_preferences
+from wall_gen.prompt_modules.core import prompt_cache, use_user_preferences # gemini_model_name removed
 
 
 # Import configuration using absolute import
@@ -44,16 +44,16 @@ from wall_gen.config import (
 )
 
 
-# Import no-preferences prompt instructions using absolute import from root
+# Import no-preferences prompt instructions using absolute import from within wall_gen
+# NOTE: This module assumes no_preferences_prompt.py is part of the wall_gen package.
 try:
-    # Assumes no_preferences_prompt.py is in the root directory and accessible
-    from no_preferences_prompt import (
+    from wall_gen.no_preferences_prompt import (
         NO_PREFS_PROMPT_INSTRUCTIONS,
         NO_PREFS_RANDOM_INSTRUCTIONS,
         enforce_art_medium
     )
 except ImportError:
-    logging.warning("Could not import from ..no_preferences_prompt. Using default instructions.")
+    logging.warning("Could not import from wall_gen.no_preferences_prompt. Using default instructions.")
     # Define fallbacks in case import fails
     try:
         # Use instructions from config if available as fallback

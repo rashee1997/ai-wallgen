@@ -1,6 +1,8 @@
 # wall_gen/cache_utils.py
 """
 Utilities for caching mechanisms and directory initialization.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 
 import collections

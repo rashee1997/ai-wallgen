@@ -20,15 +20,14 @@ from wall_gen.config import STYLE_CATEGORIES
 from ..settings_manager import get_preferences # Relative import is correct
 
 try:
-    from prompt_generator import generate_random_style_mix
+    from wall_gen.prompt_generator import generate_random_style_mix
 
     PROMPT_GEN_AVAILABLE = True
 except ImportError:
     PROMPT_GEN_AVAILABLE = False
 
 try:
-    from ai_style_generator import handle_style_generation, initialize_gemini
-
+    from wall_gen.ai_style_generator import handle_style_generation, initialize_gemini
     AI_STYLE_GEN_AVAILABLE = True
 except ImportError:
     AI_STYLE_GEN_AVAILABLE = False

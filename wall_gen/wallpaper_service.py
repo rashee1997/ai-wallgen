@@ -1,6 +1,8 @@
 # wall_gen/wallpaper_service.py
 """
 Service module for OS-specific wallpaper setting and environment detection.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 import os
 import platform
@@ -18,7 +20,8 @@ except ImportError:
     # Fallback if run standalone or structure not yet fully in place
     # This assumes wall_gen is in PYTHONPATH or is the CWD for this to work.
     # This assumes wall_gen is in PYTHONPATH or is the CWD for this to work.
-    from wall_gen.ui_utils import print_info, print_warning
+    def print_info(msg): logging.info(f"FALLBACK INFO: {msg}") # Changed to logging
+    def print_warning(msg): logging.warning(f"FALLBACK WARN: {msg}") # Changed to logging
 
 
 def detect_linux_desktop_env():

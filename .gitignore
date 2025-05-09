@@ -26,6 +26,7 @@ wheels/
 env/
 venv/
 ENV/
+linux/
 
 # IDE
 .idea/
@@ -33,6 +34,7 @@ ENV/
 *.swp
 *.swo
 .cursor/
+.qodo/
 
 # Wallpaper Generator specific
 # User data
@@ -40,8 +42,10 @@ user_preferences.json
 last_genre.json
 last_genre.txt
 generation_history.json
+generation_history_fallback.json
 prompts.json
 rasheedhh.json
+last_prompt.json
 
 # Logs and cache
 *.log
@@ -50,6 +54,8 @@ prompt_cache/
 image_cache/
 genimage/
 generated_presets_cache.json
+presets_db.json
+wall_gen/presets_db.json
 
 # Keep empty directories
 !cache/.gitkeep
@@ -65,6 +71,7 @@ preset_backups/
 history/history.db
 !history/.gitkeep
 history_backups/
+wall_gen/history/history.db 
 
 # OS specific
 .DS_Store
@@ -104,4 +111,11 @@ generate_prompts.json
 docs/git-commit-guide.md
 bkup/
 prompt_gen/
+refactor_imports_plan.txt
+plan.txt
+
+# Project specific
+wall_gen/presets/
+.blackboxrules
+.hairules
 

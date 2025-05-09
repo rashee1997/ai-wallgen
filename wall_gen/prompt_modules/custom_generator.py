@@ -18,6 +18,8 @@ except ImportError:
 
 # Import types
 from .types import SimplePrefs
+from .. import gemini_config # Added for centralized Gemini config
+
 # Import utilities
 from .formatters import enforce_prompt_format
 
@@ -42,10 +44,10 @@ def enhance_custom_prompt(custom_prompt: str, user_prefs: Optional[Any] = None, 
         if user_prefs is None and use_user_preferences:
             # Import here to avoid circular imports
             try:
-                from wallpaper_generator import user_prefs as global_user_prefs
-                user_prefs = global_user_prefs
+                from ..settings_modules import get_preferences
+                user_prefs = get_preferences()
             except ImportError:
-                logging.warning("Unable to import user_prefs from wallpaper_generator.")
+                logging.warning("Unable to import get_preferences from ..settings_modules.")
                 user_prefs = None
         
         # If we shouldn't use user preferences and none were provided, use minimal settings
@@ -69,9 +71,19 @@ def enhance_custom_prompt(custom_prompt: str, user_prefs: Optional[Any] = None, 
             # Basic artwork style for no preferences
             style = None  # Don't enforce a style when no preferences
             mood = None
-            resolution = "3840x2160"
-            aspect_ratio = "16:9"
+            resolution = "3840x2160" # Default resolution
+            aspect_ratio = "16:9"  # Default aspect ratio
+            
+            # Attempt to get resolution and aspect_ratio from SimplePrefs if available
+            if hasattr(user_prefs, 'imagen_settings') and user_prefs.imagen_settings:
+                quality_settings = user_prefs.imagen_settings.get("quality_settings", {})
+                resolution = quality_settings.get("resolution", resolution)
+            if hasattr(user_prefs, 'aspect_ratio') and user_prefs.aspect_ratio:
+                aspect_ratio = user_prefs.aspect_ratio
+
             negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs"
+            if hasattr(user_prefs, 'imagen_settings') and user_prefs.imagen_settings:
+                 negative_prompt = user_prefs.imagen_settings.get("negative_prompt", negative_prompt)
             
             # Detect specific art mediums in the prompt and preserve them
             art_mediums = {
@@ -394,22 +406,34 @@ Avoid: [negative elements]
 """
 
         # Add negative prompt if available
-        if negative_prompt:
+        if negative_prompt: # This negative_prompt is derived from user_prefs or default
             enhancement_instructions += f"\n\nNEGATIVE PROMPT - ALWAYS INCLUDE:\nThe following elements must be avoided in the image: {negative_prompt}"
         
+        # Ensure Gemini is initialized
+        if not gemini_config.is_initialized():
+            if not gemini_config.initialize_gemini_globally():
+                logging.error(f"Gemini not initialized for enhance_custom_prompt: {gemini_config.get_last_error()}")
+                return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
+
+        # Determine effective_user_prefs for model selection
+        effective_user_prefs = user_prefs
+        if not use_user_preferences and user_prefs is None:
+            effective_user_prefs = user_prefs # which is SimplePrefs instance here
+        elif user_prefs is None and use_user_preferences:
+             effective_user_prefs = SimplePrefs()
+        elif user_prefs is None:
+            effective_user_prefs = SimplePrefs()
+
+        selected_model_name = gemini_config.get_selected_gemini_model(effective_user_prefs)
+        logging.info(f"Using Gemini model for custom prompt enhancement: {selected_model_name}")
+
         # Generate enhanced prompt using Gemini
         try:
-            gemini_api_key = os.environ.get("GEMINI_API_KEY")
-            if not gemini_api_key:
-                logging.warning("No Gemini API key configured")
-                # Return formatted version of the original prompt
-                return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
-            
-            genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            # API key and configuration are handled by gemini_config.initialize_gemini_globally()
+            model = genai.GenerativeModel(selected_model_name)
             response = model.generate_content(enhancement_instructions)
 
-            if response.parts and len(response.parts) > 0:
+            if response.parts and len(response.parts) > 0 and hasattr(response.parts[0], 'text'):
                 full_response = response.parts[0].text.strip()
                 
                 # If we're not using user preferences, apply the art medium enforcement

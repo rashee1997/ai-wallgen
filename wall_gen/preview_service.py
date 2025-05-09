@@ -1,6 +1,8 @@
 # wall_gen/preview_service.py
 """
 Service module for image preview logic (GUI and CLI).
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 import os
 import logging
@@ -32,7 +34,7 @@ preview_func_qt = None
 preview_func_tkinter = None
 
 try:
-    from .preview_backends.qt_preview import preview_image_gui as preview_func_qt
+    from wall_gen.preview_backends.qt_preview import preview_image_gui as preview_func_qt
     logging.info("Qt preview backend loaded successfully.")
 except ImportError:
     logging.info("Qt preview backend (PySide6/PyQt5/6) not found or failed to load.")
@@ -41,7 +43,7 @@ except Exception as e:
 
 
 try:
-    from .preview_backends.tkinter_preview import preview_image_gui as preview_func_tkinter
+    from wall_gen.preview_backends.tkinter_preview import preview_image_gui as preview_func_tkinter
     logging.info("Tkinter preview backend loaded successfully.")
 except ImportError:
     logging.info("Tkinter preview backend not found or failed to load.")

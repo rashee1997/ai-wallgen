@@ -19,7 +19,7 @@ Before you begin, ensure you have the following:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/rasheedh/wallgen.git
+   git clone https://github.com/rashee1997/ai-wallgen.git
    cd wallgen
    ```
 
@@ -38,7 +38,7 @@ Before you begin, ensure you have the following:
 
 1. Clone the repository:
    ```powershell
-   git clone https://github.com/rasheedh/wallgen.git
+   git clone https://github.com/rashee1997/ai-wallgen.git
    cd wallgen
    ```
 

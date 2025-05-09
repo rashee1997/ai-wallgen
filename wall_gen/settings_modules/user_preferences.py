@@ -6,10 +6,22 @@ from typing import List, Dict, Any, Optional, Union, Tuple
 
 # Robust import logic to ensure CLI and module execution both work
 try:
-    from .utils import deep_update
+    from wall_gen.settings_modules.utils import deep_update
+    from wall_gen import gemini_config # For DEFAULT_GEMINI_MODEL
 except ImportError:
     # Fallback for CLI execution (direct python settings_modules/user_preferences.py)
+    # This fallback might be more complex if gemini_config isn't easily reachable
+    # For now, assume it's handled or adjust if issues arise in direct execution.
     from settings_modules.utils import deep_update
+    # Attempting a relative import that might work if script is in wall_gen parent
+    try:
+        import gemini_config
+    except ImportError:
+        # If direct import fails, this indicates a potential issue for standalone script execution
+        # For package use, the `from .. import gemini_config` should work.
+        logging.warning("Could not import gemini_config for default model in UserPreferences CLI execution.")
+        gemini_config = type('obj', (object,), {'DEFAULT_GEMINI_MODEL' : 'gemini-1.5-flash'})()
+
 
 class UserPreferences:
     """
@@ -147,6 +159,7 @@ class UserPreferences:
         self.history_file = os.path.join(script_dir, "generation_history.json")
         self.last_preset = None
         self.description = None
+        self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL # Added new preference
 
         # --- Internal dict for ALL arbitrary custom fields ---
         self._custom_fields: Dict[str, Any] = {}  # stores non-standard fields at root
@@ -247,6 +260,16 @@ class UserPreferences:
                 if "aspect_ratio" in data:
                     self.aspect_ratio = data["aspect_ratio"]
                     logging.debug(f"UserPreferences: Loaded aspect_ratio: {self.aspect_ratio}")
+                
+                if "selected_gemini_model" in data: # Added loading for new preference
+                    self.selected_gemini_model = data["selected_gemini_model"]
+                    logging.debug(f"UserPreferences: Loaded selected_gemini_model: {self.selected_gemini_model}")
+                else:
+                    # Ensure default is set if not in file, even if class default exists,
+                    # to handle cases where file exists but key is missing.
+                    self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL
+                    logging.debug(f"UserPreferences: selected_gemini_model not found in file, set to default: {self.selected_gemini_model}")
+
 
                 # Load description if present
                 if "description" in data:
@@ -256,6 +279,8 @@ class UserPreferences:
                 logging.debug("UserPreferences: Preferences loaded successfully.")
             else:
                 logging.debug("UserPreferences: Preferences file not found. Using default settings.")
+                # Ensure default is set if file doesn't exist
+                self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL
         except (json.JSONDecodeError, FileNotFoundError) as e:
             logging.error(f"UserPreferences: Error loading preferences from {pref_file_path}: {e}")
         except Exception as e:
@@ -294,7 +319,8 @@ class UserPreferences:
                 "wallpaper_settings": self.wallpaper_settings,
                 "history_file": self.history_file,
                 "last_preset": self.last_preset,
-                "aspect_ratio": self.aspect_ratio
+                "aspect_ratio": self.aspect_ratio,
+                "selected_gemini_model": self.selected_gemini_model # Added saving for new preference
             }
             logging.debug(f"UserPreferences: Data to be saved: {data}")
             

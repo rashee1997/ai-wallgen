@@ -1,6 +1,8 @@
 # wall_gen/app_utils.py
 """
 General application utilities including setup, logging, and cleanup.
+NOTE: This module uses absolute imports assuming it's part of the 'wall_gen' package.
+It may not run correctly as a standalone script without sys.path adjustments.
 """
 
 import logging
@@ -15,10 +17,16 @@ try:
     from wall_gen.ui_utils import print_warning, print_info
     from wall_gen.file_utils import _cleanup_all_temp_files # Changed to absolute import
 except ImportError:
-    logging.warning("Imports failed in app_utils.py. Ensure wall_gen package structure is correct.")
-    # Fallback imports (less likely needed now)
-    from wall_gen.ui_utils import print_warning, print_info # Keep absolute here too
-    from wall_gen.file_utils import _cleanup_all_temp_files
+    # This block is reached if 'wall_gen' is not in sys.path or not installed.
+    # Further imports from 'wall_gen' will also likely fail.
+    # Logging a warning is appropriate. No functional fallback for these core utils.
+    logging.critical("Core imports (ui_utils, file_utils) failed in app_utils.py. "
+                     "Ensure 'wall_gen' package is correctly installed and in PYTHONPATH.")
+    # Define dummy functions to prevent NameError if execution somehow continues,
+    # though the application is unlikely to function correctly.
+    def print_warning(msg): logging.warning(f"FALLBACK WARN: {msg}")
+    def print_info(msg): logging.info(f"FALLBACK INFO: {msg}")
+    def _cleanup_all_temp_files(): logging.warning("FALLBACK: _cleanup_all_temp_files called, but original not loaded.")
 
 
 # --- Logging Configuration ---
