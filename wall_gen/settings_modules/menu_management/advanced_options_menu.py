@@ -21,9 +21,15 @@ from wall_gen.config import available_genres, STYLE_CATEGORIES
 from ..settings_manager import get_preferences # Relative import is correct
 
 try:
-    from prompt_generator import set_prompt_preferences, PROMPT_GENERATOR_AVAILABLE
+    # Corrected import to be absolute from the wall_gen package
+    from wall_gen.prompt_generator import set_prompt_preferences, PROMPT_GENERATOR_AVAILABLE
 except ImportError:
     PROMPT_GENERATOR_AVAILABLE = False
+    # It's good practice to log or warn if an optional module fails to import.
+    logging.warning("wall_gen.prompt_generator module not found. Prompt generation settings will be unavailable.")
+    # If you also want a user-facing warning:
+    # print_warning("Prompt generator features will be limited as the module could not be loaded.")
+
 
 try:
     from wall_gen.ai_style_generator import (

@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import os
-# Restore original sys.path logic from user upload
-# Assumes this script is in a subdir and needs parent dir in path
-try:
-    # Ensure the parent directory (project root) is in sys.path
-    # This helps locate sibling packages if the structure is project_root/ai_prest_gen/
-    current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root_dir = os.path.dirname(current_script_dir)
-    if project_root_dir not in sys.path:
-        sys.path.insert(0, project_root_dir)
-except NameError: # __file__ might not be defined if run interactively/embedded
-    print("Warning: Could not automatically adjust sys.path.")
+# The sys.path modification block identified by the user will be removed.
+# The script will now rely on the execution environment (e.g., run_wallgen.py)
+# to ensure sys.path is correctly configured for its imports.
 
 """AI Preset Generator - Generate random wallpaper preferences using Gemini AI (Consolidated Templates)
 
@@ -181,6 +173,16 @@ try:
     # Import the CONSOLIDATED template generator from style_templates.py
     from ai_prest_gen.style_templates import get_template_for_category
     CATALOG_AND_TEMPLATES_AVAILABLE = True
+    # Import for new Gemini preset configuration
+    from .gemini_config_preset import (
+        initialize_preset_gemini,
+        get_selected_preset_model,
+        set_selected_preset_model,
+        AVAILABLE_PRESET_MODELS,
+        DEFAULT_PRESET_MODEL,
+        is_preset_gemini_initialized,
+        get_preset_last_error
+    )
 except ImportError as e:
     _print_error_fallback(f"FATAL: Could not import from ai_prest_gen submodules (style_category_catalog, style_templates): {e}")
     _print_error_fallback("Please ensure these files exist in an 'ai_prest_gen' subdirectory and it's a package (contains __init__.py).")
@@ -216,17 +218,19 @@ PRESETS_CACHE_FILE = "generated_presets_cache.json"
 PRESETS_DIR = "presets"
 os.makedirs(PRESETS_DIR, exist_ok=True)
 
-gemini_initialized = False # Global flag from user upload
+# gemini_initialized flag is now managed by gemini_config_preset for this script's context
+# gemini_initialized = False 
 
 # --- Helper Functions ---
 
-def get_gemini_api_key() -> Optional[str]:
-    """Retrieve the Gemini API key from environment variable."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        logging.warning("GEMINI_API_KEY environment variable not set.")
-        print_warning("GEMINI_API_KEY environment variable not set.")
-    return api_key
+# get_gemini_api_key is now handled by gemini_config_preset.py
+# def get_gemini_api_key() -> Optional[str]:
+#     """Retrieve the Gemini API key from environment variable."""
+#     api_key = os.environ.get("GEMINI_API_KEY")
+#     if not api_key:
+#         logging.warning("GEMINI_API_KEY environment variable not set.")
+#         print_warning("GEMINI_API_KEY environment variable not set.")
+#     return api_key
 
 def load_cached_presets() -> List[str]:
     """Load previously generated preset hashes from cache file."""
@@ -370,12 +374,15 @@ def categorize_style(style_name_input: Union[str, Dict]) -> str:
 
 def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False) -> Union[str, bool, None]:
     """Generate a random preset based on style category using consolidated templates."""
-    global gemini_initialized
+    # global gemini_initialized # Replaced by new config's state
 
-    api_key = get_gemini_api_key()
-    if not api_key:
-        print_error("Gemini API key not configured. Set GEMINI_API_KEY environment variable.")
-        return False
+    # Initialize Gemini specifically for preset generation context
+    if not is_preset_gemini_initialized():
+        if not initialize_preset_gemini(): # Tries to use env var by default
+            print_error(f"Failed to initialize Gemini for preset generation: {get_preset_last_error()}")
+            print_error("Ensure GEMINI_API_KEY environment variable is set.")
+            return False
+        logging.info("Gemini API initialized for preset generation via gemini_config_preset.")
 
     if not CATALOG_AND_TEMPLATES_AVAILABLE:
         print_error("Style catalog/templates are not available. Cannot generate AI preset.")
@@ -409,10 +416,13 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                     return False
             elif choice == "2" and AI_STYLE_GEN_AVAILABLE:
                 print_info("Attempting to generate AI style (this may take a moment)...")
-                if not gemini_initialized:
-                    if not initialize_style_gemini(api_key):
-                        print_error("Failed to initialize Gemini for AI style generation.")
-                        return False
+                # AI Style generator uses its own Gemini initialization (likely from wall_gen.gemini_config)
+                # We don't need to pass api_key explicitly if it's globally configured or initialize_style_gemini handles it.
+                # Assuming initialize_style_gemini handles its own Gemini setup or uses a global one.
+                # The `gemini_initialized` flag here was for the preset generator's direct genai calls.
+                if not initialize_style_gemini(None): # Pass None, assuming it uses its own config or global
+                    print_error("Failed to initialize Gemini for AI style generation (via wall_gen.ai_style_generator).")
+                    return False
                 style_obj = generate_random_style(style_type="detailed")
                 if not style_obj or not isinstance(style_obj, dict):
                     print_error("Failed to generate AI style object.")
@@ -427,28 +437,22 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
             print_error("Base style could not be determined.")
             return False
 
-        if not gemini_initialized:
-            try:
-                genai.configure(api_key=api_key)
-                gemini_initialized = True
-                logging.info("Gemini API initialized for preset generation.")
-            except Exception as init_err:
-                 logging.error(f"Failed to initialize Gemini API: {init_err}")
-                 print_error(f"Failed to initialize Gemini API: {init_err}")
-                 return False
+        # Gemini initialization for preset generation is handled by initialize_preset_gemini() at the start of this function.
+        # The old direct genai.configure call is removed.
 
         # --- Step 2: Generate Settings (using restored categorization and consolidated templates) ---
         print_info(f"\nGenerating settings for style: '{base_style}'...")
         style_category = categorize_style(base_style)
         print_info(f"(Detected category [Restored Logic]: {style_category})")
 
-        model_name = 'gemini-2.5-flash-preview-04-17'
+        # Get the selected model name from the new config
+        selected_model_name = get_selected_preset_model(user_prefs)
         try:
-            model = genai.GenerativeModel(model_name)
-            print_info(f"Using Gemini model: {model_name}...")
+            model = genai.GenerativeModel(selected_model_name)
+            print_info(f"Using selected Gemini model for presets: {selected_model_name}...")
         except Exception as err:
-            logging.error(f"Failed to initialize Gemini model '{model_name}': {err}")
-            print_error(f"Could not initialize AI model '{model_name}'.")
+            logging.error(f"Failed to initialize Gemini model '{selected_model_name}': {err}")
+            print_error(f"Could not initialize AI model '{selected_model_name}'. Check configuration.")
             return False
 
         # --- Get category instructions ---
@@ -697,6 +701,9 @@ try:
     # Import the whole module for applying presets
     from wall_gen.settings_modules import preset_management
     PRESET_MGMT_AVAILABLE = True
+    # For user_prefs access in menu
+    from wall_gen.settings_modules.settings_manager import save_preferences 
+
 except ImportError:
     PRESET_MGMT_AVAILABLE = False
     preset_management = PresetManagementPlaceholder()
@@ -766,6 +773,7 @@ def main():
         while True:
             print_section("AI Preset Generator Menu")
             print_option("1", "Generate New AI Preset")
+            # "Advanced Settings" option removed from here, will be in wall_gen's advanced menu
             print_option("q", "Quit")
             choice = get_validated_input("Select option:", ["1", "q"])
 
@@ -778,9 +786,15 @@ def main():
                 else:
                      print_error("Preset generation failed.")
                 input("\nPress Enter to continue...")
+            # elif choice == '2': # Removed advanced_settings_menu call
+            #     advanced_settings_menu(user_prefs) 
             elif choice == 'q':
                 print_info("Exiting AI Preset Generator.")
                 break
+
+# advanced_settings_menu and select_gemini_model_menu functions are removed from this file.
+# This functionality will be moved to wall_gen.settings_modules.menu_management.advanced_options_menu.py
+
 
 if __name__ == "__main__":
     # Ensure the script's directory is in sys.path if it's not run as a module
