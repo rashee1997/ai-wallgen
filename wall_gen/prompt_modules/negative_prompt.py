@@ -14,11 +14,11 @@ from .types import SimplePrefs # To handle cases where user_prefs might be None
 # It's better if UserPreferences can be fetched if not provided.
 # Attempting to import get_preferences for this purpose.
 try:
-    from ..settings_modules import get_preferences as get_global_user_prefs
+    from wall_gen.settings_modules import get_preferences as get_global_user_prefs
 except ImportError:
     # Fallback if direct import from settings_modules fails
     get_global_user_prefs = None
-    logging.warning("Could not import get_preferences from ..settings_modules in negative_prompt.py; user_prefs may need to be passed explicitly.")
+    logging.warning("Could not import get_preferences from wall_gen.settings_modules in negative_prompt.py; user_prefs may need to be passed explicitly.")
 
 
 def infer_subject_negatives_gemini(positive_prompt: str, user_prefs: Optional[Any] = None) -> List[str]:

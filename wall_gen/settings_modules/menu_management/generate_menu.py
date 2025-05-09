@@ -29,7 +29,7 @@ from .advanced_options_menu import (
     configure_advanced_options,
 )
 # Import from root module is correct
-from prompt_generator import (
+from wall_gen.prompt_generator import ( # Corrected import path
     use_user_preferences,
     # enhance_custom_prompt, # This is now likely handled by prompt_service
     generate_random_style_mix,
