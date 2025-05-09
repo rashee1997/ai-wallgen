@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added operational flow diagrams (Core Wallpaper Generation, AI Preset Generation) to `docs/PROJECT_OVERVIEW.md` for better architectural understanding.
 - AI Preset Generation functionality via `ai_preset_generator.py`.
 - AI Style Generation functionality via `ai_style_generator.py`.
 - GUI image preview (Qt/Tkinter).

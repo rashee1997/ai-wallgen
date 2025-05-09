@@ -285,6 +285,7 @@ For more examples and usage options, see the [Installation and CLI Guide](docs/I
 ## 📚 Documentation
 
 - [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) — Detailed installation and command-line usage
+- [Project Overview & Architecture](docs/PROJECT_OVERVIEW.md) — High-level system design, component breakdown, and **operational flow diagrams**.
 - [Git Commit Guide](docs/git-commit-guide.md) — Guidelines for writing Git commit messages
 - [Changelog](CHANGELOG.md) — Version history and updates
 
