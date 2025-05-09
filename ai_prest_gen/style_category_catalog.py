@@ -109,6 +109,13 @@ preferred_order: List[str] = [
     "ascii_art", # If not kinetic_ascii or pop_surrealism_ascii
     "line_art", # Distinct from general drawing
 
+    # Specific 3D Render Styles (High Priority)
+    "voxel_art",                # Moved for priority
+    "cartoon_3d",               # Moved for priority
+    "anime_3d",                 # Moved for priority
+    "wireframe_3d",             # Moved for priority
+    "clay_render_3d",           # Moved for priority
+
     # Illustration Styles (non-portrait) (From V3 & Restored)
     "illustration_pixar",
     "illustration_disney",
@@ -155,7 +162,9 @@ preferred_order: List[str] = [
     "minimalist", # or "minimal"
     "geometric", # if not minimalist_geometric
     "constructivism",
-    "low_poly",
+    "low_poly_3d",              # Moved for priority
+    "abstract_3d",              # Moved for priority
+    "low_poly",                 # Generic fallback
     "abstract_conceptual", # Includes abstract from restored
     "abstract", # Keep as fallback if needed
 
@@ -186,6 +195,13 @@ preferred_order: List[str] = [
 
     # Broad Digital/Traditional Categories (Fallbacks) (From V3 & Restored)
     "3d_render", # CGI, modeling
+    # "voxel_art" has been moved for priority
+    # "low_poly_3d" has been moved for priority
+    # "cartoon_3d" has been moved for priority
+    # "anime_3d" has been moved for priority
+    # "abstract_3d" has been moved for priority
+    # "wireframe_3d" has been moved for priority
+    # "clay_render_3d" has been moved for priority
     "vector_art",
     "digital_art", # General digital art
     "traditional_painting_drawing", # Very broad
@@ -537,6 +553,18 @@ _new_photographic_keywords = {
 for cat, keywords in _new_photographic_keywords.items(): # Add new photographic keywords
     categories_keywords.setdefault(cat, []).extend(keywords)
 
+_new_3d_keywords = {
+    "voxel_art": ["voxel art", "voxel", "voxels", "blocky 3d", "cubic art", "magicavoxel", "qubicle", "pixel 3d", "3d pixel art", "block art"],
+    "low_poly_3d": ["low poly", "lowpoly", "low polygon 3d", "faceted 3d", "geometric 3d", "minimalist 3d", "stylized low poly", "flat shaded 3d", "low-poly art"],
+    "cartoon_3d": ["cartoon 3d", "toon shaded 3d", "cel shaded 3d", "animated 3d style", "stylized 3d animation", "3d toon", "comic 3d style", "disney style 3d", "pixar style 3d", "non-photorealistic 3d cartoon"],
+    "anime_3d": ["anime 3d", "3d anime style", "cel shaded anime", "japanese 3d animation", "vroid style", "genshin impact style 3d", "npr anime render", "anime character 3d"],
+    "abstract_3d": ["abstract 3d", "3d abstract art", "non-representational 3d", "generative 3d art", "experimental 3d", "3d geometric abstraction", "organic abstract 3d", "surreal 3d abstract"],
+    "wireframe_3d": ["wireframe 3d", "3d wireframe render", "edge render", "topology view", "3d blueprint", "schematic 3d", "polygon mesh display", "lines only 3d", "technical 3d view"],
+    "clay_render_3d": ["clay render 3d", "3d clay style", "zbrush clay render", "sculpt preview 3d", "maquette style 3d", "monochromatic 3d sculpt", "neutral material 3d", "grey material 3d", "untextured 3d model"]
+}
+for cat, keywords in _new_3d_keywords.items(): # Add new 3D keywords
+    categories_keywords.setdefault(cat, []).extend(keywords)
+
 # De-duplicate keywords within each category (ensure this loop runs AFTER all additions)
 for cat in categories_keywords:
     seen_keywords = set()
@@ -630,7 +658,47 @@ def instructions_for_category(category: str, base_style: str) -> str:
         "cyberpunk_cityscape": "Vast, dense futuristic city with towering skyscrapers, abundant neon signs, holographic ads, rain, and a gritty, dystopian atmosphere. Night or perpetual twilight scenes are common.",
         "fantasy_landscape": "Depict magical, otherworldly environments: enchanted forests, floating islands, mystical mountains, ancient ruins. Lighting can be ethereal, with god rays or magical glows.",
         "line_art": "Focus on clean, precise outlines. Minimal to no shading or color fills. Emphasis is on the quality and expressiveness of the line itself. Can be technical or illustrative.",
-        "3d_render": "Specify 3D software look (Blender, Maya), renderer (Cycles, Arnold, Octane), polycount, material properties (PBR, toon), and advanced lighting (HDRI, area lights).",
+        "3d_render": "Specify 3D software look (Blender, Maya), renderer (Cycles, Arnold, Octane), polycount, material properties (PBR, toon), and advanced lighting (HDRI, area lights). For general realistic or high-quality 3D work.",
+        "voxel_art": (
+            f"For '{base_style_clean}' (Voxel Art), emphasize blocky, cubic forms made of individual voxels. "
+            "Colors are often vibrant and flat per block. Lighting is typically simple (e.g., directional, ambient occlusion), with hard shadows or sometimes an unlit/emissive look. "
+            "Avoid smooth surfaces, complex textures beyond flat colors per voxel, or photorealism. Common software includes MagicaVoxel. "
+            "Detail is achieved by voxel arrangement, not fine surface detail. Camera is often isometric or a clear perspective view to showcase the block structure."
+        ),
+        "low_poly_3d": (
+            f"For '{base_style_clean}' (Low Poly 3D), focus on models with a visibly low polygon count, resulting in a faceted, geometric appearance. "
+            "Shading is often flat, simple gradients, or basic diffuse. Textures are minimal or stylized (e.g., color palettes). Good for retro, minimalist, or stylized game aesthetics. "
+            "Avoid high-detail sculpting, complex PBR materials, and photorealistic rendering. Emphasize clean edges, distinct planes, and the geometric form."
+        ),
+        "cartoon_3d": (
+            f"For '{base_style_clean}' (Cartoon 3D / Toon Shaded), aim for a stylized, animated look, often using cel shading techniques. "
+            "This includes flat colors (or simple color ramps for shading steps), clear outlines around objects/characters (e.g., Freestyle, inverted hull), and expressive, simplified forms. "
+            "Lighting should support the cel-shaded look (e.g., hard shadows from a key light, rim lighting for definition). "
+            "Avoid photorealistic textures, complex global illumination, and subtle soft shading. Think animated TV shows, movies, or stylized games."
+        ),
+        "anime_3d": (
+            f"For '{base_style_clean}' (Anime 3D), capture the specific aesthetic of Japanese 3D animation. "
+            "Key elements include cel shading with distinct color ramps, strong outlines, characteristic facial features (large expressive eyes), stylized hair with sharp highlights, and dynamic poses. "
+            "Lighting often uses a strong key light and rim lighting to define forms. Color palettes are typically vibrant and thematic. "
+            "Avoid Western cartoon styles, photorealism, and overly complex PBR materials. Consider specialized anime NPR shaders if applicable."
+        ),
+        "abstract_3d": (
+            f"For '{base_style_clean}' (Abstract 3D), focus on non-representational forms, shapes, colors, and textures. "
+            "Encourage experimentation with geometry (geometric, organic, fractal), lighting (dramatic, unconventional, emissive), and materials (metallic, glass, procedural). "
+            "Composition can be minimalist or highly complex, often evoking a mood or concept rather than depicting a recognizable scene. "
+            "Avoid figurative elements, realism (unless highly abstracted), and standard product/character rendering."
+        ),
+        "wireframe_3d": (
+            f"For '{base_style_clean}' (Wireframe 3D), the primary goal is to display the model's underlying geometric structure (edges, vertices, polygons). "
+            "Lines should be clean and clearly visible against the background. Typically unlit or flat-lit, with lines often a single bright color on a dark background. "
+            "Faces may be hidden, transparent, or subtly shaded. Avoid textures, complex materials, and realistic lighting. Orthographic views are common for technical display."
+        ),
+        "clay_render_3d": (
+            f"For '{base_style_clean}' (Clay Render 3D), simulate a physical sculpture made of clay. "
+            "The model should have a uniform, matte or slightly satin material, typically in a neutral color like grey, beige, or terracotta. "
+            "Lighting should be soft and diffused (e.g., studio setup, HDRI) to showcase form and subtle details of the sculpt. Ambient occlusion is often important. "
+            "Avoid strong colors, textures, PBR details like metal/glass, and overly complex or distracting backgrounds."
+        ),
         "game_style": "Emulate the visual aesthetic of video games. Specify genre (RPG, FPS, retro), era (8-bit, modern AAA), or a specific game's style. Consider poly detail, shaders, and UI elements if relevant.",
         "cinematic": "Aim for a film still look. Consider aspect ratio (e.g., 2.39:1), color grading (e.g., teal & orange), depth of field, lens choice (anamorphic flares), and dramatic lighting.",
         "steampunk": "Victorian-era aesthetics combined with steam-powered machinery, gears, brass, copper, and intricate mechanical details. Colors are often muted browns, sepia, and bronze.",

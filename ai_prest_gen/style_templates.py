@@ -124,7 +124,16 @@ from .unique_style_templates import (
     get_material_sculptural_template,
     get_traditional_painting_drawing_template,
 )
-from .three_d_style_templates import get_3d_render_template # NEW import for 3D styles
+from .three_d_style_templates import ( # Imports for 3D styles
+    get_3d_render_template,
+    get_voxel_art_template,
+    get_low_poly_3d_template,
+    get_cartoon_3d_template,
+    get_anime_3d_template,
+    get_abstract_3d_template,
+    get_wireframe_3d_template,
+    get_clay_render_3d_template
+)
 
 # --- Main Template Generation Logic ---
 
@@ -161,7 +170,15 @@ def _priority_category_match(style_category: Union[str, List[str]]) -> str:
         "abstract_conceptual", "abstract", "pop_surrealism", "surrealism", "cubism", "expressionism",
         "fauvism", "art_nouveau", "art_deco", "psychedelic", "steampunk", "dystopian", "glitch_art",
         "retrowave", "vaporwave", "dreamcore", "weirdcore", "folk_art", "mediterranean_style",
-        "material_sculptural", "sculpture", "3d_render", "vector_art", "digital_art",
+        "material_sculptural", "sculpture", "3d_render",
+        "voxel_art",
+        "low_poly_3d",
+        "cartoon_3d",
+        "anime_3d",         # NEW 3D
+        "abstract_3d",      # NEW 3D
+        "wireframe_3d",     # NEW 3D
+        "clay_render_3d",   # NEW 3D
+        "vector_art", "digital_art",
         "traditional_painting_drawing", "animal_inspired", "space_art", "robot_art",
         "default", "unknown"
     ]
@@ -392,6 +409,20 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         return get_papercraft_template(main_category)
     elif main_category == "ascii_art":
         return get_ascii_art_template(main_category)
+    elif main_category == "voxel_art":
+        return get_voxel_art_template(main_category)
+    elif main_category == "low_poly_3d":
+        return get_low_poly_3d_template(main_category)
+    elif main_category == "cartoon_3d":
+        return get_cartoon_3d_template(main_category)
+    elif main_category == "anime_3d":
+        return get_anime_3d_template(main_category)
+    elif main_category == "abstract_3d":
+        return get_abstract_3d_template(main_category)
+    elif main_category == "wireframe_3d":
+        return get_wireframe_3d_template(main_category)
+    elif main_category == "clay_render_3d":
+        return get_clay_render_3d_template(main_category)
     elif main_category == "3d_render":
         return get_3d_render_template(main_category)
     elif main_category == "digital_art":

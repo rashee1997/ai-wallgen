@@ -368,7 +368,7 @@ def categorize_style(style_name_input: Union[str, Dict]) -> str:
 
 # --- AI Preset Generation (using consolidated templates) ---
 
-def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = None) -> Union[str, bool, None]:
+def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False) -> Union[str, bool, None]:
     """Generate a random preset based on style category using consolidated templates."""
     global gemini_initialized
 
@@ -593,10 +593,16 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                                 preview_text = json.dumps(final_preset, indent=4)
                                 print_section("Preview of Generated Preset")
                                 print_info(preview_text)
-                                confirm = get_validated_input("Save this preset? (y/n):", ["y", "n", "yes", "no"])
+                                
+                                if auto_save_flag: # auto_save_flag is a function parameter
+                                    confirm_decision = True
+                                    print_info("Auto-saving preset due to --auto-save flag.")
+                                else:
+                                    confirm_input = get_validated_input("Save this preset? (y/n):", ["y", "n", "yes", "no"])
+                                    confirm_decision = confirm_input.startswith('y')
 
                                 # --- MODIFIED SAVE LOGIC ---
-                                if confirm.startswith('y'):
+                                if confirm_decision:
                                     save_preset_to_cache(final_preset)
                                     clean_preset_name = re.sub(r'[^\w\s-]', '', final_preset["preset_name"]).strip().replace(' ', '_')
                                     preset_name_base = f"{clean_preset_name.lower()}_{int(time.time())}"
@@ -703,6 +709,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate AI wallpaper presets.")
     parser.add_argument("--style", type=str, help="Specify a base style to generate a preset for directly.")
     parser.add_argument("--apply-preset", type=str, help="Apply a preset by name or full path directly from the terminal.")
+    parser.add_argument("--auto-save", action="store_true", help="Automatically save generated preset without confirmation.")
     args = parser.parse_args()
 
     if not GEMINI_AVAILABLE:
@@ -748,7 +755,7 @@ def main():
 
     if args.style:
         print_info(f"Generating preset directly for style: {args.style}")
-        result = generate_ai_preset(user_prefs, base_style_override=args.style)
+        result = generate_ai_preset(user_prefs, base_style_override=args.style, auto_save_flag=args.auto_save)
         if isinstance(result, str):
              print_success(f"Preset generated and saved: {result}")
         elif result is None:
@@ -763,7 +770,7 @@ def main():
             choice = get_validated_input("Select option:", ["1", "q"])
 
             if choice == '1':
-                result = generate_ai_preset(user_prefs)
+                result = generate_ai_preset(user_prefs, auto_save_flag=args.auto_save)
                 if isinstance(result, str):
                      print_success(f"Preset generated and saved: {result}")
                 elif result is None:
