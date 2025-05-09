@@ -18,6 +18,7 @@ from wall_gen.ui_utils import (
     print_header,
     get_validated_input,
     show_ascii_art,
+    print_error,
 )
 # Relative imports for sibling modules within menu_management are correct
 from .wallpaper_settings_menu import manage_wallpaper_settings

@@ -35,7 +35,11 @@ try:
         initialize_temp_file_cleanup,
     )
     from wall_gen.cache_utils import initialize_cache_directories
-    from wall_gen.settings_modules import initialize_settings, UserPreferences, get_preferences
+    from wall_gen.settings_modules import (
+        initialize_settings,
+        UserPreferences,
+        get_preferences,
+    )
     from wall_gen.prompt_service import generate_final_prompt
     from wall_gen.image_service import generate_image_from_api
     from wall_gen.file_utils import (
@@ -73,10 +77,14 @@ except ImportError as e:
     )
 
     def set_prompt_preferences(use_prefs):
-        logging.warning("Fallback set_prompt_preferences called; no operation performed.")
+        logging.warning(
+            "Fallback set_prompt_preferences called; no operation performed."
+        )
 
     def use_user_preferences():
-        logging.warning("Fallback use_user_preferences called; returning True by default.")
+        logging.warning(
+            "Fallback use_user_preferences called; returning True by default."
+        )
         return True
 
 
@@ -131,7 +139,8 @@ def parse_args():
     # Testing & Debugging
     test_group = parser.add_argument_group("Testing & Debugging")
     test_group.add_argument(
-        "--test-prompt", help="Test prompt generation for a subject without creating an image."
+        "--test-prompt",
+        help="Test prompt generation for a subject without creating an image.",
     )
     test_group.add_argument(
         "--test-custom-prompt",
@@ -143,10 +152,14 @@ def parse_args():
         help="Generate and show the prompt, but do not generate the image.",
     )
     test_group.add_argument(
-        "--verbose", action="store_true", help="Enable verbose output (INFO level logging)."
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output (INFO level logging).",
     )
     test_group.add_argument(
-        "--debug", action="store_true", help="Enable debug logging (DEBUG level logging)."
+        "--debug",
+        action="store_true",
+        help="Enable debug logging (DEBUG level logging).",
     )
 
     # Preference Overrides
@@ -184,7 +197,9 @@ def parse_args():
         help="Preview the latest generated image from the 'genimage' folder.",
     )
     img_group.add_argument(
-        "--list-images", action="store_true", help="List generated images and choose one to preview/set."
+        "--list-images",
+        action="store_true",
+        help="List generated images and choose one to preview/set.",
     )
 
     # AI Preset Generator
@@ -235,7 +250,9 @@ def _generate_image(final_prompt, user_prefs_obj):
     from wall_gen.ui_utils import print_error, print_success, show_spinner
 
     if not os.environ.get(GEMINI_API_KEY_ENV):
-        print_error(f"Cannot generate image: {GEMINI_API_KEY_ENV} environment variable not set.")
+        print_error(
+            f"Cannot generate image: {GEMINI_API_KEY_ENV} environment variable not set."
+        )
         return None
 
     show_spinner("Requesting image from AI...", 2)
@@ -245,7 +262,9 @@ def _generate_image(final_prompt, user_prefs_obj):
             print_error("Image generation failed (no image data returned).")
             return None
         temp_image_path = temp_image_paths[0]
-        print_success(f"Image data received, saved to temporary file: {temp_image_path}")
+        print_success(
+            f"Image data received, saved to temporary file: {temp_image_path}"
+        )
         return temp_image_path
     except Exception as e:
         logging.error(f"Error during image generation API call: {e}", exc_info=True)
@@ -259,7 +278,9 @@ def _cache_and_save_image(final_prompt, temp_image_path):
 
     try:
         final_image_path = get_image_cache_path(final_prompt, PROJECT_ROOT)
-        print_info(f"Image will be saved to: {os.path.relpath(final_image_path, PROJECT_ROOT)}")
+        print_info(
+            f"Image will be saved to: {os.path.relpath(final_image_path, PROJECT_ROOT)}"
+        )
 
         if check_image_cache(final_image_path):
             print_info("Image already exists in cache. Using cached version.")
@@ -267,7 +288,9 @@ def _cache_and_save_image(final_prompt, temp_image_path):
             return final_image_path
         else:
             if move_temp_image_to_cache(temp_image_path, final_image_path):
-                print_success(f"Image saved successfully: {os.path.basename(final_image_path)}")
+                print_success(
+                    f"Image saved successfully: {os.path.basename(final_image_path)}"
+                )
                 return final_image_path
             else:
                 print_error("Failed to move image to final cache location.")
@@ -288,21 +311,31 @@ def _add_history_entry(
             "prompt_type": prompt_type,
             "base_prompt": base_prompt_for_history,
             "final_prompt": final_prompt,
-            "image_filename": os.path.basename(final_image_path) if final_image_path else None,
+            "image_filename": (
+                os.path.basename(final_image_path) if final_image_path else None
+            ),
             "settings_summary": {
                 "aspect_ratio": user_prefs_obj.aspect_ratio,
-                "resolution": user_prefs_obj.imagen_settings.get("quality_settings", {}).get(
-                    "resolution"
+                "resolution": user_prefs_obj.imagen_settings.get(
+                    "quality_settings", {}
+                ).get("resolution"),
+                "style": (
+                    user_prefs_obj.preferred_styles[0]
+                    if user_prefs_obj.preferred_styles
+                    else None
                 ),
-                "style": user_prefs_obj.preferred_styles[0]
-                if user_prefs_obj.preferred_styles
-                else None,
-                "mood": user_prefs_obj.preferred_moods[0] if user_prefs_obj.preferred_moods else None,
+                "mood": (
+                    user_prefs_obj.preferred_moods[0]
+                    if user_prefs_obj.preferred_moods
+                    else None
+                ),
                 "seed": user_prefs_obj.imagen_settings.get("seed"),
             },
         }
         add_to_history(history_entry)
-        logging.info(f"Added entry to history for image: {history_entry['image_filename']}")
+        logging.info(
+            f"Added entry to history for image: {history_entry['image_filename']}"
+        )
     except Exception as e:
         logging.error(f"Failed to add entry to history: {e}", exc_info=True)
         from wall_gen.ui_utils import print_warning
@@ -315,7 +348,9 @@ def _preview_and_set_wallpaper(final_image_path, user_prefs_obj):
     from wall_gen.ui_utils import print_info, print_success, print_error
 
     try:
-        wallpaper_set_successfully = show_preview_and_confirm_set(final_image_path, user_prefs_obj)
+        wallpaper_set_successfully = show_preview_and_confirm_set(
+            final_image_path, user_prefs_obj
+        )
         if wallpaper_set_successfully:
             print_success("Wallpaper process completed successfully.")
             return True
@@ -341,7 +376,9 @@ def orchestrate_wallpaper_generation(
     (Refactored from generate_wallpaper in original script)
     """
     final_prompt = None
-    base_prompt_for_history = None  # Store the initial prompt (custom or gemini-generated base)
+    base_prompt_for_history = (
+        None  # Store the initial prompt (custom or gemini-generated base)
+    )
     temp_image_path = None  # Define here for cleanup in finally block
 
     from wall_gen.ui_utils import print_section
@@ -373,7 +410,9 @@ def orchestrate_wallpaper_generation(
 
         from wall_gen.ui_utils import get_validated_input
 
-        confirm = get_validated_input("Proceed with this prompt? (yes/no)", ["yes", "no", "y", "n"])
+        confirm = get_validated_input(
+            "Proceed with this prompt? (yes/no)", ["yes", "no", "y", "n"]
+        )
         if confirm.lower() not in ["yes", "y"]:
             from wall_gen.ui_utils import print_info
 
@@ -389,13 +428,21 @@ def orchestrate_wallpaper_generation(
         if not final_image_path:
             return False
 
-        _add_history_entry(prompt_type, base_prompt_for_history, final_prompt, final_image_path, user_prefs_obj)
+        _add_history_entry(
+            prompt_type,
+            base_prompt_for_history,
+            final_prompt,
+            final_image_path,
+            user_prefs_obj,
+        )
 
         return _preview_and_set_wallpaper(final_image_path, user_prefs_obj)
 
     finally:
         if temp_image_path and os.path.exists(temp_image_path):
-            logging.warning(f"Cleaning up orphaned temporary image file: {temp_image_path}")
+            logging.warning(
+                f"Cleaning up orphaned temporary image file: {temp_image_path}"
+            )
             remove_temp_file(temp_image_path)
 
 
@@ -440,7 +487,9 @@ def main():
     # Handle Preference Overrides from CLI args
     set_prompt_preferences(not args.dont_use_user_prefs)
     if args.resolution:
-        user_prefs.imagen_settings.setdefault("quality_settings", {})["resolution"] = args.resolution
+        user_prefs.imagen_settings.setdefault("quality_settings", {})[
+            "resolution"
+        ] = args.resolution
         logging.info(f"CLI override: Resolution set to {args.resolution}")
     if args.aspect_ratio:
         # TODO: Validate aspect ratio format here
@@ -452,16 +501,25 @@ def main():
 
     # Check API Key (essential for generation)
     if not os.environ.get(GEMINI_API_KEY_ENV):
-        from wall_gen.ui_utils import print_warning as ui_print_warning, print_info as ui_print_info
+        from wall_gen.ui_utils import (
+            print_warning as ui_print_warning,
+            print_info as ui_print_info,
+        )
 
-        ui_print_warning(f"\nWARNING: {GEMINI_API_KEY_ENV} environment variable not set.")
-        ui_print_info("AI image generation and AI prompt features will not be available.")
+        ui_print_warning(
+            f"\nWARNING: {GEMINI_API_KEY_ENV} environment variable not set."
+        )
+        ui_print_info(
+            "AI image generation and AI prompt features will not be available."
+        )
 
     # Import AI preset generator functions
     try:
         from ai_prest_gen.ai_preset_generator import generate_ai_preset
     except ImportError as e:
-        logging.error(f"Failed to import AI preset generator functions: {e}", exc_info=True)
+        logging.error(
+            f"Failed to import AI preset generator functions: {e}", exc_info=True
+        )
         generate_ai_preset = None
 
     # --- Dispatch based on CLI Arguments ---
@@ -479,14 +537,18 @@ def main():
 
                 print_info(f"Generating AI preset for style: {args.generate_preset}")
                 try:
-                    success = generate_ai_preset(style_override=args.generate_preset, user_prefs=user_prefs)
+                    success = generate_ai_preset(
+                        style_override=args.generate_preset, user_prefs=user_prefs
+                    )
                     if success:
                         print_success("AI preset generated successfully.")
                     else:
                         print_error("AI preset generation failed.")
                         exit_code = 1
                 except Exception as e:
-                    logging.error(f"Error during AI preset generation: {e}", exc_info=True)
+                    logging.error(
+                        f"Error during AI preset generation: {e}", exc_info=True
+                    )
                     print_error(f"Error during AI preset generation: {e}")
                     exit_code = 1
         elif args.apply_preset:
@@ -494,12 +556,16 @@ def main():
 
             print_info(f"Applying preset: {args.apply_preset}")
             try:
-                from wall_gen.settings_modules.preset_management import _apply_preset_settings
+                from wall_gen.settings_modules.preset_management import (
+                    _apply_preset_settings,
+                )
 
                 presets_dir = os.path.join(PROJECT_ROOT, "presets")
                 preset_identifier = args.apply_preset
 
-                if os.path.exists(preset_identifier) and preset_identifier.lower().endswith(".json"):
+                if os.path.exists(
+                    preset_identifier
+                ) and preset_identifier.lower().endswith(".json"):
                     preset_path = preset_identifier
                 else:
                     preset_name = preset_identifier
@@ -535,23 +601,35 @@ def main():
             if user_prefs is not None:
                 handle_preview_latest_cli(user_prefs)
             else:
-                logging.error("User preferences not initialized; cannot preview latest image.")
+                logging.error(
+                    "User preferences not initialized; cannot preview latest image."
+                )
         elif args.preview_image:
             if user_prefs is not None:
                 handle_preview_image_cli(args.preview_image, user_prefs)
             else:
                 logging.error("User preferences not initialized; cannot preview image.")
         elif args.test_prompt:
-            from wall_gen.ui_utils import print_section as ui_print_section, print_info as ui_print_info
+            from wall_gen.ui_utils import (
+                print_section as ui_print_section,
+                print_info as ui_print_info,
+            )
 
             ui_print_section("Testing Prompt Generation")
             if user_prefs is not None:
-                test_final_prompt, _ = generate_final_prompt("gemini", user_prefs, custom_prompt_text=None)
+                test_final_prompt, _ = generate_final_prompt(
+                    "gemini", user_prefs, custom_prompt_text=None
+                )
                 ui_print_info(f"Test Generated Prompt:\n{test_final_prompt}")
             else:
-                logging.error("User preferences not initialized; cannot test prompt generation.")
+                logging.error(
+                    "User preferences not initialized; cannot test prompt generation."
+                )
         elif args.test_custom_prompt:
-            from wall_gen.ui_utils import print_section as ui_print_section, print_info as ui_print_info
+            from wall_gen.ui_utils import (
+                print_section as ui_print_section,
+                print_info as ui_print_info,
+            )
 
             ui_print_section("Testing Custom Prompt Enhancement")
             if user_prefs is not None:
@@ -560,26 +638,42 @@ def main():
                 )
                 ui_print_info(f"Test Enhanced Prompt:\n{test_final_prompt}")
             else:
-                logging.error("User preferences not initialized; cannot test custom prompt enhancement.")
+                logging.error(
+                    "User preferences not initialized; cannot test custom prompt enhancement."
+                )
         elif args.prompt:
             if user_prefs is not None:
                 orchestrate_wallpaper_generation(
-                    "custom", user_prefs, custom_prompt=args.prompt, generate_only=args.no_generate
+                    "custom",
+                    user_prefs,
+                    custom_prompt=args.prompt,
+                    generate_only=args.no_generate,
                 )
             else:
-                logging.error("User preferences not initialized; cannot generate wallpaper.")
+                logging.error(
+                    "User preferences not initialized; cannot generate wallpaper."
+                )
         elif args.random:
             if user_prefs is not None:
-                orchestrate_wallpaper_generation("random", user_prefs, generate_only=args.no_generate)
+                orchestrate_wallpaper_generation(
+                    "random", user_prefs, generate_only=args.no_generate
+                )
             else:
-                logging.error("User preferences not initialized; cannot generate wallpaper.")
+                logging.error(
+                    "User preferences not initialized; cannot generate wallpaper."
+                )
         elif args.preset:
             if user_prefs is not None:
                 orchestrate_wallpaper_generation(
-                    "preset", user_prefs, preset_name=args.preset, generate_only=args.no_generate
+                    "preset",
+                    user_prefs,
+                    preset_name=args.preset,
+                    generate_only=args.no_generate,
                 )
             else:
-                logging.error("User preferences not initialized; cannot generate wallpaper.")
+                logging.error(
+                    "User preferences not initialized; cannot generate wallpaper."
+                )
         else:
             from wall_gen.ui_utils import print_info as ui_print_info
 
@@ -595,7 +689,9 @@ def main():
                 logging.error("Failed to import or run main_menu", exc_info=True)
                 exit_code = 1
     except Exception as e:
-        logging.critical(f"An unhandled error occurred in main dispatch: {e}", exc_info=True)
+        logging.critical(
+            f"An unhandled error occurred in main dispatch: {e}", exc_info=True
+        )
         from wall_gen.ui_utils import print_error as ui_print_error
 
         ui_print_error(f"An unexpected error occurred: {e}")
