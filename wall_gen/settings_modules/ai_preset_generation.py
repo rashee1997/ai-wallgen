@@ -47,7 +47,7 @@ def generate_ai_preset():
                         print_info("Attempting to generate AI preset (this may take a moment)...")
                         # Generate AI Style
                         try:
-                            from ai_style_generator import generate_random_style, initialize_gemini
+                            from wall_gen.ai_style_generator import generate_random_style, initialize_gemini
                             api_key = os.environ.get("GEMINI_API_KEY")
                             if not api_key:
                                 print_error("GEMINI_API_KEY environment variable not set.")

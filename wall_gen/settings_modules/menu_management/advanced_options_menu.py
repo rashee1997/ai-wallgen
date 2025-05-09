@@ -26,7 +26,7 @@ except ImportError:
     PROMPT_GENERATOR_AVAILABLE = False
 
 try:
-    from ai_style_generator import (
+    from wall_gen.ai_style_generator import (
         handle_style_generation,
         initialize_gemini,
         AI_STYLE_GEN_AVAILABLE,

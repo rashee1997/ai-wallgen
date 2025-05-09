@@ -133,7 +133,7 @@ except ImportError:
     _print_warning_fallback("wall_gen.ui_utils not found. Using basic print/input for UI.")
 
 try:
-    from ai_style_generator import generate_random_style, initialize_gemini as initialize_style_gemini
+    from wall_gen.ai_style_generator import generate_random_style, initialize_gemini as initialize_style_gemini
     AI_STYLE_GEN_AVAILABLE = True
 except ImportError:
     AI_STYLE_GEN_AVAILABLE = False
