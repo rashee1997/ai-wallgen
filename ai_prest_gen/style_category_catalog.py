@@ -145,6 +145,9 @@ preferred_order: List[str] = [
     "street_photography",
     "documentary", # Photo style
     "cinematic",
+    "macro_photography",        # NEW
+    "wildlife_photography",     # NEW
+    "food_photography",         # NEW
     "photographic", # General photographic
 
     # Abstract & Conceptual (non-portrait) (From V3 & Restored)
@@ -526,6 +529,14 @@ for cat, keywords in _categories_keywords_restored.items(): # This will include 
 for cat, keywords in _new_traditional_keywords.items(): # Add new traditional keywords
     categories_keywords.setdefault(cat, []).extend(keywords)
 
+_new_photographic_keywords = {
+    "macro_photography": ["macro", "macro photo", "macro photography", "extreme close up", "close-up photography", "micro photography", "tiny details", "insect eye", "flower stamen"],
+    "wildlife_photography": ["wildlife", "wildlife photo", "wildlife photography", "animal photography", "nature photography animals", "safari photography", "birdwatching photo", "animal in habitat"],
+    "food_photography": ["food photography", "culinary photography", "food styling", "appetizing food shot", "delicious food", "gourmet dish photo", "food blog photo", "menu photo", "foodie"]
+}
+for cat, keywords in _new_photographic_keywords.items(): # Add new photographic keywords
+    categories_keywords.setdefault(cat, []).extend(keywords)
+
 # De-duplicate keywords within each category (ensure this loop runs AFTER all additions)
 for cat in categories_keywords:
     seen_keywords = set()
@@ -779,7 +790,41 @@ def instructions_for_category(category: str, base_style: str) -> str:
          elif category == "minimalist_geometric": instruction = cat_instructions_v3.get("minimalist_geometric") # Already covered
          elif category == "patchwork_collage": instruction = cat_instructions_v3.get("patchwork_collage") # Already covered
          # ... add other specific fallbacks from restored if necessary ...
+         elif category == "macro_photography":
+            instruction = (
+                f"For '{base_style_clean}', generate settings for extreme close-up photography. "
+                "Key Characteristics: Reveal intricate details, textures, and patterns of tiny subjects. Extremely shallow depth of field is a hallmark, isolating the subject against a blurred background (bokeh). "
+                "Lighting: Precise and often artificial (ring flash, twin flash, diffused LED) to illuminate tiny subjects without harsh shadows, or soft, diffused natural light. "
+                "Composition: Fill the frame with the subject, focus on abstract patterns, or isolate a single minute detail. "
+                "Subject Matter: Insects, flower parts (stamens, petals), water droplets, snowflakes, textures of everyday objects, miniature worlds. "
+                "Camera Settings: True macro lens (1:1 magnification or greater), small apertures (e.g., f/8-f/16) if focus stacking is implied for greater DoF, or wider for extreme shallow DoF. Fast shutter speed if subject is mobile or to counter camera shake. Low ISO. "
+                "Focus: Critically sharp on the primary point of interest. "
+                "Avoid: Distracting backgrounds, deep depth of field (unless focus stacked), motion blur (unless intentional)."
+            )
+         elif category == "wildlife_photography":
+            instruction = (
+                f"For '{base_style_clean}', generate settings for capturing animals in their natural habitat. "
+                "Key Characteristics: Authentic depiction of animal behavior and appearance. Patience and respect for the subject are paramount. Often uses telephoto lenses. "
+                "Lighting: Natural available light. Golden hours (early morning, late afternoon) are preferred for warm, dimensional light. Overcast days for soft, even light. Avoid harsh midday sun. "
+                "Composition: Eye-level with the subject for connection. Rule of thirds, leading lines, negative space. Show animal interacting with its environment. Capture behavior (hunting, playing, resting). "
+                "Subject Matter: Mammals, birds, reptiles, amphibians, fish, insects in their native environments. "
+                "Camera Settings: Telephoto lens (e.g., 200mm to 600mm+). Fast shutter speed to freeze action. Aperture chosen for desired DoF (isolate subject or show habitat). ISO may be higher in low light. Continuous autofocus and burst mode are common. "
+                "Focus: Critically sharp on the animal's eyes. "
+                "Avoid: Cages, human interference (unless part of a specific documentary narrative), unnatural poses, overly intrusive presence."
+            )
+         elif category == "food_photography":
+            instruction = (
+                f"For '{base_style_clean}', generate settings to make the food look as appetizing as possible. "
+                "Key Characteristics: Careful styling of food and props. Emphasis on texture, color, and freshness. "
+                "Lighting: Soft, diffused natural light (e.g., window light) is popular. Controlled studio light (softboxes, reflectors, scrims) for specific moods. Avoid direct on-camera flash. "
+                "Light Direction: Side lighting or backlighting is common to create texture, highlights, and dimension. Top-down for flat lays. "
+                "Composition: Overhead flat lay, 45-degree angle, eye-level for drinks/tall dishes, close-ups on textures. Rule of thirds, leading lines, use of negative space. Props (cutlery, linens, ingredients) should complement, not distract. "
+                "Subject Matter: Plated dishes, ingredients, drinks, culinary processes. "
+                "Camera Settings: Macro or short telephoto lenses are common. Aperture chosen for desired DoF (f/2.8-f/8 typical). Low ISO. Tripod often used. "
+                "Focus: Sharp focus on the 'hero' element of the dish. "
+                "Color: Vibrant, appetizing, and true to the food. White balance is critical. "
+                "Avoid: Unappetizing colors, harsh shadows, distracting reflections, messy presentation (unless intentionally rustic), wilted or stale-looking food."
+            )
          else: instruction = default_instruction + f" Pay close attention to the nuances of '{base_style_clean}' when generating settings."
 
     return instruction
-

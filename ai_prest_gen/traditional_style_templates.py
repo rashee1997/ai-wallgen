@@ -14,15 +14,15 @@ def get_oil_painting_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the oil painting style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Classical Realism", "post_processing": ["impasto effects", "glazing layers", "sfumato"], "style_era": "17th-19th Century"},
+        "lighting_settings": {"lighting_type": "Studio Lighting", "light_quality": "Directional", "light_direction": "Side", "time_of_day": "Indoor"},
+        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "Linear Perspective"},
+        "color_settings": {"color_scheme": "Harmonious", "palette_type": "Rich Saturated", "color_temperature": "Warm", "color_contrast": "High", "dominant_colors": ["earth tones", "deep reds", "rich blues"]},
+        "detail_settings": {"detail_level": "Medium", "texture_quality": "Canvas Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Indoor Studio", "atmospheric_effects": ["sfumato"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, digital artifacts, modern elements",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat, anachronistic details"
     }
     # No camera_settings for traditional art styles.
     return {**base_template, "imagen_settings": imagen_settings}
@@ -35,15 +35,15 @@ def get_watercolor_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the watercolor style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Traditional Watercolor", "post_processing": ["wet-on-wet blending", "paper texture visible", "lifting techniques"], "style_era": "19th Century"},
+        "lighting_settings": {"lighting_type": "Natural Backlight", "light_quality": "Luminous", "light_direction": "Behind Subject", "time_of_day": "Daytime"},
+        "composition_settings": {"technique": "Negative Space Emphasis", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "Atmospheric Perspective"},
+        "color_settings": {"color_scheme": "Analogous with Complementary Accents", "palette_type": "Transparent Layered", "color_temperature": "Cool", "color_contrast": "Medium-Low", "dominant_colors": ["soft blues", "light greens", "pale yellows"]},
+        "detail_settings": {"detail_level": "Medium-Low", "texture_quality": "Watercolor Paper Grain"},
+        "environment_settings": {"weather": "Varied", "season": "Any", "location_type": "Outdoor Landscape", "atmospheric_effects": ["light bloom", "misty background"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, opaque paint, harsh lines",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, muddy colors, overworked areas, lack of transparency"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -55,15 +55,15 @@ def get_pastel_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the pastel style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Impressionistic Pastel", "post_processing": ["layered strokes", "velvety texture", "scumbling"], "style_era": "Late 19th Century"},
+        "lighting_settings": {"lighting_type": "Soft Natural Light", "light_quality": "Diffused", "light_direction": "Front-Side", "time_of_day": "Daytime"},
+        "composition_settings": {"technique": "Broken Color", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
+        "color_settings": {"color_scheme": "Harmonious", "palette_type": "Soft and Powdery", "color_temperature": "Warm", "color_contrast": "Low", "dominant_colors": ["pinks", "lavenders", "light blues", "creams"]},
+        "detail_settings": {"detail_level": "Medium", "texture_quality": "Chalky Pastel Texture"},
+        "environment_settings": {"weather": "Pleasant", "season": "Spring/Summer", "location_type": "Portrait Setting", "atmospheric_effects": ["soft focus background"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, harsh outlines, muddy colors",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, overworked pastel, lack of powdery texture"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -75,15 +75,15 @@ def get_acrylic_painting_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the acrylic painting style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Expressive Realism", "post_processing": ["bold brushstrokes", "quick drying effects", "palette knife work"], "style_era": "Late 20th Century"},
+        "lighting_settings": {"lighting_type": "Dynamic Studio Light", "light_quality": "Crisp", "light_direction": "Varied", "time_of_day": "Any"},
+        "composition_settings": {"technique": "Strong Forms", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
+        "color_settings": {"color_scheme": "Bold Analogous", "palette_type": "Vibrant Opaque", "color_temperature": "Neutral", "color_contrast": "High", "dominant_colors": ["primary colors", "strong secondary colors"]},
+        "detail_settings": {"detail_level": "Medium-High", "texture_quality": "Visible Acrylic Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Contemporary Still Life", "atmospheric_effects": ["none"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, dull colors, overly blended",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, lack of vibrancy, muddy colors, weak brushwork"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -95,15 +95,15 @@ def get_charcoal_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the charcoal style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Classical Drawing", "post_processing": ["smudging effects", "strong tonal values", "expressive lines"], "style_era": "Academic Tradition"},
+        "lighting_settings": {"lighting_type": "Single Source Dramatic", "light_quality": "High Contrast", "light_direction": "Side", "time_of_day": "Indoor"},
+        "composition_settings": {"technique": "Mass Drawing", "focal_point": "Figure/Portrait", "camera_angle": "Eye-level", "perspective": "Naturalistic"},
+        "color_settings": {"color_scheme": "Monochromatic", "palette_type": "Grayscale", "color_temperature": "Neutral", "color_contrast": "Maximum", "dominant_colors": ["black", "white", "grey"]},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Charcoal Paper Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Life Drawing Studio", "atmospheric_effects": ["none"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, colored elements, flat shading",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, lack of tonal range, weak lines, smudged details (unintentionally)"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -115,15 +115,15 @@ def get_pencil_sketch_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the pencil sketch style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Realistic Sketching", "post_processing": ["hatching", "cross-hatching", "graphite sheen", "varied line weight"], "style_era": "Traditional Sketchbook"},
+        "lighting_settings": {"lighting_type": "Natural Ambient", "light_quality": "Soft", "light_direction": "Slightly Above", "time_of_day": "Any"},
+        "composition_settings": {"technique": "Contour Drawing", "focal_point": "Subject Detail", "camera_angle": "Eye-level", "perspective": "Naturalistic"},
+        "color_settings": {"color_scheme": "Monochromatic", "palette_type": "Grayscale", "color_temperature": "Neutral", "color_contrast": "Medium-High", "dominant_colors": ["graphite grey", "white"]},
+        "detail_settings": {"detail_level": "Medium-High", "texture_quality": "Drawing Paper Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Field Sketch", "atmospheric_effects": ["none"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, colored elements, painted look",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, smudged lines (unintentionally), lack of detail, flat appearance"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -135,15 +135,15 @@ def get_ink_drawing_template(main_category: str) -> Dict[str, Any]:
         "description": "A balanced preset for the ink drawing style, focusing on typical characteristics and a specific mood."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+        "style_settings": {"art_movement": "Line Art Illustration", "post_processing": ["stippling", "bold outlines", "ink wash", "nib textures"], "style_era": "Classic Illustration"},
+        "lighting_settings": {"lighting_type": "Implied by Form", "light_quality": "N/A", "light_direction": "N/A", "time_of_day": "N/A"},
+        "composition_settings": {"technique": "Dynamic Line Weight", "focal_point": "Key Elements", "camera_angle": "Direct", "perspective": "Flat or Stylized"},
+        "color_settings": {"color_scheme": "Monochromatic", "palette_type": "High Contrast Ink", "color_temperature": "Neutral", "color_contrast": "Maximum", "dominant_colors": ["black", "white"]},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Smooth Paper Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Illustration Page", "atmospheric_effects": ["none"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, colored elements, pencil marks, smudges",
+        "style_negative_prompt": "clashing styles, inconsistent line weight, poor composition, broken lines, fuzzy edges, lack of definition"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -154,16 +154,16 @@ def get_drawing_template(main_category: str) -> Dict[str, Any]:
         "aspect_ratio": "16:9",
         "description": "A balanced preset for the drawing style, focusing on typical characteristics and a specific mood."
     }
-    imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
-        "composition_settings": {"technique": "Rule of Thirds", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
-        "color_settings": {"color_scheme": "Analogous", "palette_type": "Balanced", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["blue", "green", "grey"]},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Realistic"},
-        "environment_settings": {"weather": "Clear", "season": "Spring", "location_type": "Outdoor", "atmospheric_effects": ["subtle haze"]},
+    imagen_settings = { # Assuming this is for Colored Pencil Drawing
+        "style_settings": {"art_movement": "Realistic Colored Pencil", "post_processing": ["burnishing effects", "layered colors", "solvent blending (simulated)"], "style_era": "Contemporary Realism"},
+        "lighting_settings": {"lighting_type": "Soft Studio Light", "light_quality": "Even", "light_direction": "Front-Side", "time_of_day": "Any"},
+        "composition_settings": {"technique": "Detailed Layering", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "Naturalistic"},
+        "color_settings": {"color_scheme": "Full Color Spectrum", "palette_type": "Richly Layered Colors", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["varied based on subject"]},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Smooth Drawing Paper"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Still Life Setup", "atmospheric_effects": ["none"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality",
-        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic elements (unless style dictates), generic, boring, flat"
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, sketchy lines, flat colors",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, muddy colors, lack of depth, visible pencil strokes (unless stylistic choice)"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -175,7 +175,7 @@ def get_gouache_template(main_category: str) -> Dict[str, Any]:
         "description": "Preset for Gouache painting, emphasizing its opaque, matte finish and ability to create bold, flat colors or layered details."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary Illustration", "post_processing": ["subtle sharpening"], "style_era": "Modern"},
+        "style_settings": {"art_movement": "Contemporary Illustration", "post_processing": ["opaque layering", "matte finish detail"], "style_era": "Modern"},
         "lighting_settings": {"lighting_type": "Natural", "light_quality": "Even Diffused", "light_direction": "Front", "time_of_day": "Daytime"},
         "composition_settings": {"technique": "Layering", "focal_point": "Main Subject", "camera_angle": "Eye-level", "perspective": "One-point"},
         "color_settings": {"color_scheme": "Analogous", "palette_type": "Vibrant Opaque", "color_temperature": "Neutral", "color_contrast": "Medium", "dominant_colors": ["varied"]},
@@ -195,7 +195,7 @@ def get_tempera_template(main_category: str) -> Dict[str, Any]:
         "description": "Preset for Tempera painting, highlighting its matte finish, potential for fine detail, cross-hatching, and historical luminous quality."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Early Renaissance", "post_processing": ["none"], "style_era": "Historical"}, # Or "Contemporary" if desired
+        "style_settings": {"art_movement": "Early Renaissance", "post_processing": ["none"], "style_era": "Historical"}, # Or "Contemporary" if desired, "none" is good for tempera's clean look
         "lighting_settings": {"lighting_type": "Natural", "light_quality": "Soft Clear", "light_direction": "Slightly Off-center", "time_of_day": "Daytime"},
         "composition_settings": {"technique": "Fine Detail", "focal_point": "Central Figure", "camera_angle": "Eye-level", "perspective": "One-point or Early Perspective"},
         "color_settings": {"color_scheme": "Harmonious", "palette_type": "Rich Matte", "color_temperature": "Warm Neutral", "color_contrast": "Medium", "dominant_colors": ["earthy tones", "golds", "blues"]},
@@ -215,7 +215,7 @@ def get_mosaic_template(main_category: str) -> Dict[str, Any]:
         "description": "Preset for Mosaic art, focusing on assembled pieces (tesserae) creating a textured, often figurative or geometric image."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Decorative Art", "post_processing": ["sharpen details"], "style_era": "Ancient/Modern"},
+        "style_settings": {"art_movement": "Decorative Art", "post_processing": ["sharpen details", "grout lines emphasis"], "style_era": "Ancient/Modern"},
         "lighting_settings": {"lighting_type": "Directional", "light_quality": "Slightly Hard", "light_direction": "Front", "time_of_day": "Any"},
         "composition_settings": {"technique": "Segmented Composition", "focal_point": "Overall Pattern/Figure", "camera_angle": "Direct", "perspective": "Flat"},
         "color_settings": {"color_scheme": "Varied", "palette_type": "Bold Segmented", "color_temperature": "Neutral", "color_contrast": "High", "dominant_colors": ["varied stone", "glass colors"]},
@@ -255,7 +255,7 @@ def get_woodcut_template(main_category: str) -> Dict[str, Any]:
         "description": "Preset for Woodcut prints, characterized by bold lines, strong contrasts, and the texture of relief printing. Often monochromatic."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Printmaking", "post_processing": ["slight grain"], "style_era": "Historical/Modern"},
+        "style_settings": {"art_movement": "Printmaking", "post_processing": ["slight grain", "carved wood texture"], "style_era": "Historical/Modern"},
         "lighting_settings": {"lighting_type": "Flat", "light_quality": "Even", "light_direction": "N/A", "time_of_day": "N/A"}, # Lighting inherent to print style
         "composition_settings": {"technique": "Relief Lines", "focal_point": "Main Subject/Negative Space", "camera_angle": "Direct", "perspective": "Flat"},
         "color_settings": {"color_scheme": "Monochromatic", "palette_type": "High Contrast", "color_temperature": "Neutral", "color_contrast": "Maximum", "dominant_colors": ["black", "white", "sepia"]}, # Or limited color

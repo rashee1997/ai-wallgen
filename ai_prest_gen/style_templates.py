@@ -17,6 +17,9 @@ from .photographic_style_templates import (
     get_street_photography_template,
     get_noir_photography_template,
     get_luna_photo_template,
+    get_macro_photography_template,
+    get_wildlife_photography_template,
+    get_food_photography_template,
 )
 from .hybrid_style_templates import (
     get_kinetic_ascii_template,
@@ -92,7 +95,7 @@ from .traditional_style_templates import (
 from .digital_style_templates import (
     get_digital_art_template,
     get_digital_painting_template,
-    get_3d_render_template,
+    # get_3d_render_template, # Moved to 3d_style_templates
     get_vector_art_template,
     get_ascii_art_template,
     get_isometric_template,
@@ -121,6 +124,7 @@ from .unique_style_templates import (
     get_material_sculptural_template,
     get_traditional_painting_drawing_template,
 )
+from .three_d_style_templates import get_3d_render_template # NEW import for 3D styles
 
 # --- Main Template Generation Logic ---
 
@@ -204,6 +208,9 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         "street_photography": get_street_photography_template,
         "noir_photography": get_noir_photography_template,
         "luna_photo": get_luna_photo_template,
+        "macro_photography": get_macro_photography_template,
+        "wildlife_photography": get_wildlife_photography_template,
+        "food_photography": get_food_photography_template,
     }
 
     if main_category in portrait_categories:

@@ -2,10 +2,11 @@
 """
 Digital Style Templates for AI Preset Generator
 
-This module contains template functions for digital art styles, including:
+This module contains template functions for various digital art styles.
+Note: 3D render templates have been moved to '3d_style_templates.py'.
+Includes:
 - Digital painting
 - Digital art (general)
-- 3D render
 - Vector art
 - ASCII art
 - Isometric art
@@ -27,21 +28,21 @@ def get_digital_art_template(style_category: str) -> Dict[str, Any]:
         "description": "A general preset for digital art, focusing on expressive and dynamic visuals."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Contemporary Digital Art", "post_processing": ["color grading", "sharpening"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Varied", "light_quality": "Varied", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Dynamic composition", "focal_point": "Main Subject"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Balanced Expressive Palette", "color_temperature": "Mixed", "color_contrast": "High"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "Digital textures"},
-        "environment_settings": {"weather": "Varied", "season": "Varied", "location_type": "Varied", "atmospheric_effects": ["varied"]},
+        "style_settings": {"art_movement": "Contemporary Digital Art", "post_processing": ["color grading", "sharpening", "subtle chromatic aberration"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Flexible Digital Lighting", "light_quality": "Dynamic and Controllable", "light_direction": "Multiple or Artist Defined"},
+        "composition_settings": {"technique": "Dynamic Composition", "focal_point": "Main Subject"},
+        "color_settings": {"color_scheme": "Full Spectrum Digital Palette", "palette_type": "Balanced Expressive Palette", "color_temperature": "Mixed", "color_contrast": "High"},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Varied Digital Textures"},
+        "environment_settings": {"weather": "Artist Defined", "season": "Artist Defined", "location_type": "Conceptual or Abstract", "atmospheric_effects": ["digital haze", "particle effects"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High Polished"},
-        "negative_prompt": "traditional art, low detail, signature, watermark, low quality",
-        "style_negative_prompt": "unblended styles, flat colors"
+        "negative_prompt": "traditional art, low detail, signature, watermark, low quality, blurry, jpeg artifacts",
+        "style_negative_prompt": "unblended styles, flat colors, poor execution"
     }
     imagen_settings["digital_settings"] = {
-        "software": "Photoshop", "rendering_technique": "digital painting with photo elements",
-        "digital_effects": ["glow effects", "texture overlays", "layer masks"], "resolution": "4K",
-        "filter_usage": ["Gaussian blur for depth", "color dodge for highlights"], "brush_type": "custom textured brushes",
-        "layer_complexity": "complex with multiple adjustment layers"
+        "software": "Common digital art software (e.g., Photoshop, Procreate, Krita, GIMP)", "rendering_technique": "Versatile raster and vector techniques, including photobashing and digital painting",
+        "digital_effects": ["glow effects", "texture overlays", "layer masks", "particle systems"], "resolution": "4K",
+        "filter_usage": ["Gaussian blur for depth", "color dodge for highlights", "noise generation for texture"], "brush_type": "custom textured brushes, procedural brushes",
+        "layer_complexity": "complex with multiple adjustment layers, non-destructive workflow"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -54,63 +55,23 @@ def get_digital_painting_template(style_category: str) -> Dict[str, Any]:
         "description": "A preset for digital painting style, focusing on painterly techniques using digital tools."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Digital Painting", "post_processing": ["digital brushwork"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Atmospheric Digital", "light_quality": "Varied", "light_direction": "Multiple"},
+        "style_settings": {"art_movement": "Digital Painting", "post_processing": ["visible brush strokes", "texture blending", "glazing techniques (digital)"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Atmospheric Digital", "light_quality": "Painterly Light", "light_direction": "Artist Defined"},
         "composition_settings": {"technique": "Painterly composition", "focal_point": "Main Subject"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Full color range with digital blending", "color_temperature": "Mixed", "color_contrast": "Medium"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "Custom digital brush textures"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Abstract", "atmospheric_effects": ["digital glow"]},
+        "color_settings": {"color_scheme": "Rich and Expressive", "palette_type": "Full color range with digital blending and color harmonies", "color_temperature": "Mixed", "color_contrast": "Medium to High"},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Custom digital brush textures, simulated canvas/paper texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Abstract or Stylized Scene", "atmospheric_effects": ["digital glow", "soft focus"]},
         "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "traditional painting, lack of digital effects, signature, watermark, low quality",
-        "style_negative_prompt": "unblended colors, flat lighting"
+        "negative_prompt": "traditional painting artifacts (unintentional), lack of digital finesse, signature, watermark, low quality, 3D render look",
+        "style_negative_prompt": "unblended colors, flat lighting, overly smooth, vector look"
     }
     imagen_settings["digital_painting_settings"] = {
-        "platform": "Photoshop/Procreate/Krita",
-        "brushwork": "simulated paint brush strokes with opacity layering", "effect_blend": ["texture overlays", "color dodge/glow effects"],
-        "aesthetic_blend": "Traditional painting appearance achieved through digital tools, often with enhanced lighting or effects."
+        "platform": "Photoshop, Procreate, Krita, Clip Studio Paint",
+        "brushwork": "simulated natural media brush strokes (oil, watercolor, acrylic) with opacity and flow dynamics, textured brushes",
+        "canvas_texture_simulation": "subtle digital canvas or paper texture integrated",
+        "layering_techniques": "extensive use of layers, blending modes, adjustment layers for depth and color complexity",
+        "aesthetic_blend": "Traditional painting appearance achieved through digital tools, often with enhanced lighting, color vibrancy, or unique digital effects."
     }
-    return {**base_template, "imagen_settings": imagen_settings}
-
-
-def get_3d_render_template(style_category: str) -> Dict[str, Any]:
-    base_template = {
-        "preset_name": "3D Render Preset",
-        "moods": ["Realistic", "Digital"],
-        "aspect_ratio": "16:9",
-        "description": "A general preset for 3D rendering, focusing on realistic digital imagery."
-    }
-    imagen_settings = {
-        "style_settings": {"art_movement": "Digital Art", "post_processing": ["realistic rendering"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Studio or Environmental", "light_quality": "Realistic", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Standard perspective view", "focal_point": "Main Subject"},
-        "color_settings": {"color_scheme": "Realistic", "palette_type": "Realistic Color Palette", "color_temperature": "Neutral", "color_contrast": "Medium"},
-        "detail_settings": {"detail_level": "Very High", "texture_quality": "Realistic 3D textures"},
-        "environment_settings": {"weather": "Varied", "season": "Varied", "location_type": "Varied", "atmospheric_effects": ["realistic"]},
-        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High Fidelity"},
-        "negative_prompt": "painting, drawing, low poly, signature, watermark, low quality",
-        "style_negative_prompt": "stylized rendering, unrealistic lighting"
-    }
-    imagen_settings["software_settings"] = {
-        "suite": "Blender", "renderer": "Cycles", "version": "4.0"
-    }
-    imagen_settings["render_settings"] = {
-        "polycount": "high polygon count", "sampling": "1024 samples", "denoiser": "enabled (OptiX)",
-        "resolution": "3840x2160", "aspect_ratio": "16:9", "frame_number": "1"
-    }
-    imagen_settings["lighting_setup"] = {
-        "system": "HDRI environment lighting with 3-point area lights", "intensity": "1.5 Strength HDRI",
-        "color": "Neutral White (5500K)", "shadows": "soft realistic shadows"
-    }
-    imagen_settings["material_settings"] = {
-        "shader_type": "Principled BSDF (PBR)", "subsurface_scattering": "0.1 (for skin if applicable)",
-        "texture_maps": ["diffuse", "normal", "roughness", "metallic"], "bump_map": "yes", "displacement": "yes (micro-displacement)"
-    }
-    imagen_settings["camera_settings"] = {
-        "camera_type": "perspective", "focal_length": "50mm", "depth_of_field": "enabled (f/2.8)",
-        "focus_distance": "focused on main subject", "camera_position": "standard eye-level view"
-    }
-    imagen_settings["composition_settings"]["view_mode"] = "standard perspective view"
-    imagen_settings["style_settings"]["post_processing"] = ["bloom effect", "vignette", "color grading (filmic LUT)"]
     return {**base_template, "imagen_settings": imagen_settings}
 
 
@@ -150,20 +111,21 @@ def get_ascii_art_template(style_category: str) -> Dict[str, Any]:
         "description": "A general preset for ASCII art, using text characters to form images."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "ASCII Art", "post_processing": ["character mosaic"], "style_era": "Retro"},
-        "lighting_settings": {"lighting_type": "Flat", "light_quality": "Hard-edged", "light_direction": "Top"},
-        "composition_settings": {"technique": "Grid-based mosaic composition", "focal_point": "Image formed by characters"},
-        "color_settings": {"color_scheme": "Monochrome", "palette_type": "monochrome green on black", "color_temperature": "Cool", "color_contrast": "High"},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "ASCII character texture"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Console Terminal", "atmospheric_effects": ["none"]},
-        "quality_settings": {"resolution": "1280x720", "rendering_quality": "Retro Digital"},
-        "negative_prompt": "realism, full-color photography, smooth gradient, signature, watermark, low quality",
-        "style_negative_prompt": "natural photo, smooth curves"
+        "style_settings": {"art_movement": "ASCII Art", "post_processing": ["character mosaic effect", "scanlines (optional)"], "style_era": "Retro Computing"},
+        "lighting_settings": {"lighting_type": "Flat / Implied by Character Density", "light_quality": "Hard-edged", "light_direction": "N/A"},
+        "composition_settings": {"technique": "Grid-based character composition", "focal_point": "Image formed by characters"},
+        "color_settings": {"color_scheme": "Monochrome or Limited Color", "palette_type": "classic monochrome (e.g., green on black, white on black, amber) or ANSI colors", "color_temperature": "Cool or Neutral", "color_contrast": "High"},
+        "detail_settings": {"detail_level": "Character-defined", "texture_quality": "ASCII character texture, fixed-width font look"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Console Terminal Screen", "atmospheric_effects": ["phosphor glow (optional)"]},
+        "quality_settings": {"resolution": "Character-based (e.g., 80x25, 132x50 characters) scaled for viewing", "rendering_quality": "Retro Digital, Crisp Characters"},
+        "negative_prompt": "realism, full-color photography, smooth gradient, anti-aliasing, signature, watermark, low quality, vector art",
+        "style_negative_prompt": "natural photo, smooth curves, photographic detail, blended colors"
     }
     imagen_settings["ascii_art_settings"] = {
-        "character_set": "full ASCII character set", "resolution": "medium character resolution",
-        "mosaic_density": "dense character placement", "contrast_method": "symbol value mix for shading",
-        "aesthetic_blend": "Text-based art using ASCII characters to form recognizable images, retro computer aesthetic."
+        "character_set": "standard ASCII, extended ASCII, block characters", "font_style": "fixed-width, monospace (e.g., Courier, Terminal)",
+        "character_resolution": "medium to high character density", "contrast_method": "character brightness/density for shading",
+        "color_depth": "monochrome, 2-bit, 4-bit (16 colors), or 8-bit (256 colors) if using ANSI/extended",
+        "aesthetic_blend": "Text-based art using ASCII/extended characters to form recognizable images, evoking a retro computer or terminal aesthetic."
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -201,25 +163,25 @@ def get_game_style_template(style_category: str) -> Dict[str, Any]:
         "description": "A general preset for modern game concept art, focusing on dynamic composition and high detail."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Modern Game Concept Art", "post_processing": ["cinematic LUT"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Dynamic Real-time", "light_quality": "Varied", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Dynamic composition for games", "focal_point": "Main Subject"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Realistic or Stylized Game Palette", "color_temperature": "Mixed", "color_contrast": "High"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "High polygon count models"},
-        "environment_settings": {"weather": "Varied", "season": "Varied", "location_type": "Game Environment", "atmospheric_effects": ["volumetric lighting"]},
-        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High Quality Game Engine Render (Unreal Engine 5)"},
-        "negative_prompt": "low detail, flat lighting, signature, watermark, low quality",
-        "style_negative_prompt": "static composition, unrealistic rendering"
+        "style_settings": {"art_movement": "Modern Game Concept Art / In-Engine Cinematics", "post_processing": ["cinematic color grading (LUTs)", "bloom", "lens flares"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Dynamic Real-time Global Illumination", "light_quality": "Photorealistic or Stylized High Fidelity", "light_direction": "Multiple, Volumetric"},
+        "composition_settings": {"technique": "Dynamic composition for games, rule of thirds, leading lines", "focal_point": "Main Character or Environmental Storytelling Element"},
+        "color_settings": {"color_scheme": "Harmonious or Contrasting based on mood", "palette_type": "Realistic or Stylized Game Palette with PBR materials", "color_temperature": "Mixed, scene-dependent", "color_contrast": "High"},
+        "detail_settings": {"detail_level": "Very High", "texture_quality": "High-fidelity PBR textures (4K-8K)"},
+        "environment_settings": {"weather": "Dynamic Weather Systems", "season": "Varied", "location_type": "Immersive Game Environment (Fantasy, Sci-Fi, Realistic)", "atmospheric_effects": ["volumetric lighting", "fog", "particle effects (rain, snow, dust)"]},
+        "quality_settings": {"resolution": "3840x2160 (4K) or higher", "rendering_quality": "Cinematic In-Engine Quality (e.g., Unreal Engine, Unity)"},
+        "negative_prompt": "low detail, flat lighting, 2D look, signature, watermark, low quality, poor texturing, obvious tiling",
+        "style_negative_prompt": "static composition, unrealistic rendering (unless stylized), non-PBR materials, poor performance look"
     }
     imagen_settings["game_engine_settings"] = {
-        "engine_type": "Unreal Engine 5", "render_quality": "high cinematic quality",
-        "shader_type": "Physically Based Rendering (PBR)", "special_effects": ["bloom", "ambient occlusion", "volumetric lighting"],
-        "post_effects": ["depth of field", "color grading (cinematic LUT)"], "resolution": "4K (3840x2160)",
-        "physics_settings": ["realistic physics simulation"], "animation_style": "smooth realistic character animation"
+        "engine_type": "Modern Game Engine (e.g., Unreal Engine, Unity, CryEngine)", "render_quality": "High Cinematic / Real-time Ray Tracing (if applicable)",
+        "shader_type": "Physically Based Rendering (PBR) with advanced material graphs", "special_effects": ["bloom", "screen space reflections (SSR)", "ambient occlusion (SSAO/HBAO)", "volumetric lighting/fog"],
+        "post_effects": ["depth of field (cinematic DoF)", "motion blur", "color grading (ACES, Filmic LUTs)", "anti-aliasing (TAA, MSAA)"], "resolution": "4K (3840x2160) or target platform resolution",
+        "physics_settings": ["realistic physics simulation (e.g., Chaos Physics, PhysX)"], "animation_style": "smooth realistic character animation, procedural animation elements"
     }
     imagen_settings["game_settings"] = {
-        "interactivity": "high interactivity implied", "environment_type": "detailed outdoor fantasy environment",
-        "character_style": "realistic stylized characters", "lighting_type": "dynamic real-time lighting"
+        "interactivity": "high interactivity implied by scene elements", "environment_type": "detailed outdoor fantasy environment, sci-fi cityscape, realistic interior",
+        "character_style": "realistic or stylized high-detail characters with PBR materials", "lighting_type": "dynamic real-time lighting with global illumination and reflections"
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -315,19 +277,20 @@ def get_surrealism_template(style_category: str) -> Dict[str, Any]:
         "description": "A preset for Surrealism, focusing on dreamlike illogical juxtapositions and scenes."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Surrealism", "post_processing": ["dreamlike effects"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Dramatic Mysterious", "light_quality": "Chiaroscuro", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Illogical juxtaposition", "focal_point": "Unexpected elements"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Varied, often Muted or Symbolic Palette", "color_temperature": "Mixed", "color_contrast": "Medium"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "Realistic on unreal subjects"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Dreamscape", "atmospheric_effects": ["mist", "shadows"]},
-        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "realistic, logical, mundane, signature, watermark, low quality",
-        "style_negative_prompt": "predictable composition, flat lighting"
+        "style_settings": {"art_movement": "Digital Surrealism", "post_processing": ["dreamlike effects", "seamless compositing", "subtle distortions"], "style_era": "Contemporary Digital"},
+        "lighting_settings": {"lighting_type": "Dramatic Mysterious or Ethereal", "light_quality": "Chiaroscuro or Soft Glow", "light_direction": "Multiple, often unconventional"},
+        "composition_settings": {"technique": "Illogical juxtaposition, symbolic arrangements", "focal_point": "Unexpected or symbolic elements"},
+        "color_settings": {"color_scheme": "Symbolic and Evocative", "palette_type": "Varied, often Muted or Contrasting Symbolic Palette", "color_temperature": "Mixed", "color_contrast": "Medium to High"},
+        "detail_settings": {"detail_level": "High, often hyperrealistic detail on unreal subjects", "texture_quality": "Realistic or digitally manipulated textures"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Dreamscape, subconscious landscapes", "atmospheric_effects": ["mist", "unusual shadows", "warped reality"]},
+        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High, polished digital finish"},
+        "negative_prompt": "realistic, logical, mundane, predictable, signature, watermark, low quality, poorly composited",
+        "style_negative_prompt": "predictable composition, flat lighting, obvious digital seams, lack of mystery"
     }
     imagen_settings["surrealism_settings"] = {
-        "conceptual_approach": "dreamlike bizarre unexpected juxtapositions", "color_scheme": "muted contrasting symbolic colors",
-        "composition": "layered symbolic narrative structure", "mood": "mysterious uncanny thought-provoking"
+        "conceptual_approach": "dreamlike, bizarre, unexpected juxtapositions, Freudian symbolism", "color_scheme": "muted, contrasting, or symbolic colors to evoke mood",
+        "composition": "layered symbolic narrative structure, transformation of objects", "mood": "mysterious, uncanny, thought-provoking, unsettling",
+        "digital_techniques": ["photorealistic rendering of impossible scenes", "seamless photobashing", "3D elements integration", "advanced masking and blending"]
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -340,20 +303,21 @@ def get_cubism_template(style_category: str) -> Dict[str, Any]:
         "description": "A preset for Cubism, focusing on fragmented forms and multiple viewpoints."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Cubism", "post_processing": ["geometric fragmentation"], "style_era": "Modern"},
-        "lighting_settings": {"lighting_type": "Simplified Abstracted", "light_quality": "Geometric", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Fragmented forms multiple viewpoints", "focal_point": "Subject"},
-        "color_settings": {"color_scheme": "Muted Earthy", "palette_type": "Muted Earthy Tones or Later Bolder Colors", "color_temperature": "Neutral", "color_contrast": "Medium"},
-        "detail_settings": {"detail_level": "Medium", "texture_quality": "Geometric planes flat or textured"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Abstract", "atmospheric_effects": ["none"]},
-        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "realistic, smooth, organic, signature, watermark, low quality",
-        "style_negative_prompt": "blended forms, soft edges"
+        "style_settings": {"art_movement": "Digital Cubism", "post_processing": ["geometric fragmentation", "sharp vector-like edges", "textured planes"], "style_era": "Contemporary Digital"},
+        "lighting_settings": {"lighting_type": "Simplified Abstracted, Faceted Lighting", "light_quality": "Geometric, hard-edged shadows", "light_direction": "Multiple, non-naturalistic"},
+        "composition_settings": {"technique": "Fragmented forms, multiple viewpoints, overlapping planes", "focal_point": "Deconstructed Subject"},
+        "color_settings": {"color_scheme": "Muted Earthy (Analytical) or Bold Contrasting (Synthetic)", "palette_type": "Muted Earthy Tones or Later Bolder Colors, often with digital precision", "color_temperature": "Neutral or Mixed", "color_contrast": "Medium to High"},
+        "detail_settings": {"detail_level": "Medium to High within fragments", "texture_quality": "Geometric planes, flat, or digitally textured (e.g., simulated wood grain, newsprint)"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Abstract, Deconstructed Space", "atmospheric_effects": ["none"]},
+        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High, crisp digital rendering"},
+        "negative_prompt": "realistic, smooth, organic, traditional perspective, signature, watermark, low quality, blurry edges",
+        "style_negative_prompt": "blended forms, soft edges, single viewpoint, photographic realism"
     }
     imagen_settings["cubism_settings"] = {
-        "form_style": "angular fragmented multiple perspectives", "color_palette": "muted earthy tones with bold geometric accents",
-        "composition": "geometric abstraction layered planes",
-        "aesthetic_blend": "Classic Cubist style with geometric fragmentation and abstract representation."
+        "form_style": "angular, fragmented, multiple simultaneous perspectives, deconstruction of subject", "color_palette": "muted earthy tones (analytical) or bold, flat colors (synthetic), often with black outlines",
+        "composition": "geometric abstraction, layered and overlapping planes, interplay of positive and negative space",
+        "digital_techniques": ["3D model fragmentation effects", "vector-sharp geometric planes", "digital texture application", "algorithmic deconstruction"],
+        "aesthetic_blend": "Classic Cubist principles (Analytical/Synthetic) reinterpreted with digital tools, emphasizing geometric precision and complex spatial relationships."
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -392,20 +356,21 @@ def get_sci_fi_template(style_category: str) -> Dict[str, Any]:
         "description": "A general preset for Science Fiction concept art, focusing on futuristic scenes."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Science Fiction Concept Art", "post_processing": ["lens flares"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Artificial or Alien World", "light_quality": "Varied", "light_direction": "Multiple"},
-        "composition_settings": {"technique": "Futuristic scene composition", "focal_point": "Technology or Environment"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Varied Sci-Fi Palette (can be gritty or clean)", "color_temperature": "Mixed", "color_contrast": "High"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "Metallic and Digital Textures"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Spaceship Interior or Alien Planet", "atmospheric_effects": ["space dust", "nebulae"]},
-        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
-        "negative_prompt": "organic, low detail, signature, watermark, low quality",
-        "style_negative_prompt": "traditional art, realistic environment"
+        "style_settings": {"art_movement": "Science Fiction Concept Art", "post_processing": ["lens flares", "chromatic aberration", "holographic interface elements"], "style_era": "Contemporary / Near Future / Far Future"},
+        "lighting_settings": {"lighting_type": "Artificial, Alien World, or Starship Interior Lighting", "light_quality": "Often high contrast, emissive lights", "light_direction": "Multiple, dynamic"},
+        "composition_settings": {"technique": "Futuristic scene composition, cinematic framing", "focal_point": "Advanced Technology, Alien Structures, or Character Interaction with Environment"},
+        "color_settings": {"color_scheme": "Cool Blues and Cyans with Warm Accents, or Alien Color Palettes", "palette_type": "Varied Sci-Fi Palette (gritty, sleek, or bioluminescent)", "color_temperature": "Mixed, often cool with warm emissives", "color_contrast": "High"},
+        "detail_settings": {"detail_level": "High to Very High", "texture_quality": "Metallic, Composite Materials, Digital Screens, Alien Textures"},
+        "environment_settings": {"weather": "N/A or Alien Atmospheric Conditions", "season": "N/A", "location_type": "Spaceship Interior, Alien Planet, Futuristic Cityscape, Dyson Sphere", "atmospheric_effects": ["space dust", "nebulae", "energy fields", "atmospheric distortion"]},
+        "quality_settings": {"resolution": "3840x2160 or higher for concept art", "rendering_quality": "High, cinematic digital painting or 3D render"},
+        "negative_prompt": "organic (unless alien biology), low detail, contemporary mundane objects, signature, watermark, low quality, fantasy elements (unless sci-fantasy)",
+        "style_negative_prompt": "traditional art style, unrealistic technology (for the established tech level), overly simple designs"
     }
     imagen_settings["sci_fi_settings"] = {
-        "technology_level": "advanced futuristic technology", "environment": "space station interior or alien landscape",
-        "lighting": "artificial cold lighting with lens flares", "color_palette": "metallic blues silvers with warning lights",
-        "aesthetic_blend": "Clean futuristic design with elements of space exploration or advanced technology."
+        "technology_level": "advanced futuristic technology (e.g., FTL travel, AI, cybernetics, energy weapons)", "environment_theme": "space station interior, alien landscape, dystopian city, utopian enclave",
+        "lighting_style": "artificial cold lighting, neon glows, emissive panels, lens flares from bright sources", "color_palette": "metallic blues, silvers, greys with accents of orange, red, or vibrant alien colors",
+        "visual_elements": ["glowing energy effects", "holographic displays", "intricate machinery", "sleek spacecraft", "complex user interfaces"],
+        "aesthetic_blend": "Clean futuristic design, gritty realism, or fantastical alien worlds, emphasizing technological advancement and speculative concepts."
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
@@ -445,20 +410,20 @@ def get_papercraft_template(style_category: str) -> Dict[str, Any]:
         "description": "A general preset for papercraft art, focusing on layered cut paper."
     }
     imagen_settings = {
-        "style_settings": {"art_movement": "Paper Art", "post_processing": ["layered depth"], "style_era": "Contemporary"},
-        "lighting_settings": {"lighting_type": "Soft Directional", "light_quality": "Highlights layers", "light_direction": "Side"},
-        "composition_settings": {"technique": "Layered cut paper composition", "focal_point": "Detail"},
-        "color_settings": {"color_scheme": "Varied", "palette_type": "Bright contrasting colors", "color_temperature": "Neutral", "color_contrast": "Medium"},
-        "detail_settings": {"detail_level": "High", "texture_quality": "Crisp paper texture"},
-        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Studio", "atmospheric_effects": ["none"]},
-        "quality_settings": {"resolution": "2048x2048", "rendering_quality": "Intricate Detail"},
-        "negative_prompt": "flat, 2d, painting, drawing, signature, watermark, low quality",
-        "style_negative_prompt": "no depth, blurry, unrealistic paper texture"
+        "style_settings": {"art_movement": "Digital Paper Art / Papercraft Illustration", "post_processing": ["layered depth effects", "subtle drop shadows", "paper texture overlay"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Soft Directional Studio Light", "light_quality": "Highlights layers and paper texture", "light_direction": "Slightly Angled / Top-Side"},
+        "composition_settings": {"technique": "Layered cut paper composition, diorama-like", "focal_point": "Central Subject or Intricate Detail"},
+        "color_settings": {"color_scheme": "Bright and Playful or Muted and Elegant", "palette_type": "Bright contrasting colors or harmonious analogous colors", "color_temperature": "Neutral to Warm", "color_contrast": "Medium to High"},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Crisp paper texture, subtle grain, folded edges"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Studio Setting or Abstract Background", "atmospheric_effects": ["none"]},
+        "quality_settings": {"resolution": "2048x2048 or higher", "rendering_quality": "Intricate Detail, Clean Edges"},
+        "negative_prompt": "flat, 2d (unintentionally), painting, drawing, photorealistic, signature, watermark, low quality, blurry edges",
+        "style_negative_prompt": "no depth, blurry textures, unrealistic paper interaction, overly smooth, digitally flat"
     }
     imagen_settings["papercraft_settings"] = {
-        "layering_technique": "stacked cut paper layers", "paper_type": "colored cardstock paper",
-        "edge_quality": "sharp precise cut edges", "construction_method": "glued layers with visible depth",
-        "motif": "geometric stylized animals or scenes",
-        "aesthetic_blend": "Layered paper art creating a 3D effect with tactile textures and precise cuts."
+        "layering_technique": "stacked and overlapping cut paper layers, quilling elements (optional)", "paper_type": "simulated colored cardstock, textured paper, vellum",
+        "edge_quality": "sharp precise cut edges, slightly beveled edges for depth", "construction_method": "simulated glued or spaced layers with visible depth and shadow play",
+        "motif": "geometric patterns, stylized figures, animals, scenes, typography",
+        "aesthetic_blend": "Digitally rendered art emulating the tactile qualities of physical papercraft, emphasizing layers, texture, and precise cuts to create a 3D illusion."
     }
-    return {**base_template, "imagen_settings": imagen_settings} 
+    return {**base_template, "imagen_settings": imagen_settings}
