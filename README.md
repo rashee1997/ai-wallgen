@@ -48,6 +48,43 @@
 
 A terminal-based tool for generating wallpapers using Google's Imagen 3 model via the Gemini API. Create desktop wallpapers with customizable prompts and settings.
 
+---
+
+## 🧑‍💻 Project Architecture & Codebase Overview
+
+- **Modular Python project using a service-oriented structure for maintainability.**
+- **Entrypoint:** `run_wallgen.py` — handles CLI parsing, initialization, user orchestration.
+- **Core logic:** `wall_gen/` package:
+    - `prompt_service.py`, `image_service.py`, `wallpaper_service.py`, `preview_service.py`
+    - Utilities: `app_utils.py`, `file_utils.py`, `ui_utils.py`, `cache_utils.py`, `graceful_exit.py`, `image_editor.py`
+    - Configuration: `gemini_config.py`, `config.py`
+    - **Sub-packages:**
+        - `settings_modules/`: user preferences, import/export, menu management
+        - `prompt_modules/`: prompt formatting, random/custom generation, negative prompt support
+        - `preview_backends/`: separate Qt and Tkinter GUI previewers
+        - `history/`: user image/prompt generation history tools
+- **Preset & Style CLI tools in root:**
+    - `ai_style_generator.py` — Generate/preview AI styles by category with Imagen 3/Gemini.
+    - `ai_prest_gen/` — Preset generator/logic, templates, and management.
+- **Data/asset directories:** `presets/`, `genimage/`, `asset/logo/`, `asset/samples/`
+- **All user customizations support deep/nested JSON via `user_preferences.json`.**
+- **Image preview via terminal or GUI (PyQt5/Tkinter).**
+- **Cross-platform support:** Windows, macOS, Linux DEs (uses platform-specific handlers for setting wallpapers).
+
+---
+
+### 🔍 Development & Contribution
+
+- **Codebase follows a modular design for ease of customization and testing.**
+- All modules in `wall_gen/` use absolute imports for clean execution from project root.
+- **Contributions:** Please see [docs/git-commit-guide.md](docs/git-commit-guide.md) for Commit Standards.
+- Bug reports and feature suggestions are welcome via GitHub Issues.
+- No automated tests yet: testing is manual, but several modules include if __name__ == '__main__': blocks with example/test code.
+- **Refactor:** Recent refactor replaced all relative imports to prevent import errors and ease top-level execution.
+- **Known limitation:** No integrated unit/integration tests. GUI preview requires PyQt5 or Tkinter installed; headless systems may need tweaks.
+
+---
+
 ## Recent Changes
 
 - Major refactor to modularize the codebase into multiple packages and modules for better maintainability and extensibility.
@@ -149,7 +186,7 @@ You can freely add fields without changing code, and all will enhance the AI's c
 
 ---
 
-## 🚀 Prerequisites
+## � Prerequisites
 
 - Python 3.8+
 - Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))

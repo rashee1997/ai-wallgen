@@ -366,11 +366,11 @@ def main():
 
     # Import AI preset generator functions
     try:
-        from ai_prest_gen.ai_preset_generator import generate_ai_preset, apply_preset_by_name_or_path
+        from ai_prest_gen.ai_preset_generator import generate_ai_preset
+        # Remove apply_preset_by_name_or_path import; will use direct preset management functions
     except ImportError as e:
         logging.error(f"Failed to import AI preset generator functions: {e}", exc_info=True)
         generate_ai_preset = None
-        apply_preset_by_name_or_path = None
 
     # --- Dispatch based on CLI Arguments ---
     exit_code = 0
@@ -396,25 +396,41 @@ def main():
                     print_error(f"Error during AI preset generation: {e}")
                     exit_code = 1
         elif args.apply_preset:
-            if apply_preset_by_name_or_path is None:
-                logging.error("AI preset application function not available.")
-                from wall_gen.ui_utils import print_error
-                print_error("AI preset application function not available.")
-                exit_code = 1
-            else:
-                from wall_gen.ui_utils import print_info, print_success, print_error
-                print_info(f"Applying preset: {args.apply_preset}")
-                try:
-                    success = apply_preset_by_name_or_path(args.apply_preset, user_prefs)
+            # Refactored: use direct preset management functions instead of apply_preset_by_name_or_path
+            from wall_gen.ui_utils import print_info, print_success, print_error
+            print_info(f"Applying preset: {args.apply_preset}")
+            try:
+                # Determine preset path; search presets directory if only a name is given
+                import os
+                from wall_gen.settings_modules.preset_management import _apply_preset_settings
+                presets_dir = os.path.join(PROJECT_ROOT, "presets")
+                preset_identifier = args.apply_preset
+
+                if os.path.exists(preset_identifier) and preset_identifier.lower().endswith(".json"):
+                    preset_path = preset_identifier
+                else:
+                    preset_name = preset_identifier
+                    if not preset_name.lower().endswith(".json"):
+                        preset_name += ".json"
+                    preset_path = os.path.join(presets_dir, preset_name)
+
+                if not os.path.exists(preset_path):
+                    print_error(f"Preset file '{preset_path}' not found.")
+                    exit_code = 1
+                else:
+                    import json
+                    with open(preset_path, 'r') as f:
+                        settings_to_apply = json.load(f)
+                    success = _apply_preset_settings(settings_to_apply, replace=True)
                     if success:
                         print_success("Preset applied successfully.")
                     else:
                         print_error("Preset application failed.")
                         exit_code = 1
-                except Exception as e:
-                    logging.error(f"Error during preset application: {e}", exc_info=True)
-                    print_error(f"Error during preset application: {e}")
-                    exit_code = 1
+            except Exception as e:
+                logging.error(f"Error during preset application: {e}", exc_info=True)
+                print_error(f"Error during preset application: {e}")
+                exit_code = 1
         elif args.list_images:
             if user_prefs is not None:
                 handle_list_images_cli(user_prefs)
