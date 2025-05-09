@@ -96,35 +96,31 @@ def extract_subject_from_prompt_for_filename(prompt: str, user_prefs=None) -> Op
         prompt (str): The prompt to analyze.
         user_prefs (UserPreferences, optional): User preferences instance. If None, will try to get it.
     """
-    if user_prefs is None:
+    current_user_prefs = user_prefs # Use a local variable to manage user_prefs
+
+    if current_user_prefs is None:
         try:
-            # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
             from wall_gen.wallpaper_settings import get_preferences
-            user_prefs = get_preferences()
+            current_user_prefs = get_preferences()
+            logging.debug("Successfully fetched user_prefs in extract_subject_from_prompt_for_filename.")
         except ImportError:
-            logging.error("Could not import get_preferences to fetch UserPreferences in file_utils.")
-            # Fallback to a default model if user_prefs cannot be obtained
-            # This is a less ideal scenario.
-            if not gemini_config.is_initialized():
-                if not gemini_config.initialize_gemini_globally():
-                    logging.error(f"Gemini not initialized for filename extraction (no user_prefs): {gemini_config.get_last_error()}")
-                    return None
-            selected_model_name = gemini_config.DEFAULT_GEMINI_MODEL
-            logging.warning(f"UserPreferences not available in file_utils, using default model: {selected_model_name}")
-            model = genai.GenerativeModel(selected_model_name)
-            # Proceed with this default model if user_prefs is truly unavailable here.
-            # Ideally, user_prefs should be passed down or accessible globally in a consistent way.
-    else:
-        if not gemini_config.is_initialized():
-            # Attempt to initialize if not already
-            if not gemini_config.initialize_gemini_globally():
-                error_msg = gemini_config.get_last_error() or "Unknown initialization error."
-                logging.error(f"Gemini not initialized for filename extraction: {error_msg}")
-                return None # Cannot proceed if Gemini isn't initialized
-        
-        selected_model_name = gemini_config.get_selected_gemini_model(user_prefs)
+            logging.warning("Could not import or call get_preferences. User preferences will not be used for model selection in filename generation.")
+            # current_user_prefs remains None
+
+    # Initialize Gemini model based on available user_prefs or fallback to default
+    if not gemini_config.is_initialized():
+        if not gemini_config.initialize_gemini_globally():
+            logging.error(f"Gemini not initialized for filename extraction: {gemini_config.get_last_error()}")
+            return None
+
+    if current_user_prefs:
+        selected_model_name = gemini_config.get_selected_gemini_model(current_user_prefs)
         logging.info(f"Using Gemini model for filename extraction: {selected_model_name}")
-        model = genai.GenerativeModel(selected_model_name)
+    else:
+        selected_model_name = gemini_config.DEFAULT_GEMINI_MODEL
+        logging.warning(f"UserPreferences not available or failed to load, using default model for filename extraction: {selected_model_name}")
+    
+    model = genai.GenerativeModel(selected_model_name)
 
     try:
         analysis_prompt_text = f"""

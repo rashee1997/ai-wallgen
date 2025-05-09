@@ -165,10 +165,10 @@ def orchestrate_wallpaper_generation(
         show_spinner("Thinking...", 1)
 
         if prompt_type == "preset":
-        # Preset loading via CLI is not implemented yet; treat as custom prompt
-           print_warning(f"Preset loading via CLI not fully implemented yet. Treating '{preset_name}' as custom prompt.")
-        prompt_type = "custom"
-        custom_prompt = preset_name # Use preset name as custom prompt for now
+            # Preset loading via CLI is not implemented yet; treat as custom prompt
+            print_warning(f"Preset loading via CLI not fully implemented yet. Treating '{preset_name}' as custom prompt.")
+            prompt_type = "custom"
+            custom_prompt = preset_name # Use preset name as custom prompt for now
 
 
         try:
@@ -401,7 +401,6 @@ def main():
             print_info(f"Applying preset: {args.apply_preset}")
             try:
                 # Determine preset path; search presets directory if only a name is given
-                import os
                 from wall_gen.settings_modules.preset_management import _apply_preset_settings
                 presets_dir = os.path.join(PROJECT_ROOT, "presets")
                 preset_identifier = args.apply_preset
@@ -431,6 +430,7 @@ def main():
                 logging.error(f"Error during preset application: {e}", exc_info=True)
                 print_error(f"Error during preset application: {e}")
                 exit_code = 1
+
         elif args.list_images:
             if user_prefs is not None:
                 handle_list_images_cli(user_prefs)
