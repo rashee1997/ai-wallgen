@@ -16,6 +16,7 @@ from wall_gen.ui_utils import (
     print_warning,
     print_success,
     print_breadcrumb,
+    print_error,
     get_validated_input,
     show_spinner,
 )
@@ -112,111 +113,7 @@ def run_generate_menu(generate_only: bool = False):
 
 def handle_gemini_generation(generate_only: bool):
     """Handle Gemini AI prompt generation."""
-    # Get mood and style preferences for this generation
-    print_section("Optional Parameters")
-    print_info(
-        "You can specify a mood and style for your wallpaper (leave empty to use random)"
-    )
-
-    # Define available options
-    mood_options = [
-        "peaceful",
-        "dramatic",
-        "mysterious",
-        "energetic",
-        "melancholic",
-        "joyful",
-        "romantic",
-        "eerie",
-        "nostalgic",
-        "contemplative",
-    ]
-
-    style_options = [
-        "abstract",
-        "anime",
-        "art_deco",
-        "art_nouveau",
-        "cartoon",
-        "charcoal",
-        "cinematic",
-        "comic_book",
-        "constructivism",
-        "cubism",
-        "cyberpunk",
-        "digital_art",
-        "divisionism",
-        "double_exposure",
-        "expressionism",
-        "fantasy",
-        "futurism",
-        "glitch_art",
-        "gothic",
-        "graffiti",
-        "hyperrealism",
-        "impressionism",
-        "ink_drawing",
-        "isometric",
-        "landscape",
-        "line_art",
-        "low_poly",
-        "manga",
-        "minimalist",
-        "oil_painting",
-        "paper_cut",
-        "pastel",
-        "pencil_sketch",
-        "photograph",
-        "pixel_art",
-        "pointillism",
-        "pop_art",
-        "realism",
-        "retrowave",
-        "sci_fi",
-        "sketch",
-        "stained_glass",
-        "steampunk",
-        "surrealism",
-        "ukiyo_e",
-        "vaporwave",
-        "watercolor",
-        "woodcut",
-    ]
-
-    # Get user inputs for mood and style
-    print_info(f"Mood options: {', '.join(mood_options)}")
-    mood = input("Enter mood (optional): ").strip().lower()
-    if mood and mood not in mood_options:
-        print_warning(
-            f"'{mood}' is not in the suggested moods, but we'll try to use it anyway"
-        )
-
-    print_info(f"Style options: {', '.join(style_options)}")
-    print_info(
-        "You can also enter 'random_mix' to combine 2-3 compatible styles for creative results"
-    )
-    style = input("Enter style (optional): ").strip().lower()
-
     user_prefs = get_preferences()
-
-    if style == "random_mix":
-        style = generate_random_style_mix()
-        print_info(f"Selected style mix: {style}")
-        # Ask if the user wants to save this style mix to their preferences
-        save_style = get_validated_input(
-            "Save this style mix to your preferences? (y/n)", ["y", "n"]
-        )
-        if save_style == "y":
-            if style not in user_prefs.preferred_styles:
-                user_prefs.preferred_styles.append(style)
-                user_prefs.save_preferences()
-                print_success(f"Added '{style}' to preferred styles")
-            else:
-                print_warning(f"'{style}' is already in your preferred styles")
-    elif style and style not in style_options:
-        print_warning(
-            f"'{style}' is not in the suggested styles, but we'll try to use it anyway"
-        )
 
     # Now call the main orchestrator function from run_wallgen
     # WARNING: Calling orchestrator from run_wallgen is fragile.

@@ -14,6 +14,7 @@ from wall_gen.ui_utils import (
     get_menu_choice,
     print_info,
     print_warning,
+    print_error,
     print_success,
     print_breadcrumb,
     get_validated_input,

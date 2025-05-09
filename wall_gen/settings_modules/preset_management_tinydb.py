@@ -9,11 +9,11 @@ from tinydb.operations import delete
 
 from rapidfuzz import fuzz
 
-from ui_utils import (
+from wall_gen.ui_utils import (
     print_section, print_option, print_success, print_error, print_warning, print_info, get_validated_input,
     print_menu_options, get_menu_choice
 )
-from file_utils import deep_update
+from wall_gen.file_utils import deep_update # Assuming file_utils is also in wall_gen
 from .settings_manager import get_preferences
 
 DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets_db.json")
