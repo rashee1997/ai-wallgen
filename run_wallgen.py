@@ -678,7 +678,7 @@ def main():
         else:
             from wall_gen.ui_utils import print_info as ui_print_info
 
-            ui_print_info("\n🚀 No CLI task given. Launching interactive menu to explore possibilities...")
+            # ui_print_info("\n🚀 No CLI task given. Launching interactive menu to explore possibilities...")
             try:
                 from wall_gen.settings_modules.menu_management import main_menu
 

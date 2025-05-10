@@ -1,0 +1,250 @@
+[
+    {
+        "tokens": ["abstract", "cubism", "expressionism"],
+        "category": "abstract_expressionism_cubism_fusion"
+    },
+    {
+        "tokens": ["anime", "oil", "painting"],
+        "category": "anime_oilpainting"
+    },
+    {
+        "tokens": ["anime", "oilpaint"],
+        "category": "anime_oilpainting"
+    },
+    {
+        "tokens": ["collage", "digital", "overlay"],
+        "category": "collage_digital_overlay"
+    },
+    {
+        "tokens": ["cubism", "futurism"],
+        "category": "cubism_futurism"
+    },
+    {
+        "tokens": ["digital", "pixel", "traditional"],
+        "category": "digital_pixel_traditional"
+    },
+    {
+        "tokens": ["digital", "fusion", "traditional"],
+        "category": "digital_traditional_fusion"
+    },
+    {
+        "tokens": ["digital", "hybrid", "traditional"],
+        "category": "hybrid_traditional_digital"
+    },
+    {
+        "tokens": ["ascii", "kinetic"],
+        "category": "kinetic_ascii"
+    },
+    {
+        "tokens": ["morphism", "surreal"],
+        "category": "morphism_surreal"
+    },
+    {
+        "tokens": ["patchwork", "pixel"],
+        "category": "pixel_patchwork"
+    },
+    {
+        "tokens": ["ascii", "pop", "surrealism"],
+        "category": "pop_surrealism_ascii"
+    },
+    {
+        "tokens": ["psychedelic", "surrealism"],
+        "category": "psychedelic_surrealism"
+    },
+    {
+        "tokens": ["pixel", "retro", "vaporwave"],
+        "category": "retro_pixel_vaporwave"
+    },
+    {
+        "tokens": ["hybrid", "scientific", "technological"],
+        "category": "scientific_technological_hybrid"
+    },
+    {
+        "tokens": ["media", "mixed", "tradigital"],
+        "category": "tradigital_mixed_media"
+    },
+    {
+        "tokens": ["pencil", "watercolor"],
+        "category": "watercolor_pencil"
+    },
+    {
+        "tokens": ["pencil", "watercolour"],
+        "category": "watercolor_pencil"
+    },
+    {
+        "tokens": ["dreamcore", "weirdcore"],
+        "category": "dreamcore_weirdcore"
+    },
+    {
+        "tokens": ["geometric", "minimalist"],
+        "category": "minimalist_geometric"
+    },
+    {
+        "tokens": ["geometric", "minimal"],
+        "category": "minimalist_geometric"
+    },
+    {
+        "tokens": ["glitch", "photorealism"],
+        "category": "photorealism_glitch"
+    },
+    {
+        "tokens": ["glitch", "photorealistic"],
+        "category": "photorealism_glitch"
+    },
+    {
+        "tokens": ["luna", "photo"],
+        "category": "luna_photo"
+    },
+    {
+        "tokens": ["art", "pop", "portrait"],
+        "category": "pop_portrait"
+    },
+    {
+        "tokens": ["city", "cyberpunk"],
+        "category": "cyberpunk_cityscape"
+    },
+    {
+        "tokens": ["cyberpunk", "portrait"],
+        "category": "cyberpunk_portrait"
+    },
+    {
+        "tokens": ["battle", "fantasy"],
+        "category": "fantasy_battle"
+    },
+    {
+        "tokens": ["fantasy", "landscape"],
+        "category": "fantasy_landscape"
+    },
+    {
+        "tokens": ["fantasy", "portrait"],
+        "category": "fantasy_portrait"
+    },
+    {
+        "tokens": ["city", "fantasy"],
+        "category": "fantasy_cityscape"
+    },
+    {
+        "tokens": ["fi", "futuristic", "sci"],
+        "category": "sci_fi_futuristic"
+    },
+    {
+        "tokens": ["futuristic", "scifi"],
+        "category": "sci_fi_futuristic"
+    },
+    {
+        "tokens": ["fi", "portrait", "sci"],
+        "category": "futuristic_portrait"
+    },
+    {
+        "tokens": ["portrait", "scifi"],
+        "category": "futuristic_portrait"
+    },
+    {
+        "tokens": ["collage", "media", "mixed"],
+        "category": "mixed_media_collage"
+    },
+    {
+        "tokens": ["journaling", "media", "mixed"],
+        "category": "mixed_media_journaling"
+    },
+    {
+        "tokens": ["media", "mixed", "sketchbook"],
+        "category": "mixed_media_journaling"
+    },
+    {
+        "tokens": ["media", "mixed", "whimsical"],
+        "category": "whimsical_mixed_media"
+    },
+    {
+        "tokens": ["fantasy", "whimsical"],
+        "category": "whimsical_fantasy"
+    },
+    {
+        "tokens": ["bold", "printing", "screen"],
+        "category": "screen_printing_bold"
+    },
+    {
+        "tokens": ["hybrid", "phygital"],
+        "category": "phygital_hybrid"
+    },
+    {
+        "tokens": ["cubism", "media", "mixed"],
+        "category": "cubism_mixed"
+    },
+    {
+        "tokens": ["cubist", "illustration"],
+        "category": "illustration_cubist"
+    },
+    {
+        "tokens": ["illustration", "surreal"],
+        "category": "illustration_surreal"
+    },
+    {
+        "tokens": ["illustration", "steampunk"],
+        "category": "illustration_steampunk"
+    },
+    {
+        "tokens": ["illustration", "portrait"],
+        "category": "illustration_portrait"
+    },
+    {
+        "tokens": ["photographic", "portrait"],
+        "category": "photographic_portrait"
+    },
+    {
+        "tokens": ["portrait", "traditional"],
+        "category": "traditional_portrait"
+    },
+    {
+        "tokens": ["environmental", "portrait"],
+        "category": "environmental_portrait"
+    },
+    {
+        "tokens": ["caricature", "portrait"],
+        "category": "caricature_portrait"
+    },
+    {
+        "tokens": ["conceptual", "portrait"],
+        "category": "conceptual_portrait"
+    },
+    {
+        "tokens": ["fashion", "portrait"],
+        "category": "fashion_portrait"
+    },
+    {
+        "tokens": ["portrait", "selfie"],
+        "category": "selfie_portrait"
+    },
+    {
+        "tokens": ["experimental", "media", "mixed"],
+        "category": "experimental_mixed_media"
+    },
+    {
+        "tokens": ["ar", "art", "vr"],
+        "category": "augmented_reality_art"
+    },
+    {
+        "tokens": ["art", "reality", "virtual"],
+        "category": "augmented_reality_art"
+    },
+    {
+        "tokens": ["art", "augmented", "reality"],
+        "category": "augmented_reality_art"
+    },
+    {
+        "tokens": ["pop", "surrealism"],
+        "category": "pop_surrealism"
+    },
+    {
+        "tokens": ["digital", "traditional"],
+        "category": "hybrid_traditional_digital"
+    },
+    {
+        "tokens": ["collage", "digital"],
+        "category": "collage_digital_overlay"
+    },
+    {
+        "tokens": ["futuristic", "sci-fi"],
+        "category": "sci_fi_futuristic"
+    }
+]

@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 import sys
 import os
-# The sys.path modification block identified by the user will be removed.
-# The script will now rely on the execution environment (e.g., run_wallgen.py)
-# to ensure sys.path is correctly configured for its imports.
 
 """AI Preset Generator - Generate random wallpaper preferences using Gemini AI (Consolidated Templates)
 
@@ -162,7 +159,7 @@ except ImportError:
 
 try:
     # Import from the restored catalog
-    from ai_prest_gen.style_category_catalog import (
+    from .style_category_catalog import (
         hybrid_styles,
         hybrid_categories_keywords,
         categories_keywords,
@@ -171,7 +168,7 @@ try:
         instructions_for_category
     )
     # Import the CONSOLIDATED template generator from style_templates.py
-    from ai_prest_gen.style_templates import get_template_for_category
+    from .style_templates import get_template_for_category
     CATALOG_AND_TEMPLATES_AVAILABLE = True
     # Import for new Gemini preset configuration
     from .gemini_config_preset import (
@@ -797,11 +794,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # Ensure the script's directory is in sys.path if it's not run as a module
-    current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root_dir = os.path.dirname(current_script_dir)
-    if project_root_dir not in sys.path:
-        sys.path.insert(0, project_root_dir)
-
+    # The sys.path modification has been moved to the top of the script.
     main()
 # --- End of ai_preset_generator.py ---

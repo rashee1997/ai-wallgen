@@ -1,0 +1,1160 @@
+{
+    "photographic_portrait": [
+        "photographic portrait",
+        "photo realistic portrait",
+        "dslr portrait",
+        "photo portrait",
+        "realistic portrait"
+    ],
+    "traditional_portrait": [
+        "traditional portrait painting",
+        "classic painted portrait",
+        "oil on canvas portrait",
+        "traditional portrait",
+        "oil portrait",
+        "watercolor portrait",
+        "pastel portrait",
+        "charcoal portrait"
+    ],
+    "futuristic_portrait": [
+        "futuristic character portrait",
+        "scifi human portrait",
+        "future concept portrait",
+        "futuristic portrait",
+        "sci-fi portrait",
+        "cyberpunk portrait"
+    ],
+    "cyberpunk_portrait": [
+        "cyberpunk character portrait",
+        "cyborg face",
+        "neon noir portrait"
+    ],
+    "illustration_portrait": [
+        "illustrated face",
+        "character art portrait",
+        "stylized digital portrait",
+        "illustration portrait",
+        "cartoon portrait",
+        "anime portrait",
+        "manga portrait"
+    ],
+    "pop_portrait": [
+        "pop art style portrait",
+        "warholesque portrait",
+        "graphic pop character",
+        "pop portrait",
+        "pop art portrait"
+    ],
+    "environmental_portrait": [
+        "environmental portraiture",
+        "subject in context photo",
+        "location based portrait",
+        "environmental portrait",
+        "on-location portrait",
+        "location portrait",
+        "in environment",
+        "surroundings portrait",
+        "contextual portrait"
+    ],
+    "caricature_portrait": [
+        "caricature drawing",
+        "exaggerated features portrait",
+        "cartoon likeness",
+        "caricature",
+        "caricature portrait",
+        "exaggerated portrait",
+        "satirical portrait",
+        "comic portrait"
+    ],
+    "conceptual_portrait": [
+        "conceptual art portrait",
+        "symbolic self portrait",
+        "idea driven face",
+        "conceptual portrait",
+        "concept portrait",
+        "symbolic portrait",
+        "metaphorical portrait",
+        "abstract portrait",
+        "idea-driven portrait"
+    ],
+    "fashion_portrait": [
+        "fashion photography portrait",
+        "editorial model shot",
+        "vogue style image",
+        "beauty shot",
+        "fashion portrait",
+        "editorial portrait",
+        "runway portrait",
+        "stylish portrait",
+        "high-fashion portrait",
+        "magazine portrait"
+    ],
+    "selfie_portrait": [
+        "selfie style",
+        "phone self portrait",
+        "social media selfie",
+        "selfie",
+        "selfie portrait",
+        "self-portrait",
+        "arm's length portrait",
+        "smartphone portrait",
+        "front camera portrait"
+    ],
+    "fantasy_portrait": [
+        "fantasy character portrait",
+        "elf face",
+        "wizard depiction",
+        "mythical being portrait"
+    ],
+    "noir_photography": [
+        "noir film photography",
+        "black and white crime photo",
+        "chiaroscuro detective",
+        "noir",
+        "noir photography",
+        "film noir",
+        "black and white",
+        "high contrast",
+        "grainy",
+        "low key lighting",
+        "shadowy",
+        "moody",
+        "hardboiled"
+    ],
+    "digital_collage": [
+        "digital collage art",
+        "photomontage composition",
+        "layered digital graphics",
+        "digital collage",
+        "collage",
+        "layered composition",
+        "cut and paste",
+        "scanned elements",
+        "digital scraps",
+        "montage",
+        "composite",
+        "mixed material collage"
+    ],
+    "claymation": [
+        "claymation style",
+        "stop motion clay model",
+        "plasticine animation",
+        "claymation",
+        "stop motion",
+        "clay animation",
+        "clay figure animation"
+    ],
+    "art_deco_revival": [
+        "art deco revival design",
+        "modern deco pattern",
+        "gatsby era update",
+        "art deco revival",
+        "art deco style",
+        "art deco architecture"
+    ],
+    "biopunk": [
+        "biopunk aesthetic",
+        "bio-punk art",
+        "organic tech visuals",
+        "genetic horror",
+        "biopunk",
+        "biological cyberpunk",
+        "genetic art",
+        "bio-tech art"
+    ],
+    "dreamcore": [
+        "dreamcore images",
+        "dreamy surreal aesthetic",
+        "liminal space visuals",
+        "dreamcore",
+        "dreamlike aesthetic",
+        "ethereal dream art"
+    ],
+    "ferrofluid": [
+        "ferrofluid sculpture",
+        "magnetic liquid display",
+        "iron fluid patterns",
+        "ferrofluid",
+        "magnetic fluid art",
+        "liquid metal art"
+    ],
+    "fractal_generative_art": [
+        "fractal geometry art",
+        "generative algorithm patterns",
+        "mandelbrot visuals",
+        "fractal",
+        "generative",
+        "mandelbrot",
+        "julia set",
+        "recursion",
+        "algorithmic art",
+        "mathematical",
+        "iterative pattern",
+        "fractal gradient"
+    ],
+    "folk_art": [
+        "traditional folk art",
+        "ethnic pattern design",
+        "naive decorative painting",
+        "cultural craft art",
+        "folk art",
+        "traditional motif",
+        "ethnic art",
+        "decorative",
+        "regional",
+        "naive art",
+        "cultural art",
+        "handcrafted look",
+        "ornamental"
+    ],
+    "ink_punk": [
+        "ink punk illustration",
+        "raw sketchy ink art",
+        "gritty ink style",
+        "ink punk",
+        "inkpunk",
+        "hand-drawn sketchy",
+        "unfinished look"
+    ],
+    "isometric": [
+        "isometric projection",
+        "isometric illustration",
+        "2.5d game view",
+        "axonometric art",
+        "isometric",
+        "isometric view",
+        "axonometric"
+    ],
+    "kinetic_art": [
+        "kinetic sculpture",
+        "moving art installation",
+        "art in motion design",
+        "kinetic art",
+        "moving art",
+        "dynamic sculpture",
+        "motion art"
+    ],
+    "mixed_media_collage": [
+        "mixed media collage art",
+        "assemblage artwork",
+        "found object collage"
+    ],
+    "nightcore": [
+        "nightcore visuals",
+        "fast paced anime graphics",
+        "high energy music video style",
+        "nightcore",
+        "fast paced art",
+        "high energy art",
+        "vibrant neon art"
+    ],
+    "optic_art": [
+        "op art patterns",
+        "optical illusion design",
+        "visual geometric tricks",
+        "optic art",
+        "op art",
+        "optical illusion art",
+        "visual trickery"
+    ],
+    "paper_quilling": [
+        "paper quilling designs",
+        "quilled paper craft",
+        "rolled paper art forms"
+    ],
+    "patchwork_fabric": [
+        "fabric patchwork design",
+        "textile art quilt",
+        "sewn fabric collage"
+    ],
+    "pop_surrealism": [
+        "pop surrealism painting",
+        "lowbrow art movement",
+        "new contemporary characters",
+        "pop surrealism",
+        "lowbrow art",
+        "cartoon surrealism",
+        "fantastical pop art"
+    ],
+    "psychedelic": [
+        "psychedelic art experience",
+        "trippy visual patterns",
+        "acid trip graphics",
+        "visionary abstract painting",
+        "psychedelic",
+        "trippy",
+        "hallucinogenic",
+        "psychedelia",
+        "acid art"
+    ],
+    "surrealism": [
+        "surrealist painting",
+        "surreal dreamscape art",
+        "dali-esque imagery",
+        "magritte style",
+        "surrealism",
+        "surreal",
+        "dreamlike",
+        "fantastical"
+    ],
+    "cubism": [
+        "cubist artwork",
+        "picasso style cubism",
+        "geometric abstract painting",
+        "braque cubism",
+        "cubism",
+        "cubist",
+        "geometric abstraction"
+    ],
+    "minimalist": [
+        "minimalist artwork",
+        "minimal design style",
+        "simple abstract forms",
+        "clean aesthetic"
+    ],
+    "geometric": [
+        "geometric abstract art",
+        "geometric shape patterns",
+        "mathematical design"
+    ],
+    "steampunk": [
+        "steampunk aesthetic art",
+        "victorian futuristic tech",
+        "clockwork machinery design",
+        "industrial fantasy art",
+        "steampunk",
+        "victorian sci-fi",
+        "industrial fantasy"
+    ],
+    "dystopian": [
+        "dystopian world art",
+        "post-apocalyptic landscape",
+        "dark future society visuals",
+        "dystopian",
+        "post-apocalyptic",
+        "dark future",
+        "ruined world"
+    ],
+    "glitch_art": [
+        "glitch effect art",
+        "databending images",
+        "digital distortion graphics",
+        "glitch art",
+        "glitch effect",
+        "digital glitch",
+        "error art"
+    ],
+    "retrowave": [
+        "retrowave design style",
+        "synthwave visuals",
+        "outrun aesthetic graphics",
+        "80s neon future",
+        "retrowave",
+        "vaporwave",
+        "80s revival",
+        "synthwave"
+    ],
+    "vaporwave": [
+        "vaporwave art style",
+        "90s internet aesthetic",
+        "glitchy pastel nostalgia",
+        "classical statue glitch"
+    ],
+    "mediterranean_style": [
+        "mediterranean painting",
+        "tuscan scenery",
+        "greek island visuals"
+    ],
+    "animal_inspired": [
+        "animal-inspired patterns",
+        "animal motif artwork",
+        "wildlife themed design",
+        "animal inspired",
+        "animal motif",
+        "fauna art",
+        "wildlife art"
+    ],
+    "space_art": [
+        "space exploration art",
+        "astronomical illustration",
+        "cosmic nebula painting",
+        "galaxy artwork",
+        "space art",
+        "astronomy art",
+        "cosmic",
+        "galaxy"
+    ],
+    "robot_art": [
+        "robot concept design",
+        "mech warrior art",
+        "cybernetic android illustration",
+        "mecha drawing",
+        "robot art",
+        "mech art",
+        "cybernetic",
+        "mecha"
+    ],
+    "game_cel_shaded": [
+        "cel shaded game graphics",
+        "toon shaded 3d models",
+        "anime style video game",
+        "cel-shaded",
+        "toon shading",
+        "anime style",
+        "cartoon style"
+    ],
+    "game_retro": [
+        "retro video game art",
+        "8-bit pixel graphics",
+        "16-bit game design",
+        "classic arcade style",
+        "retro game",
+        "8-bit",
+        "16-bit",
+        "pixel art",
+        "chunky pixels"
+    ],
+    "game_style": [
+        "video game concept art",
+        "game environment design",
+        "game character model",
+        "unity game screenshot",
+        "unreal engine visuals",
+        "game style",
+        "game art",
+        "game engine",
+        "unity",
+        "unreal",
+        "unreal engine",
+        "unity engine",
+        "pubg",
+        "cyberpunk game",
+        "fps",
+        "rpg",
+        "in-engine",
+        "cel-shaded",
+        "cyberpunk cityscape"
+    ],
+    "cyberpunk_cityscape": [
+        "cyberpunk city skyline",
+        "neon lit urban future",
+        "blade runner style city"
+    ],
+    "cyberpunk_action": [
+        "cyberpunk combat art",
+        "sci-fi gunfight scene",
+        "future fight concept"
+    ],
+    "cyberpunk_technology": [
+        "cyberpunk ui design",
+        "holographic interface art",
+        "future tech gadgets display"
+    ],
+    "cyberpunk": [
+        "cyberpunk genre art",
+        "high tech low life visuals",
+        "dystopian neon future",
+        "cyberpunk",
+        "cyberpunk art",
+        "futuristic",
+        "neon city"
+    ],
+    "fantasy_battle": [
+        "epic fantasy battle art",
+        "mythical combat illustration",
+        "dragon fight scene"
+    ],
+    "fantasy_cityscape": [
+        "magical city concept",
+        "elven architecture design",
+        "dwarven city illustration",
+        "floating fantasy city"
+    ],
+    "fantasy_landscape": [
+        "enchanted forest painting",
+        "mystical mountain range art",
+        "alien planet environment"
+    ],
+    "whimsical_fantasy": [
+        "whimsical fairy tale art",
+        "dreamy fantasy illustration",
+        "lighthearted magical scene"
+    ],
+    "fantasy": [
+        "high fantasy art",
+        "mythical creature illustration",
+        "epic world building art",
+        "sword and sorcery visuals",
+        "fantasy",
+        "mythical",
+        "magical",
+        "wizard",
+        "fairy",
+        "dragon",
+        "unicorn",
+        "fairy tale",
+        "castle",
+        "fantasy landscape"
+    ],
+    "sci_fi_futuristic": [
+        "advanced scifi technology",
+        "space opera concept art",
+        "far future civilization design"
+    ],
+    "sci_fi": [
+        "science fiction concept art",
+        "futuristic vehicle design",
+        "alien planet exploration",
+        "spaceship interior",
+        "sci-fi",
+        "science fiction",
+        "spaceship",
+        "space opera"
+    ],
+    "illustration_pixar": [
+        "pixar animation style",
+        "pixar character concept",
+        "pixar",
+        "pixar style",
+        "pixar animation"
+    ],
+    "illustration_disney": [
+        "disney animation style",
+        "classic disney character art",
+        "disney",
+        "disney style",
+        "disney animation"
+    ],
+    "illustration_tom_jerry": [
+        "tom and jerry style cartoon",
+        "hanna-barbera character design",
+        "tom & jerry",
+        "tom and jerry",
+        "hanna-barbera"
+    ],
+    "illustration_vintage_cartoon": [
+        "vintage cartoon animation",
+        "rubber hose style art",
+        "1930s character art",
+        "vintage cartoon",
+        "rubber hose",
+        "1930s cartoon",
+        "classic cartoon"
+    ],
+    "illustration_anime_manga": [
+        "anime illustration style",
+        "manga comic art",
+        "japanese animation character",
+        "anime",
+        "manga",
+        "shonen",
+        "shojo",
+        "seinen",
+        "japanese animation"
+    ],
+    "illustration_comic": [
+        "comic book panel art",
+        "graphic novel page",
+        "superhero comic style",
+        "comic",
+        "comic book",
+        "comic strip",
+        "sequential art"
+    ],
+    "illustration_pixel": [
+        "pixel art character sprite",
+        "8-bit scene illustration",
+        "16-bit game background",
+        "pixel art",
+        "8-bit",
+        "16-bit",
+        "pixelated",
+        "retro game art"
+    ],
+    "illustration_childrens": [
+        "childrens book artwork",
+        "picture book style illustration",
+        "kids story characters",
+        "children's book",
+        "picture book",
+        "kids illustration"
+    ],
+    "illustration_graphic": [
+        "graphic design illustration",
+        "bold vector art style",
+        "modern flat illustration",
+        "illustration",
+        "cartoon",
+        "cartoony",
+        "graphic novel"
+    ],
+    "illustration_steampunk": [
+        "steampunk character illustration",
+        "victorian sci-fi drawing",
+        "steampunk illustration",
+        "victorian sci-fi illustration",
+        "industrial fantasy illustration",
+        "steampunk"
+    ],
+    "illustration_cubist": [
+        "cubist style illustration",
+        "geometric character design",
+        "cubist illustration",
+        "geometric illustration",
+        "fragmented illustration",
+        "cubist",
+        "cubism"
+    ],
+    "illustration_surreal": [
+        "surreal narrative illustration",
+        "dreamlike character art",
+        "surreal illustration",
+        "dreamlike illustration",
+        "fantastical illustration",
+        "surreal"
+    ],
+    "illustration_fantasy": [
+        "fantasy story illustration",
+        "mythical creature drawing",
+        "fantasy illustration",
+        "mythical",
+        "magical creatures"
+    ],
+    "illustration": [
+        "general illustrative art",
+        "stylized representational art",
+        "narrative drawing"
+    ],
+    "oil_painting": [
+        "oil painting technique",
+        "oil on canvas art",
+        "traditional oils",
+        "oil painting",
+        "oil paint",
+        "impasto",
+        "alla prima",
+        "wet-on-wet"
+    ],
+    "watercolor": [
+        "watercolor painting",
+        "watercolour art",
+        "aquarelle technique",
+        "watercolor",
+        "watercolour",
+        "wet-on-wet",
+        "wet-on-dry"
+    ],
+    "pastel": [
+        "pastel portrait drawing",
+        "pastel landscape art",
+        "soft pastel technique",
+        "oil pastel artwork",
+        "pastel",
+        "pastel drawing",
+        "pastel painting"
+    ],
+    "acrylic_painting": [
+        "acrylic abstract painting",
+        "acrylic on board",
+        "modern acrylic art",
+        "acrylic",
+        "acrylic paint",
+        "acrylic painting"
+    ],
+    "digital_painting": [
+        "digital painting illustration",
+        "photoshop concept art",
+        "procreate character design",
+        "painterly digital art",
+        "digital painting",
+        "digital illustration",
+        "digital art"
+    ],
+    "pencil_sketch": [
+        "graphite pencil sketch",
+        "detailed pencil drawing",
+        "realistic pencil portrait",
+        "pencil",
+        "pencil sketch",
+        "graphite",
+        "pencil drawing"
+    ],
+    "ink_drawing": [
+        "pen and ink illustration",
+        "ink wash drawing",
+        "black and white ink art",
+        "hatching ink technique",
+        "ink drawing",
+        "ink sketch",
+        "pen and ink",
+        "line drawing",
+        "line art",
+        "ink wash"
+    ],
+    "charcoal": [
+        "charcoal drawing medium",
+        "charcoal art piece",
+        "charcoal portrait sketch",
+        "charcoal sketch",
+        "charcoal drawing",
+        "charcoal art"
+    ],
+    "line_art": [
+        "clean line art",
+        "outline illustration",
+        "inking comic art",
+        "vector line drawing",
+        "line art",
+        "lineart",
+        "clean lines",
+        "ink lines",
+        "digital line art",
+        "line drawing"
+    ],
+    "drawing": [
+        "hand-drawn illustration",
+        "traditional sketch artwork",
+        "observational drawing"
+    ],
+    "street_photography": [
+        "candid street photography",
+        "urban environment photos",
+        "city life documentation",
+        "street photography",
+        "urban photography",
+        "candid photography"
+    ],
+    "documentary": [
+        "documentary photo series",
+        "photojournalistic story",
+        "reportage imagery",
+        "documentary",
+        "documentary style",
+        "journalistic"
+    ],
+    "cinematic": [
+        "cinematic shot composition",
+        "film still photography",
+        "movie scene aesthetic",
+        "dramatic lighting photo",
+        "cinematic",
+        "film look",
+        "movie style",
+        "motion picture"
+    ],
+    "photographic": [
+        "general photographic style",
+        "realistic photo image",
+        "dslr camera shot",
+        "photo",
+        "photograph",
+        "photographic",
+        "shot on",
+        "dslr",
+        "camera",
+        "realistic",
+        "film",
+        "kodak",
+        "fujifilm",
+        "cinematic",
+        "hyperrealism",
+        "realism",
+        "portrait photography",
+        "landscape photography",
+        "street photography"
+    ],
+    "constructivism": [
+        "constructivist poster design",
+        "geometric avant-garde art",
+        "russian constructivism",
+        "constructivism",
+        "constructivist",
+        "industrial art"
+    ],
+    "low_poly": [
+        "low poly 3d art",
+        "faceted polygon design",
+        "geometric minimalist 3d",
+        "low poly",
+        "low polygon",
+        "polygonal art"
+    ],
+    "abstract_conceptual": [
+        "abstract conceptual painting",
+        "idea-based visual representation",
+        "symbolic abstract forms"
+    ],
+    "abstract": [
+        "abstract artwork",
+        "non-objective painting",
+        "abstract geometric patterns design",
+        "abstract",
+        "abstract art",
+        "non-representational"
+    ],
+    "expressionism": [
+        "expressionist painting",
+        "emotive art style",
+        "german expressionism",
+        "expressionism",
+        "expressionist",
+        "emotional art"
+    ],
+    "fauvism": [
+        "fauvist color painting",
+        "wild beast art movement",
+        "matisse style fauvism",
+        "fauvism",
+        "fauvist",
+        "wild beasts"
+    ],
+    "art_nouveau": [
+        "art nouveau design",
+        "jugendstil illustration",
+        "organic flowing lines art",
+        "art nouveau",
+        "new art",
+        "modern style"
+    ],
+    "art_deco": [
+        "art deco architecture",
+        "gatsby style design",
+        "modernist geometric patterns",
+        "art deco",
+        "decop",
+        "modernist"
+    ],
+    "material_sculptural": [
+        "mixed material sculpture",
+        "3d form installation",
+        "textured sculptural art"
+    ],
+    "sculpture": [
+        "bronze sculpture",
+        "marble statue",
+        "clay modeling figure",
+        "wood carving art"
+    ],
+    "3d_render": [
+        "3d render cgi",
+        "computer generated imagery",
+        "blender 3d scene",
+        "maya character model",
+        "3d visualization",
+        "3d",
+        "3d render",
+        "3d modeling",
+        "3d model",
+        "3d illustration",
+        "cgi",
+        "c.g.i",
+        "cg render",
+        "clay render",
+        "octane render",
+        "arnold render",
+        "blender",
+        "maya",
+        "cinema 4d",
+        "unreal engine",
+        "3ds max",
+        "zbrush",
+        "keyshot",
+        "pixar style 3d",
+        "toon 3d",
+        "stylized 3d",
+        "photoreal 3d",
+        "3d portrait",
+        "3d scene",
+        "3d composition",
+        "3d character",
+        "3d environment"
+    ],
+    "vector_art": [
+        "vector graphics illustration",
+        "adobe illustrator art",
+        "scalable vector design",
+        "vector art",
+        "vector illustration",
+        "vector graphics"
+    ],
+    "digital_art": [
+        "general digital artwork",
+        "computer created art piece",
+        "digital media creation",
+        "digital art",
+        "digital painting",
+        "vector art",
+        "glitch art",
+        "vaporwave",
+        "retrowave",
+        "rendered",
+        "digital illustration",
+        "digital media"
+    ],
+    "traditional_painting_drawing": [
+        "classic art techniques",
+        "traditional art media painting",
+        "non-digital drawing methods",
+        "impressionist",
+        "renaissance",
+        "baroque",
+        "rococo",
+        "acrylic",
+        "tempera",
+        "art nouveau",
+        "art deco",
+        "cubism",
+        "constructivism",
+        "futurism",
+        "pointillism",
+        "divisionism",
+        "ukiyo-e",
+        "woodcut",
+        "linocut",
+        "etching"
+    ],
+    "papercraft": [
+        "3d papercraft model",
+        "paper art sculpture",
+        "kirigami cut paper",
+        "origami animal",
+        "papercraft",
+        "paper cut",
+        "folded paper",
+        "layered paper",
+        "glued paper"
+    ],
+    "ascii_art": [
+        "ascii text picture",
+        "character art graphic",
+        "terminal art image",
+        "ascii art",
+        "text art",
+        "character art",
+        "typographic art"
+    ],
+    "default": [
+        "standard style",
+        "generic artwork",
+        "basic visual design"
+    ],
+    "unknown": [
+        "undefined art style",
+        "other category",
+        "unclassified visual"
+    ],
+    "vr_ar_art": [
+        "vr art",
+        "ar art",
+        "virtual reality",
+        "augmented reality",
+        "360 art",
+        "immersive art",
+        "3d immersive",
+        "interactive media",
+        "xr experience"
+    ],
+    "sketchbook_mixed_media": [
+        "sketchbook",
+        "mixed media sketch",
+        "pencil and ink",
+        "wash and mark",
+        "journaling art",
+        "studio work-in-progress",
+        "scribble layered",
+        "inline notes",
+        "informal study"
+    ],
+    "realism": [
+        "realism",
+        "realistic",
+        "photoreal",
+        "hyperrealism",
+        "photorealistic"
+    ],
+    "game_3d": [
+        "3d game",
+        "3d engine",
+        "realistic game",
+        "next-gen game"
+    ],
+    "game_indie": [
+        "indie game",
+        "indie art",
+        "hand-drawn game"
+    ],
+    "luna_photo": [
+        "luna photo",
+        "double exposure",
+        "surreal photographic",
+        "ethereal photo"
+    ],
+    "synesthesia_art": [
+        "synesthesia art",
+        "color sound fusion",
+        "sensory blending art"
+    ],
+    "weirdcore": [
+        "weirdcore",
+        "surreal glitch",
+        "dreamlike glitch",
+        "uncanny art"
+    ],
+    "gouache_painting": [
+        "gouache",
+        "gouache painting",
+        "opaque watercolor",
+        "bodycolor",
+        "designer's gouache"
+    ],
+    "tempera_painting": [
+        "tempera",
+        "tempera painting",
+        "egg tempera",
+        "casein tempera"
+    ],
+    "mosaic_art": [
+        "mosaic",
+        "mosaic art",
+        "tessellation",
+        "tesserae",
+        "tile mosaic",
+        "glass mosaic",
+        "stone mosaic",
+        "byzantine mosaic",
+        "roman mosaic"
+    ],
+    "stained_glass_art": [
+        "stained glass",
+        "stained glass art",
+        "leaded glass",
+        "cathedral glass",
+        "glass painting (traditional)"
+    ],
+    "woodcut_print": [
+        "woodcut",
+        "woodcut print",
+        "woodblock print",
+        "relief print wood",
+        "xylography"
+    ],
+    "traditional_collage": [
+        "traditional collage",
+        "physical collage",
+        "paper collage",
+        "fabric collage",
+        "analog collage",
+        "assemblage art",
+        "found object collage",
+        "cut and paste (physical)"
+    ],
+    "macro_photography": [
+        "macro",
+        "macro photo",
+        "macro photography",
+        "extreme close up",
+        "close-up photography",
+        "micro photography",
+        "tiny details",
+        "insect eye",
+        "flower stamen"
+    ],
+    "wildlife_photography": [
+        "wildlife",
+        "wildlife photo",
+        "wildlife photography",
+        "animal photography",
+        "nature photography animals",
+        "safari photography",
+        "birdwatching photo",
+        "animal in habitat"
+    ],
+    "food_photography": [
+        "food photography",
+        "culinary photography",
+        "food styling",
+        "appetizing food shot",
+        "delicious food",
+        "gourmet dish photo",
+        "food blog photo",
+        "menu photo",
+        "foodie"
+    ],
+    "voxel_art": [
+        "voxel art",
+        "voxel",
+        "voxels",
+        "blocky 3d",
+        "cubic art",
+        "magicavoxel",
+        "qubicle",
+        "pixel 3d",
+        "3d pixel art",
+        "block art"
+    ],
+    "low_poly_3d": [
+        "low poly",
+        "lowpoly",
+        "low polygon 3d",
+        "faceted 3d",
+        "geometric 3d",
+        "minimalist 3d",
+        "stylized low poly",
+        "flat shaded 3d",
+        "low-poly art"
+    ],
+    "cartoon_3d": [
+        "cartoon 3d",
+        "toon shaded 3d",
+        "cel shaded 3d",
+        "animated 3d style",
+        "stylized 3d animation",
+        "3d toon",
+        "comic 3d style",
+        "disney style 3d",
+        "pixar style 3d",
+        "non-photorealistic 3d cartoon"
+    ],
+    "anime_3d": [
+        "anime 3d",
+        "3d anime style",
+        "cel shaded anime",
+        "japanese 3d animation",
+        "vroid style",
+        "genshin impact style 3d",
+        "npr anime render",
+        "anime character 3d"
+    ],
+    "abstract_3d": [
+        "abstract 3d",
+        "3d abstract art",
+        "non-representational 3d",
+        "generative 3d art",
+        "experimental 3d",
+        "3d geometric abstraction",
+        "organic abstract 3d",
+        "surreal 3d abstract"
+    ],
+    "wireframe_3d": [
+        "wireframe 3d",
+        "3d wireframe render",
+        "edge render",
+        "topology view",
+        "3d blueprint",
+        "schematic 3d",
+        "polygon mesh display",
+        "lines only 3d",
+        "technical 3d view"
+    ],
+    "clay_render_3d": [
+        "clay render 3d",
+        "3d clay style",
+        "zbrush clay render",
+        "sculpt preview 3d",
+        "maquette style 3d",
+        "monochromatic 3d sculpt",
+        "neutral material 3d",
+        "grey material 3d",
+        "untextured 3d model"
+    ]
+}
