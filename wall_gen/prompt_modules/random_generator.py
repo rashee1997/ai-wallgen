@@ -29,12 +29,9 @@ def generate_prompt_random(tags: List[str], user_prefs: Optional[Any] = None) ->
         str: A prompt for image generation
     """
     try:
-        # Import from core to avoid circular imports
         from .core import use_user_preferences
         
-        # If user_prefs is not provided and we should use preferences, get them from global
         if user_prefs is None and use_user_preferences:
-            # Import here to avoid circular imports
             try:
                 from ..settings_modules import get_preferences
                 user_prefs = get_preferences()
@@ -42,9 +39,7 @@ def generate_prompt_random(tags: List[str], user_prefs: Optional[Any] = None) ->
                 logging.warning("Unable to import get_preferences from ..settings_modules.")
                 user_prefs = None
             
-        # If we shouldn't use user preferences and none were provided, use minimal settings
         if not use_user_preferences and user_prefs is None:
-            # Create minimal preferences
             user_prefs = SimplePrefs(
                 aspect_ratio="16:9",
                 imagen_settings={
@@ -52,107 +47,112 @@ def generate_prompt_random(tags: List[str], user_prefs: Optional[Any] = None) ->
                     "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw, watermark"
                 }
             )
-            # Get basic settings
             resolution = "7680x4320"
             aspect_ratio = "16:9"
             negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs"
             
-            # Try to import no-preferences instructions for better subject preservation
             try:
                 from no_preferences_prompt import (
                     NO_PREFS_RANDOM_INSTRUCTIONS
                 )
             except ImportError:
                 logging.warning("no_preferences_prompt.py not found. Using default instructions.")
-                # Define fallbacks in case import fails
                 NO_PREFS_RANDOM_INSTRUCTIONS = """
-Generate a detailed and artistic prompt for a high-quality wallpaper image.
+You will be given a list of tags: "{formatted_tags}".
+Your primary task is to transform these tags into a single, cohesive, and vivid descriptive paragraph suitable for an image generation model.
+Weave these tags into a natural, flowing narrative, creating a unified scene.
+Your generated output should be ONLY the creative descriptive paragraph.
+DO NOT include any technical specifications like resolution, aspect ratio, or any 'Avoid:' clauses in YOUR response. These will be handled by the system separately.
 
-Technical parameters:
-- Resolution: {resolution}
-- Aspect ratio: {aspect_ratio}
+ENHANCEMENT MISSION (No Specific User Preferences, Based on Tags):
+Your goal is to take the core tags "{formatted_tags}" and enrich them into a more vivid and descriptive paragraph.
+While no specific user preferences for style, camera, etc., are provided, you should creatively and subtly weave in general artistic and descriptive elements to add depth and detail, drawing inspiration from established prompt engineering techniques to make the tags form a coherent scene.
 
-The generated prompt should be detailed and descriptive, focusing on the subject tags provided.
-Example format: "A detailed description of the image... {resolution} resolution, {aspect_ratio} aspect ratio"
-Avoid: ugly, disfigured, low quality, blurry, nsfw, watermark, signature, out of frame, extra limbs
-"""
-            
-            # Format simple tags into a prompt
-            formatted_tags = ", ".join(tags)
-            
-            # Create a simple base prompt
-            prompt = f"{formatted_tags}, artistic"
-            
-            # Use NO_PREFS_RANDOM_INSTRUCTIONS for the prompt enhancement
-            instructions = NO_PREFS_RANDOM_INSTRUCTIONS.format(
-                resolution=resolution,
-                aspect_ratio=aspect_ratio
-            )
-            
-            # Add specific guidance for random tag generation
-            instructions += f"""
+PROMPT CRAFTING PRINCIPLES:
+- Tag Integration: All provided tags: "{formatted_tags}" MUST be incorporated naturally into the scene.
+- Contextual Richness: Describe the setting or background. Where are these elements? What surrounds them?
+- Style Coherence: Suggest a complementary style subtly that fits the combined tags.
+- Descriptive Language: Use vivid adjectives and adverbs to paint a clear picture.
+- Quality Modifiers: Incorporate terms like "high-quality," "detailed," "masterpiece," "sharp focus," "vivid colors" to guide towards better results.
 
-TAGS PROVIDED: {formatted_tags}
-
-Your prompt MUST incorporate all of these tags while maintaining coherence.
-Focus on creating a unified scene that naturally includes these elements.
-Choose an artistic style that best showcases these subjects together.
+CONSIDER ADDING DETAILS RELATED TO (if not conflicting with the tags, and inspired by best practices):
+- Visual Storytelling: What kind of scene or story do the tags imply when combined?
+- Atmosphere & Mood: What feeling should the combined scene evoke?
+- Lighting Qualities: Describe potential lighting for the scene.
+- Color Harmonies & Palette: Suggest general color ideas for the scene.
+- Compositional Elements: Hint at composition for the combined elements.
+- Textural Details: Describe potential textures within the scene.
 
 OUTPUT FORMAT:
-Your response must follow this exact format:
-1. A single, detailed paragraph describing the image that incorporates ALL provided tags
-2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
-3. End with "Avoid: {negative_prompt}"
+Your response MUST be ONLY the single, detailed descriptive paragraph.
+DO NOT include resolution, aspect ratio, or any "Avoid:" clauses in YOUR response.
+Example (if tags were "forest, dragon, moonlight"):
+"A mystical ancient forest, where a colossal, iridescent-scaled dragon slumbers peacefully under the soft, ethereal glow of moonlight filtering through the dense canopy. The scene is filled with an air of quiet magic and ancient power, with detailed textures on the gnarled trees and the dragon's hide."
+(The system will add resolution, aspect ratio, and negative prompts later.)
 """
             
-            # Try to use Gemini to enhance the prompt
+            formatted_tags = ", ".join(tags)
+            prompt_fallback = f"{formatted_tags}, artistic"
+
+            def _cleanup_text_from_gemini(text: str) -> str:
+                # Remove resolution and aspect ratio mentions
+                text = re.sub(r'\b\d+x\d+\s+resolution\b[.,\s]*', '', text, flags=re.IGNORECASE)
+                text = re.sub(r'\b\d+:\d+\s+aspect\s+ratio\b[.,\s]*', '', text, flags=re.IGNORECASE)
+                # Remove "Avoid:" clauses
+                text = re.sub(r'\bAvoid\s*:[^\n]*', '', text, flags=re.IGNORECASE)
+                # Remove potential "TAGS PROVIDED:" or initial tag lists
+                text = re.sub(r'^TAGS\s+PROVIDED\s*:[^\n]*\n*', '', text, flags=re.IGNORECASE | re.MULTILINE)
+                # Remove any leading tag lists or comma-separated tags at the start of the text
+                # This regex removes lines or parts that look like tag lists at the start
+                text = re.sub(r'^(?:[\w\s,-]+,)+[\w\s,-]+\s*', '', text, flags=re.IGNORECASE)
+                # Remove multiple newlines and join lines into a single paragraph
+                text = " ".join(text.splitlines()).strip().strip('.').strip()
+                return text
+
+            # Simplify instructions to mention tags only once and explicitly exclude tags and technical details
+            instructions = f"""
+You will be given a list of tags: "{formatted_tags}".
+Your primary task is to transform these tags into a single, cohesive, and vivid descriptive paragraph suitable for an image generation model.
+Weave these tags into a natural, flowing narrative, creating a unified scene.
+Your generated output should be ONLY the creative descriptive paragraph.
+DO NOT include any tags, technical specifications like resolution, aspect ratio, or any 'Avoid:' clauses in YOUR response. These will be handled by the system separately.
+
+Your output MUST NOT repeat the tags or any technical details.
+"""
+            
             try:
                 import google.generativeai as genai
             except ImportError:
                 logging.warning("google.generativeai module not found. Some features will be disabled.")
-                return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt) # Fallback
+                return enforce_prompt_format(prompt_fallback, resolution, aspect_ratio, negative_prompt)
             
-            # Ensure Gemini is initialized
             if not gemini_config.is_initialized():
                 if not gemini_config.initialize_gemini_globally():
                     logging.error(f"Gemini not initialized for random prompt enhancement: {gemini_config.get_last_error()}")
-                    return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt) # Fallback
+                    return enforce_prompt_format(prompt_fallback, resolution, aspect_ratio, negative_prompt)
 
-            # Determine effective_user_prefs for model selection (even if it's SimplePrefs here)
             effective_user_prefs_for_model = user_prefs if user_prefs else SimplePrefs()
             selected_model_name = gemini_config.get_selected_gemini_model(effective_user_prefs_for_model)
-            logging.info(f"Using Gemini model for random prompt enhancement: {selected_model_name}")
+            logging.info(f"Using Gemini model for random prompt enhancement (no_prefs path): {selected_model_name}")
                 
             try:
-                # API key and configuration are handled by gemini_config
                 model = genai.GenerativeModel(selected_model_name)
                 response = model.generate_content(instructions)
 
                 if hasattr(response, 'parts') and response.parts and hasattr(response.parts[0], 'text'):
-                    full_response = response.parts[0].text.strip()
-
-                    # Find the start of the enhanced prompt after the introductory phrase
-                    intro_phrase = "Here's the enhanced prompt:"
-                    intro_index = full_response.find(intro_phrase)
-
-                    if intro_index != -1:
-                        # Extract the text after the introductory phrase
-                        enhanced_prompt_text = full_response[intro_index + len(intro_phrase):].strip()
-                    else:
-                        # Fallback: If the phrase is not found, assume the whole response is the prompt
-                        enhanced_prompt_text = full_response
-
-                    # Ensure proper formatting with resolution and aspect ratio
-                    final_prompt = enforce_prompt_format(enhanced_prompt_text, resolution, aspect_ratio, negative_prompt)
-
-                    return final_prompt
+                    raw_gemini_text = response.parts[0].text.strip()
+                    enhanced_descriptive_text = _cleanup_text_from_gemini(raw_gemini_text)
+                    if not enhanced_descriptive_text:
+                        logging.warning("Gemini returned empty description after cleanup for random (no_prefs). Falling back.")
+                        enhanced_descriptive_text = prompt_fallback
                 else:
-                    # Fallback to basic prompt formatting if no response
-                    return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
+                    logging.warning("Gemini response issue for random (no_prefs). Falling back.")
+                    enhanced_descriptive_text = prompt_fallback
             except Exception as e:
-                logging.error(f"Error generating prompt with Gemini: {str(e)}")
-                # Fallback to basic prompt formatting in case of error
-                return enforce_prompt_format(prompt, resolution, aspect_ratio, negative_prompt)
+                logging.error(f"Error generating prompt with Gemini (no_prefs path): {str(e)}")
+                enhanced_descriptive_text = prompt_fallback
+            
+            return enhanced_descriptive_text
 
         # User preferences are enabled or provided - use Gemini for enhancement
         # Get user preferences
@@ -295,75 +295,72 @@ Example format: "A detailed description of the image... {resolution} resolution,
             lighting=lighting_type if lighting_type else "Not specified",
             composition=technique if technique else "Not specified",
             depth_of_field=depth_of_field if depth_of_field else "Not specified",
-            style_context=""
+            style_context="" # Not strictly needed if PROMPT_INSTRUCTIONS is simple, but kept for compatibility
         )
 
-        # Create a more evocative, artistic generation context
-        technical_context = f"""
-✨ CREATIVE VISION QUEST ✨
+        # Create a more evocative, artistic generation context for Gemini
+        # This instruction tells Gemini to ONLY output the descriptive paragraph.
+        
+        # Helper function to clean Gemini's output (can be defined at module level or here if not already)
+        # For simplicity, assuming it might be redefined or ensure it's accessible
+        # If _cleanup_text_from_gemini was defined above for the no_prefs block, it's in scope.
+        # Otherwise, it should be defined here or at module level.
+        # Let's ensure it's available or defined if this path is taken independently.
+        if '_cleanup_text_from_gemini' not in locals():
+            def _cleanup_text_from_gemini(text: str) -> str:
+                text = re.sub(r'\b\d+x\d+\s+resolution\b[.,\s]*', '', text, flags=re.IGNORECASE)
+                text = re.sub(r'\b\d+:\d+\s+aspect\s+ratio\b[.,\s]*', '', text, flags=re.IGNORECASE)
+                text = re.sub(r'\bAvoid\s*:[^\n]*', '', text, flags=re.IGNORECASE)
+                text = re.sub(r'^TAGS\s+PROVIDED\s*:[^\n]*\n*', '', text, flags=re.IGNORECASE | re.MULTILINE)
+                text = " ".join(text.splitlines()).strip().strip('.').strip()
+                return text
 
-From the random constellation of elements: {formatted_tags}, you are tasked with weaving a single, coherent visual tapestry that harmonizes these seemingly disparate elements into one breathtaking scene.
+        # Enhanced instructions to emphasize user's chosen style more strongly.
+        gemini_instructions = f"""
+As an expert prompt engineer, your task is to craft a single, vivid, and highly descriptive paragraph for an AI image generator.
+The core subject elements to be woven into this scene are: "{formatted_tags}".
 
-🎨 ARTISTIC ESSENCE 🎨
-• Creative Direction: {style if style else "Let the elements guide the perfect stylistic approach"}
-• Emotional Resonance: {mood if mood else "What emotional atmosphere would unify these elements?"}
-• Artistic Heritage: {art_movement if art_movement else "Which artistic movement would best harmonize these elements?"} 
-• Historical Context: {style_era if style_era else "What time period would create the perfect backdrop?"}
+Your primary mission is to create a captivating visual narrative that *prominently features the user's chosen artistic style and mood*, while seamlessly integrating the input tags.
+Do not just list tags or preference keywords. Synthesize them into a rich, imaginative scene that *clearly embodies* the specified style.
+Think like an art director guiding a concept artist.
 
-💫 THE ALCHEMY CHALLENGE 💫
-You're presented with seemingly unrelated elements: {formatted_tags}
-Your mission is to discover the hidden connections between them and transform them into a single, coherent reality—a visual poem where each element feels essential and nothing feels forced.
+Input Tags (to be woven into the scene): {formatted_tags}
 
-Imagine you're a master illusionist who can bend reality to create impossible yet believable scenes. What magical realm could organically contain all these elements? How might they interact in a way that feels intentional rather than random?
+User Preferences (these are CRITICAL guides for the artistic direction):
+- **Primary Artistic Style**: "{style if style else "An artistically fitting style should be chosen based on tags and mood."}" - This style MUST be evident in your description. Use descriptive language characteristic of this style.
+- **Desired Emotional Atmosphere/Mood**: "{mood if mood else "Evocative and fitting for the scene."}" - The overall feeling of the scene should strongly reflect this mood.
+- **Art Movement Influence** (if specified): "{art_movement if art_movement else "None specific; focus on the primary style."}" - If an art movement is named, the scene should clearly echo its characteristics.
+- **Historical Era Feel** (if specified): "{style_era if style_era else "Timeless or modern, as appropriate for the style."}" - If an era is named, let it influence the setting and details.
 
-🌎 WORLD-BUILDING FOUNDATIONS 🌎
-• Atmospheric Canvas: {weather if weather else "What atmospheric conditions would unite these elements?"} during {season if season else "a season that enhances the mood"}
-• Setting: {location_type if location_type else "A setting that naturally embraces all elements"}
-• Environmental Poetry: {", ".join(atmospheric_effects) if atmospheric_effects else "Atmospheric qualities that enhance visual coherence"}
+Other Guiding Details (use these to enrich the scene *within the chosen style*):
+- Lighting Impression: The lighting ({lighting_type if lighting_type else "natural"}, {light_quality if light_quality else "clear"}) should enhance the specified style and mood. Time of day: {time_of_day if time_of_day else "chosen to best suit style/mood"}.
+- Color Story: The colors ({color_scheme if color_scheme else "harmonious"}, {palette_type if palette_type else "expressive"}) should strongly support the chosen style and mood. Color temperature: {color_temperature if color_temperature else "fitting"}.
+- Compositional Sense: The composition ({technique if technique else "engaging"}) should serve the style and draw attention to {focal_point if focal_point else "the main subject derived from tags"}.
+- Detail & Texture: Details ({detail_level if detail_level else "appropriate"}) and textures ({texture_quality if texture_quality else "fitting"}) must align with and enhance the chosen artistic style.
 
-✨ VISUAL SYMPHONY ORCHESTRATION ✨
-• Light Choreography: {lighting_type if lighting_type else "How does light dance through this scene?"} with {light_quality if light_quality else "qualities that harmonize the elements"} at {time_of_day if time_of_day else "the perfect moment of day"}
-• Color Harmony: {color_scheme if color_scheme else "A palette that unifies the elements"} with {palette_type if palette_type else "tonal qualities that"} {color_temperature if color_temperature else "create the perfect visual temperature"}
-• Spatial Narrative: {technique if technique else "A composition that guides the eye"} that leads to {focal_point if focal_point else "the most important element"}
+Specific Art Style Details (if provided, these are KEY to describing the style accurately):
+- Digital Art: If the style is digital, mention qualities related to "{digital_software}" or effects like "{", ".join(digital_effects if digital_effects else ['N/A'])}".
+- Game Art: If game-related, describe it as if from a "{game_genre}" game, perhaps using "{game_engine}" visuals with "{game_shader}" shaders.
+- Traditional Medium: If a traditional medium like "{painting_medium}" is chosen, describe the "{brushwork}" and "{texture}" of the medium.
+- Illustration: If an "{illustration_style}" is chosen, describe the "{line_quality}".
+- Abstract: For abstract styles, focus on "{abstract_composition}" and "{movement_type}".
+- Materials: If specific materials like "{material_type}" with a "{material_finish}" finish are relevant to the style, describe them.
 
-🔍 ARTISTIC EXECUTION ELEMENTS 🔍
-• Stylistic Approach: {painting_medium if painting_medium else "Consider what medium"} with {brushwork if brushwork else "techniques that enhance cohesion"}
-• Tactile Atmosphere: {texture_quality if texture_quality else "Textural qualities"} with {texture if texture else "surface characteristics that unify the elements"}
-• Detail Philosophy: {detail_level if detail_level else "A level of detail that"}
-• Visual Language: {illustration_style if illustration_style else "A stylistic approach that"} with {line_quality if line_quality else "line characteristics that enhance cohesion"}
-• Dynamism: {abstract_composition if abstract_composition else "Energy flows that"} with {movement_type if movement_type else "movement qualities that connect elements"}
-• Material Presence: {material_type if material_type else "Physical qualities that"} with {material_finish if material_finish else "finish characteristics that elevate the scene"}
+Creative Mandate:
+1.  Weave all "{formatted_tags}" into a single, flowing narrative paragraph.
+2.  The User's **Primary Artistic Style and Mood** MUST be the dominant characteristics of your description. Use adjectives and verbs that clearly evoke this style.
+3.  All other preferences should serve to enrich this primary style.
+4.  The output MUST be a single descriptive paragraph.
+5.  DO NOT include the original tags list, resolution, aspect ratio, or any "Avoid:" clauses in YOUR response. These are handled separately.
 
-🎭 TECHNICAL MANIFESTATION 🎭
-• Digital Creation: {digital_software if digital_software else "Digital techniques"} with {", ".join(digital_effects) if digital_effects else "effects that enhance unity"}
-• Game-Inspired Aesthetics: {game_engine if game_engine else "Game-like qualities"} in {game_genre if game_genre else "a style that"} using {game_shader if game_shader else "rendering approaches that unify"}
-• Professional Execution: {suite if suite else "Industry approaches"} with {renderer if renderer else "rendering that elevates"}
+Example (Tags: "cityscape, rain, neon lights". Prefs: Style="Cyberpunk", Mood="Melancholic", Lighting="Reflective wet surfaces"):
+"A melancholic cyberpunk cityscape unfolds, drenched in a persistent, cold rain. Towering, oppressive skyscrapers, adorned with flickering holographic advertisements, disappear into the smog-choked upper atmosphere. Neon lights from countless signs bleed across the rain-slicked streets, their vibrant blues, pinks, and electric greens reflecting in puddles that mirror the desolation. The scene evokes a sense of lonely beauty and technological decay, characteristic of the cyberpunk genre, with a focus on the reflective interplay of light on wet, metallic surfaces."
 
-📷 OPTICAL STORYTELLING 📷
-• Visual Lens: {camera_model if camera_model else "A perspective"} with {lens_type if lens_type else "optical characteristics that"}
-• Technical Choices: {aperture if aperture else "Aperture choices"} at {focal_length if focal_length else "a focal length that"} with {shutter_speed if shutter_speed else "exposure timing that"} at {iso if iso else "sensitivity that captures perfectly"}
-• Special Optics: {filter_type if filter_type else "Filtering effects"} with {special_lens if special_lens else "special optical characteristics"}
-
-🌟 THE CREATIVE SYNTHESIS PROCESS 🌟
-1. Discover the hidden logical connections between {formatted_tags}
-2. Create a world where these elements naturally coexist
-3. Craft ONE flowing paragraph where every element feels essential to the whole
-4. Transform technical specifications into poetic qualities of the scene
-5. End precisely with "{resolution} resolution, {aspect_ratio} aspect ratio"
-6. Follow with "Avoid: [negative elements]"
-
-⚠️ CREATIVE MANDATE ⚠️
-You are writing visual poetry, not a technical document. The random elements must feel like they were always meant to be together. The technical aspects should dissolve into the narrative flow, becoming qualities of the world rather than specifications. Be bold, be imaginative, and make magic that transforms randomness into destiny.
-
-OUTPUT FORMAT:
-[A single, flowing paragraph that creates a coherent reality containing {formatted_tags}, weaving in all relevant technical elements naturally, ending exactly with "{resolution} resolution, {aspect_ratio} aspect ratio"]
-Avoid: [negative elements]
-
-NEGATIVE PROMPT - ALWAYS INCLUDE:
-The following elements must be avoided: {negative_prompt}
+Now, generate the prompt for the tags: "{formatted_tags}", ensuring the user's stylistic preferences are paramount.
 """
 
         # Generate prompt using Gemini
+        enhanced_descriptive_text = formatted_tags # Fallback to just tags
         try:
             # Ensure Gemini is initialized
             if not gemini_config.is_initialized():
@@ -376,46 +373,46 @@ The following elements must be avoided: {negative_prompt}
             logging.info(f"Using Gemini model for random prompt (user_prefs path): {selected_model_name}")
 
             # API key and configuration are handled by gemini_config
+            # Explicitly ensure 'genai' is in scope here, though it should be from top-level import.
+            import google.generativeai as genai
             model = genai.GenerativeModel(selected_model_name)
-            response = model.generate_content(instruction_context + "\n\n" + technical_context)
+            # Send only the specific instructions for Gemini
+            response = model.generate_content(gemini_instructions) 
 
             if hasattr(response, 'text') and response.text:
-                full_response = response.text.strip()
-
-                # Parse the response to separate prompt and negative prompt
-                prompt_parts = full_response.split("Avoid:")
-
-                if len(prompt_parts) > 1:
-                    # If successfully parsed into two parts
-                    main_prompt = prompt_parts[0].strip()
-                    negative_part = prompt_parts[1].strip()
-
-                    # Combine them with "Avoid:" format
-                    final_prompt = f"{main_prompt} Avoid: {negative_part}"
-                else:
-                    # If not in expected format, just add negative prompt
-                    final_prompt = full_response
-                    if "avoid" not in final_prompt.lower():
-                        final_prompt += f" Avoid: {negative_prompt}"
-
-                # Ensure proper formatting with resolution and aspect ratio
-                final_prompt = enforce_prompt_format(final_prompt, resolution, aspect_ratio, negative_prompt)
-
-                # No caching here for random prompts, as they are inherently random
-                return final_prompt
+                raw_gemini_text = response.text.strip()
+                enhanced_descriptive_text = _cleanup_text_from_gemini(raw_gemini_text)
+                if not enhanced_descriptive_text: # Check for empty response after cleanup
+                    logging.warning("Gemini returned empty description after cleanup for random (user_prefs). Falling back to tags.")
+                    enhanced_descriptive_text = formatted_tags # Fallback is just tags
             else:
-                # Return a formatted version of the simple tags
-                formatted_prompt = enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
-                return formatted_prompt
+                logging.warning("Gemini response issue for random (user_prefs). Falling back to tags.")
+                enhanced_descriptive_text = formatted_tags # Fallback is just tags
         except Exception as e:
-            logging.error(f"Error generating prompt with Gemini: {e}")
-            # Return a formatted version of the simple tags
-            return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+            logging.error(f"Error generating prompt with Gemini (user_prefs path): {e}")
+            enhanced_descriptive_text = formatted_tags # Fallback is just tags
+        
+        # The function should consistently return just the descriptive text.
+        # The calling code will be responsible for the final formatting using enforce_prompt_format.
+        return enhanced_descriptive_text
+
     except Exception as e:
         logging.error(f"Error in generate_prompt_random: {e}")
+        # Fallback to basic tags if a catastrophic error occurs before Gemini call
+        # Need to define resolution, aspect_ratio, negative_prompt for this fallback
+        fallback_resolution = "3840x2160"
+        fallback_aspect_ratio = "16:9"
+        fallback_negative_prompt = "ugly, disfigured, low quality, blurry, nsfw, watermark"
+        if 'user_prefs' in locals() and user_prefs:
+            if hasattr(user_prefs, 'imagen_settings') and user_prefs.imagen_settings:
+                quality_settings = user_prefs.imagen_settings.get("quality_settings", {})
+                fallback_resolution = quality_settings.get("resolution", fallback_resolution)
+                fallback_negative_prompt = user_prefs.imagen_settings.get("negative_prompt", fallback_negative_prompt)
+            if hasattr(user_prefs, 'aspect_ratio'):
+                fallback_aspect_ratio = user_prefs.aspect_ratio
+        
         formatted_tags_str = ", ".join(tags)
-        # Fallback to basic tags if error occurs
-        return enforce_prompt_format(formatted_tags_str, resolution, aspect_ratio, negative_prompt)
+        return enforce_prompt_format(formatted_tags_str, fallback_resolution, fallback_aspect_ratio, fallback_negative_prompt)
 
 
 def generate_random_style_mix(user_prefs=None):
