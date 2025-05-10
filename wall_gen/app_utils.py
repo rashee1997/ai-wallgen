@@ -129,6 +129,7 @@ def mask_sensitive_url_data(url: str) -> str:
     
     sensitive_params = ["key", "api_key", "client_id", "token", "password", "secret"]
     for param in sensitive_params:
+        # Use non-greedy match to avoid over-masking
         masked_url = re.sub(rf'({param}=)[^&]+', rf'\1<HIDDEN>', masked_url, flags=re.IGNORECASE)
         
     return masked_url

@@ -1,74 +1,181 @@
 """
 Stores context-sensitive help content for the WallGen TUI.
+Supports Rich markup for enhanced formatting and visual appeal.
 """
-from typing import Dict
+from typing import Dict, List, Optional, Union
 
-HELP_TEXTS: Dict[str, str] = {
-    "MAIN_MENU": (
-        "Main Menu Help:\n\n"
-        "This is the central navigation point for the AI Wallpaper Generator.\n\n"
-        "- '1: Generate AI Wallpaper': Start the interactive process to create a new wallpaper using AI, based on your preferences or custom prompts.\n"
-        "- '2: Generate Prompt Only': Similar to option 1, but will only generate the text prompt and save it, without calling the AI to generate an image.\n"
-        "- '3: Manage Preferences': Access sub-menus to customize various settings like wallpaper styles, moods, AI parameters, output quality, etc.\n"
-        "- '4: Tools & Utilities': Access additional tools, which might include cache management, preset utilities, or other helper functions.\n"
-        "- '5: View Generation History': Browse a history of previously generated wallpapers and their associated prompts and settings.\n"
-        "- '7: Preview Recent Images': Quickly view recently generated images using the configured preview tool.\n"
-        "- 'E: Exit': Save any changed preferences and close the application.\n\n"
-        "Tip: At most prompts, you can type 'h' or '?' to get contextual help."
-    ),
-    "MANAGE_PREFERENCES_MENU": (
-        "Manage Preferences Menu Help:\n\n"
-        "This menu allows you to configure various aspects of the wallpaper generation process.\n\n"
-        "- '1: Wallpaper Settings': Adjust general wallpaper settings like preferred styles, moods, artistic influences, and subject matter.\n"
-        "- '2: Advanced Options': Configure more detailed AI generation parameters, potentially including specific model settings, negative prompts, and quality adjustments.\n"
-        "- '3: Reset All Settings to None': Clears all your saved preferences, reverting to default behavior. Use with caution.\n"
-        "- 'b: Back': Return to the Main Menu."
-    ),
-    # Renaming GENERATE_MENU_PROMPT_TYPE to GENERATE_MENU_OVERALL and updating content
-    "GENERATE_MENU_OVERALL": ( 
-        "Generate Wallpaper/Prompt Menu Help:\n\n"
-        "This menu allows you to choose the method for generating your wallpaper prompt and to access advanced settings or load presets before generation.\n\n"
-        "- '1: Use Gemini AI to generate a prompt': The AI will create a prompt based on your configured preferences.\n"
-        "- '2: Use a random prompt': Generates a prompt using random tags or styles.\n"
-        "- '3: Enter your own custom prompt': You provide the exact prompt text.\n"
-        "- '4: Advanced Options - Fine-tune generation parameters': Access detailed settings before this generation run.\n"
-        "- '5: Load Saved Preset': Load a previously saved set of configurations to use for this generation.\n"
-        "- 'B: Back to Main Menu': Return to the main application menu."
-    ),
-    "GENERATE_CUSTOM_PROMPT_INPUT": (
-        "Enter Custom Prompt Help:\n\n"
-        "Please type the text prompt you want to use for generating the wallpaper.\n"
-        "The application might apply further enhancements or combine this with your preferences depending on the configuration.\n"
-        "Enter 'b' to go back without entering a custom prompt."
-    ),
-    "AI_PRESET_GENERATOR_MENU": ( 
-        "AI Preset Generator Menu Help:\n\n"
-        "This tool helps you generate new wallpaper setting presets using AI.\n\n"
-        "- '1: Generate New AI Preset': Starts the process to create a new preset. You might be asked for a base style or theme for the AI to work with.\n"
-        "- 'q: Quit': Exit the AI Preset Generator and return to the previous menu or exit the script if run standalone.\n\n"
-        "Generated presets can be used later to quickly apply a full set of configurations for wallpaper generation."
-    ),
-    # Add more contexts and their help texts as needed for other menus.
-    # Example for a hypothetical tools menu:
-    "TOOLS_MENU": (
-        "Tools & Utilities Menu Help:\n\n"
-        "This menu provides access to various utility functions.\n\n"
-        "- '1: Cache Management': Options to view or clear image/prompt caches.\n"
-        "- '2: AI Preset Utilities': May include options to list, apply, or manage AI-generated presets.\n"
-        "- 'b: Back': Return to the Main Menu."
-    ),
-    "WALLPAPER_SETTINGS_MENU": (
-        "Wallpaper Settings Menu Help:\n\n"
-        "Configure the aesthetic and thematic elements of your generated wallpapers.\n"
-        "- Options typically include: Preferred Styles, Moods, Artists, Colors, Subject Matter, etc.\n"
-        "- 'b: Back': Return to the Manage Preferences Menu."
-    ),
-    "ADVANCED_OPTIONS_MENU": (
-        "Advanced Options Menu Help:\n\n"
-        "Fine-tune AI generation parameters and other technical settings.\n"
-        "- Options may include: Negative Prompts, AI Model Selection (if applicable), Quality Settings, Aspect Ratio, Resolution Overrides.\n"
-        "- 'b: Back': Return to the Manage Preferences Menu."
-    ),
+# Define help content structure types
+class HelpSection:
+    def __init__(self, title: str, content: str, icon: Optional[str] = None):
+        self.title = title
+        self.content = content
+        self.icon = icon or "📌"
+
+# Main help content dictionary - can contain either structured HelpSection objects or simple strings
+HELP_TEXTS: Dict[str, Union[str, List[HelpSection]]] = {
+    "MAIN_MENU": [
+        HelpSection(
+            title="Overview",
+            icon="🧭",
+            content="This is the central navigation point for the AI Wallpaper Generator. From here, you can create new wallpapers, manage settings, or use various utilities."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "- [yellow]1: Generate AI Wallpaper[/] - Start the interactive process to create a new wallpaper.\n"
+                "- [yellow]2: Generate Prompt Only[/] - Create and save just the AI prompt without generating an image.\n"
+                "- [yellow]3: Manage Preferences[/] - Customize settings for styles, moods, and parameters.\n"
+                "- [yellow]4: Tools & Utilities[/] - Access cache management and other helper functions.\n"
+                "- [yellow]5: View Generation History[/] - Browse previously generated wallpapers.\n"
+                "- [yellow]7: Preview Recent Images[/] - View recent images using the configured preview tool.\n"
+                "- [yellow]E: Exit[/] - Save preferences and close the application."
+            )
+        ),
+        HelpSection(
+            title="Tip",
+            icon="💡",
+            content="At most prompts, type [bold magenta]h[/] or [bold magenta]?[/] to get contextual help."
+        )
+    ],
+    "MANAGE_PREFERENCES_MENU": [
+        HelpSection(
+            title="Purpose",
+            icon="⚙️",
+            content="This menu allows you to configure various aspects of the wallpaper generation process."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "- [yellow]1: Wallpaper Settings[/] - Adjust styles, moods, artistic influences, and subject matter.\n"
+                "- [yellow]2: Advanced Options[/] - Configure AI generation parameters, negative prompts, and quality.\n"
+                "- [yellow]3: Reset All Settings to None[/] - [italic red]Caution:[/] Reverts all preferences to defaults.\n"
+                "- [yellow]b: Back[/] - Return to the Main Menu."
+            )
+        )
+    ],
+    "GENERATE_MENU_OVERALL": [
+        HelpSection(
+            title="Purpose", 
+            icon="🎨",
+            content="This menu allows you to choose how to generate your wallpaper prompt and access advanced settings or presets."
+        ),
+        HelpSection(
+            title="Generation Methods",
+            icon="🤖",
+            content=(
+                "- [yellow]1: Use Gemini AI[/] - The AI creates a prompt based on your preferences.\n"
+                "- [yellow]2: Use a random prompt[/] - Generates a prompt with random tags or styles.\n"
+                "- [yellow]3: Enter custom prompt[/] - You provide the exact text to use."
+            )
+        ),
+        HelpSection(
+            title="Additional Options",
+            icon="🛠️",
+            content=(
+                "- [yellow]4: Advanced Options[/] - Fine-tune parameters for this generation only.\n"
+                "- [yellow]5: Load Saved Preset[/] - Use a previously saved configuration.\n"
+                "- [yellow]B: Back[/] - Return to the Main Menu."
+            )
+        )
+    ],
+    "GENERATE_CUSTOM_PROMPT_INPUT": [
+        HelpSection(
+            title="Instructions",
+            icon="✏️",
+            content=(
+                "Please type the text prompt you want to use for generating the wallpaper.\n\n"
+                "The application might enhance this prompt or combine it with your saved preferences.\n\n"
+                "Enter [yellow]b[/] to go back without entering a custom prompt."
+            )
+        ),
+        HelpSection(
+            title="Tips",
+            icon="💡",
+            content=(
+                "• Be as descriptive as possible with your prompt\n"
+                "• Include style references if you have specific looks in mind\n"
+                "• Mention color schemes or moods you'd like to see"
+            )
+        )
+    ],
+    "AI_PRESET_GENERATOR_MENU": [
+        HelpSection(
+            title="Purpose",
+            icon="🧪",
+            content="This tool helps you generate new wallpaper setting presets using AI."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "- [yellow]1: Generate New AI Preset[/] - Creates a new preset based on a style or theme.\n"
+                "- [yellow]q: Quit[/] - Exit back to the previous menu."
+            )
+        ),
+        HelpSection(
+            title="About Presets",
+            icon="💾",
+            content="Generated presets can be used later to quickly apply a full set of configurations for wallpaper generation."
+        )
+    ],
+    "TOOLS_MENU": [
+        HelpSection(
+            title="Purpose",
+            icon="🔧",
+            content="This menu provides access to various utility functions to manage the application."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "- [yellow]1: Cache Management[/] - View or clear image and prompt caches.\n"
+                "- [yellow]2: AI Preset Utilities[/] - List, apply, or manage AI-generated presets.\n"
+                "- [yellow]b: Back[/] - Return to the Main Menu."
+            )
+        )
+    ],
+    "WALLPAPER_SETTINGS_MENU": [
+        HelpSection(
+            title="Purpose",
+            icon="🎭",
+            content="Configure the aesthetic and thematic elements of your generated wallpapers."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "Options typically include:\n"
+                "- [yellow]Preferred Styles[/] - Artistic styles for your wallpapers\n"
+                "- [yellow]Moods[/] - Emotional tone of the generated images\n" 
+                "- [yellow]Artists[/] - Influential creators whose style you admire\n"
+                "- [yellow]Colors[/] - Color themes and palettes\n"
+                "- [yellow]Subject Matter[/] - Main content focus\n\n"
+                "- [yellow]b: Back[/] - Return to the Manage Preferences Menu."
+            )
+        )
+    ],
+    "ADVANCED_OPTIONS_MENU": [
+        HelpSection(
+            title="Purpose",
+            icon="⚙️",
+            content="Fine-tune AI generation parameters and other technical settings for your wallpapers."
+        ),
+        HelpSection(
+            title="Available Options",
+            icon="🔍",
+            content=(
+                "Options may include:\n"
+                "- [yellow]Negative Prompts[/] - Elements to exclude from generation\n"
+                "- [yellow]AI Model Selection[/] - Choose specific AI models if available\n"
+                "- [yellow]Quality Settings[/] - Control the fidelity of outputs\n"
+                "- [yellow]Aspect Ratio[/] - Set dimensions for different displays\n"
+                "- [yellow]Resolution Overrides[/] - Customize output resolution\n\n"
+                "- [yellow]b: Back[/] - Return to the Manage Preferences Menu."
+            )
+        )
+    ],
     # The duplicated GENERATE_MENU_OVERALL entry is removed here.
     # The first one, which was the correctly updated one, remains.
     "IMAGE_PREVIEW_MENU": (

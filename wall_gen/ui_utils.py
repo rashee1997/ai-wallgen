@@ -124,13 +124,20 @@ def print_info(text: str, timestamp: bool = False) -> None:
 # Function print_prompt removed as its functionality is incorporated into Rich-based input functions.
 
 try:
-    from .help_content import get_help_text # For contextual help
+    from .help_content import get_help_text, HelpSection # For contextual help and help structure
 except ImportError:
     # Fallback if help_content is not found, to prevent crashes during development/testing
     def get_help_text(context_id: str) -> str:
         # In a real scenario, might log this warning
         # print_warning(f"Warning: help_content.py not found or get_help_text failed for context: {context_id}")
         return "Help system component (help_content.py) not found."
+    
+    # Dummy HelpSection class if original can't be imported
+    class HelpSection:
+        def __init__(self, title: str, content: str, icon: Optional[str] = None):
+            self.title = title
+            self.content = content
+            self.icon = icon or "📌"
 
 def get_interactive_input(prompt_text: str) -> str:
     """
@@ -178,8 +185,8 @@ def get_validated_input(
         ).strip()
 
         if help_context_id and raw_user_input.lower() in ['h', '?']:
-            # display_help_panel will clear the screen. The calling menu must redraw.
-            display_help_panel(get_help_text(help_context_id), title=f"{help_context_id.replace('_', ' ').title()} Help")
+            # Use the enhanced display_help_content function instead
+            display_help_content(help_context_id)
             # After help, the screen is clear. The menu needs to redraw before next prompt.
             return "_HELP_SHOWN_" # Return sentinel value instead of continue
 
@@ -235,6 +242,115 @@ def print_wrapped_text(text: str, width: int = 70, indent: int = 4) -> None:
     wrapper = textwrap.TextWrapper(width=width, subsequent_indent=' ' * indent)
     wrapped = wrapper.fill(text)
     console.print(wrapped)
+
+def display_help_section(section: HelpSection, index: int, total: int) -> None:
+    """
+    Displays a single help section within the enhanced help system.
+    
+    Args:
+        section: The HelpSection object containing title, content and icon
+        index: Current section index (1-based)
+        total: Total number of sections
+    """
+    # Create a stylized title with section number, icon and navigation information
+    title_text = Text()
+    # Add section number indicator if multiple sections exist
+    if total > 1:
+        title_text.append(f"[{index}/{total}] ", style="dim cyan")
+    
+    # Add icon and title
+    title_text.append(f"{section.icon} ", style="bold")
+    title_text.append(section.title, style="bold cyan")
+    
+    # Create the panel with Rich markup-enabled content
+    section_panel = Panel(
+        section.content,  # Rich markup is directly supported here
+        title=title_text,
+        border_style="blue",
+        expand=False
+    )
+    
+    console.print(section_panel)
+
+def display_help_content(context_id: str) -> None:
+    """
+    Enhanced help display system that handles both structured help content (list of HelpSection objects)
+    and legacy string-based help content.
+    
+    Args:
+        context_id: The context ID to retrieve help content for
+    """
+    # Clear screen before showing help
+    clear_screen()
+    
+    # Get the help content
+    help_content = get_help_text(context_id)
+    
+    # Format the title from the context_id
+    formatted_title = context_id.replace('_', ' ').title()
+    
+    console.print(Rule(f"[bold cyan]{formatted_title} Help[/bold cyan]", style="cyan"))
+    console.print()
+    
+    if not help_content:
+        console.print(Text("No help content provided.", style="yellow"))
+    elif isinstance(help_content, list):  # New structured format (list of HelpSection objects)
+        total_sections = len(help_content)
+        current_section = 0
+        
+        # Initial display of the first section
+        if total_sections > 0:
+            display_help_section(help_content[current_section], current_section + 1, total_sections)
+        
+        # Navigation controls if there are multiple sections
+        if total_sections > 1:
+            console.print()
+            controls_text = Text("Navigation: ", style="cyan")
+            controls_text.append("[N]ext ", style="green bold")
+            controls_text.append("[P]revious ", style="yellow bold")
+            controls_text.append("[Q]uit help", style="red bold")
+            console.print(controls_text, justify="center")
+            
+            # Interactive section navigation
+            while True:
+                command = get_interactive_input("").lower()
+                
+                if command in ['q', 'quit', 'exit']:
+                    break
+                elif command in ['n', 'next'] and current_section < total_sections - 1:
+                    current_section += 1
+                    clear_screen()
+                    console.print(Rule(f"[bold cyan]{formatted_title} Help[/bold cyan]", style="cyan"))
+                    console.print()
+                    display_help_section(help_content[current_section], current_section + 1, total_sections)
+                    console.print()
+                    console.print(controls_text, justify="center")
+                elif command in ['p', 'prev', 'previous'] and current_section > 0:
+                    current_section -= 1
+                    clear_screen()
+                    console.print(Rule(f"[bold cyan]{formatted_title} Help[/bold cyan]", style="cyan"))
+                    console.print()
+                    display_help_section(help_content[current_section], current_section + 1, total_sections)
+                    console.print()
+                    console.print(controls_text, justify="center")
+        else:
+            # Single section, just wait for any key to close
+            console.print()
+            console.print(Text("Press Enter to close help...", style="dim italic cyan"), justify="center")
+            input()
+    else:  # Legacy string-based format
+        # Create a panel with padding
+        legacy_panel = Panel(
+            Padding(Text(help_content), (1, 2)),  # Top/bottom padding 1, left/right padding 2
+            border_style="blue",
+            expand=False  # Panel will size to content, up to console width
+        )
+        console.print(legacy_panel)
+        console.print(Text("Press Enter to close help...", style="dim italic cyan"), justify="center")
+        input()
+    
+    # Always clear the screen when exiting help
+    clear_screen()
 
 def display_help_panel(help_text: str, title: str = "Help") -> None:
     """
