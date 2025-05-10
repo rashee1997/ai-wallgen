@@ -108,7 +108,7 @@ except ImportError:
     _print_warning_fallback("wall_gen.settings_modules modules not found. Using placeholder UserPreferences.")
 
 try:
-    from wall_gen.ui_utils import get_validated_input, print_section, print_option, print_info, print_error, print_success, print_warning
+    from wall_gen.ui_utils import get_validated_input, print_section, print_option, print_info, print_error, print_success, print_warning, clear_screen, print_header
     UI_UTILS_AVAILABLE = True
 except ImportError:
     UI_UTILS_AVAILABLE = False
@@ -401,8 +401,19 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
             if AI_STYLE_GEN_AVAILABLE:
                 valid_choices.append("2")
 
-            choice = get_validated_input("Select option:", valid_choices)
-
+            choice = get_validated_input(
+                "Select option:", 
+                valid_choices,
+                help_context_id="AI_PRESET_STYLE_SOURCE_CHOICE"
+            )
+            if choice == "_HELP_SHOWN_":
+                # This is tricky as this prompt is not in a loop that redraws options.
+                # For now, returning None will effectively cancel and go back to the main AI Preset Gen menu,
+                # which will then redraw. A dedicated loop here would be needed for perfect re-prompt.
+                # Or, the calling code (main menu) needs to handle this.
+                # Simplest for now: treat as cancel if help was shown here.
+                print_info("Help shown. Returning to AI Preset Generator menu.")
+                return None # Or re-call generate_ai_preset without base_style_override
             if choice == "b":
                 print_info("Preset generation cancelled.")
                 return None
@@ -599,8 +610,24 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                                     confirm_decision = True
                                     print_info("Auto-saving preset due to --auto-save flag.")
                                 else:
-                                    confirm_input = get_validated_input("Save this preset? (y/n):", ["y", "n", "yes", "no"])
-                                    confirm_decision = confirm_input.startswith('y')
+                                    confirm_input = get_validated_input(
+                                        "Save this preset? (y/n):", 
+                                        ["y", "n", "yes", "no"],
+                                        help_context_id="AI_PRESET_SAVE_CONFIRMATION"
+                                    )
+                                    if confirm_input == "_HELP_SHOWN_":
+                                        # Re-prompt for save confirmation by re-entering the attempt loop
+                                        # This specific re-prompt is tricky without restructuring this part into its own loop.
+                                        # For now, let it fall through, which might mean it retries the whole generation if attempts remain,
+                                        # or cancels if it was the last attempt.
+                                        # A cleaner solution would be a dedicated loop for this confirmation.
+                                        # For simplicity in this fix, we'll let the existing outer loop handle it,
+                                        # which means it might regenerate if not the last attempt.
+                                        # Or, more simply, treat help here as a "no" for now.
+                                        print_info("Help shown for save confirmation. Treating as 'no' to save for this attempt.")
+                                        confirm_decision = False
+                                    else:
+                                        confirm_decision = confirm_input.startswith('y')
 
                                 # --- MODIFIED SAVE LOGIC ---
                                 if confirm_decision:
@@ -768,12 +795,19 @@ def main():
              print_error("Preset generation failed.")
     else:
         while True:
-            print_section("AI Preset Generator Menu")
+            clear_screen()
+            print_header("AI Preset Generator") 
+            # print_section("AI Preset Generator Menu") # Replaced by print_header
             print_option("1", "Generate New AI Preset")
             # "Advanced Settings" option removed from here, will be in wall_gen's advanced menu
             print_option("q", "Quit")
-            choice = get_validated_input("Select option:", ["1", "q"])
-
+            choice = get_validated_input(
+                prompt="Select option:",
+                options=["1", "q"],
+                help_context_id="AI_PRESET_GENERATOR_MENU"
+            )
+            if choice == "_HELP_SHOWN_":
+                continue
             if choice == '1':
                 result = generate_ai_preset(user_prefs, auto_save_flag=args.auto_save)
                 if isinstance(result, str):

@@ -13,7 +13,9 @@ from wall_gen.ui_utils import (
     print_error,
     get_validated_input,
     print_menu_options,
-    get_menu_choice,
+    get_menu_choice, # get_menu_choice might not be used if all are get_validated_input
+    clear_screen, # Added
+    print_header, # Added
 )
 # Updated imports
 from wall_gen.config import STYLE_CATEGORIES
@@ -106,7 +108,9 @@ def manage_styles():
     }
     while True:
         try:
-            print_section("Manage Styles")
+            clear_screen()
+            print_header("Manage Styles")
+            # print_section("Manage Styles") # Replaced by print_header
             print_info("Current preferred style:")
             if user_prefs.preferred_styles:
                 print_info(f"- {user_prefs.preferred_styles}")
@@ -127,10 +131,13 @@ def manage_styles():
 
             valid_choices = ["4", "5", "b", "1", "2", "3", "6", "7", "8", "9"]
             style_choice = get_validated_input(
-                "Select an option (or type a style name to set)",
-                valid_choices,
+                prompt="Select an option (or type a style name to set)",
+                options=valid_choices,
                 allow_empty=True,
+                help_context_id="STYLES_MENU"
             )
+            if style_choice == "_HELP_SHOWN_":
+                continue
             if style_choice == "b":
                 return
             elif style_choice == "4":
@@ -141,9 +148,12 @@ def manage_styles():
                     print_success(f"Set preferred style to '{style}'")
             elif style_choice == "5":
                 confirm = get_validated_input(
-                    "Are you sure you want to clear the preferred style? (y/n)",
-                    ["y", "n"],
+                    prompt="Are you sure you want to clear the preferred style? (y/n)",
+                    options=["y", "n"],
+                    help_context_id="STYLES_CLEAR_CONFIRMATION"
                 )
+                if confirm == "_HELP_SHOWN_":
+                    continue
                 if confirm == "y":
                     user_prefs.clear_style()
                     print_success("Cleared preferred style")
@@ -151,8 +161,12 @@ def manage_styles():
                 style_mix = generate_random_style_mix()
                 print_info(f"Generated random style mix: {style_mix}")
                 add_to_preferences = get_validated_input(
-                    "Set this mix as your preferred style? (y/n)", ["y", "n"]
+                    prompt="Set this mix as your preferred style? (y/n)", 
+                    options=["y", "n"],
+                    help_context_id="STYLES_RANDOM_MIX_CONFIRMATION"
                 )
+                if add_to_preferences == "_HELP_SHOWN_":
+                    continue
                 if add_to_preferences == "y":
                     if style_mix:
                         user_prefs.preferred_styles.clear()
@@ -192,8 +206,11 @@ def manage_styles():
                     user_prefs.add_style(style)
                     print_success(f"Set preferred style to '{style}'")
                 continue
-            elif style_choice == "6":
+            elif style_choice == "6": # Art Movement
                 while True:
+                    clear_screen()
+                    print_header("Configure Art Movement")
+                    print_info("Current Art Movement: " + str(user_prefs.imagen_settings.get("style_settings", {}).get("art_movement", "Not set")))
                     print_info("Select art movement:")
                     print_option("0", "None (No specific art movement)")
                     print_option("1", "Abstract Expressionism")
@@ -205,9 +222,12 @@ def manage_styles():
                     print_option("b", "Back")
 
                     movement_choice = get_validated_input(
-                        "Select art movement (0-6, b)",
-                        ["0", "1", "2", "3", "4", "5", "6", "b"],
+                        prompt="Select art movement",
+                        options=["0", "1", "2", "3", "4", "5", "6", "b"],
+                        help_context_id="STYLES_ART_MOVEMENT_CHOICE"
                     )
+                    if movement_choice == "_HELP_SHOWN_":
+                        continue
                     if movement_choice == "b":
                         break
 
@@ -244,21 +264,29 @@ def manage_styles():
                     ] = movements[movement_choice]
                     print_success(f"Art movement set to {movements[movement_choice]}")
                     user_prefs.save_preferences()
-            elif style_choice == "7":
-                print_info(
-                    "Set Style Era (e.g., Modern, Golden Age, Silver Age, or custom):"
-                )
-                print_option("1", "Modern")
+            elif style_choice == "7": # Style Era
+                while True: # Added loop for re-prompt after help
+                    clear_screen()
+                    print_header("Configure Style Era")
+                    print_info("Current Style Era: " + str(user_prefs.imagen_settings.get("style_settings", {}).get("style_era", "Not set")))
+                    print_info(
+                        "Set Style Era (e.g., Modern, Golden Age, Silver Age, or custom):"
+                    )
+                    print_option("1", "Modern")
                 print_option("2", "Golden Age")
                 print_option("3", "Silver Age")
                 print_option("4", "Custom Era")
                 print_option("b", "Back")
                 era_choice = get_validated_input(
-                    "Select style era (1-4, b)", ["1", "2", "3", "4", "b"]
+                    prompt="Select style era", 
+                    options=["1", "2", "3", "4", "b"],
+                    help_context_id="STYLES_STYLE_ERA_CHOICE"
                 )
+                if era_choice == "_HELP_SHOWN_":
+                    continue
                 if era_choice == "b":
-                    pass
-                else:
+                    break # Exit style era sub-menu
+                # else: # Removed else, logic continues if not 'b'
                     eras = {"1": "Modern", "2": "Golden Age", "3": "Silver Age"}
                     if era_choice == "4":
                         custom_era = input("Enter custom style era: ").strip()
@@ -274,8 +302,14 @@ def manage_styles():
                         )
                         print_success(f"Style era set to: {eras[era_choice]}")
                         user_prefs.save_preferences()
-            elif style_choice == "8":
+                    # No need to break here if a choice was made, the loop is for re-prompting on invalid input or after help
+            elif style_choice == "8": # Post-Processing
                 while True:
+                    clear_screen()
+                    print_header("Configure Post-Processing Effects")
+                    current_effects_val = user_prefs.imagen_settings.get("style_settings", {}).get("post_processing", [])
+                    current_effects_str = ", ".join(current_effects_val) if current_effects_val else "None set"
+                    print_info("Current Post-Processing Effects: " + current_effects_str)
                     print_info("Select post-processing effects:")
                     print_option("1", "Bloom Effect")
                     print_option("2", "Vignette Effect")
@@ -294,25 +328,15 @@ def manage_styles():
                     print_option("b", "Back")
 
                     effects_choice = get_validated_input(
-                        "Select post-processing effects (1-14, b)",
-                        [
-                            "1",
-                            "2",
-                            "3",
-                            "4",
-                            "5",
-                            "6",
-                            "7",
-                            "8",
-                            "9",
-                            "10",
-                            "11",
-                            "12",
-                            "13",
-                            "14",
-                            "b",
+                        prompt="Select post-processing effects",
+                        options=[
+                            "1", "2", "3", "4", "5", "6", "7", "8", 
+                            "9", "10", "11", "12", "13", "14", "b"
                         ],
+                        help_context_id="STYLES_POST_PROCESSING_CHOICE"
                     )
+                    if effects_choice == "_HELP_SHOWN_":
+                        continue
                     if effects_choice == "b":
                         break
 

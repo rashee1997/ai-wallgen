@@ -14,6 +14,7 @@ from wall_gen.ui_utils import (
     get_validated_input,
     get_interactive_input, # Added
     get_confirmation,    # Added
+    clear_screen, # Added
 )
 # Updated imports
 from wall_gen.config import available_genres
@@ -24,8 +25,10 @@ def manage_genres():
     """Manage user's preferred genres for wallpaper generation."""
     user_prefs = get_preferences()
     while True:
+        clear_screen()
         print_header("Manage Genres")
-        print_section("Current Preferred Genres")
+        # print_section("Current Preferred Genres") # Header is sufficient
+        print_info("\nYour Preferred Genres:") # More descriptive
 
         if not user_prefs.preferred_genres:
             print_info("No preferred genres set yet.")
@@ -44,8 +47,12 @@ def manage_genres():
         print_option("b", "Back")
 
         choice = get_validated_input(
-            "\nEnter your choice (1-3, b): ", ["1", "2", "3", "b"]
+            prompt="\nEnter your choice", 
+            options=["1", "2", "3", "b"],
+            help_context_id="GENRES_MENU"
         )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             return  # Exit genre management
 

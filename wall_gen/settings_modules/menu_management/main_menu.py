@@ -51,8 +51,15 @@ def run_main_menu():
     # Show welcome message -- REMOVED, handled by run_wallgen.py
     # show_ascii_art()
 
+    # Import clear_screen, it might not be directly in ui_utils if not added, but it's planned.
+    # Assuming it's available as per plan. If not, this would need adjustment or ui_utils to be updated first.
+    from wall_gen.ui_utils import clear_screen # Ensure clear_screen is available
+
     while True:
-        menu_options: List[Tuple[str, str]] = [
+        clear_screen()
+        print_header("WallGen AI Wallpaper Generator") # Consistent header
+        print_section("Main Menu")
+        menu_options: List[Tuple[str, str]] = [ # Define menu_options inside loop if it can change, or outside if static
             ("1", "Generate AI Wallpaper - Create custom wallpapers using AI"),
             ("2", "Generate Prompt Only - Create and save prompts without images"),
             ("3", "Manage Preferences - Customize wallpaper settings"),
@@ -61,13 +68,15 @@ def run_main_menu():
             ("7", "Preview Recent Images"),
             ("E", "Exit - Save and exit"),
         ]
-
-        print_section("Main Menu")
         print_menu_options(menu_options)
 
         choice = get_menu_choice(
-            "Select an option (1-5, 7, E)", ["1", "2", "3", "4", "5", "7", "E", "e"]
+            prompt="Select an option", 
+            valid_choices=["1", "2", "3", "4", "5", "7", "E", "e"],
+            help_context_id="MAIN_MENU"
         )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             # Handle graceful exit
             print_info("Saving preferences before exit...")
@@ -115,10 +124,20 @@ def manage_preferences():
         ("3", "Reset All Settings to None"),
     ]
 
+    from wall_gen.ui_utils import clear_screen # Ensure clear_screen is available
+
     while True:
+        clear_screen()
+        print_header("WallGen Preferences") # Consistent header
         print_section("Manage Preferences")
         print_menu_options(menu_options)  # Display the options
-        choice: str = get_menu_choice("Select option (1-3, b)", ["1", "2", "3", "b"])
+        choice: str = get_menu_choice(
+            prompt="Select an option (or 'b' to go back)",
+            valid_choices=["1", "2", "3", "b"],
+            help_context_id="MANAGE_PREFERENCES_MENU"
+        )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             return  # Exit preference management if interrupted
 
@@ -137,10 +156,22 @@ def manage_preferences():
 
 def confirm_and_reset():
     """Helper function to handle reset confirmation."""
+    # This function doesn't have its own loop to continue, so if help is shown,
+    # it will just re-prompt. The visual break might be acceptable here,
+    # or this could be restructured into a loop if perfect redraw is needed.
+    # For now, just adding the check. The main impact is on menu loops.
     confirm = get_validated_input(
         "Are you sure you want to reset ALL settings to None? This cannot be undone. (y/n)",
-        ["y", "n"],
+        options=["y", "n"], # Added options keyword
+        help_context_id="CONFIRM_RESET_ALL_SETTINGS" # Needs a new context ID
     )
+    if confirm == "_HELP_SHOWN_":
+        # Re-call confirm_and_reset to show the prompt again after help
+        # This creates a recursive call if help is repeatedly asked for, but simple.
+        # A loop would be cleaner if this becomes an issue.
+        confirm_and_reset() 
+        return 
+
     if confirm.lower() == "y":
         reset_all_settings_to_none()
     else:

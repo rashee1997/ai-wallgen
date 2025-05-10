@@ -9,6 +9,8 @@ from wall_gen.ui_utils import (
     print_success,
     print_warning,
     get_validated_input,
+    clear_screen, # Added
+    print_header, # Added
 )
 from wall_gen.settings_modules.settings_manager import get_preferences
 
@@ -21,7 +23,9 @@ def manage_wallpaper_settings():
     settings = user_prefs.wallpaper_settings
 
     while True:
-        print_section("Wallpaper Settings")
+        clear_screen()
+        print_header("Wallpaper Settings")
+        # print_section("Wallpaper Settings") # Replaced by print_header
         print_option(
             "1",
             f"Automatically Set Wallpaper: {'Yes' if settings.get('auto_set') else 'No'}",
@@ -34,7 +38,13 @@ def manage_wallpaper_settings():
         )
         print_option("b", "Back to Previous Menu")
 
-        choice = get_validated_input("Choose: ", ["1", "2", "3", "b"])
+        choice = get_validated_input(
+            prompt="Choose an option", 
+            options=["1", "2", "3", "b"],
+            help_context_id="WALLPAPER_SETTINGS_MENU"
+        )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "1":
             curr = settings.get("auto_set", False)
             settings["auto_set"] = not curr
@@ -52,8 +62,12 @@ def manage_wallpaper_settings():
             for k, v in opt_map.items():
                 print_option(k, v)
             selection = get_validated_input(
-                "Choose backend (1-3, or 'b' to cancel): ", list(opt_map.keys()) + ["b"]
+                prompt="Choose backend (or 'b' to cancel)", 
+                options=list(opt_map.keys()) + ["b"],
+                help_context_id="WALLPAPER_SETTINGS_PREVIEW_BACKEND_CHOICE"
             )
+            if selection == "_HELP_SHOWN_":
+                continue # Will re-enter the main loop of manage_wallpaper_settings, then if '3' is chosen, it re-shows this sub-section
             if selection != "b":
                 settings["gui_preview_backend"] = opt_map[selection]
                 print_success(f"Preview backend set to {opt_map[selection]}")

@@ -18,6 +18,8 @@ from wall_gen.ui_utils import (
     print_success,
     print_breadcrumb,
     get_validated_input,
+    clear_screen, # Added
+    print_header, # Added
 )
 # Import necessary modules for the new menu option
 from ... import gemini_config # To access AVAILABLE_GEMINI_MODELS, set_selected_gemini_model, get_selected_gemini_model
@@ -29,7 +31,9 @@ def handle_select_gemini_model():
     user_prefs = get_preferences()
     current_model = gemini_config.get_selected_gemini_model(user_prefs)
     
-    print_section("Select Gemini Model (Non-Imagen Tasks)")
+    clear_screen()
+    print_header("Select Gemini Model (Non-Imagen)")
+    # print_section("Select Gemini Model (Non-Imagen Tasks)") # Replaced by print_header
     print_info(f"Current model: {current_model}")
     print_info("Available models:")
     
@@ -39,8 +43,18 @@ def handle_select_gemini_model():
     prompt_text = f"Select model (1-{len(gemini_config.AVAILABLE_GEMINI_MODELS)}, or 'c' to cancel):"
     valid_choices = [str(i) for i in range(1, len(gemini_config.AVAILABLE_GEMINI_MODELS) + 1)] + ["c"]
     
-    choice = get_validated_input(prompt_text, valid_choices)
+    choice = get_validated_input(
+        prompt_text, 
+        options=valid_choices, # Ensure 'options' keyword is used
+        help_context_id="TOOLS_SELECT_GEMINI_MODEL_CHOICE"
+    )
 
+    if choice == "_HELP_SHOWN_":
+        # If help was shown, we want to re-display this sub-menu/prompt.
+        # Since this function doesn't have its own loop, returning will go back to run_tools_menu,
+        # which will then re-enter this function if the user chooses option '6' again.
+        # This is an acceptable flow for now.
+        return 
     if choice.lower() == 'c':
         print_info("Model selection cancelled.")
         return
@@ -78,13 +92,19 @@ def run_tools_menu():
     ]
 
     while True:
-        print_section("Tools & Utilities")
+        clear_screen()
+        print_header("WallGen Tools & Utilities")
+        # print_section("Tools & Utilities") # Replaced by print_header for consistency
         print_breadcrumb(["Main Menu", "Tools & Utilities"])
         print_menu_options(menu_options)
 
         choice = get_menu_choice(
-            "Select option (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"] # Updated valid choices
+            prompt="Select an option", # Generic prompt
+            valid_choices=["1", "2", "3", "4", "5", "6", "b"], 
+            help_context_id="TOOLS_MENU" 
         )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             return  # Exit if interrupted
         if choice == "_EOF_":

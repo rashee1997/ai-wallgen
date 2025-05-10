@@ -15,6 +15,7 @@ from wall_gen.ui_utils import (
     print_error,
     get_validated_input,
     print_header,
+    clear_screen, # Added
 )
 # Updated imports
 from wall_gen.config import available_genres, STYLE_CATEGORIES
@@ -60,7 +61,9 @@ def configure_advanced_options():
     Menu for advanced options configuration, calling appropriate sub-menus.
     """
     while True:
-        print_section("Advanced Options")
+        clear_screen()
+        print_header("Advanced Options")
+        # print_section("Advanced Options") # Replaced by print_header
         print_option("1", "Genres")
         print_option("2", "Style Settings & Options")
         print_option("3", "Moods")
@@ -80,8 +83,13 @@ def configure_advanced_options():
         print_option("b", "Back")
 
         valid_options = [str(i) for i in range(1, 17)] + ["b"]
-        choice = get_validated_input("Choose: ", valid_options)
-
+        choice = get_validated_input(
+            prompt="Choose an option", 
+            options=valid_options,
+            help_context_id="ADVANCED_OPTIONS_MENU"
+        )
+        if choice == "_HELP_SHOWN_":
+            continue
         menu_map = {
             "1": manage_genres,
             "2": manage_styles,
@@ -169,13 +177,24 @@ def change_aspect_ratio():
     """
     user_prefs = get_preferences()
     options = ["16:9", "21:9", "4:3", "3:2", "1:1"]
-    print_section("Available Aspect Ratios:")
+    clear_screen()
+    print_header("Change Aspect Ratio")
+    # print_section("Available Aspect Ratios:") # Replaced by print_header
+    print_info("Current Aspect Ratio: " + str(user_prefs.aspect_ratio if hasattr(user_prefs, 'aspect_ratio') else "Not set"))
+    print_info("Select new aspect ratio:")
     for idx, val in enumerate(options, 1):
         print_option(str(idx), val)
     idx_map = {str(i + 1): v for i, v in enumerate(options)}
     choice = get_validated_input(
-        "Choose (or 'b' to cancel): ", list(idx_map.keys()) + ["b"]
+        prompt="Choose an option (or 'b' to cancel)", 
+        options=list(idx_map.keys()) + ["b"],
+        help_context_id="ADVANCED_OPTIONS_ASPECT_RATIO_CHOICE"
     )
+    if choice == "_HELP_SHOWN_":
+        # This function is called once, if help is shown, it should ideally re-prompt.
+        # For simplicity, returning will take it back to the configure_advanced_options menu.
+        # User can select option '4' again.
+        return
     if choice != "b":
         value = idx_map[choice]
         user_prefs.aspect_ratio = value

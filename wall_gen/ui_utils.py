@@ -15,6 +15,7 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.status import Status
 from rich.prompt import Prompt, Confirm
+from rich.padding import Padding # Added for help panel
 
 console = Console()
 
@@ -26,15 +27,21 @@ _current_progress_task_id: Optional[TaskID] = None
 
 def print_header(text: str) -> None:
     """
-    Print a formatted header using Rich Rules and Text.
+    Print a formatted and feature-rich header using Rich Rules and Text for all headers.
     """
-    header_text = Text(text, justify="center", style="bold cyan")
+    # Apply a consistent feature-rich style to all headers
+    header_text_str = f"🌟 {text} 🌟"  # Generic decoration
+    rule_char = "─"  # BOX DRAWINGS LIGHT HORIZONTAL - consistent rule character
+    header_style = "bold yellow"  # Consistent style for the header text
+    rule_style = "yellow"  # Consistent style for the rule lines
+
+    header_text = Text(header_text_str, justify="center", style=header_style)
     
-    console.print() # For the initial newline before the first border
-    console.print(Rule(style="cyan", characters="=")) 
+    console.print() 
+    console.print(Rule(style=rule_style, characters=rule_char)) 
     console.print(header_text) 
-    console.print(Rule(style="cyan", characters="=")) 
-    console.print() # For the additional newline (original had \n\n after last border)
+    console.print(Rule(style=rule_style, characters=rule_char)) 
+    console.print()
 
 def print_section(title: str) -> None: # Parameter renamed from text to title for clarity
     """
@@ -116,6 +123,15 @@ def print_info(text: str, timestamp: bool = False) -> None:
 
 # Function print_prompt removed as its functionality is incorporated into Rich-based input functions.
 
+try:
+    from .help_content import get_help_text # For contextual help
+except ImportError:
+    # Fallback if help_content is not found, to prevent crashes during development/testing
+    def get_help_text(context_id: str) -> str:
+        # In a real scenario, might log this warning
+        # print_warning(f"Warning: help_content.py not found or get_help_text failed for context: {context_id}")
+        return "Help system component (help_content.py) not found."
+
 def get_interactive_input(prompt_text: str) -> str:
     """
     Get user input interactively using Rich Prompt.
@@ -129,27 +145,70 @@ def get_interactive_input(prompt_text: str) -> str:
     # Prompt.ask will return this default if the user just presses Enter.
     return Prompt.ask(styled_prompt_text, default="").strip()
 
-def get_validated_input(prompt: str, options: Optional[List[str]] = None,
-                        default: Optional[str] = None, allow_empty: bool = False) -> str:
+def get_validated_input(
+    prompt: str, 
+    options: Optional[List[str]] = None,
+    default: Optional[str] = None, 
+    allow_empty: bool = False,
+    help_context_id: Optional[str] = None # New parameter for contextual help
+) -> str:
     """
-    Get and validate user input using Rich Prompt.
+    Get and validate user input using Rich Prompt, with integrated help.
     """
     effective_default = default
-    if default is None and allow_empty:
-        # If allow_empty is True and no specific default is given,
-        # an empty string is effectively the default for blank input.
+    if default is None and allow_empty and not options: # Rich handles default with choices differently
         effective_default = ""
     
-    # show_default should reflect if an original default was provided by the caller,
-    # not our internally set effective_default of "" if that was the case.
     should_show_default_in_prompt = bool(default is not None)
+    
+    prompt_suffix = ""
+    if help_context_id:
+        prompt_suffix = " (type 'h' or '?' for help)"
 
-    return Prompt.ask(
-        prompt,
-        choices=options,
-        default=effective_default,
-        show_default=should_show_default_in_prompt
-    )
+    while True:
+        full_prompt_text = f"{prompt}{prompt_suffix}"
+        
+        # Using Rich Prompt.ask for input.
+        # We will check for 'h' or '?' before Rich's own choice validation if options are provided.
+        raw_user_input = Prompt.ask(
+            full_prompt_text,
+            choices=None, # We handle choice validation manually after help check to allow 'h','?'
+            default=effective_default if not options else None, # Default handling by Rich is tricky with choices
+            show_default=should_show_default_in_prompt if not options else False
+        ).strip()
+
+        if help_context_id and raw_user_input.lower() in ['h', '?']:
+            # display_help_panel will clear the screen. The calling menu must redraw.
+            display_help_panel(get_help_text(help_context_id), title=f"{help_context_id.replace('_', ' ').title()} Help")
+            # After help, the screen is clear. The menu needs to redraw before next prompt.
+            return "_HELP_SHOWN_" # Return sentinel value instead of continue
+
+        # Manual validation against options if provided
+        if options:
+            if raw_user_input.lower() in [opt.lower() for opt in options]:
+                for opt_val in options: # Return with original casing
+                    if opt_val.lower() == raw_user_input.lower():
+                        return opt_val
+                # This part should ideally not be reached if the above finds a match
+                return raw_user_input 
+            else:
+                # Constructing the valid options string for the error message
+                valid_options_str = ", ".join(options)
+                print_error(f"Invalid choice. Please enter one of [{valid_options_str}]{prompt_suffix if help_context_id else ''}.")
+                # Loop continues, re-prompting. Menu should redraw.
+                continue
+        
+        # If no options to validate against
+        if allow_empty and not raw_user_input: # If empty input is allowed and input is empty
+            return ""
+        
+        if not allow_empty and not raw_user_input: # If empty input is not allowed and input is empty
+            print_error(f"Input cannot be empty.{prompt_suffix if help_context_id else ''}")
+            # Loop continues, re-prompting. Menu should redraw.
+            continue
+            
+        # If no options, and input is not empty (or empty is allowed and it's not empty)
+        return raw_user_input
 
 def get_confirmation(prompt: str, default: Optional[bool] = None) -> bool:
     """
@@ -176,6 +235,38 @@ def print_wrapped_text(text: str, width: int = 70, indent: int = 4) -> None:
     wrapper = textwrap.TextWrapper(width=width, subsequent_indent=' ' * indent)
     wrapped = wrapper.fill(text)
     console.print(wrapped)
+
+def display_help_panel(help_text: str, title: str = "Help") -> None:
+    """
+    Displays the given help text in a Rich Panel.
+    Clears the screen after the help panel is dismissed.
+    """
+    if not help_text:
+        console.print(Text("No help content provided.", style="yellow"))
+        return
+
+    content = Text(help_text, style="default")
+
+    # Create a panel with padding
+    help_panel = Panel(
+        Padding(content, (1, 2)), # Top/bottom padding 1, left/right padding 2
+        title=f"[bold cyan]{title}[/bold cyan]",
+        border_style="blue",
+        expand=False # Panel will size to content, up to console width
+    )
+    console.print() # Newline before panel
+    console.print(help_panel)
+    console.print(Text("Press any key to close help...", style="dim italic cyan", justify="center"))
+    
+    try:
+        if sys.stdin.isatty(): # Check if running in an interactive terminal
+            input() 
+        else: # Non-interactive, maybe just pause briefly or skip
+            time.sleep(0.1) # Small pause if not interactive
+    except KeyboardInterrupt:
+        pass # Allow Ctrl+C to break out
+    finally:
+        clear_screen() # CRITICAL: Clear screen after help display
 
 def show_spinner(message: str, duration: float = 2) -> None:
     """
@@ -264,17 +355,31 @@ def print_menu_options(options: List[tuple[str, str, Optional[str]]]) -> None:
         shortcut = rest[0] if rest else None
         print_option(key, description, shortcut)
 
-def get_menu_choice(prompt: str, valid_choices: List[str], allow_empty: bool = False) -> str:
+def get_menu_choice(
+    prompt: str, 
+    valid_choices: List[str], 
+    help_context_id: Optional[str] = None, # New parameter
+    allow_empty: bool = False
+) -> str:
     """
-    Get a validated menu choice from the user.
+    Get a validated menu choice from the user, using enhanced get_validated_input.
+    Handles KeyboardInterrupt and EOFError.
     """
     try:
-        return get_validated_input(prompt, valid_choices, allow_empty=allow_empty)
+        # Pass valid_choices to options parameter of get_validated_input
+        return get_validated_input(
+            prompt, 
+            options=valid_choices, 
+            help_context_id=help_context_id, 
+            allow_empty=allow_empty
+        )
     except KeyboardInterrupt:
-        print("\nOperation interrupted.")
+        # console.print("\nOperation interrupted by user (Ctrl+C).", style="yellow") # Rich console for consistency
+        print_warning("\nOperation interrupted by user (Ctrl+C).") # Using existing styled print
         return "_INTERRUPTED_"
     except EOFError:
-        print("\nInput closed. Exiting menu.")
+        # console.print("\nInput stream closed (Ctrl+D).", style="yellow")
+        print_warning("\nInput stream closed (Ctrl+D).") # Using existing styled print
         return "_EOF_"
 
 # Function show_ascii_art() removed as it was redundant with app_utils.display_startup_message

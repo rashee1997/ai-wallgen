@@ -19,6 +19,8 @@ from wall_gen.ui_utils import (
     print_error,
     get_validated_input,
     show_spinner,
+    clear_screen, # Added
+    print_header, # Added
 )
 
 # Import from other internal modules (updated paths)
@@ -59,13 +61,19 @@ def run_generate_menu(generate_only: bool = False):
     ]
 
     while True:
-        print_section(section_title)
+        clear_screen()
+        print_header(section_title) # Using header instead of section for consistency
+        # print_section(section_title) 
         print_breadcrumb(breadcrumb)
         print_menu_options(menu_options)
 
         choice = get_menu_choice(
-            "Select option (1-5, B)", ["1", "2", "3", "4", "5", "B", "b"]
+            prompt="Select option", # Generic prompt
+            valid_choices=["1", "2", "3", "4", "5", "B", "b"],
+            help_context_id="GENERATE_MENU_OVERALL" # Added help context
         )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             raise KeyboardInterrupt
 
@@ -145,8 +153,17 @@ def handle_random_generation(generate_only: bool):
 def handle_custom_generation(generate_only: bool):
     """Handle custom prompt entry and generation."""
     custom_prompt = get_validated_input(
-        "Enter your custom prompt (or 'b' to go back)", allow_empty=False
+        prompt="Enter your custom prompt (or 'b' to go back)", 
+        allow_empty=False,
+        help_context_id="GENERATE_CUSTOM_PROMPT_INPUT" # Added help context
     )
+    if custom_prompt == "_HELP_SHOWN_":
+        # This function is called, does its input, then returns.
+        # If help is shown, we want to re-prompt for custom input.
+        # A simple way is to call itself again, or just return and let the main generate_menu loop.
+        # For now, returning will take it back to the run_generate_menu options.
+        # If a dedicated re-prompt for custom input is desired after help, this function needs its own loop.
+        return # Go back to run_generate_menu
     if custom_prompt.lower() == "b":
         return
 

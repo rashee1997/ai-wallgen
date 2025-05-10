@@ -5,6 +5,8 @@ from wall_gen.ui_utils import (
     print_info,
     print_success,
     get_validated_input,
+    clear_screen, # Added
+    print_header, # Added
 )
 from ..settings_manager import get_preferences
 
@@ -13,7 +15,9 @@ def manage_camera_settings():
     """Manage camera-specific settings."""
     user_prefs = get_preferences()
     while True:
-        print_section("Camera & Technical Settings")
+        clear_screen()
+        print_header("Camera & Technical Settings")
+        # print_section("Camera & Technical Settings") # Replaced by print_header
         print_option("1", "Camera Model")
         print_option("2", "Lens Type")
         print_option("3", "Aperture")
@@ -26,8 +30,12 @@ def manage_camera_settings():
         print_option("b", "Back")
 
         choice = get_validated_input(
-            "Select option (1-9, b)", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "b"]
+            prompt="Select an option", 
+            options=["1", "2", "3", "4", "5", "6", "7", "8", "9", "b"],
+            help_context_id="CAMERA_MENU"
         )
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "_INTERRUPTED_":
             return  # Exit camera settings
 
@@ -79,8 +87,12 @@ def manage_camera_settings():
             print_option("6", "Custom Filter")
             print_option("b", "Back")
             filter_choice = get_validated_input(
-                "Select filter type (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"]
+                prompt="Select filter type", 
+                options=["1", "2", "3", "4", "5", "6", "b"],
+                help_context_id="CAMERA_FILTER_TYPE_CHOICE"
             )
+            if filter_choice == "_HELP_SHOWN_":
+                continue
             if filter_choice == "_INTERRUPTED_":
                 return
             if filter_choice == "b":
@@ -116,8 +128,12 @@ def manage_camera_settings():
             print_option("b", "Back")
 
             model_choice = get_validated_input(
-                "Select camera model (1-5, b)", ["1", "2", "3", "4", "5", "b"]
+                prompt="Select camera model", 
+                options=["1", "2", "3", "4", "5", "b"],
+                help_context_id="CAMERA_MODEL_CHOICE"
             )
+            if model_choice == "_HELP_SHOWN_":
+                continue
             if model_choice == "_INTERRUPTED_":
                 continue
 
@@ -156,8 +172,12 @@ def manage_camera_settings():
             print_option("b", "Back")
 
             lens_choice = get_validated_input(
-                "Select lens type (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"]
+                prompt="Select lens type", 
+                options=["1", "2", "3", "4", "5", "6", "b"],
+                help_context_id="CAMERA_LENS_TYPE_CHOICE"
             )
+            if lens_choice == "_HELP_SHOWN_":
+                continue
             if lens_choice == "_INTERRUPTED_":
                 continue
 
@@ -197,8 +217,12 @@ def manage_camera_settings():
             print_option("b", "Back")
 
             aperture_choice = get_validated_input(
-                "Select aperture (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"]
+                prompt="Select aperture", 
+                options=["1", "2", "3", "4", "5", "6", "b"],
+                help_context_id="CAMERA_APERTURE_CHOICE"
             )
+            if aperture_choice == "_HELP_SHOWN_":
+                continue
             if aperture_choice == "_INTERRUPTED_":
                 continue
 
@@ -238,8 +262,12 @@ def manage_camera_settings():
             print_option("b", "Back")
 
             dof_choice = get_validated_input(
-                "Select depth of field (1-6, b)", ["1", "2", "3", "4", "5", "6", "b"]
+                prompt="Select depth of field", 
+                options=["1", "2", "3", "4", "5", "6", "b"],
+                help_context_id="CAMERA_DOF_CHOICE"
             )
+            if dof_choice == "_HELP_SHOWN_":
+                continue
             if dof_choice == "_INTERRUPTED_":
                 continue
 
@@ -280,9 +308,12 @@ def manage_camera_settings():
             print_option("b", "Back")
 
             effect_choice = get_validated_input(
-                "Select special effect (1-7, b)",
-                ["1", "2", "3", "4", "5", "6", "7", "b"],
+                prompt="Select special effect",
+                options=["1", "2", "3", "4", "5", "6", "7", "b"],
+                help_context_id="CAMERA_LENS_EFFECT_CHOICE"
             )
+            if effect_choice == "_HELP_SHOWN_":
+                continue
             if effect_choice == "_INTERRUPTED_":
                 continue
 

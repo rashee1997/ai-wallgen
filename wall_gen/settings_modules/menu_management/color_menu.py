@@ -6,6 +6,8 @@ from wall_gen.ui_utils import (
     print_warning,
     print_error,
     get_validated_input,
+    clear_screen, # Added
+    print_header, # Added
 )
 from ..settings_manager import get_preferences
 
@@ -14,7 +16,9 @@ def manage_color_settings():
     """Manage color and detail settings."""
     user_prefs = get_preferences()
     while True:
-        print_section("Color & Detail Settings")
+        clear_screen()
+        print_header("Color & Detail Settings")
+        # print_section("Color & Detail Settings") # Replaced by print_header
         print_option("1", "Color Scheme")
         print_option("2", "Palette Type")
         print_option("3", "Color Temperature")
@@ -23,9 +27,12 @@ def manage_color_settings():
         print_option("b", "Back")
 
         choice = get_validated_input(
-            "Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"]
+            prompt="Select an option", 
+            options=["1", "2", "3", "4", "5", "b"],
+            help_context_id="COLOR_DETAIL_MENU"
         )
-
+        if choice == "_HELP_SHOWN_":
+            continue
         if choice == "b":
             return
 
@@ -41,9 +48,12 @@ def manage_color_settings():
             print_option("b", "Back")
 
             scheme_choice = get_validated_input(
-                "Select color scheme (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"]
+                prompt="Select color scheme", 
+                options=["1", "2", "3", "4", "5", "6", "7", "b"],
+                help_context_id="COLOR_SCHEME_CHOICE"
             )
-
+            if scheme_choice == "_HELP_SHOWN_":
+                continue
             if scheme_choice == "b":
                 continue
 
@@ -83,9 +93,12 @@ def manage_color_settings():
             print_option("b", "Back")
 
             palette_choice = get_validated_input(
-                "Select palette type (1-7, b)", ["1", "2", "3", "4", "5", "6", "7", "b"]
+                prompt="Select palette type", 
+                options=["1", "2", "3", "4", "5", "6", "7", "b"],
+                help_context_id="COLOR_PALETTE_TYPE_CHOICE"
             )
-
+            if palette_choice == "_HELP_SHOWN_":
+                continue
             if palette_choice == "b":
                 continue
 
@@ -123,9 +136,12 @@ def manage_color_settings():
             print_option("b", "Back")
 
             temp_choice = get_validated_input(
-                "Select color temperature (1-5, b)", ["1", "2", "3", "4", "5", "b"]
+                prompt="Select color temperature", 
+                options=["1", "2", "3", "4", "5", "b"],
+                help_context_id="COLOR_TEMPERATURE_CHOICE"
             )
-
+            if temp_choice == "_HELP_SHOWN_":
+                continue
             if temp_choice == "b":
                 continue
 
@@ -156,9 +172,12 @@ def manage_color_settings():
             print_option("b", "Back")
 
             detail_choice = get_validated_input(
-                "Select detail level (1-5, b)", ["1", "2", "3", "4", "5", "b"]
+                prompt="Select detail level", 
+                options=["1", "2", "3", "4", "5", "b"],
+                help_context_id="DETAIL_LEVEL_CHOICE"
             )
-
+            if detail_choice == "_HELP_SHOWN_":
+                continue
             if detail_choice == "b":
                 continue
 
@@ -191,9 +210,13 @@ def manage_color_settings():
             print_option("b", "Back")
 
             texture_choice = get_validated_input(
-                "Select texture quality (1-5, b)", ["1", "2", "3", "4", "5", "b"]
+                prompt="Select texture quality", 
+                options=["1", "2", "3", "4", "5", "b"],
+                help_context_id="TEXTURE_QUALITY_CHOICE"
             )
-            if texture_choice == "_INTERRUPTED_":
+            if texture_choice == "_HELP_SHOWN_":
+                continue
+            if texture_choice == "_INTERRUPTED_": # This was likely a copy-paste error in the original, should be handled by get_validated_input
                 continue
 
             if texture_choice == "b":

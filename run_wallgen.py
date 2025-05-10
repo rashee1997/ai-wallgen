@@ -412,8 +412,18 @@ def orchestrate_wallpaper_generation(
         from wall_gen.ui_utils import get_validated_input
 
         confirm = get_validated_input(
-            "Proceed with this prompt? (yes/no)", ["yes", "no", "y", "n"]
+            prompt="Proceed with this prompt? (yes/no)", 
+            options=["yes", "no", "y", "n"],
+            help_context_id="ORCHESTRATE_PROMPT_CONFIRMATION"
         )
+        if confirm == "_HELP_SHOWN_":
+            # If help was shown, the screen was cleared.
+            # This function will return, and the calling menu (e.g., generate_menu) will loop and redraw.
+            # No specific action needed here other than not proceeding.
+            # We can consider this a cancellation for this attempt.
+            from wall_gen.ui_utils import print_info
+            print_info("Help shown for prompt confirmation. Returning to previous menu.")
+            return False # Indicate cancellation or non-completion
         if confirm.lower() not in ["yes", "y"]:
             from wall_gen.ui_utils import print_info
 

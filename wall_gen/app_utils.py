@@ -15,6 +15,7 @@ import shutil # For getting terminal size
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from rich.prompt import Prompt as RichPrompt # Added for "Press Enter"
 
 try:
     # Use absolute package import for ui_utils and file_utils 
@@ -47,21 +48,12 @@ def configure_app_logging(level=logging.INFO, log_filename="wallpaper_generator.
     """
     log_file_path = os.path.join(project_root_dir, log_filename)
     
-    # Basic config sets up the root logger.
-    # Using basicConfig is simple but less flexible if other parts of the app also call it.
-    # Consider using logger instances if more complex logging is needed later.
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(levelname)s - [%(name)s] - %(message)s",
         handlers=[logging.FileHandler(log_file_path, encoding='utf-8')] # Ensure UTF-8 encoding
     )
     
-    # Optionally, add a StreamHandler for console output if ui_utils isn't used everywhere
-    # console_handler = logging.StreamHandler(sys.stdout)
-    # console_handler.setLevel(level)
-    # console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    # logging.getLogger().addHandler(console_handler)
-
     logging.info(f"Logging configured. Level: {logging.getLevelName(level)}. Log file: {log_file_path}")
 
 
@@ -75,13 +67,10 @@ def check_system_dependencies():
     missing_deps = []
     outdated_deps = []
     dependencies_to_check = {
-        "PIL": "pillow", # Pillow is the package name for PIL
+        "PIL": "pillow", 
         "bleach": "bleach",
-        # Add other optional dependencies here if needed
-        # e.g., "PySide6": "PySide6" for Qt preview
     }
 
-    # Special check for Google AI Python SDK
     try:
         import google.generativeai
         import importlib.metadata
@@ -89,7 +78,6 @@ def check_system_dependencies():
             genai_version = importlib.metadata.version('google-generativeai')
             logging.info(f"Google AI Python SDK version: {genai_version}")
             
-            # Check if this is the new SDK (after July 2024)
             if hasattr(google.generativeai, 'Client'):
                 logging.info("Using the unified Google AI SDK (google-genai)")
             else:
@@ -133,18 +121,14 @@ def check_system_dependencies():
 def mask_sensitive_url_data(url: str) -> str:
     """
     Masks sensitive data (like API keys) in URLs before logging.
-    (Moved from mask_sensitive_data_in_url in wallpaper_generator.py)
     """
     if not isinstance(url, str):
-        return url # Return as is if not a string
+        return url 
 
-    masked_url = html.unescape(url) # Decode HTML entities first
+    masked_url = html.unescape(url) 
     
-    # Mask common sensitive parameters
     sensitive_params = ["key", "api_key", "client_id", "token", "password", "secret"]
     for param in sensitive_params:
-        # Regex to find param=value ensuring value doesn't contain '&'
-        # Handles cases at end of URL or followed by '&'
         masked_url = re.sub(rf'({param}=)[^&]+', rf'\1<HIDDEN>', masked_url, flags=re.IGNORECASE)
         
     return masked_url
@@ -153,41 +137,47 @@ def mask_sensitive_url_data(url: str) -> str:
 def sanitize_logging_content(content: str) -> str:
     """
     Sanitize content for logging by removing potentially sensitive data patterns.
-    (Moved from sanitize_log_content in wallpaper_generator.py)
     """
     if not isinstance(content, str):
         return content
         
-    # Example: Redact typical API key patterns (adjust regex as needed)
-    # This is a basic example, more robust redaction might be needed
     sanitized = re.sub(r"api_key=[\w-]+", "api_key=REDACTED", content, flags=re.IGNORECASE)
     sanitized = re.sub(r"token=[\w.-]+", "token=REDACTED", sanitized, flags=re.IGNORECASE)
-    # Add more redaction rules if necessary
     return sanitized
 
 
 # --- Application Startup Message ---
 
 def display_startup_message():
-    """
-    Display a rich welcome message using Panel and styled Text, centered.
-    """
-    console = Console() # Instantiate console
+    """Displays an enhanced Rich-styled startup message, full width, with emojis/icons."""
+    console = Console()
+    
+    # Create each line as a Text object with its own justification
+    line1 = Text("🎨 🖼️  AI Wallpaper Generator  🖼️ 🎨", style="bold magenta", justify="center")
+    line2 = Text("✨ " + "─" * 40 + " ✨", style="dim white", justify="center") # Using box drawing char for line, adjusted length
+    line3 = Text("🖌️  Crafting unique visuals, just for you! 🌟", style="italic cyan", justify="center")
+    line4 = Text("💡 Tip: Type 'h' or '?' at prompts for help.", style="dim yellow", justify="center")
 
-    text_content = Text(justify="center")
-    # Using ✧ (White Four Pointed Star) icons
-    text_content.append("✧ AI Wallpaper Generator ✧\n", style="bold magenta")
-    text_content.append("-" * 30 + "\n", style="dim white") # Adjusted separator length
-    text_content.append("Crafting unique visuals, just for you.", style="italic cyan")
+    # Join the lines with newlines
+    text_content = Text("\n").join([line1, line2, line3, line4])
 
-    final_panel = Panel(
+    welcome_panel = Panel(
         text_content,
-        title="[bold white]Welcome![/bold white]", # Rich markup in title
-        border_style="bright_blue",
-        expand=False, # Panel width fits content
-        padding=(1, 2) # Padding inside the panel (vertical, horizontal)
+        title="🎉 [bold white]Welcome to WallGen AI![/bold white] 🎉",
+        border_style="bright_blue", 
+        expand=True,  # For full width
+        padding=(1, 2)
     )
-    console.print("\n", final_panel, justify="center")
+    
+    console.print() # Newline before panel
+    console.print(welcome_panel, justify="center") # Centering the panel itself
+    console.print() # For spacing before the prompt
+    try:
+        # RichPrompt was already imported at the top of the file
+        RichPrompt.ask(Text("Press Enter to continue...", style="dim italic cyan", justify="center"), default="", show_default=False)
+    except Exception: 
+        input("Press Enter to continue...") # Fallback for safety
+    # The screen will then be cleared by the main_menu's loop.
 
 
 # --- Cleanup Registration ---
@@ -198,7 +188,6 @@ def initialize_temp_file_cleanup():
     """
     Registers the temporary file cleanup function to run at exit.
     Should be called once during application startup.
-    (New function as per plan)
     """
     global _cleanup_registered
     if not _cleanup_registered:
@@ -213,9 +202,7 @@ def initialize_temp_file_cleanup():
 
 
 if __name__ == '__main__':
-    # Example usage for testing
     logging.basicConfig(level=logging.DEBUG)
-    # Mock ui_utils for direct testing
     print_warning = lambda x: print(f"WARN: {x}")
     print_info = lambda x: print(f"INFO: {x}")
 
@@ -223,7 +210,7 @@ if __name__ == '__main__':
     display_startup_message()
 
     print("\n--- Testing Dependency Check ---")
-    check_system_dependencies() # Will show warnings if Pillow/Bleach are missing
+    check_system_dependencies() 
 
     print("\n--- Testing URL Masking ---")
     test_url_1 = "https://example.com/api?key=12345abc&data=stuff"
@@ -245,8 +232,7 @@ if __name__ == '__main__':
     logging.info("This is an info message after config.")
 
     print("\n--- Testing Cleanup Registration ---")
-    # Note: Cleanup runs at actual script exit. We test registration here.
     initialize_temp_file_cleanup()
-    initialize_temp_file_cleanup() # Test calling again
+    initialize_temp_file_cleanup() 
 
     print("\n--- App Utils Tests Complete ---")
