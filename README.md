@@ -11,15 +11,6 @@
   <a href="https://ai.google.dev/" title="Gemini API">
     <img alt="Gemini API" src="https://img.shields.io/badge/Gemini%20API-Enabled-blue?style=for-the-badge&logo=google">
   </a>
-  <a href="#features" title="Wallpaper Generator">
-    <img alt="Wallpaper Generator" src="https://img.shields.io/badge/Wallpaper-Generator-brightgreen?style=for-the-badge&logo=wallpaperflare">
-  </a>
-  <a href="https://ai.google.dev/" title="AI Powered">
-    <img alt="AI Powered" src="https://img.shields.io/badge/AI--Powered-orange?style=for-the-badge&logo=artificial-intelligence">
-  </a>
-  <a href="https://ai.google.dev/" title="Imagen 3 Enabled">
-    <img alt="Imagen 3" src="https://img.shields.io/badge/Imagen%203-Enabled-purple?style=for-the-badge&logo=google">
-  </a>
   <a href="#prerequisites" title="Supported Platforms">
     <img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey?style=for-the-badge&logo=linux">
   </a>
@@ -52,51 +43,19 @@ A terminal-based tool for generating wallpapers using Google's Imagen 3 model vi
 
 ## 🧑‍💻 Project Architecture & Codebase Overview
 
-- **Modular Python project using a service-oriented structure for maintainability.**
-- **Entrypoint:** `run_wallgen.py` — handles CLI parsing, initialization, user orchestration.
-- **Core logic:** `wall_gen/` package:
-    - `prompt_service.py`, `image_service.py`, `wallpaper_service.py`, `preview_service.py`
-    - Utilities: `app_utils.py`, `file_utils.py`, `ui_utils.py`, `cache_utils.py`, `graceful_exit.py`, `image_editor.py`
-    - Configuration: `gemini_config.py`, `config.py`
-    - **Sub-packages:**
-        - `settings_modules/`: user preferences, import/export, menu management
-        - `prompt_modules/`: prompt formatting, random/custom generation, negative prompt support
-        - `preview_backends/`: separate Qt and Tkinter GUI previewers
-        - `history/`: user image/prompt generation history tools
-- **Preset & Style CLI tools in root:**
-    - `ai_style_generator.py` — Generate/preview AI styles by category with Imagen 3/Gemini.
-    - `ai_prest_gen/` — Preset generator/logic, templates, and management.
-- **Data/asset directories:** `presets/`, `genimage/`, `asset/logo/`, `asset/samples/`
-- **All user customizations support deep/nested JSON via `user_preferences.json`.**
-- **Image preview via terminal or GUI (PyQt5/Tkinter).**
-- **Cross-platform support:** Windows, macOS, Linux DEs (uses platform-specific handlers for setting wallpapers).
+This project features a modular Python structure with a service-oriented design. The main entry point is `run_wallgen.py`, and the core logic resides in the `wall_gen/` package.
+
+For a detailed breakdown of the architecture, components, and operational flows, please see the [Project Overview & Architecture document](docs/PROJECT_OVERVIEW.md).
 
 ---
 
 ### 🔍 Development & Contribution
 
-- **Codebase follows a modular design for ease of customization and testing.**
-- All modules in `wall_gen/` use absolute imports for clean execution from project root.
-- **Contributions:** Please see [docs/git-commit-guide.md](docs/git-commit-guide.md) for Commit Standards.
-- Bug reports and feature suggestions are welcome via GitHub Issues.
-- No automated tests yet: testing is manual, but several modules include if __name__ == '__main__': blocks with example/test code.
-- **Refactor:** Recent refactor replaced all relative imports to prevent import errors and ease top-level execution.
-- **Known limitation:** No integrated unit/integration tests. GUI preview requires PyQt5 or Tkinter installed; headless systems may need tweaks.
+The codebase is designed for modularity. Contributions are welcome! Please refer to our [Git Commit Guide](docs/git-commit-guide.md) for commit standards. Bug reports and feature suggestions can be made via GitHub Issues.
 
 ---
 
-## Recent Changes
-
-- Major refactor to modularize the codebase into multiple packages and modules for better maintainability and extensibility.
-- Added AI-powered preset and style generation features.
-- Enhanced CLI with new options and improved user experience.
-- See [CHANGELOG.md](CHANGELOG.md) for detailed version history and updates.
-
-> **Note**: The codebase has been recently modularized. The main entry point is now `run_wallgen.py`.
-
-> **⚠️ UNDER DEVELOPMENT**: This project is currently under active development. Features may change, and some functionality might be incomplete or experimental.
-
-[Features](#✨-key-features) • [Installation](#🚀-prerequisites) • [System Components](#🧩-system-components) • [Quick Usage](#⚡-quick-usage) • [Documentation](#📚-documentation) • [License](#📝-license)
+[Features](#✨-key-features) • [Prerequisites](#🚀-prerequisites) • [Quick Usage](#⚡-quick-usage) • [Documentation](#📚-documentation) • [License](#📝-license)
 
 <p align="center">
   <code>#ai-image-generation</code> •
@@ -114,16 +73,10 @@ Here are some examples of wallpapers generated using this tool:
 
 <div align="center">
 
-<table>
-  <tr>
-    <td align="center"><img src="asset/samples/palace_corridor.png" alt="Palace Corridor" width="400"/><br><em>Ancient Palace Corridor</em></td>
-    <td align="center"><img src="asset/samples/mosque_street.png" alt="Mosque Street" width="400"/><br><em>Middle Eastern Street View</em></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="asset/samples/garden_art.png" alt="Garden Art" width="400"/><br><em>Topiary Garden Art</em></td>
-    <td align="center"><img src="asset/samples/taj_mahal.png" alt="Taj Mahal" width="400"/><br><em>Taj Mahal at Sunset</em></td>
-  </tr>
-</table>
+|     |     |
+| --- | --- |
+| <img src="asset/samples/palace_corridor.png" alt="Palace Corridor" width="400"/><br><em>Ancient Palace Corridor</em> | <img src="asset/samples/mosque_street.png" alt="Mosque Street" width="400"/><br><em>Middle Eastern Street View</em> |
+| <img src="asset/samples/garden_art.png" alt="Garden Art" width="400"/><br><em>Topiary Garden Art</em> | <img src="asset/samples/taj_mahal.png" alt="Taj Mahal" width="400"/><br><em>Taj Mahal at Sunset</em> |
 
 </div>
 
@@ -131,154 +84,48 @@ Here are some examples of wallpapers generated using this tool:
 
 ## ✨ Key Features
 
-- <img src="https://api.iconify.design/mdi/brain.svg?color=%236200ea" alt="AI Icon" width="20" height="20" style="vertical-align:middle;"> **AI-Powered Generation:** Generate wallpapers using Google's Imagen 3 model via Gemini API.
-- <img src="https://api.iconify.design/mdi/shuffle-variant.svg?color=%2303a9f4" alt="Methods Icon" width="20" height="20" style="vertical-align:middle;"> **Multiple Generation Methods:** Choose from AI-generated, random, or custom prompts.
-- <img src="https://api.iconify.design/mdi/tune.svg?color=%23ff9800" alt="Settings Icon" width="20" height="20" style="vertical-align:middle;"> **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color, etc.), manage presets, and save user preferences.
-- <img src="https://api.iconify.design/mdi/creation.svg?color=%234caf50" alt="Preset Icon" width="20" height="20" style="vertical-align:middle;"> **AI Preset Generation:** Automatically generate coherent setting presets using AI, with CLI commands for generation, listing, loading, and deletion.
-- <img src="https://api.iconify.design/mdi/palette-swatch-outline.svg?color=%23e91e63" alt="Style Icon" width="20" height="20" style="vertical-align:middle;"> **AI Style Generation:** Generate unique artistic styles using AI, with CLI options for category selection, detailed output, and saving to preferences.
-- <img src="https://api.iconify.design/mdi/pencil-circle-outline.svg?color=%232196f3" alt="Prompt Icon" width="20" height="20" style="vertical-align:middle;"> **Detailed Prompt Engineering:** Sophisticated prompt enhancement techniques for optimal results.
-- <img src="https://api.iconify.design/mdi/image-outline.svg?color=%23795548" alt="Preview Icon" width="20" height="20" style="vertical-align:middle;"> **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter), with options for terminal or GUI previews.
-- <img src="https://api.iconify.design/mdi/desktop-mac-dashboard.svg?color=%23607d8b" alt="Platform Icon" width="20" height="20" style="vertical-align:middle;"> **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments, with options to skip preview and apply wallpapers directly.
-- <img src="https://api.iconify.design/mdi/history.svg?color=%239c27b0" alt="History Icon" width="20" height="20" style="vertical-align:middle;"> **Generation History:** View previously generated wallpapers along with the settings used.
-- <img src="https://api.iconify.design/mdi/console-line.svg?color=%233f51b5" alt="Terminal Icon" width="20" height="20" style="vertical-align:middle;"> **Terminal-Based UI:** Simple, text-based interface for interactive use.
-- <img src="https://api.iconify.design/mdi/keyboard-settings-outline.svg?color=%23009688" alt="CLI Icon" width="20" height="20" style="vertical-align:middle;"> **Command-Line Interface:** Control generation, presets, styles, image previews, and advanced options directly via CLI arguments.
+- **AI-Powered Generation:** Create unique wallpapers using Google's Imagen 3 model via the Gemini API.
+- **Multiple Generation Methods:** Choose from AI-generated, random, or custom user prompts.
+- **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color), manage presets, and personalize user preferences. See [Dynamic Configuration](docs/feature_dynamic_configuration.md) for advanced customization.
+- **AI Preset Generation:** Automatically generate coherent setting presets using AI. Full details in the [AI Preset Generation Guide](docs/AI_PRESET_GENERATOR.md).
+- **AI Style Generation:** Generate unique artistic styles using AI. See the [AI Style Generation Guide](docs/feature_ai_style_generation.md).
+- **Detailed Prompt Engineering:** Utilizes sophisticated prompt enhancement techniques for optimal results. Learn more in the [Prompt Engineering Guide](docs/feature_prompt_engineering.md).
+- **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter).
+- **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments. More details in [Other Key Features](docs/other_key_features.md).
+- **Generation History:** Keep track of and view previously generated wallpapers and their settings. More details in [Other Key Features](docs/other_key_features.md).
+- **Terminal-Based UI & CLI:** Offers both an interactive menu for ease of use and a comprehensive command-line interface for advanced control. See the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md) for all CLI options.
 
 ---
 
-## 🛠️ Advanced: Adding Custom Keys in User Preferences (Dynamic Settings)
-
-**Wallgen supports unlimited customization!** You can add any custom settings/key–value pairs (at any depth) in your `user_preferences.json` or via the UI/settings menus, and *all* such fields will be automatically discovered and included in prompt generation, thanks to dynamic flattening of settings.
-
-This lets you extend Imagen settings, styles, or user metadata with no code changes.
-
-**Example: Adding custom keys and nested fields to user preferences**
-
-```json
-{
-  "preferred_styles": ["fantasy", "minimalist"],
-  "aspect_ratio": "21:9",
-  "imagen_settings": {
-    "lighting_settings": {
-      "lighting_type": "neon",
-      "custom_light_mode": "ambient disco"
-    },
-    "composition_settings": {
-      "technique": "rule_of_thirds",
-      "experimental_composition": {
-        "geometry_focus": "hexagonal_pattern",
-        "symmetry_level": 0.75
-      }
-    },
-    "my_extra_tag": "magic glow",
-    "custom_materials": ["silk", "obsidian"]
-  },
-  "my_global_note": "I love ultra-wide scenes"
-}
-```
-
-> *Wallgen will auto-flatten all such entries. Any (non-ignored) keys, even arbitrary new fields/nesting, immediately show up as creative context in prompts or sample output, e.g.:*
->
-> ...and with magic glow my extra tag that, using custom light mode that, geometry focus: hexagonal_pattern, symmetry level: 0.75, custom materials that, I love ultra-wide scenes my global note that, ...
-
-You can freely add fields without changing code, and all will enhance the AI's creative awareness.
-
-> **Note:** Avoid using reserved names (like `negative_prompt`, which is handled separately), and use human-readable/custom key names for best readability in prompt context.
-
----
-
-## � Prerequisites
+## 🚀 Prerequisites
 
 - Python 3.8+
-- Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- A Google Gemini API Key is required. You can obtain one from [Google AI Studio](https://makersuite.google.com/app/apikey).
 
-For complete setup instructions, including installation steps for different operating systems and detailed command-line usage, please refer to the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
-
----
-
-## 🧩 System Components
-
-The application is structured as follows:
-
-- **Main Entry Point:** `run_wallgen.py` (Handles CLI args, initialization, orchestration)
-- **Core Logic Package:** `wall_gen/`
-    - **Services:** `prompt_service.py`, `image_service.py`, `wallpaper_service.py`, `preview_service.py`
-    - **Utilities:** `app_utils.py`, `cache_utils.py`, `file_utils.py`, `ui_utils.py`, `image_editor.py`, `graceful_exit.py`
-    - **Configuration:** `config.py`
-    - **Sub-packages:** `settings_modules/`, `history/`, `prompt_modules/`, `preview_backends/`
-- **Root Modules:** `prompt_generator.py` (Facade), `ai_style_generator.py`, `ai_prest_gen/` (Preset Generation CLI/Logic), `no_preferences_prompt.py`
-- **Data/Assets:** `presets/`, `genimage/`, `cache/`, `asset/`
+For complete setup instructions, installation steps for different operating systems, and detailed command-line usage, please refer to the comprehensive [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
 
 ---
 
 ## ⚡ Quick Usage
 
-After installation, run the application using the new entry point. Run without arguments for the interactive menu:
+After installation and setting up your API key, run the application:
 
 ```bash
 python run_wallgen.py
 ```
+This will start the interactive menu.
 
-### Common Commands
+For command-line operations, here are a couple of basic examples:
 
 ```bash
-# Generate with a random prompt
+# Generate a wallpaper with a random prompt
 python run_wallgen.py --random
 
 # Generate with a custom prompt
-python run_wallgen.py --prompt "mountain landscape at sunset"
-
-# Specify resolution (if supported by your API tier)
-python run_wallgen.py --prompt "forest scene" --resolution "1920x1080"
+python run_wallgen.py --prompt "a serene beach at sunset"
 ```
 
-**AI Preset Generation:**
-
-```bash
-# Generate a new preset based on the "photographic" style
-python ai_preset_generator.py generate --style photographic
-
-# List available presets
-python ai_preset_generator.py list
-
-# Load a preset by name
-python ai_preset_generator.py load cinematic_mood
-
-# Delete a preset by name
-python ai_preset_generator.py delete my_abstract_preset
-```
-
-**AI Style Generation:**
-
-```bash
-# Generate a simple style in the "watercolor" category
-python ai_style_generator.py --category watercolor
-
-# Generate a detailed style for the "sci_fi" category
-python ai_style_generator.py --category sci_fi --detailed
-
-# Generate a random detailed style and save it to preferences
-python ai_style_generator.py --detailed --save
-```
-
----
-
-### Image Preview and Management
-
-```bash
-# Preview the latest generated wallpaper
-python run_wallgen.py --preview-latest
-
-# Preview a specific image file
-python run_wallgen.py --preview-image "genimage/abstract_pattern_87654321.png"
-
-# List all generated images and preview one by number
-python run_wallgen.py --list-images
-
-# Generate a wallpaper and immediately set it as desktop background
-python run_wallgen.py --prompt "mountain landscape with lakes" --skip-preview
-```
-
-For more examples and usage options, see the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
+For a full list of all CLI commands, options, and detailed examples for `run_wallgen.py`, `ai_preset_generator.py`, and `ai_style_generator.py`, please consult the [Installation and CLI Guide](docs/INSTALLATION_AND_CLI_GUIDE.md).
 
 ---
 

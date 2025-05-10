@@ -49,12 +49,41 @@ Key Modules Involved:
     -   (`Imagen settings`, "My overall artistic goal", "Photorealistic with a touch of surrealism")
 
 4.  **Dynamic Technical Context (`dynamic_technical_context`):**
-    The flattened list of settings is then passed to the `dynamic_technical_context` function (detailed further in the [Advanced Prompt Engineering](./feature_prompt_engineering.md) guide). This function attempts to build natural language phrases from these key-value pairs. For instance:
+    The flattened list of settings is then passed to the `dynamic_technical_context` function (detailed further in the [Advanced Prompt Engineering](./feature_prompt_engineering.md) guide). This function attempts to build natural language phrases from these key-value pairs.
+
+    For instance, consider the following custom keys in `user_preferences.json`:
+    ```json
+    {
+      "preferred_styles": ["fantasy", "minimalist"],
+      "aspect_ratio": "21:9",
+      "imagen_settings": {
+        "lighting_settings": {
+          "lighting_type": "neon",
+          "custom_light_mode": "ambient disco"
+        },
+        "composition_settings": {
+          "technique": "rule_of_thirds",
+          "experimental_composition": {
+            "geometry_focus": "hexagonal_pattern",
+            "symmetry_level": 0.75
+          }
+        },
+        "my_extra_tag": "magic glow",
+        "custom_materials": ["silk", "obsidian"]
+      },
+      "my_global_note": "I love ultra-wide scenes"
+    }
+    ```
+    The `dynamic_technical_context` function might then generate a string portion like:
+    `"...and with magic glow my extra tag that, using custom light mode that, geometry_focus: hexagonal_pattern, symmetry_level: 0.75, custom materials that, I love ultra-wide scenes my global note that, ..."`
+    (The exact phrasing can vary based on the internal logic of `phrase_from_kv` within `dynamic_technical_context` and other settings processed.)
+
+    The initial example from the "Adding Custom Keys" section would produce phrases like:
     -   "Vintage Film Grain My custom camera effect that"
     -   "Honeycomb Grid Type that"
     -   "0.7 Intensity factor that"
     -   "Photorealistic with a touch of surrealism My overall artistic goal that"
-    (The exact phrasing can vary based on the internal logic of `phrase_from_kv` within `dynamic_technical_context`.)
+
 
 5.  **Informing the AI Prompt Generator:**
     This dynamically generated text, rich with your custom settings, is then included in the instructions given to the Gemini model that generates the *final image prompt*. This means your custom parameters directly influence the AI's understanding of the desired image, leading to more tailored and unique results.
@@ -70,6 +99,5 @@ Key Modules Involved:
 -   **Nest Appropriately:** While you can add keys at various levels, nesting them within relevant sections (e.g., custom camera details inside `camera_settings`) keeps your `user_preferences.json` organized.
 -   **Use Descriptive Key Names:** Clear key names (e.g., `my_artistic_theme` instead of `param1`) will translate better into the flattened context.
 -   **Avoid Reserved Names:** Be mindful of existing key names used by the application to avoid conflicts, especially for top-level settings directly managed by the `UserPreferences` class. The `flatten_settings` function has an `ignore_keys` set (e.g., for `negative_prompt` which is handled separately).
--   **Refer to `README.md`:** The main project `README.md` also contains a section "Advanced: Adding Custom Keys in User Preferences" which provides a concise example.
 
 This dynamic configuration capability is a cornerstone of AI Wallgen's flexibility, allowing users to deeply customize the AI's creative process.
