@@ -11,6 +11,7 @@ import html
 import atexit
 import sys # For check_dependencies to suggest pip install command
 import os # Added for configure_app_logging path
+import shutil # For getting terminal size
 
 try:
     # Use absolute package import for ui_utils and file_utils 
@@ -166,16 +167,24 @@ def sanitize_logging_content(content: str) -> str:
 
 def display_startup_message():
     """
-    Display ASCII art header and welcome message.
-    (Moved from show_ascii_art in wallpaper_generator.py)
+    Display ASCII art header and welcome message, centered in the terminal.
     """
-    # Use standard print for ASCII art, ui_utils for info message
-    print("\n" + "=" * 80)
-    print(" " * 29 + "AI Wallpaper Generator" + " " * 29)
-    print("=" * 80 + "\n")
-    print_info(
-        "Welcome! Generating stunning AI wallpapers..."
-    ) # Slightly updated message
+    try:
+        columns = shutil.get_terminal_size().columns
+    except OSError: # Handles cases where terminal size can't be determined
+        columns = 80 # Default to 80 columns as a fallback
+
+    message_lines = [
+        "✨🎨✨ AI Wallpaper Generator ✨🎨✨",
+        "------------------------------------",
+        "Crafting unique visuals, just for you.",
+        "------------------------------------"
+    ]
+
+    print("\n") # Initial newline before the centered block
+    for line in message_lines:
+        print(line.center(columns))
+    print("") # Final newline after the centered block
 
 
 # --- Cleanup Registration ---

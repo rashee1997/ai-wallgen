@@ -209,20 +209,38 @@ Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 
 ENHANCEMENT MISSION (No Specific User Preferences):
 Your goal is to take the core subject "{custom_prompt}" and enrich it into a more vivid and descriptive prompt.
-While no specific user preferences for style, camera, etc., are provided, you should creatively and subtly weave in general artistic and descriptive elements to add depth and detail.
+While no specific user preferences for style, camera, etc., are provided, you should creatively and subtly weave in general artistic and descriptive elements to add depth and detail, drawing inspiration from established prompt engineering techniques.
+
+PROMPT CRAFTING PRINCIPLES (Inspired by Gemini API Documentation):
+- Subject Focus: The original subject of "{custom_prompt}" is paramount. Your enhancement must revolve around it.
+- Contextual Richness: Describe the setting or background. Where is the subject? What surrounds it? (e.g., "a studio with a white background," "outdoors in a bustling city," "a serene indoor environment").
+- Style Coherence: If the original prompt implies a style (e.g., "a sketch of..."), maintain and enrich it. If not, suggest a complementary style subtly.
+- Descriptive Language: Use vivid adjectives and adverbs to paint a clear picture.
+- Iterative Refinement (Conceptual): Think of this as one step in refining a vision. Aim for a strong, detailed single output.
+- Quality Modifiers: Incorporate terms like "high-quality," "detailed," "masterpiece," "photorealistic" (if appropriate for the subject and not conflicting with a stated non-photorealistic medium), "sharp focus," "vivid colors" to guide towards better results.
+- Facial Details (if applicable): If the subject involves people, especially in portraits, consider emphasizing clear facial features and expressions.
 
 CRITICAL:
 - The original subject and any explicitly stated artistic medium in "{custom_prompt}" MUST be preserved and remain central.
-- If a traditional medium (e.g., oil painting, watercolor) was in the original prompt, DO NOT convert it to digital art or 3D unless the original prompt implied it. Your enhancements should respect and build upon the stated medium.
+- If a traditional medium (e.g., oil painting, watercolor, sketch) was in the original prompt, DO NOT convert it to digital art or 3D unless the original prompt implied it. Your enhancements should respect and build upon the stated medium.
 
-CONSIDER ADDING DETAILS RELATED TO (if not conflicting with the original prompt):
-- Visual Storytelling: What kind of scene or story does the subject imply? Expand on this.
-- Atmosphere & Mood: What feeling should it evoke? (e.g., serene, dynamic, mysterious, tranquil, vibrant).
-- Lighting Qualities: Describe potential lighting. (e.g., soft diffused light, dramatic directional light, ambient glow, sharp midday light, golden hour).
-- Color Harmonies & Palette: Suggest general color ideas. (e.g., vibrant and contrasting, muted and analogous, monochromatic with accent, cool tones, warm tones).
-- Compositional Elements: Hint at composition. (e.g., rule of thirds, leading lines, symmetry/asymmetry, sense of depth, focused subject, expansive view).
-- Textural Details: Describe potential textures. (e.g., smooth and polished, rough and organic, detailed patterns, simple flat surfaces).
-- Artistic Nuances: Subtly suggest general stylistic touches that complement the subject. (e.g., "a touch of painterly strokes," "clean digital rendering," "geometric forms," "flat shaded textures," "minimal detail"). These should be very general and complementary, and ALWAYS defer to any medium specified in the original prompt.
+CONSIDER ADDING DETAILS RELATED TO (if not conflicting with the original prompt, and inspired by best practices):
+- Visual Storytelling: What kind of scene or story does the subject imply? Expand on this. (e.g., "a lone lighthouse keeper gazing at a stormy sea," "a futuristic cityscape at dawn").
+- Atmosphere & Mood: What feeling should it evoke? (e.g., serene, dynamic, mysterious, tranquil, vibrant, melancholic, joyful, epic, whimsical).
+- Lighting Qualities: Describe potential lighting. (e.g., soft diffused light, dramatic directional light, ambient glow, sharp midday light, golden hour, volumetric lighting, rim lighting, studio lighting, natural lighting).
+- Color Harmonies & Palette: Suggest general color ideas. (e.g., vibrant and contrasting, muted and analogous, monochromatic with accent, cool tones, warm tones, pastel, neon, sepia).
+- Compositional Elements: Hint at composition. (e.g., rule of thirds, leading lines, symmetry/asymmetry, sense of depth, focused subject, expansive view, dynamic angles, Dutch angle, close-up, wide shot, aerial view, from below).
+- Textural Details: Describe potential textures. (e.g., smooth and polished, rough and organic, detailed patterns, simple flat surfaces, metallic sheen, velvety softness, weathered wood, glossy plastic).
+- Artistic Nuances & Styles: Subtly suggest general stylistic touches. (e.g., "a touch of painterly strokes," "clean digital rendering," "geometric forms," "flat shaded textures," "minimal detail," "impressionistic," "surreal," "abstract," "technical pencil drawing," "charcoal sketch," "pastel painting"). ALWAYS defer to any medium specified in the original prompt. Consider historical art references if fitting (e.g., "in the style of Art Nouveau," "reminiscent of Renaissance paintings," "Pop Art influence").
+- Shapes and Materials: If relevant, describe objects "made of [material]" (e.g., "made of glass," "made of chrome," "made of ancient stone") or "in the shape of [form]" (e.g., "a cloud in the shape of a dragon").
+
+TEXT IN IMAGE GENERATION (IF APPLICABLE):
+If the prompt "{custom_prompt}" implies or could benefit from text within the image (e.g., a sign, a book title, a logo concept):
+- Keep text concise (ideally 1-3 words, maximum around 25 characters for clarity).
+- If multiple phrases are needed, limit to 2-3 distinct short phrases.
+- You can suggest general placement (e.g., "text 'Explore' at the bottom," "a sign saying 'Open'") but acknowledge that precise placement can vary.
+- You can suggest a general font style (e.g., "bold sans-serif font," "elegant script font," "vintage lettering") to influence the outcome.
+- You can suggest general font size (e.g., "large title text," "small caption text").
 
 MANDATORY TECHNICAL PARAMETERS (MUST BE INCLUDED):
 - Resolution: {resolution}
@@ -238,7 +256,7 @@ Your response must follow this exact format:
 3. The response MUST then end with "Avoid: [all elements from the negative prompt]".
 
 Example of enriching (if original was "a red cube"):
-"A vibrant red cube, exuding a sense of minimalist strength, resting on a subtly textured flat plane. The scene is bathed in soft, diffused morning light creating gentle highlights and shadows, emphasizing its clean geometric form. The color palette is primarily monochromatic focusing on shades of red with neutral undertones, creating a calm and focused composition. {resolution} resolution, {aspect_ratio} aspect ratio. Avoid: [negative elements]"
+"A vibrant red cube, exuding a sense of minimalist strength, resting on a subtly textured flat plane. The scene is bathed in soft, diffused morning light creating gentle highlights and shadows, emphasizing its clean geometric form. High-quality, detailed rendering with sharp focus. The color palette is primarily monochromatic focusing on shades of red with neutral undertones, creating a calm and focused composition. {resolution} resolution, {aspect_ratio} aspect ratio. Avoid: [negative elements]"
 This is just an example; tailor your enrichment to the specific "{custom_prompt}".
 """
             
@@ -364,63 +382,73 @@ Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 
 🔮 CREATIVE ENHANCEMENT MISSION 🔮
 
-Your task is to breathe life into this prompt while honoring its soul. Take the essence of "{custom_prompt}" and craft a vivid, immersive scene that elevates it to new heights without changing its fundamental spirit.
+Your task is to breathe life into this prompt while honoring its soul. Take the essence of "{custom_prompt}" and craft a vivid, immersive scene that elevates it to new heights without changing its fundamental spirit, guided by the user's preferences and advanced prompt engineering techniques.
 
 ARTISTIC VISION:
-• Style: {style if style else "Be guided by what best serves the subject"}
-• Mood: {mood if mood else "What emotions does this scene naturally evoke?"}
-• Art Movement: {art_movement if art_movement else "Consider what artistic tradition would best frame this imagery"}
+• Style: {style if style else "Be guided by what best serves the subject (e.g., photograph, painting, sketch, digital art, 3D render)"}. Consider specific art styles like {illustration_style if illustration_style else "e.g., anime, comic book, concept art"} or traditional styles like {painting_medium if painting_medium else "e.g., oil painting, watercolor"} with {brushwork if brushwork else "appropriate brushwork"}.
+• Mood: {mood if mood else "What emotions does this scene naturally evoke? (e.g., epic, serene, mysterious, joyful)"}
+• Art Movement: {art_movement if art_movement else "Consider what artistic tradition would best frame this imagery (e.g., Impressionism, Pop Art, Surrealism, Art Deco, Renaissance, Baroque)"}
 • Historical Context: {style_era if style_era else "What time period resonates with this scene?"}
+• Subject Focus: If depicting people, especially in portraits, ensure clear and well-rendered facial details. Use terms like "portrait" or "close-up on face" if appropriate.
 
 CREATIVE METAMORPHOSIS GUIDANCE:
-The original prompt seed "{custom_prompt}" is sacred—its core essence must remain intact and recognizable. Your challenge is to amplify its power through artistic interpretation, weaving in technical elements as natural characteristics of the scene, never as mechanical afterthoughts.
+The original prompt seed "{custom_prompt}" is sacred—its core essence must remain intact and recognizable. Your challenge is to amplify its power through artistic interpretation, weaving in technical elements (derived from user preferences) as natural characteristics of the scene, never as mechanical afterthoughts.
 
 Imagine you're a master painter, cinematographer, and poet combined. Your canvas awaits the transformation of "{custom_prompt}" into something that retains its soul while gaining depth, atmosphere, and technical excellence.
 
 ATMOSPHERE & ENVIRONMENT INSPIRATIONS:
-• Weather conditions: {weather if weather else "What atmospheric conditions would heighten the scene's impact?"}
-• Season: {season if season else "What time of year would create the perfect backdrop?"}
-• Location essence: {location_type if location_type else "What setting would provide the ideal stage?"}
-• Atmospheric qualities: {", ".join(atmospheric_effects) if atmospheric_effects else "Consider fog, mist, clear air, haze, or other atmospheric elements"}
+• Weather conditions: {weather if weather else "What atmospheric conditions would heighten the scene's impact? (e.g., sunny, overcast, rainy, snowy, foggy)"}
+• Season: {season if season else "What time of year would create the perfect backdrop? (e.g., spring, summer, autumn, winter)"}
+• Location essence: {location_type if location_type else "What setting would provide the ideal stage? (e.g., bustling city, tranquil forest, futuristic interior, alien planet)"}
+• Atmospheric qualities: {", ".join(atmospheric_effects) if atmospheric_effects else "Consider fog, mist, clear air, haze, dust particles, or other atmospheric elements"}
 
 VISUAL LANGUAGE ELEMENTS:
-• Light character: {lighting_type if lighting_type else "How does light interact with this scene?"} with {light_quality if light_quality else "quality that enhances the subject"}
-• Time of day: {time_of_day if time_of_day else "When would this scene be most striking?"}
-• Color harmony: {color_scheme if color_scheme else "What color relationships would strengthen the scene?"} with {palette_type if palette_type else "palette reflecting the mood"} and {color_temperature if color_temperature else "temperature creating the right feeling"}
-• Depth perception: {depth_of_field if depth_of_field else "How should focus be distributed across the scene?"}
-• Spatial arrangement: {technique if technique else "What compositional technique would frame this best?"} with focus on {focal_point if focal_point else "the most important element"}
+• Light character: {lighting_type if lighting_type else "How does light interact with this scene? (e.g., natural light, studio lighting, dramatic lighting, soft lighting, volumetric, rim lighting)"} with {light_quality if light_quality else "quality that enhances the subject (e.g., warm, cool, harsh, diffused)"}
+• Time of day: {time_of_day if time_of_day else "When would this scene be most striking? (e.g., sunrise, golden hour, midday, twilight, night)"}
+• Color harmony: {color_scheme if color_scheme else "What color relationships would strengthen the scene? (e.g., monochromatic, analogous, complementary, triadic)"} with {palette_type if palette_type else "palette reflecting the mood (e.g., vibrant, muted, pastel, neon)"} and {color_temperature if color_temperature else "temperature creating the right feeling (e.g., warm, cool, neutral)"}
+• Depth perception: {depth_of_field if depth_of_field else "How should focus be distributed across the scene? (e.g., shallow depth of field, deep focus, bokeh)"}
+• Spatial arrangement & Composition: {technique if technique else "What compositional technique would frame this best? (e.g., rule of thirds, leading lines, symmetry, golden ratio)"} with focus on {focal_point if focal_point else "the most important element"}. Consider {camera_angle if camera_angle else "camera angles like eye-level, low angle, high angle, bird's-eye view, worm's-eye view, Dutch angle"}.
 
 ARTISTIC EXECUTION SUGGESTIONS:
-• Medium expression: {painting_medium if painting_medium else "Consider the perfect medium"} with {brushwork if brushwork else "technique that captures the right feeling"}
-• Textural quality: {texture_quality if texture_quality else "What tactile qualities should be visible?"} with {texture if texture else "surface characteristics that enhance the scene"}
-• Detail richness: {detail_level if detail_level else "How intricate should the scene be?"}
-• Stylistic approach: {illustration_style if illustration_style else "What illustrative style would resonate?"} with {line_quality if line_quality else "line work that enhances the subject"}
-• Dynamic elements: {abstract_composition if abstract_composition else "Consider compositional energy"} with {movement_type if movement_type else "movement qualities that bring life"}
-• Material presence: {material_type if material_type else "What physical qualities should be emphasized?"} with {material_finish if material_finish else "surface finish that creates the right impression"}
+• Medium expression: {painting_medium if painting_medium else "Consider the perfect medium (e.g., oil, watercolor, acrylic, pastel, charcoal, pencil sketch)"} with {brushwork if brushwork else "technique that captures the right feeling (e.g., impasto, scumbling, smooth blending)"}
+• Textural quality: {texture_quality if texture_quality else "What tactile qualities should be visible? (e.g., high detail, smooth, rough, metallic, fabric)"} with {texture if texture else "surface characteristics that enhance the scene (e.g., wood grain, stone texture, brushed metal)"}
+• Detail richness: {detail_level if detail_level else "How intricate should the scene be? (e.g., highly detailed, minimalist, intricate patterns)"}
+• Stylistic approach: {illustration_style if illustration_style else "What illustrative style would resonate? (e.g., comic book art, anime, flat illustration, isometric)"} with {line_quality if line_quality else "line work that enhances the subject (e.g., clean lines, sketchy lines, bold outlines)"}
+• Dynamic elements: {abstract_composition if abstract_composition else "Consider compositional energy (e.g., geometric, organic, flowing)"} with {movement_type if movement_type else "movement qualities that bring life (e.g., dynamic action, serene stillness)"}
+• Material presence: {material_type if material_type else "What physical qualities should be emphasized? (e.g., glass, wood, metal, stone, fabric)"} with {material_finish if material_finish else "surface finish that creates the right impression (e.g., matte, glossy, polished, weathered)"}
 
 TECHNICAL EXCELLENCE REQUIREMENTS:
-• Digital realization: {digital_software if digital_software else "Consider digital execution"} with {", ".join(digital_effects) if digital_effects else "effects that elevate the scene"}
-• Gaming aesthetic: {game_engine if game_engine else "Consider game-inspired visual language"} in {game_genre if game_genre else "a genre that fits"} using {game_shader if game_shader else "appropriate shader techniques"}
-• Professional tooling: {suite if suite else "Consider industry-standard approaches"} with {renderer if renderer else "rendering techniques that excel"}
+• Digital realization: {digital_software if digital_software else "Consider digital execution (e.g., digital painting, 3D render)"} with {", ".join(digital_effects) if digital_effects else "effects that elevate the scene (e.g., bloom, motion blur, lens flare)"}
+• Gaming aesthetic: {game_engine if game_engine else "Consider game-inspired visual language (e.g., Unreal Engine, Unity)"} in {game_genre if game_genre else "a genre that fits (e.g., RPG, sci-fi, fantasy)"} using {game_shader if game_shader else "appropriate shader techniques (e.g., cel shading, PBR)"}
+• Professional tooling: {suite if suite else "Consider industry-standard approaches (e.g., Adobe Photoshop, Blender, Maya)"} with {renderer if renderer else "rendering techniques that excel (e.g., ray tracing, path tracing)"}
+• Overall Quality Impression: Aim for terms like "{rendering_quality if rendering_quality else "high-quality"}", "photorealistic" (if style is photographic), "4K", "HDR", "Studio Photo", "professionally captured/rendered", "detailed masterpiece" where appropriate to the style and subject.
 
-OPTICAL CHARACTERISTICS:
-• Camera perspective: {camera_model if camera_model else "Imagine the perfect camera"} with {lens_type if lens_type else "optimal lens choice"}
-• Optical settings: {aperture if aperture else "Consider aperture impact"} at {focal_length if focal_length else "focal length for ideal perspective"} with {shutter_speed if shutter_speed else "exposure timing that captures motion perfectly"} at {iso if iso else "sensitivity setting for ideal grain/noise"}
-• Photographic enhancements: {filter_type if filter_type else "Consider filter effects"} and {special_lens if special_lens else "special lens characteristics"}
+OPTICAL CHARACTERISTICS (Primarily for Photographic/Rendered Styles):
+• Camera perspective: {camera_model if camera_model else "Imagine the perfect camera"} with {lens_type if lens_type else "optimal lens choice (e.g., 35mm, 50mm, 85mm for portraits; 16-35mm for wide-angle landscapes; 100mm macro for close-ups; fisheye for unique perspectives)"}.
+• Optical settings: {aperture if aperture else "Consider aperture impact (e.g., f/1.8 for shallow depth of field, f/16 for deep focus)"} at {focal_length if focal_length else "focal length for ideal perspective"} with {shutter_speed if shutter_speed else "exposure timing that captures motion perfectly (e.g., fast shutter for freezing action, slow shutter for motion blur)"} at {iso if iso else "sensitivity setting for ideal grain/noise (e.g., ISO 100 for clean, ISO 3200 for low light)"}.
+• Photographic enhancements: {filter_type if filter_type else "Consider filter effects (e.g., polarizing filter, ND filter)"} and {special_lens if special_lens else "special lens characteristics (e.g., anamorphic lens flare, tilt-shift)"}. Consider film types like "{'black and white film' if 'black and white' in style.lower() else 'color film'}", "polaroid".
+
+TEXT IN IMAGE GENERATION (IF APPLICABLE):
+If the prompt "{custom_prompt}" or user preferences imply or could benefit from text within the image:
+- Keep text concise (ideally 1-3 words, maximum around 25 characters for clarity).
+- If multiple phrases are needed, limit to 2-3 distinct short phrases.
+- You can suggest general placement (e.g., "text 'Adventure Awaits' across the top," "a street sign reading 'Elm St'") but acknowledge that precise placement can vary.
+- You can suggest a general font style (e.g., "bold sans-serif font," "elegant script font," "vintage lettering," "futuristic digital font") to influence the outcome.
+- You can suggest general font size (e.g., "large prominent title text," "small subtle caption text").
 
 THE CREATIVE ALCHEMY PROCESS:
-1. Begin with the essence of "{custom_prompt}" - its subject, mood, and intent are inviolable
-2. Synthesize a heightened reality where technical elements become poetic qualities
-3. Craft ONE flowing paragraph where every word serves the vision
-4. Transform technical specifications into natural characteristics of the scene
-5. End exactly with "{resolution} resolution, {aspect_ratio} aspect ratio"
-6. Follow with "Avoid: [negative elements]"
+1. Begin with the essence of "{custom_prompt}" - its subject, mood, and intent are inviolable.
+2. Synthesize a heightened reality where technical elements (from user preferences) become poetic qualities of the scene.
+3. Craft ONE flowing paragraph where every word serves the vision.
+4. Transform technical specifications into natural characteristics of the scene (light, color, perspective, texture, etc.).
+5. End exactly with "{resolution} resolution, {aspect_ratio} aspect ratio".
+6. Follow with "Avoid: [negative elements]".
 
 CRITICAL REMINDER:
-You are creating visual poetry, not a technical document. The technical elements should dissolve into the narrative flow, becoming qualities of light, space, and emotion rather than specifications. Be bold, be evocative, and let your creativity soar while honoring the original prompt's soul.
+You are creating visual poetry, not a technical document. The technical elements should dissolve into the narrative flow, becoming qualities of light, space, and emotion rather than specifications. Be bold, be evocative, and let your creativity soar while honoring the original prompt's soul and the user's preferences.
 
 OUTPUT FORMAT:
-[A single, flowing paragraph that transforms "{custom_prompt}" into a breathtaking scene, weaving in all relevant technical elements as natural qualities, ending precisely with "{resolution} resolution, {aspect_ratio} aspect ratio"]
+[A single, flowing paragraph that transforms "{custom_prompt}" into a breathtaking scene, weaving in all relevant technical elements (guided by user_prefs) as natural qualities, ending precisely with "{resolution} resolution, {aspect_ratio} aspect ratio"]
 Avoid: [negative elements]
 """
 
