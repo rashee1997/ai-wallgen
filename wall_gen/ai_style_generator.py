@@ -1,20 +1,27 @@
+import argparse
+import difflib
+import json
+import logging
 import os
+import random
+import re
 import sys
 import time
-import logging
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 import google.generativeai as genai
+
 # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
-from wall_gen.wallpaper_settings import get_preferences # UserPreferences is obtained via this
 from wall_gen import gemini_config # Import the new centralized configuration
 from wall_gen.ui_utils import (
-    print_warning,
-    print_section,
-    print_info,
     get_validated_input,
+    print_info,
+    print_section,
     print_success,
+    print_warning,
 )
+# UserPreferences is obtained via get_preferences, initialize_settings also used in main
+from wall_gen.wallpaper_settings import get_preferences, initialize_settings
 
 # Configure logging for this module
 # logging.basicConfig( # BasicConfig should ideally be called once at app entry.
@@ -33,6 +40,39 @@ RETRY_DELAY = 2  # seconds
 # Initialization and state are handled by gemini_config.
 
 # _attempt_init_from_env() is removed. gemini_config handles auto-init.
+
+# Module-level constant for category mappings
+CATEGORY_MAPPINGS = {
+    "oil_painting": {
+        "oil", "impasto", "baroque", "impression", "post-impression", "romanticism",
+        "expressionism", "fauvism", "pointillism", "divisionism", "van gogh", "renoir", "manet"
+    },
+    "watercolor": {"watercolor", "watercolour", "aquarelle"},
+    "pastel": {"pastel", "degas"},
+    "charcoal": {"charcoal", "carboncillo"},
+    "pencil_sketch": {"pencil", "graphite", "colored pencil"},
+    "ink_drawing": {"ink", "pen & ink", "line", "pen and ink"},
+    "minimalist": {"minimal", "minimalism", "reductive"},
+    "geometric": {"geometric", "geometry", "polygon", "low poly", "constructivism"},
+    "minimalist_geometric": {"minimalist geometric", "minimal geometric", "geometric minimalism"},
+    "psychedelic": {"psychedelic", "trippy", "hallucinogenic", "psychedelia"},
+    "surrealism": {"surrealism", "surreal", "dreamlike", "fantastical"},
+    "fantasy_landscape": {"fantasy landscape", "fantastical landscape", "enchanted landscape"},
+    "cyberpunk_cityscape": {"cyberpunk cityscape", "neon city", "futuristic cityscape"},
+    "illustration_pixel": {"pixel", "8-bit", "16-bit", "pixelated"},
+    "illustration_anime_manga": {"anime", "manga", "shojo", "shonen", "seinen"},
+    "illustration_comic": {"comic", "graphic novel"},
+    "illustration_cubist": {"cubist", "geometric", "fragmented"},
+    "illustration_surreal": {"surreal", "dreamlike", "fantastical"},
+    "illustration_steampunk": {"steampunk", "victorian", "industrial fantasy"},
+    "photographic": {"photo", "realistic", "photograph", "film", "kodak", "dslr", "cinematic", "fujifilm", "shot on", "hyperreal"},
+    "game_style": {"game", "engine", "unreal", "unity", "fps", "rpg", "rendered", "in-engine"},
+    "digital_art": {"digital", "vector", "glitch", "vaporwave", "retrowave", "3d", "render"},
+    "abstract_conceptual": {"abstract", "conceptual", "cubist", "fauvist", "expressionist", "non-representational", "dreamscape", "surreal"},
+    "material_sculptural": {"sculpture", "sculpted", "statue", "bust", "relief", "bronze", "marble", "clay"},
+    "fantasy": {"fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "castle"},
+    "sci_fi": {"sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"}
+}
 
 def initialize_gemini(api_key: str) -> bool:
     """
@@ -83,8 +123,10 @@ def generate_style_prompt(category: Optional[str] = None, style_type: str = "sim
         )
     else:
         core = (
-            "Suggest a style name (2-4 words) suitable for an AI art preset, then—in one sentence on a new line—describe 1-2 visual or technical hallmarks of this style inspired by its category."
-            "First line: name. Second line: description."
+            "Suggest a style name (2-4 words) suitable for an AI art preset, and a 1-2 sentence description of its visual or technical hallmarks. "
+            "Format the output as a JSON object with two keys: \"name\" and \"description\". "
+            "Example: {\"name\": \"Vibrant Dreamscape\", \"description\": \"Characterized by vivid, surreal colors and flowing, organic shapes. Often evokes a sense of wonder and ethereal beauty.\"}"
+            "Output only the JSON object."
         )
     return base + core
 
@@ -112,6 +154,7 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
     prompt = generate_style_prompt(category, style_type)
     selected_model_name = gemini_config.get_selected_gemini_model(user_prefs)
     logger.info(f"Using Gemini model for style generation: {selected_model_name}")
+    logger.debug(f"Generated Gemini prompt for style_type '{style_type}', category '{category}':\n{prompt}")
 
     for attempt in range(MAX_RETRIES):
         try:
@@ -136,13 +179,29 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
 
             if style_type == "simple":
                 return {"name": style_text, "description": ""}
+            
+            # Attempt to parse as JSON first for detailed style
+            try:
+                # Ensure style_text is not empty and looks like a JSON object
+                if style_text and style_text.startswith("{") and style_text.endswith("}"):
+                    parsed_json = json.loads(style_text)
+                    if isinstance(parsed_json, dict) and "name" in parsed_json and "description" in parsed_json:
+                        logger.info("Successfully parsed detailed style as JSON from Gemini response.")
+                        return {"name": str(parsed_json["name"]).strip(), "description": str(parsed_json["description"]).strip()}
+                    else:
+                        logger.warning(f"Parsed JSON but keys 'name'/'description' missing or invalid structure: {style_text}")
+                # Fallthrough to existing logic if not valid JSON or keys missing
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse detailed style as JSON, falling back to newline splitting: '{style_text}'")
+                # Fallthrough to existing logic
+
+            # Existing fallback logic
             if "\n" in style_text:
                 name, desc = style_text.split("\n", 1)
                 return {"name": name.strip(), "description": desc.strip()}
             else: # Handle case where detailed is expected but only one line is returned
-                logger.warning(f"Expected detailed style (name+desc) but got single line: '{style_text}'. Using as name.")
+                logger.warning(f"Expected detailed style (name+desc) but got single line (and not JSON): '{style_text}'. Using as name.")
                 return {"name": style_text, "description": "Description not provided by AI."}
-
 
         except Exception as e:
             # gemini_state.retry_count removed
@@ -172,58 +231,25 @@ def canonicalize_style_name(style_name: str) -> str:
     :param style_name: Human/computer-generated style string
     :return: Canonical category, or "unknown"
     """
-    import difflib
+    # import difflib # Moved to top
 
     style_name_lower = style_name.lower()
     words = set(style_name_lower.split())
 
-    # Define sets for efficient category lookup
-    category_mappings = {
-        "oil_painting": {
-            "oil", "impasto", "baroque", "impression", "post-impression", "romanticism",
-            "expressionism", "fauvism", "pointillism", "divisionism", "van gogh", "renoir", "manet"
-        },
-        "watercolor": {"watercolor", "watercolour", "aquarelle"},
-        "pastel": {"pastel", "degas"},
-        "charcoal": {"charcoal", "carboncillo"},
-        "pencil_sketch": {"pencil", "graphite", "colored pencil"},
-        "ink_drawing": {"ink", "pen & ink", "line", "pen and ink"},
-        "minimalist": {"minimal", "minimalism", "reductive"},
-        "geometric": {"geometric", "geometry", "polygon", "low poly", "constructivism"},
-        "minimalist_geometric": {"minimalist geometric", "minimal geometric", "geometric minimalism"},
-        "psychedelic": {"psychedelic", "trippy", "hallucinogenic", "psychedelia"},
-        "surrealism": {"surrealism", "surreal", "dreamlike", "fantastical"},
-        "fantasy_landscape": {"fantasy landscape", "fantastical landscape", "enchanted landscape"},
-        "cyberpunk_cityscape": {"cyberpunk cityscape", "neon city", "futuristic cityscape"},
-        "illustration_pixel": {"pixel", "8-bit", "16-bit", "pixelated"},
-        "illustration_anime_manga": {"anime", "manga", "shojo", "shonen", "seinen"},
-        "illustration_comic": {"comic", "graphic novel"},
-        "illustration_cubist": {"cubist", "geometric", "fragmented"},
-        "illustration_surreal": {"surreal", "dreamlike", "fantastical"},
-        "illustration_steampunk": {"steampunk", "victorian", "industrial fantasy"},
-        "photographic": {"photo", "realistic", "photograph", "film", "kodak", "dslr", "cinematic", "fujifilm", "shot on", "hyperreal"},
-        "game_style": {"game", "engine", "unreal", "unity", "fps", "rpg", "rendered", "in-engine"},
-        "digital_art": {"digital", "vector", "glitch", "vaporwave", "retrowave", "3d", "render"},
-        "abstract_conceptual": {"abstract", "conceptual", "cubist", "fauvist", "expressionist", "non-representational", "dreamscape", "surreal"},
-        "material_sculptural": {"sculpture", "sculpted", "statue", "bust", "relief", "bronze", "marble", "clay"},
-        "fantasy": {"fantasy", "mythical", "magical", "wizard", "fairy", "dragon", "unicorn", "castle"},
-        "sci_fi": {"sci-fi", "science fiction", "cyberpunk", "futuristic", "spaceship", "space opera"}
-    }
-
-    # Flatten all terms for fuzzy matching
-    all_terms = {term for terms in category_mappings.values() for term in terms}
+    # Use module-level CATEGORY_MAPPINGS
+    all_terms = {term for terms in CATEGORY_MAPPINGS.values() for term in terms}
 
     # Use difflib to find close matches in the style_name string
     close_matches = difflib.get_close_matches(style_name_lower, all_terms, n=5, cutoff=0.6)
 
     # Check if any close match belongs to a category
     for match in close_matches:
-        for category, terms in category_mappings.items():
+        for category, terms in CATEGORY_MAPPINGS.items():
             if match in terms:
                 return category
 
     # Fallback to existing exact word matching
-    for category, terms in category_mappings.items():
+    for category, terms in CATEGORY_MAPPINGS.items():
         if any(term in words for term in terms):
             return category
 
@@ -235,7 +261,7 @@ def handle_style_generation(user_prefs):
     Now always generates detailed (name + description) output for consistency with CLI.
     Each style is generated in a random (non-repeating) canonical category for greater diversity.
     """
-    import random
+    # import random # Moved to top
     if not gemini_config.is_initialized():
         # Attempt to initialize if not already
         if not gemini_config.initialize_gemini_globally():
@@ -243,12 +269,7 @@ def handle_style_generation(user_prefs):
             print_warning(f"Gemini model is not initialized: {error_msg}. Please ensure GEMINI_API_KEY is set or provide key.")
             return
     # user_prefs is already passed to this function
-    all_categories = [
-        "oil_painting", "watercolor", "pastel", "charcoal", "pencil_sketch", "ink_drawing",
-        "minimalist", "geometric", "illustration_pixel", "illustration_anime_manga", "illustration_comic",
-        "photographic", "game_style", "digital_art", "abstract_conceptual", "material_sculptural",
-        "fantasy", "sci_fi"
-    ]
+    all_categories = list(CATEGORY_MAPPINGS.keys())
     prev_category = None
     while True:
         print_section("AI Style Generation")
@@ -262,13 +283,13 @@ def handle_style_generation(user_prefs):
         if not style or not isinstance(style, dict):
             print_warning("Failed to generate style. Please try again later.")
             return
-        import re
+        # import re # Moved to top
         name = style['name']
         desc = style['description']
 
         # Extract style name: from the output, prefer first line, strip markdown and whitespace
         # Handles case where output is "**Style Name**\nDescription" or just "Style Name"
-        import re
+        # import re # Moved to top
         first_line = name.splitlines()[0] if name else ""
         name_extracted = re.sub(r"^\*+|\*+$", "", first_line).strip()
         print_info(f"Generated AI Style (Category: {chosen_category}):\n  {name_extracted}\n  {desc.strip()}")
@@ -297,8 +318,8 @@ def export_style_to_file(style: Dict[str, str], filename: str) -> None:
     Raises:
         IOError: If file cannot be written.
     """
-    import json
-    import os
+    # import json # Moved to top
+    # import os # Moved to top
 
     try:
         ext = os.path.splitext(filename)[1].lower()
@@ -324,9 +345,9 @@ def main():
       --save                  Automatically save the generated style to preferences.
       --export FILENAME       Export the generated style to a file (JSON or text).
     """
-    import argparse
+    # import argparse # Moved to top
     # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
-    from wall_gen.wallpaper_settings import initialize_settings, get_preferences
+    # from wall_gen.wallpaper_settings import initialize_settings, get_preferences # Moved to top
 
     user_prefs = initialize_settings()
     parser = argparse.ArgumentParser(description='Generate an AI art style description')
@@ -344,39 +365,58 @@ def main():
     try:
         style_type = "detailed" if args.detailed else "simple"
         style = generate_random_style(category=args.category, style_type=style_type)
-        if style:
-            if args.detailed and isinstance(style, dict):
-                # Enhanced extraction for multi-option responses
-                import re
-                name = style['name']
-                desc = style['description']
-                # If typical "Here are a few" multi-style output, extract first markdown/asterisk or bold style name
-                # Matches e.g.: **Baroque Luminosity**\nDescription...
-                name_for_canon = name
-                desc_for_canon = desc
-                m = re.search(r"\*\*(.+?)\*\*", desc)
-                if m:
-                    name_for_canon = m.group(1)
-                    # Grab the following description line if present
-                    desc_match = re.search(r"\*\*.+?\*\*\n([^\*]+)", desc)
-                    if desc_match:
-                        desc_for_canon = desc_match.group(1).strip()
-                print(f"Generated style name: {name_for_canon}\nDescription: {desc_for_canon}")
-                canonical = canonicalize_style_name(name_for_canon)
+
+        if style and isinstance(style, dict) and "name" in style:
+            generated_name = style['name']
+            generated_desc = style.get('description', "")
+
+            name_to_process = generated_name
+            desc_to_print = generated_desc
+            style_name_to_save = generated_name # Default to generated_name
+
+            if args.detailed:
+                # Optional: If style['name'] is very generic and style['description'] contains a bolded name (old fallback)
+                # This part can be simplified or removed if JSON parsing is reliable
+                if not name_to_process or name_to_process.lower() == "style name": # Example of a poor name
+                    m_desc_name = re.search(r"\*\*(.+?)\*\*", generated_desc)
+                    if m_desc_name:
+                        name_from_desc = m_desc_name.group(1).strip()
+                        if name_from_desc: # If a valid name is found in description
+                            name_to_process = name_from_desc
+                            # Try to get description following this bolded name
+                            desc_match = re.search(r"\*\*" + re.escape(name_from_desc) + r"\*\*\s*\n([^\*].*)", generated_desc, re.DOTALL)
+                            if desc_match:
+                                desc_to_print = desc_match.group(1).strip()
+                            # else desc_to_print remains generated_desc
+                
+                print(f"Generated style name: {name_to_process}\nDescription: {desc_to_print}")
+                canonical = canonicalize_style_name(name_to_process)
                 print(f"Canonical category (system): {canonical}")
-                style_to_save = name_for_canon
-            else:
-                print(f"Generated style: {style}")
-                canonical = canonicalize_style_name(style)
+                style_name_to_save = name_to_process
+            else: # Simple style
+                # For simple style, name_to_process is already generated_name, desc_to_print is ""
+                print(f"Generated style: {name_to_process}")
+                canonical = canonicalize_style_name(name_to_process)
                 print(f"Canonical category (system): {canonical}")
-                style_to_save = style
+                # style_name_to_save is already name_to_process (generated_name)
+                desc_to_print = "" # Ensure description is empty for simple style export
+
             if args.save:
-                user_prefs.add_style(style_to_save)
-                print(f"Style saved to preferences: {style_to_save}")
+                user_prefs.add_style(style_name_to_save) # Always pass the string name
+                print(f"Style saved to preferences: {style_name_to_save}")
+            
             if args.export:
-                export_style_to_file(style_to_save if isinstance(style_to_save, dict) else {"name": style_to_save, "description": ""}, args.export)
+                # export_style_to_file expects a dict. Reconstruct it.
+                export_dict = {"name": style_name_to_save, "description": desc_to_print}
+                export_style_to_file(export_dict, args.export)
+        
+        elif style: # Handle cases where style might not be the expected dict (e.g. if generate_random_style changes unexpectedly)
+             logger.error(f"Generated style has unexpected structure: {style}")
+             print(f"Failed to process generated style due to unexpected structure.", file=sys.stderr)
+             sys.exit(1)
         else:
-            print("Failed to generate style", file=sys.stderr)
+            # This case is hit if generate_random_style returns None
+            print("Failed to generate style.", file=sys.stderr)
             sys.exit(1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
