@@ -21,14 +21,16 @@ try:
         fantasy_tags, abstract_tags, mood_tags, style_to_tags, STYLE_CATEGORIES
     )
     # Functions from prompt_generator.py using absolute import
-    from wall_gen.prompt_generator import (
-        enhance_custom_prompt,
-        enforce_prompt_format,
-        set_prompt_preferences, # To set preference for using user_prefs
-        use_user_preferences, # To check if user_prefs should be used
+    from wall_gen.prompt_generator import ( # This seems to be an alias or older structure
+        enhance_custom_prompt as old_enhance_custom_prompt, # aliasing to avoid conflict if used elsewhere
+        enforce_prompt_format, # This is likely wall_gen.prompt_modules.formatters.enforce_prompt_format
+        set_prompt_preferences, 
+        use_user_preferences, 
         enhance_negative_prompt,
-        # infer_subject_negatives_gemini # This was in wallpaper_generator.py, its final place TBD (here or prompt_generator.py)
     )
+    # Explicitly import from the new modules structure
+    from wall_gen.prompt_modules.custom_generator import enhance_custom_prompt
+    from wall_gen.prompt_modules.random_generator import generate_prompt_random
 except ImportError:
     # This block is reached if 'wall_gen' is not in sys.path or not installed.
     # Critical dependencies are missing.
@@ -344,16 +346,24 @@ def generate_final_prompt(prompt_type, user_prefs, custom_prompt_text=None):
         gemini_generated_prompt = sanitized_custom_prompt 
 
     elif prompt_type == "random":
-        logging.info("Generating random prompt for final generation...")
+        logging.info("Generating random prompt for final generation using 'random_generator.generate_prompt_random'...")
         random_tags = select_random_tags_for_prompt()
         
+        # The base prompt for history will be the raw tags
+        gemini_generated_prompt = ", ".join(random_tags)
+
         if should_use_prefs:
-            base_random_prompt = _build_random_prompt_from_settings(random_tags, user_prefs)
-            final_enhanced_prompt = enhance_custom_prompt(base_random_prompt, user_prefs)
+            # generate_prompt_random now returns only the descriptive text
+            descriptive_text = generate_prompt_random(random_tags, user_prefs)
         else:
-            base_random_prompt = _build_random_prompt_from_settings(random_tags, SimplePrefs()) 
-            final_enhanced_prompt = enhance_custom_prompt(base_random_prompt)
-        gemini_generated_prompt = base_random_prompt
+            # generate_prompt_random now returns only the descriptive text
+            descriptive_text = generate_prompt_random(random_tags, SimplePrefs())
+        
+        # final_enhanced_prompt is the descriptive text.
+        # The calling function in run_wallgen.py (`orchestrate_wallpaper_generation` via `_generate_prompt`)
+        # will handle the final formatting with resolution, aspect ratio, and avoid clause using enforce_prompt_format.
+        # For clarity, ensure descriptive_text is not None.
+        final_enhanced_prompt = descriptive_text if descriptive_text else gemini_generated_prompt
 
     else: 
         logging.info("Generating AI (Gemini) prompt for final generation...")
