@@ -12,6 +12,9 @@ import atexit
 import sys # For check_dependencies to suggest pip install command
 import os # Added for configure_app_logging path
 import shutil # For getting terminal size
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 
 try:
     # Use absolute package import for ui_utils and file_utils 
@@ -167,24 +170,24 @@ def sanitize_logging_content(content: str) -> str:
 
 def display_startup_message():
     """
-    Display ASCII art header and welcome message, centered in the terminal.
+    Display a rich welcome message using Panel and styled Text, centered.
     """
-    try:
-        columns = shutil.get_terminal_size().columns
-    except OSError: # Handles cases where terminal size can't be determined
-        columns = 80 # Default to 80 columns as a fallback
+    console = Console() # Instantiate console
 
-    message_lines = [
-        "✨🎨✨ AI Wallpaper Generator ✨🎨✨",
-        "------------------------------------",
-        "Crafting unique visuals, just for you.",
-        "------------------------------------"
-    ]
+    text_content = Text(justify="center")
+    # Using ✧ (White Four Pointed Star) icons
+    text_content.append("✧ AI Wallpaper Generator ✧\n", style="bold magenta")
+    text_content.append("-" * 30 + "\n", style="dim white") # Adjusted separator length
+    text_content.append("Crafting unique visuals, just for you.", style="italic cyan")
 
-    print("\n") # Initial newline before the centered block
-    for line in message_lines:
-        print(line.center(columns))
-    print("") # Final newline after the centered block
+    final_panel = Panel(
+        text_content,
+        title="[bold white]Welcome![/bold white]", # Rich markup in title
+        border_style="bright_blue",
+        expand=False, # Panel width fits content
+        padding=(1, 2) # Padding inside the panel (vertical, horizontal)
+    )
+    console.print("\n", final_panel, justify="center")
 
 
 # --- Cleanup Registration ---

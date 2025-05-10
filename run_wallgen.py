@@ -392,9 +392,10 @@ def orchestrate_wallpaper_generation(
             return False
 
         print_section("Confirm Prompt")
-        from wall_gen.ui_utils import print_info
+        from wall_gen.ui_utils import print_info, print_styled_prompt # Added print_styled_prompt
 
-        print_info(f"Generated Prompt:\n{final_prompt}")
+        # Using the new function to print the label and then the styled prompt
+        print_styled_prompt("Generated Prompt:", final_prompt)
 
         save_json_data(
             {"base_prompt": base_prompt_for_history, "final_prompt": final_prompt},

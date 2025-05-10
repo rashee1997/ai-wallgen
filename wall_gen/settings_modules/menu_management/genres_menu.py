@@ -7,11 +7,13 @@ from wall_gen.ui_utils import (
     print_section,
     print_option,
     print_info,
-    print_prompt,
+    # print_prompt, # Removed, use get_interactive_input or get_confirmation
     print_success,
     print_warning,
     print_error,
     get_validated_input,
+    get_interactive_input, # Added
+    get_confirmation,    # Added
 )
 # Updated imports
 from wall_gen.config import available_genres
@@ -51,8 +53,7 @@ def manage_genres():
             return
 
         if choice == "1":
-            print_prompt("\nEnter the number of the genre to add (or 'b' to go back): ")
-            genre_choice = input().strip().lower()
+            genre_choice = get_interactive_input("\nEnter the number of the genre to add (or 'b' to go back): ").lower()
 
             if genre_choice == "b":
                 continue
@@ -78,10 +79,9 @@ def manage_genres():
                 print_warning("\nNo genres to remove.")
                 continue
 
-            print_prompt(
+            genre_choice = get_interactive_input(
                 "\nEnter the number of the genre to remove (or 'b' to go back): "
-            )
-            genre_choice = input().strip().lower()
+            ).lower()
 
             if genre_choice == "b":
                 continue
@@ -102,10 +102,10 @@ def manage_genres():
                 print_warning("\nNo genres to clear.")
                 continue
 
-            print_warning(
-                "\nAre you sure you want to clear all preferred genres? (y/n): "
-            )
-            if input().strip().lower() == "y":
+            print_warning( # This is now a Rich print_warning
+                "\nAre you sure you want to clear all preferred genres? This cannot be undone."
+            ) # (y/n) part removed as get_confirmation handles it
+            if get_confirmation("Clear all preferred genres?", default=False): # Default to No for safety
                 user_prefs.preferred_genres.clear()
                 user_prefs.save_preferences()
                 print_success("\nCleared all preferred genres.")

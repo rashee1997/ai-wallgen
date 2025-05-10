@@ -7,10 +7,10 @@ absl-py>=2.0.0
 numpy>=1.24.0
 opencv-python-headless>=4.7.0.72
 scikit-image
-clrprint>=1.2.6
 PyQt5>=5.15.0
 tinydb>=4.7.0
 rapidfuzz>=2.13.7
+rich
 
-# Note: 'clrprint' and 'PyQt5' added based on project imports in ui_utils.py and qt_preview.py respectively.
-
+# Note: 'PyQt5' added based on project imports in qt_preview.py.
+# clrprint was previously listed but removed after migration to Rich library for UI.

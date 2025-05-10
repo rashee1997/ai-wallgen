@@ -14,7 +14,7 @@ from wall_gen.ui_utils import (
     print_warning,
     print_error,
     get_validated_input,
-    print_colored,
+    print_header,
 )
 # Updated imports
 from wall_gen.config import available_genres, STYLE_CATEGORIES
