@@ -204,23 +204,42 @@ Resolution: {resolution} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 Aspect Ratio: {aspect_ratio} - YOU MUST INCLUDE THIS IN YOUR FINAL PROMPT
 
 """
-            # Use the no preferences instruction template
-            enhancement_instructions = original_prompt_prefix + NO_PREFS_PROMPT_INSTRUCTIONS.format(
-                resolution=resolution,
-                aspect_ratio=aspect_ratio
-            )
-            
-            # Add explicit negative prompt section
-            enhancement_instructions += f"""
+            # Use the no preferences instruction template, but make it richer
+            enhancement_instructions = original_prompt_prefix + f"""
+
+ENHANCEMENT MISSION (No Specific User Preferences):
+Your goal is to take the core subject "{custom_prompt}" and enrich it into a more vivid and descriptive prompt.
+While no specific user preferences for style, camera, etc., are provided, you should creatively and subtly weave in general artistic and descriptive elements to add depth and detail.
+
+CRITICAL:
+- The original subject and any explicitly stated artistic medium in "{custom_prompt}" MUST be preserved and remain central.
+- If a traditional medium (e.g., oil painting, watercolor) was in the original prompt, DO NOT convert it to digital art or 3D unless the original prompt implied it. Your enhancements should respect and build upon the stated medium.
+
+CONSIDER ADDING DETAILS RELATED TO (if not conflicting with the original prompt):
+- Visual Storytelling: What kind of scene or story does the subject imply? Expand on this.
+- Atmosphere & Mood: What feeling should it evoke? (e.g., serene, dynamic, mysterious, tranquil, vibrant).
+- Lighting Qualities: Describe potential lighting. (e.g., soft diffused light, dramatic directional light, ambient glow, sharp midday light, golden hour).
+- Color Harmonies & Palette: Suggest general color ideas. (e.g., vibrant and contrasting, muted and analogous, monochromatic with accent, cool tones, warm tones).
+- Compositional Elements: Hint at composition. (e.g., rule of thirds, leading lines, symmetry/asymmetry, sense of depth, focused subject, expansive view).
+- Textural Details: Describe potential textures. (e.g., smooth and polished, rough and organic, detailed patterns, simple flat surfaces).
+- Artistic Nuances: Subtly suggest general stylistic touches that complement the subject. (e.g., "a touch of painterly strokes," "clean digital rendering," "geometric forms," "flat shaded textures," "minimal detail"). These should be very general and complementary, and ALWAYS defer to any medium specified in the original prompt.
+
+MANDATORY TECHNICAL PARAMETERS (MUST BE INCLUDED):
+- Resolution: {resolution}
+- Aspect Ratio: {aspect_ratio}
 
 NEGATIVE PROMPT - ALWAYS INCLUDE:
 The following elements must be avoided in the image: {negative_prompt}
 
 OUTPUT FORMAT:
 Your response must follow this exact format:
-1. A single, detailed paragraph describing the image that FAITHFULLY preserves the original prompt
-2. MUST end the description with "{resolution} resolution, {aspect_ratio} aspect ratio"
-3. End with "Avoid: [negative elements]"
+1. A single, detailed paragraph describing the image that FAITHFULLY preserves and ENRICHES the original prompt "{custom_prompt}".
+2. The description MUST end with "{resolution} resolution, {aspect_ratio} aspect ratio".
+3. The response MUST then end with "Avoid: [all elements from the negative prompt]".
+
+Example of enriching (if original was "a red cube"):
+"A vibrant red cube, exuding a sense of minimalist strength, resting on a subtly textured flat plane. The scene is bathed in soft, diffused morning light creating gentle highlights and shadows, emphasizing its clean geometric form. The color palette is primarily monochromatic focusing on shades of red with neutral undertones, creating a calm and focused composition. {resolution} resolution, {aspect_ratio} aspect ratio. Avoid: [negative elements]"
+This is just an example; tailor your enrichment to the specific "{custom_prompt}".
 """
             
         else:

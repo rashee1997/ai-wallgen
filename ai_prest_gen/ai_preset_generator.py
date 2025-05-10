@@ -707,7 +707,7 @@ try:
 except ImportError:
     PRESET_MGMT_AVAILABLE = False
     preset_management = PresetManagementPlaceholder()
-    _print_warning_fallback("wall_gen.settings_modules.preset_management not found. Preset application will be simulated.")
+    # _print_warning_fallback("wall_gen.settings_modules.preset_management not found. Preset application will be simulated.")
 
 
 # --- Main Function ---

@@ -26,7 +26,7 @@ try:
 except ImportError:
     PROMPT_GENERATOR_AVAILABLE = False
     # It's good practice to log or warn if an optional module fails to import.
-    logging.warning("wall_gen.prompt_generator module not found. Prompt generation settings will be unavailable.")
+    # logging.warning("wall_gen.prompt_generator module not found. Prompt generation settings will be unavailable.")
     # If you also want a user-facing warning:
     # print_warning("Prompt generator features will be limited as the module could not be loaded.")
 
