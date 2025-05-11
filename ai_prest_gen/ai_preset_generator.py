@@ -2,12 +2,26 @@
 import sys
 import os
 
-"""AI Preset Generator - Generate random wallpaper preferences using Gemini AI (Consolidated Templates)
+"""
+AI Preset Generator for the AI Wallpaper Generator project.
 
-This script uses Google's Gemini AI to create intelligent, coherent random presets
-for the wallpaper generator application based on detected style categories.
-Uses categorization logic based on user-uploaded files and the consolidated template
-definitions within style_templates.py. Includes updated save preset logic and reinforced prompt.
+This script serves as the primary engine for generating AI-driven wallpaper presets. 
+It utilizes Google's Gemini AI to interpret style inputs and produce coherent, 
+creative preset configurations based on a comprehensive style catalog and 
+template system.
+
+Key functionalities include:
+- Parsing command-line arguments for direct preset generation or application.
+- Interactive menu for generating new presets.
+- Determining a base style, either from user input or via an AI style generator.
+- Categorizing the base style using `style_category_catalog.py`.
+- Fetching appropriate base templates via `style_templates.py`.
+- Constructing detailed prompts for the Gemini AI.
+- Interacting with the Gemini API (managed by `gemini_config_preset.py`).
+- Parsing, validating, and refining AI-generated JSON preset data.
+- Ensuring preset uniqueness through a caching mechanism.
+- Saving valid presets to disk and a database (via `preset_management`).
+- Robust error handling and fallbacks for external dependencies.
 """
 
 import json
@@ -206,13 +220,18 @@ except ImportError:
 
 
 # --- Configuration ---
+# --- Configuration ---
+LOG_FILE_NAME = "ai_preset_generator.log"
+PRESETS_CACHE_FILE = "generated_presets_cache.json"
+PRESETS_DIR = "presets"
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler("ai_preset_generator.log", mode='a')]
+    handlers=[logging.FileHandler(LOG_FILE_NAME, mode='a')]
 )
-PRESETS_CACHE_FILE = "generated_presets_cache.json"
-PRESETS_DIR = "presets"
+# PRESETS_CACHE_FILE = "generated_presets_cache.json" # Defined above
+# PRESETS_DIR = "presets" # Defined above
 os.makedirs(PRESETS_DIR, exist_ok=True)
 
 # gemini_initialized flag is now managed by gemini_config_preset for this script's context
@@ -369,13 +388,307 @@ def categorize_style(style_name_input: Union[str, Dict]) -> str:
 
 # --- AI Preset Generation (using consolidated templates) ---
 
-def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False) -> Union[str, bool, None]:
-    """Generate a random preset based on style category using consolidated templates."""
-    # global gemini_initialized # Replaced by new config's state
+# Helper function to get base style
+def _get_base_style_for_preset(user_prefs: Any, base_style_override: Optional[str]) -> Optional[str]:
+    """
+    Determines the base style for preset generation.
 
-    # Initialize Gemini specifically for preset generation context
+    This function either uses a `base_style_override` if provided, or prompts
+    the user to choose between entering a custom style or generating one using
+    the AI style generator (if available).
+
+    Args:
+        user_prefs: The user preferences object (currently unused in this helper but kept for potential future use).
+        base_style_override: An optional string to directly use as the base style.
+
+    Returns:
+        Optional[str]: The determined base style string, or None if the user
+                       cancels, provides no input, or if AI style generation fails.
+    """
+    if base_style_override:
+        print_info(f"Using provided style: {base_style_override}")
+        return base_style_override
+
+    print_section("Choose Style Source for Preset")
+    print_option("1", "Enter Custom Style")
+    if AI_STYLE_GEN_AVAILABLE:
+        print_option("2", "Generate AI Style")
+    print_option("b", "Back")
+
+    valid_choices = ["1", "b"]
+    if AI_STYLE_GEN_AVAILABLE:
+        valid_choices.append("2")
+
+    choice = get_validated_input(
+        "Select option:",
+        valid_choices,
+        help_context_id="AI_PRESET_STYLE_SOURCE_CHOICE"
+    )
+
+    if choice == "_HELP_SHOWN_":
+        print_info("Help shown. Returning to AI Preset Generator menu.")
+        return None
+    if choice == "b":
+        print_info("Preset generation cancelled.")
+        return None
+    elif choice == "1":
+        base_style = input("Enter your custom style: ").strip()
+        if not base_style:
+            print_error("No style entered.")
+            return None
+        return base_style
+    elif choice == "2" and AI_STYLE_GEN_AVAILABLE:
+        print_info("Attempting to generate AI style (this may take a moment)...")
+        if not initialize_style_gemini(None):
+            print_error("Failed to initialize Gemini for AI style generation (via wall_gen.ai_style_generator).")
+            return None
+        style_obj = generate_random_style(style_type="detailed")
+        if not style_obj or not isinstance(style_obj, dict):
+            print_error("Failed to generate AI style object.")
+            return None
+        base_style = style_obj.get('name')
+        if not base_style:
+            print_error("AI generated style object lacked a 'name'.")
+            return None
+        print_info(f"AI Generated Style: {base_style} (Description: {style_obj.get('description', 'N/A')})")
+        return base_style
+    return None
+
+# Helper function to build the prompt
+def _build_preset_generation_prompt(base_style_name: str, style_category: str, category_instructions: str, template: Dict[str, Any]) -> str:
+    """
+    Constructs the detailed prompt string for the Gemini AI to generate preset settings.
+
+    The prompt includes:
+    - The base style name and its detected category.
+    - Specific instructions tailored to the style category.
+    - Critical instructions on JSON output format and key inclusion.
+    - A JSON template structure that the AI should fill.
+
+    Args:
+        base_style_name: The name of the base style.
+        style_category: The detected category for the base style.
+        category_instructions: Specific AI guidance for the detected category.
+        template: The base JSON template for the style category.
+
+    Returns:
+        str: The fully constructed prompt string for the Gemini API.
+    """
+    instruction_header = f"Select settings that work well with \"{base_style_name}\" (category: {style_category}):"
+    
+    # Ensure 'styles' key exists and is a list with the base_style_name
+    # This modification should ideally happen before this function if template is pre-processed
+    # but we ensure it here for robustness.
+    template_for_prompt = template.copy() # Avoid modifying the original template dict
+    template_for_prompt["styles"] = [base_style_name]
+    template_for_prompt.setdefault("description", f"AI preset for {base_style_name}.")
+    template_for_prompt.setdefault("aspect_ratio", "16:9")
+
+
+    prompt = f"""
+    Generate settings for a wallpaper with style: "{base_style_name}"
+
+    Instructions:
+    1. Create a unique `preset_name` inspired by the style "{base_style_name}" and category "{style_category}".
+    2. Create a `description` field describing the preset.
+    3. Choose ONE mood for the "moods" list.
+    4. Follow the specific guidance for the detected category "{style_category}":
+       {instruction_header}
+       {category_instructions}
+    5. For `negative_prompt`, generate text avoiding elements conflicting with the *category* "{style_category}".
+    6. For `style_negative_prompt`, generate text avoiding elements conflicting with the *base style* "{base_style_name}".
+    7. Ensure `aspect_ratio` is "16:9".
+    8. Fill in ALL fields from the template below with specific, fitting values. Do NOT leave default template values unchanged unless they are truly appropriate. Do NOT use placeholders.
+    9. **CRITICAL:** Ensure the output JSON includes ALL top-level keys (`preset_name`, `moods`, `aspect_ratio`, `description`, `styles`, `imagen_settings`) and ALL nested dictionaries (`style_settings`, `lighting_settings`, `composition_settings`, `color_settings`, `detail_settings`, `environment_settings`, `quality_settings`, `camera_settings` if present in the template, etc.) exactly as they appear in the template structure provided below. Do not omit any sections.
+    10. Generate detailed and dynamic `camera_settings` including parameters such as aperture, shutter speed, ISO, focal length, lens type, camera model, and any other relevant photographic settings. Do NOT reuse static or default camera settings from the template; instead, create unique and contextually appropriate camera settings for this preset.
+    11. Output ONLY the valid JSON object, starting with `{{` and ending with `}}`. No ```json.
+
+    JSON Template to Fill:
+    ```json
+    {json.dumps(template_for_prompt, indent=4)}
+    ```
+    """
+    return prompt
+
+# Helper function to process Gemini response
+def _process_gemini_preset_response(json_str: str, base_style: str, template: Dict[str, Any], style_category: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses the JSON string from Gemini, validates it, and refines the settings.
+
+    This function merges the AI-generated settings with the base template,
+    ensures critical fields are present (e.g., preset_name, moods, aspect_ratio),
+    validates negative prompts, and handles style-specific adjustments like
+    removing camera settings for traditional art styles.
+
+    Args:
+        json_str: The JSON string received from the Gemini API.
+        base_style: The name of the base style.
+        template: The base template used for this style category.
+        style_category: The detected category of the style.
+
+    Returns:
+        Optional[Dict[str, Any]]: A dictionary containing the final, processed
+                                   preset settings, or None if parsing or
+                                   validation fails.
+    """
+    try:
+        generated_settings = json.loads(json_str)
+        final_preset = {"styles": [base_style]} # base_style here is the string name
+
+        final_preset["preset_name"] = generated_settings.get("preset_name", template.get("preset_name", f"{base_style.replace('_',' ').title()} Fallback Preset"))
+        
+        moods = generated_settings.get("moods", template.get("moods", ["Neutral"]))
+        if not isinstance(moods, list) or not moods or not isinstance(moods[0], str):
+            final_preset["moods"] = template.get("moods", ["Neutral"])
+        else:
+            final_preset["moods"] = [moods[0]] # Take only the first mood
+
+        final_preset["description"] = generated_settings.get("description", template.get("description", f"AI preset for {base_style}."))
+        final_preset["aspect_ratio"] = "16:9" # Enforce
+
+        # Merge imagen_settings
+        ai_imagen = generated_settings.get("imagen_settings")
+        template_imagen = template.get("imagen_settings", {})
+        import copy
+        merged_imagen_settings = copy.deepcopy(template_imagen)
+
+        if isinstance(ai_imagen, dict):
+            if 'deep_update' in globals(): # Check if deep_update is available
+                deep_update(merged_imagen_settings, ai_imagen)
+            else: # Fallback basic update
+                merged_imagen_settings.update(ai_imagen)
+                logging.warning("deep_update function not found, using basic dict.update for imagen_settings merge.")
+        
+        # Ensure camera_settings key exists if it was in either template or AI response,
+        # but only if camera_settings itself is intended for this style category
+        if "camera_settings" in template_imagen or ("camera_settings" in ai_imagen if isinstance(ai_imagen, dict) else False):
+            merged_imagen_settings.setdefault("camera_settings", {})
+        
+        final_preset["imagen_settings"] = merged_imagen_settings
+        
+        # Validate/fallback negative prompts
+        neg_prompt = final_preset["imagen_settings"].get("negative_prompt", "")
+        if not neg_prompt or len(neg_prompt) < 5:
+            final_preset["imagen_settings"]["negative_prompt"] = template_imagen.get("negative_prompt", "low quality, blurry")
+        
+        style_neg_prompt = final_preset["imagen_settings"].get("style_negative_prompt", "")
+        if not style_neg_prompt or len(style_neg_prompt) < 5:
+            final_preset["imagen_settings"]["style_negative_prompt"] = template_imagen.get("style_negative_prompt", "clashing styles")
+
+        # Ensure all keys from the original template are present
+        for key, t_value in template.items():
+            if key not in final_preset and key != "styles": # 'styles' is already handled
+                final_preset[key] = generated_settings.get(key, t_value)
+        
+        # Remove camera_settings for traditional art styles
+        traditional_categories = [
+            "oil_painting", "watercolor", "pastel", "acrylic_painting",
+            "charcoal", "pencil_sketch", "ink_drawing", "drawing"
+        ]
+        if style_category in traditional_categories:
+            if "camera_settings" in final_preset.get("imagen_settings", {}):
+                del final_preset["imagen_settings"]["camera_settings"]
+        
+        return final_preset
+    except json.JSONDecodeError as json_err:
+        logging.error(f"Failed to parse JSON response: {json_err}\nResponse text was:\n{json_str}")
+        print_error(f"AI response was not valid JSON.")
+        return None
+
+# Helper function to save preset
+def _save_generated_preset(final_preset: Dict[str, Any], auto_save_flag: bool) -> Union[str, bool, None]:
+    """
+    Handles the saving process for a generated preset.
+
+    This includes:
+    - Checking if the preset is unique against a cache.
+    - Displaying a preview to the user.
+    - Asking for user confirmation to save (unless `auto_save_flag` is true).
+    - Saving the preset to a cache file to prevent future duplicates.
+    - Saving the preset to a JSON file in the presets directory and to the database
+      (via the imported `save_preset` function).
+
+    Args:
+        final_preset: The dictionary containing the complete preset data.
+        auto_save_flag: Boolean indicating if the preset should be saved without user confirmation.
+
+    Returns:
+        Union[str, bool, None]: 
+            - The base name of the saved preset file (str) on successful save.
+            - `False` if the preset was not unique and thus not saved (allowing for a retry).
+            - `None` if the user cancelled saving or if the save operation failed.
+    """
+    if not is_preset_unique(final_preset):
+        print_warning("Generated preset is too similar to a previous one.")
+        return False # Indicate not unique, to allow retry in the main loop
+
+    preview_text = json.dumps(final_preset, indent=4)
+    print_section("Preview of Generated Preset")
+    print_info(preview_text)
+
+    confirm_decision = False
+    if auto_save_flag:
+        confirm_decision = True
+        print_info("Auto-saving preset due to --auto-save flag.")
+    else:
+        confirm_input = get_validated_input(
+            "Save this preset? (y/n):",
+            ["y", "n", "yes", "no"],
+            help_context_id="AI_PRESET_SAVE_CONFIRMATION"
+        )
+        if confirm_input == "_HELP_SHOWN_":
+            print_info("Help shown for save confirmation. Treating as 'no' to save for this attempt.")
+            confirm_decision = False # Or could return a specific value to re-prompt save
+        else:
+            confirm_decision = confirm_input.startswith('y')
+
+    if confirm_decision:
+        save_preset_to_cache(final_preset)
+        clean_preset_name = re.sub(r'[^\w\s-]', '', final_preset["preset_name"]).strip().replace(' ', '_')
+        preset_name_base = f"{clean_preset_name.lower()}_{int(time.time())}"
+        
+        success = save_preset(final_preset, preset_name_base)
+        if success:
+            print_success(f"Generated unique preset: '{final_preset['preset_name']}'")
+            print_success(f"Saved preset '{preset_name_base}' to presets folder and database")
+            return preset_name_base # Return name on success
+        else:
+            print_error(f"Failed to save preset '{preset_name_base}'")
+            return None # Indicate save failure
+    else:
+        print_warning("Preset saving cancelled by user.")
+        return None # Indicate cancelled by user
+
+def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False) -> Union[str, bool, None]:
+    """
+    Orchestrates the generation of an AI-driven wallpaper preset.
+
+    This function manages the entire workflow:
+    1. Initializes the Gemini API for preset generation if not already done.
+    2. Determines the base style (either from override, user input, or AI generation).
+    3. Categorizes the style and fetches the appropriate template and AI instructions.
+    4. Constructs a detailed prompt for the Gemini AI.
+    5. Calls the Gemini API to generate preset settings, with a retry mechanism.
+    6. Parses, validates, and refines the AI's JSON response.
+    7. Handles saving the unique preset (with user confirmation if not auto-saving).
+
+    Args:
+        user_prefs: The user preferences object, used for model selection.
+        base_style_override (Optional[str]): If provided, this style name is used directly,
+                                             bypassing user input for style selection.
+        auto_save_flag (bool): If True, generated presets are saved without explicit
+                               user confirmation.
+
+    Returns:
+        Union[str, bool, None]:
+            - The base name of the saved preset file (str) if successful.
+            - `False` if preset generation failed after all attempts or if a unique
+              preset could not be generated.
+            - `None` if the user cancelled the process at any stage (e.g., style selection,
+              save confirmation).
+    """
     if not is_preset_gemini_initialized():
-        if not initialize_preset_gemini(): # Tries to use env var by default
+        if not initialize_preset_gemini():
             print_error(f"Failed to initialize Gemini for preset generation: {get_preset_last_error()}")
             print_error("Ensure GEMINI_API_KEY environment variable is set.")
             return False
@@ -385,75 +698,32 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
         print_error("Style catalog/templates are not available. Cannot generate AI preset.")
         return False
 
-    base_style: Optional[str] = None
+    base_style_name = _get_base_style_for_preset(user_prefs, base_style_override)
+    if not base_style_name:
+        # Error/cancel message already printed by helper
+        return None if base_style_name is None else False # Propagate cancel or error
+
     try:
-        # --- Step 1: Get Base Style (logic from user upload) ---
-        if base_style_override:
-            base_style = base_style_override
-            print_info(f"Using provided style: {base_style}")
+        # base_style_name is already correctly set by _get_base_style_for_preset
+        # If base_style_override was provided, base_style_name will be that value.
+        
+        if base_style_override and base_style_override == base_style_name:
+            # If CLI override is used (or any direct override),
+            # normalize it to snake_case for internal use as category key.
+            # This ensures it matches keys like "surreal_3d" used in templates/instructions.
+            normalized_category_key = base_style_override.lower().replace(' ', '_').replace('-', '_')
+            # Consolidate multiple underscores that might result from replacements (e.g., "style - name" -> "style___name")
+            normalized_category_key = re.sub(r'_+', '_', normalized_category_key) 
+
+            style_category = normalized_category_key
+            # base_style_name holds the original override string (e.g., "surreal 3d") for display/prompting.
+            print_info(f"\nUsing CLI/override specified style '{base_style_name}', normalized to category key: '{style_category}' for preset generation.")
         else:
-            print_section("Choose Style Source for Preset")
-            print_option("1", "Enter Custom Style")
-            print_option("2", "Generate AI Style (if ai_style_generator is available)")
-            print_option("b", "Back")
+            # For interactive input or AI generated style, categorize it
+            print_info(f"\nGenerating settings for style: '{base_style_name}'...")
+            style_category = categorize_style(base_style_name)
+            print_info(f"(Detected category [Restored Logic]: {style_category})")
 
-            valid_choices = ["1", "b"]
-            if AI_STYLE_GEN_AVAILABLE:
-                valid_choices.append("2")
-
-            choice = get_validated_input(
-                "Select option:", 
-                valid_choices,
-                help_context_id="AI_PRESET_STYLE_SOURCE_CHOICE"
-            )
-            if choice == "_HELP_SHOWN_":
-                # This is tricky as this prompt is not in a loop that redraws options.
-                # For now, returning None will effectively cancel and go back to the main AI Preset Gen menu,
-                # which will then redraw. A dedicated loop here would be needed for perfect re-prompt.
-                # Or, the calling code (main menu) needs to handle this.
-                # Simplest for now: treat as cancel if help was shown here.
-                print_info("Help shown. Returning to AI Preset Generator menu.")
-                return None # Or re-call generate_ai_preset without base_style_override
-            if choice == "b":
-                print_info("Preset generation cancelled.")
-                return None
-            elif choice == "1":
-                base_style = input("Enter your custom style: ").strip()
-                if not base_style:
-                    print_error("No style entered.")
-                    return False
-            elif choice == "2" and AI_STYLE_GEN_AVAILABLE:
-                print_info("Attempting to generate AI style (this may take a moment)...")
-                # AI Style generator uses its own Gemini initialization (likely from wall_gen.gemini_config)
-                # We don't need to pass api_key explicitly if it's globally configured or initialize_style_gemini handles it.
-                # Assuming initialize_style_gemini handles its own Gemini setup or uses a global one.
-                # The `gemini_initialized` flag here was for the preset generator's direct genai calls.
-                if not initialize_style_gemini(None): # Pass None, assuming it uses its own config or global
-                    print_error("Failed to initialize Gemini for AI style generation (via wall_gen.ai_style_generator).")
-                    return False
-                style_obj = generate_random_style(style_type="detailed")
-                if not style_obj or not isinstance(style_obj, dict):
-                    print_error("Failed to generate AI style object.")
-                    return False
-                base_style = style_obj.get('name')
-                if not base_style:
-                    print_error("AI generated style object lacked a 'name'.")
-                    return False
-                print_info(f"AI Generated Style: {base_style} (Description: {style_obj.get('description', 'N/A')})")
-
-        if not base_style:
-            print_error("Base style could not be determined.")
-            return False
-
-        # Gemini initialization for preset generation is handled by initialize_preset_gemini() at the start of this function.
-        # The old direct genai.configure call is removed.
-
-        # --- Step 2: Generate Settings (using restored categorization and consolidated templates) ---
-        print_info(f"\nGenerating settings for style: '{base_style}'...")
-        style_category = categorize_style(base_style)
-        print_info(f"(Detected category [Restored Logic]: {style_category})")
-
-        # Get the selected model name from the new config
         selected_model_name = get_selected_preset_model(user_prefs)
         try:
             model = genai.GenerativeModel(selected_model_name)
@@ -462,57 +732,23 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
             logging.error(f"Failed to initialize Gemini model '{selected_model_name}': {err}")
             print_error(f"Could not initialize AI model '{selected_model_name}'. Check configuration.")
             return False
-
-        # --- Get category instructions ---
-        # Extract style name string if base_style is a dict from AI generation
-        style_name_for_instructions = base_style.get('name', '') if isinstance(base_style, dict) else base_style
-        category_instructions = instructions_for_category(style_category, style_name_for_instructions)
-        instruction_header = f"Select settings that work well with \"{style_name_for_instructions}\" (category: {style_category}):" # Use extracted name
-
-        # --- Get Template: Use the consolidated function ---
-        template = get_template_for_category(style_category) # Only call this function
+        
+        category_instructions = instructions_for_category(style_category, base_style_name)
+        template = get_template_for_category(style_category)
         print_info(f"Using consolidated template for category: {style_category}")
 
         if not template or not isinstance(template, dict):
-             logging.error(f"No valid template found for category: {style_category}. Using minimal default.")
-             template = { # Minimal fallback
-                 "preset_name": f"{base_style.replace('_',' ').title()} Default",
-                 "styles": [base_style], "moods": ["Neutral"],
-                 "description": f"Default preset for {base_style}.", "aspect_ratio": "16:9",
+            logging.error(f"No valid template found for category: {style_category}. Using minimal default.")
+            template = {
+                 "preset_name": f"{base_style_name.replace('_',' ').title()} Default",
+                 "styles": [base_style_name], "moods": ["Neutral"],
+                 "description": f"Default preset for {base_style_name}.", "aspect_ratio": "16:9",
                  "imagen_settings": {"negative_prompt": "low quality", "style_negative_prompt": "clashing styles"}
-             }
-        else:
-            template["styles"] = [base_style]
+            }
+        # Note: _build_preset_generation_prompt now handles adding base_style_name to template["styles"]
 
-        template.setdefault("description", f"AI preset for {base_style}.")
-        template.setdefault("aspect_ratio", "16:9")
+        prompt = _build_preset_generation_prompt(base_style_name, style_category, category_instructions, template)
 
-        # --- Build Prompt (Reinforced Instructions) ---
-        prompt = f"""
-        Generate settings for a wallpaper with style: "{style_name_for_instructions}" # Use extracted name
-
-        Instructions:
-        1. Create a unique `preset_name` inspired by the style "{style_name_for_instructions}" and category "{style_category}". # Use extracted name
-        2. Create a `description` field describing the preset.
-        3. Choose ONE mood for the "moods" list.
-        4. Follow the specific guidance for the detected category "{style_category}":
-           {instruction_header}
-           {category_instructions}
-        5. For `negative_prompt`, generate text avoiding elements conflicting with the *category* "{style_category}".
-        6. For `style_negative_prompt`, generate text avoiding elements conflicting with the *base style* "{style_name_for_instructions}". # Use extracted name
-        7. Ensure `aspect_ratio` is "16:9".
-        8. Fill in ALL fields from the template below with specific, fitting values. Do NOT leave default template values unchanged unless they are truly appropriate. Do NOT use placeholders.
-        9. **CRITICAL:** Ensure the output JSON includes ALL top-level keys (`preset_name`, `moods`, `aspect_ratio`, `description`, `styles`, `imagen_settings`) and ALL nested dictionaries (`style_settings`, `lighting_settings`, `composition_settings`, `color_settings`, `detail_settings`, `environment_settings`, `quality_settings`, `camera_settings` if present in the template, etc.) exactly as they appear in the template structure provided below. Do not omit any sections.
-        10. Generate detailed and dynamic `camera_settings` including parameters such as aperture, shutter speed, ISO, focal length, lens type, camera model, and any other relevant photographic settings. Do NOT reuse static or default camera settings from the template; instead, create unique and contextually appropriate camera settings for this preset.
-        11. Output ONLY the valid JSON object, starting with `{{` and ending with `}}`. No ```json.
-
-        JSON Template to Fill:
-        ```json
-        {json.dumps(template, indent=4)}
-        ```
-        """
-
-        # --- Generation and Processing Loop ---
         for attempt in range(3):
             print_info(f"Generating settings (Attempt {attempt + 1}/3)...")
             try:
@@ -523,7 +759,6 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                     genai_types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 }
                 generation_config = genai.types.GenerationConfig(temperature=0.75, top_p=0.95, top_k=40)
-
                 response = model.generate_content(prompt, generation_config=generation_config, safety_settings=safety_settings)
 
                 if response and response.candidates and response.candidates[0].content.parts:
@@ -531,169 +766,53 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                     json_match = re.search(r'```json\s*(\{.*?\})\s*```|(\{.*?\})', response_text, re.DOTALL)
                     if json_match:
                         json_str = json_match.group(1) or json_match.group(2)
-                        try:
-                            generated_settings = json.loads(json_str)
-
-                            # --- Validation & Refinement ---
-                            final_preset = {"styles": [base_style]}
-
-                            final_preset["preset_name"] = generated_settings.get("preset_name", template["preset_name"])
-                            final_preset["moods"] = generated_settings.get("moods", template["moods"])
-                            if not isinstance(final_preset["moods"], list) or not final_preset["moods"] or not isinstance(final_preset["moods"][0], str):
-                                final_preset["moods"] = template["moods"]
-                            else:
-                                final_preset["moods"] = [final_preset["moods"][0]]
-
-                            final_preset["description"] = generated_settings.get("description", template["description"])
-                            final_preset["aspect_ratio"] = "16:9"
-
-                            # --- Merge imagen_settings, handling camera_settings specifically ---
-                            ai_imagen = generated_settings.get("imagen_settings")
-                            if isinstance(ai_imagen, dict):
-                                # Start with a deep copy of template imagen_settings
-                                import copy
-                                merged_imagen_settings = copy.deepcopy(template.get("imagen_settings", {}))
-
-                                # Merge AI settings into the copy using deep_update
-                                # Ensure deep_update is available (it should be imported from file_utils or defined locally)
-                                if 'deep_update' in locals() or 'deep_update' in globals():
-                                     deep_update(merged_imagen_settings, ai_imagen)
-                                else: # Fallback basic update if deep_update not found
-                                     merged_imagen_settings.update(ai_imagen)
-                                     logging.warning("deep_update function not found, using basic dict.update for imagen_settings merge.")
-
-
-                                # Ensure camera_settings key exists if it was in either template or AI response,
-                                # but only if camera_settings itself is intended for this style category
-                                # (The removal logic later handles inappropriate camera settings)
-                                if "camera_settings" in template.get("imagen_settings", {}) or "camera_settings" in ai_imagen:
-                                     merged_imagen_settings.setdefault("camera_settings", {}) # Ensure key exists if relevant
-
-                                final_preset["imagen_settings"] = merged_imagen_settings
-                            else:
-                                # If AI didn't provide imagen_settings or it wasn't a dict, use template's
-                                final_preset["imagen_settings"] = template.get("imagen_settings", {}).copy()
-                            # --- End imagen_settings merge ---
-
-
-
-                            neg_prompt = final_preset["imagen_settings"].get("negative_prompt", "")
-                            if not neg_prompt or len(neg_prompt) < 5:
-                                final_preset["imagen_settings"]["negative_prompt"] = template.get("imagen_settings",{}).get("negative_prompt", "low quality, blurry")
-                            style_neg_prompt = final_preset["imagen_settings"].get("style_negative_prompt", "")
-                            if not style_neg_prompt or len(style_neg_prompt) < 5:
-                                final_preset["imagen_settings"]["style_negative_prompt"] = template.get("imagen_settings",{}).get("style_negative_prompt", "clashing styles")
-
-                            for key, value in generated_settings.items():
-                                if key in template and key not in final_preset:
-                                    final_preset[key] = value
-                            for key, t_value in template.items():
-                                if key not in final_preset:
-                                    final_preset[key] = t_value
-
-                            # --- Remove camera_settings for traditional art styles (final enforcement) ---
-                            traditional_categories = [
-                                "oil_painting", "watercolor", "pastel", "acrylic_painting",
-                                "charcoal", "pencil_sketch", "ink_drawing", "drawing"
-                            ]
-                            if style_category in traditional_categories:
-                                if "camera_settings" in final_preset.get("imagen_settings", {}):
-                                    del final_preset["imagen_settings"]["camera_settings"]
-
-                            # --- Check Uniqueness & Save ---
-                            if is_preset_unique(final_preset):
-                                preview_text = json.dumps(final_preset, indent=4)
-                                print_section("Preview of Generated Preset")
-                                print_info(preview_text)
-                                
-                                if auto_save_flag: # auto_save_flag is a function parameter
-                                    confirm_decision = True
-                                    print_info("Auto-saving preset due to --auto-save flag.")
-                                else:
-                                    confirm_input = get_validated_input(
-                                        "Save this preset? (y/n):", 
-                                        ["y", "n", "yes", "no"],
-                                        help_context_id="AI_PRESET_SAVE_CONFIRMATION"
-                                    )
-                                    if confirm_input == "_HELP_SHOWN_":
-                                        # Re-prompt for save confirmation by re-entering the attempt loop
-                                        # This specific re-prompt is tricky without restructuring this part into its own loop.
-                                        # For now, let it fall through, which might mean it retries the whole generation if attempts remain,
-                                        # or cancels if it was the last attempt.
-                                        # A cleaner solution would be a dedicated loop for this confirmation.
-                                        # For simplicity in this fix, we'll let the existing outer loop handle it,
-                                        # which means it might regenerate if not the last attempt.
-                                        # Or, more simply, treat help here as a "no" for now.
-                                        print_info("Help shown for save confirmation. Treating as 'no' to save for this attempt.")
-                                        confirm_decision = False
-                                    else:
-                                        confirm_decision = confirm_input.startswith('y')
-
-                                # --- MODIFIED SAVE LOGIC ---
-                                if confirm_decision:
-                                    save_preset_to_cache(final_preset)
-                                    clean_preset_name = re.sub(r'[^\w\s-]', '', final_preset["preset_name"]).strip().replace(' ', '_')
-                                    preset_name_base = f"{clean_preset_name.lower()}_{int(time.time())}"
-                                    # Call the imported or fallback save function
-                                    success = save_preset(final_preset, preset_name_base) # Use the imported/fallback function
-                                    if success:
-                                        print_success(f"Generated unique preset: '{final_preset['preset_name']}'")
-                                        print_success(f"Saved preset '{preset_name_base}' to presets folder and database")
-                                        return preset_name_base
-                                    else:
-                                        print_error(f"Failed to save preset '{preset_name_base}'")
-                                        return None # Indicate save failure
-                                else:
-                                    print_warning("Preset saving cancelled by user.")
-                                    return None
-                                # --- END MODIFIED SAVE LOGIC ---
-                            else:
-                                print_warning("Generated preset is too similar to a previous one. Retrying...")
+                        final_preset = _process_gemini_preset_response(json_str, base_style_name, template, style_category)
+                        
+                        if final_preset:
+                            save_result = _save_generated_preset(final_preset, auto_save_flag)
+                            if save_result is True or isinstance(save_result, str): # Successfully saved (str is preset name)
+                                return save_result
+                            elif save_result is False: # Not unique, retry
                                 if attempt == 2:
                                     print_error("Failed to generate a unique preset after 3 attempts.")
                                     return False
                                 time.sleep(1)
-                                continue
-
-                        except json.JSONDecodeError as json_err:
-                            logging.error(f"Failed to parse JSON response: {json_err}\nResponse text was:\n{response_text}")
-                            print_error(f"AI response was not valid JSON (Attempt {attempt + 1}).")
+                                continue 
+                            else: # User cancelled save (save_result is None)
+                                return None 
+                        else: # JSON parsing/validation failed in helper
                             if attempt == 2: return False
                             time.sleep(1)
-                            continue
+                            continue # Retry generation
                     else: # No JSON found
                         logging.warning(f"Could not extract JSON from response (Attempt {attempt+1}). Response: {response_text}")
                         print_warning(f"AI response format was unexpected (Attempt {attempt + 1}).")
-                        if attempt == 2: return False
-                        time.sleep(1)
-                        continue
                 elif response and response.prompt_feedback and response.prompt_feedback.block_reason:
                      block_reason = response.prompt_feedback.block_reason
                      logging.warning(f"Generation blocked by API. Reason: {block_reason} (Attempt {attempt + 1})")
                      print_warning(f"Generation blocked (Reason: {block_reason}). Retrying...")
-                     if attempt == 2: return False
-                     time.sleep(2 + attempt * 2)
-                     continue
                 else: # Empty or problematic response
                     logging.warning(f"Received no valid response or candidates (Attempt {attempt+1}). Full response: {response}")
                     print_warning(f"AI returned an empty or invalid response (Attempt {attempt + 1}).")
-                    if attempt == 2: return False
-                    time.sleep(1)
-                    continue
 
-            # --- Error Handling ---
+                if attempt == 2: # If loop is about to end after this failed attempt
+                    print_error("Failed to generate a valid preset after 3 attempts due to API issues or response format.")
+                    return False
+                time.sleep(1 if not (response and response.prompt_feedback and response.prompt_feedback.block_reason) else (2 + attempt * 2) ) # Longer sleep if blocked
+                continue
+
             except genai_types.StopCandidateException as stop_err:
                  logging.warning(f"Generation stopped by API (StopCandidateException): {stop_err} (Attempt {attempt + 1})")
                  print_warning(f"Generation stopped by API: {stop_err}. Retrying...")
                  if attempt == 2: return False
                  time.sleep(2 + attempt * 2)
                  continue
-            except Exception as api_err:
+            except Exception as api_err: # General API error handling
                 err_str = str(api_err).lower()
                 if "api key not valid" in err_str or "authentication" in err_str:
                      logging.error(f"Authentication error: {api_err}")
                      print_error("Authentication error. Check your GEMINI_API_KEY.")
-                     return False # Fatal
+                     return False 
                 elif "rate limit" in err_str or "429" in err_str or "resource has been exhausted" in err_str:
                     logging.warning(f"Rate limit or resource exhaustion: {api_err}. Waiting... (Attempt {attempt + 1})")
                     print_warning("API rate limit reached or resource exhausted. Waiting before retry...")
@@ -706,11 +825,12 @@ def generate_ai_preset(user_prefs: Any, base_style_override: Optional[str] = Non
                     if attempt == 2: return False
                     time.sleep(2)
                     continue
-        # If loop finishes without returning
+        
+        # Fallthrough if all attempts fail
         print_error("Failed to generate a unique and valid preset after all attempts.")
         return False
 
-    except Exception as e:
+    except Exception as e: # Catch-all for unexpected errors in the main try block
         logging.exception("An unexpected error occurred during AI preset generation:")
         print_error(f"An unexpected error occurred: {e}")
         return False

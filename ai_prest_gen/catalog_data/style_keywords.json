@@ -1156,5 +1156,72 @@
         "neutral material 3d",
         "grey material 3d",
         "untextured 3d model"
+    ],
+    "fresco_painting": [
+        "fresco",
+        "fresco painting",
+        "buon fresco",
+        "fresco secco",
+        "wall painting",
+        "mural",
+        "renaissance mural",
+        "lime plaster painting"
+    ],
+    "pyrography": [
+        "pyrography",
+        "wood burning",
+        "pokerwork",
+        "burnt wood art",
+        "woodburning art",
+        "fire art on wood"
+    ],
+    "stone_carving": [
+        "stone carving",
+        "stone sculpture",
+        "marble sculpture",
+        "granite sculpture",
+        "bas relief",
+        "high relief",
+        "statuary",
+        "chiselled stone",
+        "sculpted stone"
+    ],
+    "surreal_3d": [
+        "surreal 3d",
+        "dreamlike 3d",
+        "3d surrealism",
+        "abstract realism 3d",
+        "dali-esque 3d",
+        "magritte 3d render",
+        "fantasy 3d abstract",
+        "bizarre 3d"
+    ],
+    "painterly_3d": [
+        "painterly 3d",
+        "3d npr",
+        "impressionistic 3d",
+        "3d painting style",
+        "non-photorealistic render painting",
+        "digital impasto 3d",
+        "stylized 3d paint",
+        "artistic 3d render"
+    ],
+    "technical_illustration_3d": [
+        "technical illustration 3d",
+        "3d schematic",
+        "product cutaway 3d",
+        "engineering render",
+        "blueprint 3d shaded",
+        "instructional 3d",
+        "3d diagram",
+        "exploded view 3d"
+    ],
+    "minecraft_style_3d": [
+        "minecraft",
+        "minecraft 3d",
+        "minecraft pixel art",
+        "minecraft voxel art",
+        "blocky game art",
+        "crafting game style"
     ]
 }

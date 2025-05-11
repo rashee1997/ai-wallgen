@@ -1,12 +1,34 @@
-"""Hybrid & Fusion Style Templates Module for AI Preset Generator
+"""
+Hybrid & Fusion Style Templates Module for AI Preset Generator.
 
-This module includes a dedicated function with concrete template logic for each hybrid or fusion style,
-migrated fully from style_templates.py. Each function is self-contained, with no placeholders or stubs.
+This module provides specific template functions for various hybrid, fusion,
+or uniquely combined art styles. Each function generates a base dictionary
+structure tailored to the nuances of a particular combined style, intended
+to be used by the AI for preset generation.
+
+Examples of styles covered:
+- Kinetic ASCII
+- Watercolor Pencil
+- Photorealism Glitch
+- Abstract Expressionism Cubism Fusion
+- Anime Oil Painting
+- Digital Pixel Traditional
+- And many other creative fusions.
 """
 
 from typing import Dict, Any
+from ai_prest_gen.camera_settings import get_dynamic_camera_settings # Added import
 
 def get_kinetic_ascii_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Kinetic ASCII' hybrid style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Kinetic ASCII Preset",
         "moods": ["Retro-Tech"],
@@ -61,7 +83,85 @@ def get_kinetic_ascii_template(style_category: str) -> Dict[str, Any]:
     }
     return {**base_template, "imagen_settings": imagen_settings}
 
+def get_photorealism_glitch_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Photorealism Glitch' hybrid style.
+    Combines hyperrealistic photographic detail with digital glitch effects.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Photorealism Glitch Preset",
+        "moods": ["Deconstructed", "Digital", "Chaotic", "Unsettling"],
+        "aspect_ratio": "16:9",
+        "description": "A hybrid preset combining hyperrealistic photographic detail with disruptive digital glitch effects, creating a sense of deconstruction or corruption of reality."
+    }
+    imagen_settings = {
+        "style_settings": {
+            "art_movement": "Photorealism Glitch Art / Digital Hybrid",
+            "post_processing": ["Moderate glitch effects (e.g., datamoshing, pixel sorting, artifacting)", "RGB channel splitting", "scan lines (optional)", "chromatic aberration (stylized)"],
+            "style_era": "Contemporary Digital"
+        },
+        "lighting_settings": {
+            "lighting_type": "Natural or Studio Lighting (as per base photorealism)",
+            "light_quality": "Realistic (can be distorted by glitch effects)",
+            "light_direction": "Varied (as per base photorealism, then glitched)",
+            "time_of_day": "Any (as per base photorealism)"
+        },
+        "composition_settings": {
+            "technique": "Rule of Thirds, Leading Lines (base photorealism, then disrupted by glitch)",
+            "focal_point": "Main Subject (often partially obscured or distorted by glitch)",
+            "camera_angle": "Standard photographic angles (can be visually skewed by glitch)",
+            "perspective": "Natural Perspective (base, then potentially warped)"
+        },
+        "color_settings": {
+            "color_scheme": "Realistic with Digital Artifacts/Shifts",
+            "palette_type": "True-to-life colors corrupted by RGB splits, banding, or unexpected color patches from glitch effects",
+            "color_temperature": "Realistic base, potentially altered by glitch",
+            "color_contrast": "High (often amplified by glitch artifacts)",
+            "dominant_colors": ["varied based on scene", "digital artifact colors (e.g., magenta, cyan, green from RGB splits)"]
+        },
+        "detail_settings": {
+            "detail_level": "Hyperrealistic Base Detail with areas of Glitch-induced Obscuration/Corruption",
+            "texture_quality": "Sharp photographic detail juxtaposed with digital glitch textures (pixelation, noise, blockiness)"
+        },
+        "environment_settings": { 
+            "weather": "Varied (as per base photorealism)",
+            "season": "Varied (as per base photorealism)",
+            "location_type": "Any (urban, natural, portrait - base photorealism, then glitched)",
+            "atmospheric_effects": ["Natural atmospheric perspective (base), overlaid or disrupted by digital noise/visual static from glitch"]
+        },
+        "quality_settings": {
+            "resolution": "3840x2160 (4K) or higher",
+            "rendering_quality": "High Photographic Quality with Intentional Glitch Artifacts"
+        },
+        "negative_prompt": "ugly, tiling, poorly drawn (unless part of glitch), extra limbs (unless part of glitch), disfigured (unless part of glitch), bad anatomy (unless part of glitch), watermark, signature, text, words, amateur, low quality, cartoon, painting, sketch, drawing, illustration, purely abstract (unless glitch makes it so), overly clean, no glitch effect",
+        "style_negative_prompt": "clashing styles (unintentionally), inconsistent lighting (beyond glitch effect), poor composition (base), generic, boring, flat, overly subtle glitch, purely traditional media look",
+        "camera_settings": get_dynamic_camera_settings("photographic") 
+    }
+    imagen_settings["photorealism_glitch_settings"] = {
+        "glitch_intensity": "Moderate to High",
+        "glitch_types_simulated": ["Pixel sorting", "Datamoshing artifacts", "RGB channel splitting", "JPEG compression artifacts", "Scan lines", "Data corruption patterns"],
+        "base_image_clarity": "Hyperrealistic photographic base image that is then subjected to glitch processing.",
+        "conceptual_theme": "Often explores themes of digital decay, information overload, corrupted memory, or the fragility of perception.",
+        "aesthetic_blend": "A compelling fusion of high-fidelity photorealism with disruptive, often chaotic, digital glitch effects. The underlying image is clearly photographic, but its integrity is compromised or altered by various forms of digital 'damage' or manipulation, creating a visually arresting and often thought-provoking result."
+    }
+    return {**base_template, "imagen_settings": imagen_settings}
+
 def get_watercolor_pencil_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Watercolor Pencil' hybrid style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Watercolor Pencil Preset",
         "moods": ["Dreamy"],
@@ -119,6 +219,15 @@ def get_watercolor_pencil_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_hybrid_traditional_digital_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a 'Hybrid Traditional-Digital' style (Oil Base).
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Hybrid Traditional-Digital Preset",
         "moods": ["Innovative"],
@@ -177,6 +286,15 @@ def get_hybrid_traditional_digital_template(style_category: str) -> Dict[str, An
 # Each function is named get_<hybrid_category>_template(style_category: str) and is a complete template.
 
 def get_installation_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Installation Art' hybrid style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Installation Art Preset",
         "moods": ["Immersive"],
@@ -233,6 +351,15 @@ def get_installation_art_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_scientific_technological_hybrid_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Scientific/Technological Hybrid' art styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Technological Hybrid Preset",
         "moods": ["High-Tech"],
@@ -289,6 +416,15 @@ def get_scientific_technological_hybrid_template(style_category: str) -> Dict[st
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_augmented_reality_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Augmented Reality Art' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Augmented Reality Art Preset",
         "moods": ["Immersive"],
@@ -345,6 +481,15 @@ def get_augmented_reality_art_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_abstract_expressionism_cubism_fusion_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Abstract Expressionism/Cubism Fusion' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Abstract Expressionism/Cubism Fusion Preset",
         "moods": ["Chaotic"],
@@ -401,6 +546,15 @@ def get_abstract_expressionism_cubism_fusion_template(style_category: str) -> Di
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_collage_digital_overlay_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Collage Digital Overlay' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Collage Digital Overlay Preset",
         "moods": ["Eclectic"],
@@ -456,6 +610,15 @@ def get_collage_digital_overlay_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_claymation_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Claymation' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Claymation Preset",
         "moods": ["Whimsical"],
@@ -486,6 +649,15 @@ def get_claymation_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_experimental_mixed_media_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Experimental Mixed Media' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Experimental Mixed Media Preset",
         "moods": ["Experimental", "Avant-Garde"],
@@ -513,6 +685,15 @@ def get_experimental_mixed_media_template(style_category: str) -> Dict[str, Any]
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_patchwork_collage_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Patchwork Collage' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Patchwork Collage Preset",
         "moods": ["Folk", "Textile"],
@@ -541,6 +722,15 @@ def get_patchwork_collage_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_paper_quilling_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Paper Quilling' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Paper Quilling Preset",
         "moods": ["Delicate", "Intricate"],
@@ -569,6 +759,15 @@ def get_paper_quilling_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_tradigital_mixed_media_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Tradigital Mixed Media' (Acrylic Base) styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Tradigital Mixed Media Preset",
         "moods": ["Textured", "Blended"],
@@ -598,6 +797,15 @@ def get_tradigital_mixed_media_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_whimsical_mixed_media_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Whimsical Mixed Media' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Whimsical Mixed Media Preset",
         "moods": ["Playful", "Dreamy", "Whimsical"],
@@ -625,6 +833,15 @@ def get_whimsical_mixed_media_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_sci_fi_futuristic_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Sci-Fi Futuristic' (Concept/Cyberpunk) styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Sci-Fi Futuristic Preset",
         "moods": ["High-Tech", "Futuristic", "Cyberpunk", "Expansive"],
@@ -653,6 +870,15 @@ def get_sci_fi_futuristic_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_mediterranean_style_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Mediterranean Style' digital paintings.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Mediterranean Digital Painting Preset",
         "moods": ["Lively", "Warm", "Sunny", "Picturesque"],
@@ -680,6 +906,15 @@ def get_mediterranean_style_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_morphism_surreal_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Morphism Surreal' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Morphism Surreal Preset",
         "moods": ["Surreal", "Dreamlike"],
@@ -708,6 +943,15 @@ def get_morphism_surreal_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_cubism_mixed_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Cubism Mixed Media' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cubism Mixed Preset",
         "moods": ["Geometric", "Fragmented"],
@@ -735,6 +979,15 @@ def get_cubism_mixed_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_pixel_patchwork_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Pixel Patchwork' (Pixel/Voxel Art + Quilt) styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pixel Patchwork Preset",
         "moods": ["Retro", "Geometric"],
@@ -763,6 +1016,15 @@ def get_pixel_patchwork_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_phygital_hybrid_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Phygital Hybrid' (Sculpture + AR) styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Phygital Hybrid Preset",
         "moods": ["Innovative", "Interactive"],
@@ -791,6 +1053,15 @@ def get_phygital_hybrid_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_screen_printing_bold_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Screen Printing Bold' graphic styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Screen Printing Bold Preset",
         "moods": ["Graphic", "Bold"],
@@ -819,6 +1090,15 @@ def get_screen_printing_bold_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_mixed_media_journaling_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Mixed Media Journaling' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Mixed Media Journaling Preset",
         "moods": ["Personal", "Whimsical", "Creative"],
@@ -847,6 +1127,15 @@ def get_mixed_media_journaling_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_digital_pixel_traditional_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Digital Pixel Traditional' fusion styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Digital Pixel Traditional Preset",
         "moods": ["Retro", "Painterly"],
@@ -874,6 +1163,15 @@ def get_digital_pixel_traditional_template(style_category: str) -> Dict[str, Any
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_patchwork_fabric_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Patchwork Fabric' (Textile Art) styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Patchwork Fabric Preset",
         "moods": ["Textile", "Craft"],
@@ -901,6 +1199,15 @@ def get_patchwork_fabric_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_mixed_media_collage_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Physical Mixed Media Collage' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Physical Mixed Media Collage Preset",
         "moods": ["Eclectic", "Textured", "Found Object Art"],
@@ -929,6 +1236,15 @@ def get_mixed_media_collage_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_whimsical_fantasy_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Whimsical Fantasy Illustration' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Whimsical Fantasy Illustration Preset",
         "moods": ["Dreamy", "Playful", "Magical", "Enchanting"],
@@ -957,6 +1273,15 @@ def get_whimsical_fantasy_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_anime_oilpainting_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Anime Oil Painting' fusion styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Anime Oil Painting Preset",
         "moods": ["Painterly", "Stylized"],
@@ -984,6 +1309,15 @@ def get_anime_oilpainting_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_minimalist_geometric_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Digital Geometric Minimalism' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Digital Geometric Minimalism Preset",
         "moods": ["Minimal", "Clean", "Abstract", "Precise"],
@@ -1012,6 +1346,15 @@ def get_minimalist_geometric_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_pop_surrealism_ascii_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Pop Surrealism ASCII' fusion styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pop Surrealism ASCII Preset",
         "moods": ["Retro-Tech", "Surreal"],
@@ -1040,6 +1383,15 @@ def get_pop_surrealism_ascii_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_dreamcore_weirdcore_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Dreamcore/Weirdcore' aesthetic styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Dreamcore/Weirdcore Aesthetic Preset",
         "moods": ["Nostalgic", "Uncanny", "Eerie", "Liminal", "Surreal"],
@@ -1067,6 +1419,15 @@ def get_dreamcore_weirdcore_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_fantasy_battle_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Fantasy Battle' digital painting styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Fantasy Battle Digital Painting Preset",
         "moods": ["Epic", "Intense", "Dramatic", "Action-Packed"],
@@ -1096,6 +1457,15 @@ def get_fantasy_battle_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_fantasy_landscape_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Fantasy Landscape' digital painting styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Fantasy Landscape Digital Painting Preset",
         "moods": ["Epic", "Mysterious", "Vast", "Awe-inspiring", "Enchanting"],
@@ -1125,6 +1495,15 @@ def get_fantasy_landscape_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_fantasy_cityscape_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Fantasy Cityscape' digital painting styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Fantasy Cityscape Digital Painting Preset",
         "moods": ["Magical", "Ancient", "Grand", "Awe-inspiring", "Mystical"],
@@ -1153,6 +1532,15 @@ def get_fantasy_cityscape_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_cyberpunk_action_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Cyberpunk Action' digital painting styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cyberpunk Action Digital Painting Preset",
         "moods": ["Intense", "Chaotic", "Futuristic", "Gritty", "Dynamic"],
@@ -1180,6 +1568,15 @@ def get_cyberpunk_action_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_cyberpunk_technology_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Cyberpunk Technology Focus' digital illustration styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cyberpunk Technology Focus Preset",
         "moods": ["High-Tech", "Complex", "Digital", "Intricate", "Sleek"],
@@ -1208,6 +1605,15 @@ def get_cyberpunk_technology_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_game_retro_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Retro Pixel Game Art' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Retro Pixel Game Art Preset",
         "moods": ["Nostalgic", "Pixelated", "Retro", "Arcade"],
@@ -1241,6 +1647,15 @@ def get_game_retro_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_game_cel_shaded_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a template for 'Cel-Shaded Game Art' styles.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cel-Shaded Game Art Preset",
         "moods": ["Stylized", "Vibrant", "Anime-esque", "Comic Book"],

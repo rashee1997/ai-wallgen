@@ -1,11 +1,32 @@
-"""Illustration Style Templates Module for AI Preset Generator
+"""
+Illustration Style Templates Module for AI Preset Generator.
 
-All illustrative template functions migrated from style_templates.py, one for each illustration* category.
+This module provides specific template functions for a wide range of
+illustration styles, from classic animation to modern digital illustration
+and comic book art. Each function generates a base dictionary structure
+tailored to the nuances of a particular illustration style.
+
+Styles covered include:
+- Cubist, Surreal, Steampunk Illustration
+- Pixar, Disney, Tom & Jerry, Vintage Cartoon styles
+- Anime/Manga, Comic Book styles
+- Pixel Art Illustration
+- Children's Book, Fantasy, Graphic Illustration
+- General Illustration
 """
 
 from typing import Dict, Any
 
 def get_illustration_cubist_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Cubist Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cubist Illustration Preset",
         "moods": ["Analytical"],
@@ -23,6 +44,15 @@ def get_illustration_cubist_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_surreal_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Surrealist Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Surrealist Illustration Preset",
         "moods": ["Dreamlike"],
@@ -40,6 +70,15 @@ def get_illustration_surreal_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_steampunk_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Steampunk Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Steampunk Illustration Preset",
         "moods": ["Inventive"],
@@ -57,6 +96,15 @@ def get_illustration_steampunk_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_pixar_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Pixar Style Illustration'.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pixar Style Illustration Preset",
         "moods": ["Warmth"],
@@ -74,6 +122,15 @@ def get_illustration_pixar_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_disney_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Disney Style Illustration'.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Disney Style Illustration Preset",
         "moods": ["Magical"],
@@ -91,6 +148,15 @@ def get_illustration_disney_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_tom_jerry_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Tom & Jerry Cartoon Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Tom & Jerry Cartoon Illustration Preset",
         "moods": ["Playful"],
@@ -108,6 +174,15 @@ def get_illustration_tom_jerry_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_vintage_cartoon_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Vintage Cartoon Illustration' (Rubber Hose) style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Vintage Cartoon Illustration Preset",
         "moods": ["Nostalgic"],
@@ -125,6 +200,15 @@ def get_illustration_vintage_cartoon_template(style_category: str) -> Dict[str, 
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_anime_manga_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Anime/Manga Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Anime/Manga Illustration Preset",
         "moods": ["Dramatic"],
@@ -142,6 +226,15 @@ def get_illustration_anime_manga_template(style_category: str) -> Dict[str, Any]
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_comic_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Comic Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Comic Illustration Preset",
         "moods": ["Dynamic"],
@@ -159,6 +252,15 @@ def get_illustration_comic_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_pixel_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Pixel Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pixel Illustration Preset",
         "moods": ["Retro"],
@@ -176,6 +278,15 @@ def get_illustration_pixel_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_childrens_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Children's Book Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Children's Book Illustration Preset",
         "moods": ["Playful"],
@@ -193,6 +304,15 @@ def get_illustration_childrens_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_fantasy_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Fantasy Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Fantasy Illustration Preset",
         "moods": ["Magical"],
@@ -210,6 +330,15 @@ def get_illustration_fantasy_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_graphic_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for 'Graphic Illustration' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Graphic Illustration Preset",
         "moods": ["Bold"],
@@ -227,6 +356,16 @@ def get_illustration_graphic_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_illustration_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a generic base template for 'Illustration' styles.
+    This can be used as a fallback or for general illustrative purposes.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Generic Illustration Preset",
         "moods": ["Storytelling"],

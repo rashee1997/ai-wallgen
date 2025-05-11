@@ -1,9 +1,16 @@
-"""Style Templates Module for AI Preset Generator
+"""
+Style Templates Dispatcher Module for AI Preset Generator.
 
-This module provides style-specific template generation for different art styles
-to ensure settings are appropriate for each style category.
-All templates are fully defined with concrete default values and include
-definitions restored from the user's original file.
+This module serves as the central dispatcher for retrieving style-specific
+preset base templates. It imports template-generating functions from various
+specialized modules (e.g., `digital_style_templates.py`, 
+`photographic_style_templates.py`, etc.) and uses a prioritization logic 
+to select and call the appropriate function based on a given style category.
+
+The main function, `get_template_for_category`, determines the most relevant
+category using `_priority_category_match` (which now relies on an externally
+defined preferred order from `style_category_catalog.py`) and then delegates
+to the corresponding `get_<style>_template` function.
 """
 
 import re # Added for cleaning in preset name generation later if needed
@@ -59,6 +66,7 @@ from .hybrid_style_templates import (
     get_cyberpunk_technology_template,
     get_game_retro_template,
     get_game_cel_shaded_template,
+    get_photorealism_glitch_template, # Added import
 )
 from .illustration_style_templates import (
     get_illustration_cubist_template,
@@ -91,6 +99,9 @@ from .traditional_style_templates import (
     get_stained_glass_template,
     get_woodcut_template,
     get_traditional_collage_template,
+    get_fresco_painting_template,
+    get_pyrography_template,
+    get_stone_carving_template,
 )
 from .digital_style_templates import (
     get_digital_art_template,
@@ -124,6 +135,7 @@ from .unique_style_templates import (
     get_material_sculptural_template,
     get_traditional_painting_drawing_template,
 )
+from .style_category_catalog import preferred_order as catalog_preferred_order # Added import
 from .three_d_style_templates import ( # Imports for 3D styles
     get_3d_render_template,
     get_voxel_art_template,
@@ -132,58 +144,35 @@ from .three_d_style_templates import ( # Imports for 3D styles
     get_anime_3d_template,
     get_abstract_3d_template,
     get_wireframe_3d_template,
-    get_clay_render_3d_template
+    get_clay_render_3d_template,
+    get_surreal_3d_template,
+    get_painterly_3d_template,
+    get_technical_illustration_3d_template,
+    get_minecraft_style_3d_template
 )
 
 # --- Main Template Generation Logic ---
 
 def _priority_category_match(style_category: Union[str, List[str]]) -> str:
     """
-    Return the best-matching style category based on a fixed priority list.
-    When multiple categories are given, always choose the most specific/relevant one by priority.
-    Fallback to first or 'default'.
+    Return the best-matching style category based on the externally defined `catalog_preferred_order`.
+    
+    When multiple categories might match a style name, this function uses the
+    `catalog_preferred_order` (sourced from `style_category_catalog.py`, which loads
+    it from a JSON file) to select the single most appropriate category.
+    If no specific match is found in the preferred order, it falls back to the
+    first category in the input list or 'default' if the input is empty or invalid.
+
+    Args:
+        style_category (Union[str, List[str]]): A single style category string
+                                                or a list of potential category strings.
+
+    Returns:
+        str: The determined primary style category.
     """
-    priority_list = [
-        "pop_surrealism_ascii", "abstract_expressionism_cubism_fusion", "anime_oilpainting",
-        "retro_pixel_vaporwave", "dreamcore_weirdcore", "photorealism_glitch", "watercolor_pencil",
-        "cubism_futurism", "digital_pixel_traditional", "scientific_technological_hybrid",
-        "psychedelic_surrealism", "morphism_surreal", "kinetic_ascii", "collage_digital_overlay",
-        "pixel_patchwork", "tradigital_mixed_media", "hybrid_traditional_digital", "digital_traditional_fusion",
-        "caricature_portrait", "selfie_portrait", "environmental_portrait", "fashion_portrait",
-        "conceptual_portrait", "cyberpunk_portrait", "futuristic_portrait", "pop_portrait",
-        "illustration_portrait", "photographic_portrait", "traditional_portrait", "fantasy_portrait",
-        "noir_photography", "art_deco_revival", "augmented_reality_art", "biopunk", "ferrofluid",
-        "fractal_generative_art", "installation_art", "kinetic_art", "luna_photo",
-        "mixed_media_journaling", "nightcore", "optic_art", "paper_quilling", "phygital_hybrid",
-        "screen_printing_bold", "synesthesia_art", "ink_punk", "game_cel_shaded", "game_retro",
-        "game_style", "cyberpunk_action", "cyberpunk_cityscape", "cyberpunk_technology", "cyberpunk",
-        "fantasy_battle", "fantasy_cityscape", "fantasy_landscape", "whimsical_fantasy", "fantasy",
-        "sci_fi_futuristic", "sci_fi", "claymation", "digital_collage", "experimental_mixed_media",
-        "patchwork_fabric", "patchwork_collage", "papercraft", "ascii_art", "line_art",
-        "illustration_pixar", "illustration_disney", "illustration_tom_jerry",
-        "illustration_vintage_cartoon", "illustration_anime_manga", "illustration_comic",
-        "illustration_pixel", "illustration_steampunk", "illustration_cubist", "illustration_surreal",
-        "illustration_childrens", "illustration_fantasy", "illustration_graphic", "illustration",
-        "oil_painting", "watercolor", "pastel", "acrylic_painting", "digital_painting", "pencil_sketch",
-        "ink_drawing", "charcoal", "drawing", "street_photography", "documentary", "cinematic",
-        "photographic", "minimalist_geometric", "minimalist", "geometric", "constructivism", "low_poly",
-        "abstract_conceptual", "abstract", "pop_surrealism", "surrealism", "cubism", "expressionism",
-        "fauvism", "art_nouveau", "art_deco", "psychedelic", "steampunk", "dystopian", "glitch_art",
-        "retrowave", "vaporwave", "dreamcore", "weirdcore", "folk_art", "mediterranean_style",
-        "material_sculptural", "sculpture", "3d_render",
-        "voxel_art",
-        "low_poly_3d",
-        "cartoon_3d",
-        "anime_3d",         # NEW 3D
-        "abstract_3d",      # NEW 3D
-        "wireframe_3d",     # NEW 3D
-        "clay_render_3d",   # NEW 3D
-        "vector_art", "digital_art",
-        "traditional_painting_drawing", "animal_inspired", "space_art", "robot_art",
-        "default", "unknown"
-    ]
-    seen = set()
-    unique_priority_list = [x for x in priority_list if not (x in seen or seen.add(x))]
+    # Use the imported preferred_order from style_category_catalog.py
+    # This list is assumed to be pre-processed for uniqueness if necessary by its source.
+    unique_priority_list = catalog_preferred_order
 
     if isinstance(style_category, str):
         categories = [style_category.lower()]
@@ -205,9 +194,24 @@ def _priority_category_match(style_category: Union[str, List[str]]) -> str:
 
 def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str, Any]:
     """
-    Return the appropriate JSON template based on style category or list of style categories.
-    Uses priority to select the most relevant category when several are given.
-    All placeholders are replaced with concrete default values. Includes restored templates.
+    Return the appropriate JSON template based on a style category or list of categories.
+
+    This function first determines the single most relevant `main_category` using
+    `_priority_category_match`. It then delegates to a specific `get_<style>_template`
+    function (imported from specialized modules like `digital_style_templates.py`,
+    `photographic_style_templates.py`, etc.) based on this `main_category`.
+
+    All returned templates are fully defined with concrete default values, suitable
+    for use as a base for AI preset generation.
+
+    Args:
+        style_category (Union[str, List[str]]): A single style category string or a
+                                                list of potential category strings.
+
+    Returns:
+        Dict[str, Any]: A dictionary representing the JSON base template for the
+                        determined style category. Returns a generic default
+                        template if no specific match is found.
     """
     main_category = _priority_category_match(style_category)
 
@@ -306,6 +310,12 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         return get_ink_drawing_template(main_category)
     elif main_category == "drawing":
         return get_drawing_template(main_category)
+    elif main_category == "fresco_painting":
+        return get_fresco_painting_template(main_category)
+    elif main_category == "pyrography":
+        return get_pyrography_template(main_category)
+    elif main_category == "stone_carving":
+        return get_stone_carving_template(main_category)
 
     # --- Hybrids & Fusions ---
     if main_category == "kinetic_ascii":
@@ -377,6 +387,8 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         return get_pop_surrealism_ascii_template(main_category)
     elif main_category == "dreamcore_weirdcore":
         return get_dreamcore_weirdcore_template(main_category)
+    elif main_category == "photorealism_glitch": # Added condition
+        return get_photorealism_glitch_template(main_category)
     elif main_category == "fantasy_battle":
         return get_fantasy_battle_template(main_category)
     elif main_category == "fantasy_landscape":
@@ -423,6 +435,14 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         return get_wireframe_3d_template(main_category)
     elif main_category == "clay_render_3d":
         return get_clay_render_3d_template(main_category)
+    elif main_category == "surreal_3d":
+        return get_surreal_3d_template(main_category)
+    elif main_category == "painterly_3d":
+        return get_painterly_3d_template(main_category)
+    elif main_category == "technical_illustration_3d":
+        return get_technical_illustration_3d_template(main_category)
+    elif main_category == "minecraft_style_3d":
+        return get_minecraft_style_3d_template(main_category)
     elif main_category == "3d_render":
         return get_3d_render_template(main_category)
     elif main_category == "digital_art":

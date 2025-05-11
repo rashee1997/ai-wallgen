@@ -1,26 +1,46 @@
 #!/usr/bin/env python3
 """
-Digital Style Templates for AI Preset Generator
+Digital Style Templates Module for AI Preset Generator.
 
-This module contains template functions for various digital art styles.
-Note: 3D render templates have been moved to '3d_style_templates.py'.
-Includes:
-- Digital painting
-- Digital art (general)
-- Vector art
-- ASCII art
-- Isometric art
-- Game-style art
-- Pixel art
-- And other digital-related styles
+This module provides specific template functions for a variety of digital art styles.
+Each function generates a base dictionary structure tailored to the nuances of a
+particular digital style, intended to be used by the AI for preset generation.
 
-Each function returns a dictionary with preset settings optimized for the given style.
+Styles covered include:
+- General Digital Art
+- Digital Painting
+- Vector Art
+- ASCII Art
+- Isometric Art
+- Game Styles (General)
+- Pixel Art
+- Vaporwave
+- Glitch Art
+- Surrealism (Digital Context)
+- Cubism (Digital Context)
+- Minimalism (Digital Context)
+- Sci-Fi (Digital Concept Art)
+- Steampunk (Digital Illustration)
+- Papercraft (Digital Simulation)
+
+Note: 3D rendering styles (like general 3D, voxel, low-poly) are handled in 
+`three_d_style_templates.py`.
 """
 
 from typing import Dict, Any
 
 
 def get_digital_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a general 'Digital Art' style.
+
+    Args:
+        style_category (str): The specific style category (unused in this function
+                              but maintained for consistency with dispatcher).
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Digital Art Preset",
         "moods": ["Expressive", "Dynamic"],
@@ -48,6 +68,15 @@ def get_digital_art_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_digital_painting_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Digital Painting' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Digital Painting Preset",
         "moods": ["Painterly", "Digital"],
@@ -76,6 +105,15 @@ def get_digital_painting_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_vector_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Vector Art' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Vector Art Preset",
         "moods": ["Clean", "Modern", "Graphic"],
@@ -104,6 +142,15 @@ def get_vector_art_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_ascii_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'ASCII Art' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "ASCII Art Preset",
         "moods": ["Retro", "Digital"],
@@ -131,6 +178,15 @@ def get_ascii_art_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_isometric_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Isometric' art style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Isometric Preset",
         "moods": ["Geometric", "Structured"],
@@ -156,6 +212,15 @@ def get_isometric_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_game_style_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a general 'Game Style' (concept art/cinematic).
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Game Style Preset",
         "moods": ["Epic", "Adventurous", "Immersive"],
@@ -187,6 +252,15 @@ def get_game_style_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_pixel_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Pixel Art' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pixel Art Preset",
         "moods": ["Retro", "Nostalgic", "Graphic"],
@@ -215,6 +289,15 @@ def get_pixel_art_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_vaporwave_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Vaporwave' aesthetic.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Vaporwave Preset",
         "moods": ["Nostalgic", "Surreal", "Retro-futuristic"],
@@ -242,6 +325,15 @@ def get_vaporwave_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_glitch_art_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Glitch Art' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Glitch Art Preset",
         "moods": ["Distorted", "Digital", "Chaotic"],
@@ -270,6 +362,15 @@ def get_glitch_art_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_surrealism_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Digital Surrealism' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Surrealism Preset",
         "moods": ["Dreamlike", "Uncanny", "Mysterious"],
@@ -296,6 +397,15 @@ def get_surrealism_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_cubism_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Digital Cubism' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cubism Preset",
         "moods": ["Analytical", "Geometric", "Abstract"],
@@ -323,6 +433,15 @@ def get_cubism_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_minimalist_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Digital Minimalism' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Minimalist Preset",
         "moods": ["Calm", "Clean", "Simple"],
@@ -349,6 +468,15 @@ def get_minimalist_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_sci_fi_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a general 'Science Fiction' concept art style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Sci-Fi Preset",
         "moods": ["Futuristic", "Exploratory", "Technological"],
@@ -376,6 +504,15 @@ def get_sci_fi_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_steampunk_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Steampunk' digital illustration style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Steampunk Preset",
         "moods": ["Adventurous", "Mechanical", "Nostalgic"],
@@ -403,6 +540,15 @@ def get_steampunk_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_papercraft_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Digital Papercraft' style.
+
+    Args:
+        style_category (str): The specific style category.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Papercraft Preset",
         "moods": ["Crafted", "Textured"],

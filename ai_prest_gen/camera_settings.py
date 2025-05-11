@@ -1,14 +1,27 @@
-"""Camera Settings Module for AI Preset Generator
+"""
+Camera Settings Module for AI Preset Generator.
 
-This module provides dynamic camera settings tailored to different style categories.
+This module provides functions to generate dynamic and contextually appropriate
+camera settings for various style categories, primarily targeting photographic
+and 3D rendering styles to enhance realism and technical accuracy in generated presets.
 """
 
 from typing import Dict, Any
 
 def get_dynamic_camera_settings(style_category: str) -> Dict[str, Any]:
     """
-    Return dynamic camera settings based on the style category.
-    This replaces static camera settings with tailored values per style.
+    Returns a dictionary of dynamic camera settings tailored to the given style category.
+
+    If a specific style category is not explicitly handled, it falls back to a set of
+    default common camera settings suitable for general photographic purposes.
+
+    Args:
+        style_category (str): The normalized (lowercase) style category name
+                              (e.g., "photographic", "cinematic", "macro").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing camera parameters such as
+                        camera_model, lens_type, aperture, focal_length, etc.
     """
     style_category = style_category.lower()
 

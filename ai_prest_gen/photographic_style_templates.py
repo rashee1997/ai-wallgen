@@ -19,7 +19,15 @@ from typing import Dict, Any
 from ai_prest_gen.camera_settings import get_dynamic_camera_settings
 
 def get_photographic_template(style_category: str) -> Dict[str, Any]:
-    """Generic photographic template with dynamic camera settings."""
+    """
+    Generates a base template for a general 'Photographic' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "photographic").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "General Photographic Preset",
         "moods": ["Authentic", "Realistic", "Well-Composed"],
@@ -72,7 +80,15 @@ def get_photographic_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_cinematic_template(style_category: str) -> Dict[str, Any]:
-    """Cinematic style template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Cinematic' photographic style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "cinematic").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cinematic Film Still Preset",
         "moods": ["Dramatic", "Narrative", "Atmospheric", "Tense", "Emotional"],
@@ -132,7 +148,15 @@ def get_cinematic_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_documentary_template(style_category: str) -> Dict[str, Any]:
-    """Documentary style template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Documentary' photographic style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "documentary").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Documentary Photography Preset",
         "moods": ["Reportage", "Authentic", "Observational", "Candid"],
@@ -185,7 +209,15 @@ def get_documentary_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_street_photography_template(style_category: str) -> Dict[str, Any]:
-    """Street photography template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Street Photography' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "street_photography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Street Photography Preset",
         "moods": ["Candid", "Urban", "Observational", "Spontaneous"],
@@ -238,7 +270,15 @@ def get_street_photography_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_noir_photography_template(style_category: str) -> Dict[str, Any]:
-    """Noir photography template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Noir Photography' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "noir_photography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Film Noir Photography Preset",
         "moods": ["Moody", "Mysterious", "Suspenseful", "Gritty"],
@@ -291,7 +331,15 @@ def get_noir_photography_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_luna_photo_template(style_category: str) -> Dict[str, Any]:
-    """Luna/moon-inspired photo template with dynamic camera settings."""
+    """
+    Generates a base template for 'Luna Photo' (moon-inspired night photography).
+
+    Args:
+        style_category (str): The specific style category (e.g., "luna_photo").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Lunar Night Photography Preset",
         "moods": ["Ethereal", "Mysterious", "Serene", "Dreamlike", "Nocturnal"],
@@ -344,7 +392,15 @@ def get_luna_photo_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_macro_photography_template(style_category: str) -> Dict[str, Any]:
-    """Macro photography template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Macro Photography' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "macro_photography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Macro Detail Photography Preset",
         "moods": ["Intricate", "Detailed", "Close-up", "Revealing"],
@@ -397,7 +453,15 @@ def get_macro_photography_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_wildlife_photography_template(style_category: str) -> Dict[str, Any]:
-    """Wildlife photography template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Wildlife Photography' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "wildlife_photography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Wildlife Photography Preset",
         "moods": ["Natural", "Untamed", "Observational", "Majestic", "Candid"],
@@ -450,7 +514,15 @@ def get_wildlife_photography_template(style_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_food_photography_template(style_category: str) -> Dict[str, Any]:
-    """Food photography template with dynamic camera settings."""
+    """
+    Generates a base template for the 'Food Photography' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "food_photography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Food Photography Preset",
         "moods": ["Appetizing", "Delicious", "Styled", "Fresh", "Gourmet"],

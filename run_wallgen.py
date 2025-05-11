@@ -549,7 +549,7 @@ def main():
                 print_info(f"Generating AI preset for style: {args.generate_preset}")
                 try:
                     success = generate_ai_preset(
-                        style_override=args.generate_preset, user_prefs=user_prefs
+                        base_style_override=args.generate_preset, user_prefs=user_prefs
                     )
                     if success:
                         print_success("AI preset generated successfully.")

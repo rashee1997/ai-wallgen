@@ -1,12 +1,39 @@
-"""Traditional Art Style Templates
+"""
+Traditional Art Style Templates Module for AI Preset Generator.
 
-Provides template generators for traditional art mediums.
-Each function returns a fully-defined template dict for its style.
+This module provides specific template functions for various traditional art mediums.
+Each function generates a base dictionary structure tailored to the nuances of a
+particular traditional style, intended to be used by the AI for preset generation.
+
+Styles covered include:
+- Oil Painting
+- Watercolor
+- Pastel
+- Acrylic Painting
+- Charcoal Drawing
+- Pencil Sketch
+- Ink Drawing
+- General Drawing
+- Gouache
+- Tempera
+- Mosaic
+- Stained Glass
+- Woodcut
+- Traditional Collage
 """
 
 from typing import Dict, Any
 
 def get_oil_painting_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Oil Painting' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "oil_painting").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Oil Painting Preset",
         "moods": ["Evocative"],
@@ -28,6 +55,15 @@ def get_oil_painting_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_watercolor_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Watercolor' painting style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "watercolor").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Watercolor Preset",
         "moods": ["Evocative"],
@@ -48,6 +84,15 @@ def get_watercolor_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_pastel_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Pastel' art style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "pastel").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pastel Preset",
         "moods": ["Evocative"],
@@ -68,6 +113,15 @@ def get_pastel_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_acrylic_painting_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Acrylic Painting' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "acrylic_painting").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Acrylic Painting Preset",
         "moods": ["Evocative"],
@@ -88,6 +142,15 @@ def get_acrylic_painting_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_charcoal_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Charcoal' drawing style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "charcoal").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Charcoal Preset",
         "moods": ["Evocative"],
@@ -108,6 +171,15 @@ def get_charcoal_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_pencil_sketch_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Pencil Sketch' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "pencil_sketch").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Pencil Sketch Preset",
         "moods": ["Evocative"],
@@ -128,6 +200,15 @@ def get_pencil_sketch_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_ink_drawing_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Ink Drawing' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "ink_drawing").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Ink Drawing Preset",
         "moods": ["Evocative"],
@@ -148,6 +229,15 @@ def get_ink_drawing_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_drawing_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a general 'Drawing' style (e.g., colored pencil).
+
+    Args:
+        main_category (str): The specific style category (e.g., "drawing").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Drawing Preset",
         "moods": ["Evocative"],
@@ -168,6 +258,15 @@ def get_drawing_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_gouache_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Gouache' painting style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "gouache").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Gouache Painting Preset",
         "moods": ["Vibrant", "Matte"],
@@ -188,6 +287,15 @@ def get_gouache_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_tempera_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Tempera' painting style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "tempera").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Tempera Painting Preset",
         "moods": ["Luminous", "Detailed"],
@@ -208,6 +316,15 @@ def get_tempera_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_mosaic_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Mosaic' art style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "mosaic").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Mosaic Art Preset",
         "moods": ["Textured", "Decorative"],
@@ -228,6 +345,15 @@ def get_mosaic_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_stained_glass_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Stained Glass' art style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "stained_glass").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Stained Glass Art Preset",
         "moods": ["Luminous", "Spiritual"],
@@ -248,6 +374,15 @@ def get_stained_glass_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_woodcut_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Woodcut' print style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "woodcut").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Woodcut Print Preset",
         "moods": ["Bold", "Graphic"],
@@ -268,6 +403,15 @@ def get_woodcut_template(main_category: str) -> Dict[str, Any]:
     return {**base_template, "imagen_settings": imagen_settings}
 
 def get_traditional_collage_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Traditional Collage' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "traditional_collage").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Traditional Collage Preset",
         "moods": ["Eclectic", "Textured"],
@@ -284,5 +428,92 @@ def get_traditional_collage_template(main_category: str) -> Dict[str, Any]:
         "quality_settings": {"resolution": "3200x4000", "rendering_quality": "High"},
         "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, digital look, seamless blending, flat",
         "style_negative_prompt": "clashing styles, inconsistent lighting, poor composition, unrealistic material interaction, digitally manipulated look (unless intended hybrid), lack of texture definition"
+    }
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_fresco_painting_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Fresco Painting' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "fresco_painting").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Fresco Painting Preset",
+        "moods": ["Historical", "Grand", "Matte"],
+        "aspect_ratio": "16:9",
+        "description": "Preset for Fresco painting, capturing its characteristic matte finish on plaster, often used for large-scale murals with historical or religious themes."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Italian Renaissance", "post_processing": ["matte finish", "subtle plaster texture", "earth pigments"], "style_era": "14th-17th Century"},
+        "lighting_settings": {"lighting_type": "Natural Ambient", "light_quality": "Diffused", "light_direction": "Varied (as in large hall)", "time_of_day": "Daytime Interior"},
+        "composition_settings": {"technique": "Narrative Composition", "focal_point": "Central Figures/Scene", "camera_angle": "Eye-level or Slightly Low", "perspective": "Linear Perspective (Renaissance)"},
+        "color_settings": {"color_scheme": "Earthy Tones", "palette_type": "Limited Pigment (Historical)", "color_temperature": "Warm Neutral", "color_contrast": "Medium", "dominant_colors": ["ochre", "terracotta red", "soft blues", "muted greens", "lime white"]},
+        "detail_settings": {"detail_level": "Medium-High", "texture_quality": "Matte Plaster Texture"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Interior Wall Surface", "atmospheric_effects": ["none"]},
+        "quality_settings": {"resolution": "3840x2160", "rendering_quality": "High"},
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, glossy finish, modern elements, vibrant synthetic colors, excessive texture",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, anachronistic details, shiny surface, overly bright colors, digital look, photographic elements"
+    }
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_pyrography_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Pyrography (Wood Burning)' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "pyrography").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Pyrography Art Preset",
+        "moods": ["Rustic", "Detailed", "Monochromatic"],
+        "aspect_ratio": "3:4",
+        "description": "Preset for Pyrography (wood burning), emphasizing the monochromatic sepia tones, detailed burn marks, and visible wood grain."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Decorative Folk Art", "post_processing": ["scorched wood effect", "variable burn depth shading", "wood grain visible"], "style_era": "Traditional/Contemporary"},
+        "lighting_settings": {"lighting_type": "Even Flat Light", "light_quality": "Soft", "light_direction": "Front", "time_of_day": "Any"},
+        "composition_settings": {"technique": "Line and Tone Burning", "focal_point": "Main Subject Detail", "camera_angle": "Direct", "perspective": "Flat or Slight Angle"},
+        "color_settings": {"color_scheme": "Monochromatic Sepia", "palette_type": "Burned Tones", "color_temperature": "Warm", "color_contrast": "High", "dominant_colors": ["dark brown", "medium brown", "light tan", "charred black"]},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Burned Wood Texture with Grain"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Wooden Surface (plaque, panel)", "atmospheric_effects": ["none"]},
+        "quality_settings": {"resolution": "3072x4096", "rendering_quality": "High"},
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, color, painted look, smooth surface, no wood grain",
+        "style_negative_prompt": "clashing styles, inconsistent burning, lack of detail, colorful elements, painted appearance, smudged (not burned)"
+    }
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_stone_carving_template(main_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Stone Carving' style.
+
+    Args:
+        main_category (str): The specific style category (e.g., "stone_carving").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Stone Carving Preset",
+        "moods": ["Classical", "Solid", "Textured"],
+        "aspect_ratio": "9:16",
+        "description": "Preset for Stone Carving, highlighting the textures of carved stone (e.g., marble, granite) and the interplay of light on sculptural forms."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Classical Sculpture", "post_processing": ["chiselled details", "polished highlights (if marble)", "matte texture (if rougher stone)"], "style_era": "Ancient/Classical/Contemporary"},
+        "lighting_settings": {"lighting_type": "Dramatic Single Source", "light_quality": "Directional Hard", "light_direction": "Side or Three-quarter", "time_of_day": "Studio/Outdoor"},
+        "composition_settings": {"technique": "Figurative Form", "focal_point": "Sculptural Form", "camera_angle": "Slightly Low (heroic)", "perspective": "Naturalistic 3D"},
+        "color_settings": {"color_scheme": "Monochromatic (Natural Stone)", "palette_type": "Stone Tones", "color_temperature": "Neutral/Cool", "color_contrast": "Medium-High (form definition)", "dominant_colors": ["grey", "white (marble)", "beige", "dark grey (granite)"]},
+        "detail_settings": {"detail_level": "High", "texture_quality": "Carved Stone Texture (marble, granite, limestone)"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Museum Pedestal", "atmospheric_effects": ["subtle ambient occlusion"]},
+        "quality_settings": {"resolution": "2160x3840", "rendering_quality": "High"},
+        "negative_prompt": "ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, text, words, amateur, low quality, color, painted stone, smooth plastic look, unrealistic material",
+        "style_negative_prompt": "clashing styles, inconsistent lighting, lack of sculptural form, painted appearance, unrealistic stone texture, modern digital artifacts"
     }
     return {**base_template, "imagen_settings": imagen_settings}

@@ -1,14 +1,47 @@
-"""Portrait Style Templates Module for AI Preset Generator
+"""
+Portrait Style Templates Module for AI Preset Generator.
 
-This module provides detailed portrait style templates with concrete default values.
+This module is dedicated to providing detailed and nuanced base templates for a
+wide variety of portrait styles. The primary function, `get_portrait_template`,
+acts as a dispatcher, returning a specific template dictionary based on the
+provided `style_category`.
+
+Styles covered include:
+- Photographic Portrait (and various sub-genres like environmental, fashion)
+- Traditional Portrait (e.g., oil painting likeness)
+- Futuristic/Cyberpunk Portrait
+- Illustrative Portrait
+- Pop Art Portrait
+- Caricature Portrait
+- Conceptual Portrait
+- Selfie Portrait
+And more, each with tailored settings.
 """
 
 from typing import Dict, Any
 
 def get_portrait_template(style_category: str) -> Dict[str, Any]:
     """
-    Return the appropriate JSON template based on a specific portrait style category.
-    All placeholders are replaced with concrete default values.
+    Returns a detailed JSON-like template for a specific portrait style category.
+
+    The function normalizes the input `style_category` and then uses a series
+    of conditional checks to select and customize a base template for that
+    particular portrait sub-style (e.g., "photographic_portrait", 
+    "traditional_portrait", "cyberpunk_portrait").
+
+    Each returned template includes a `preset_name`, `moods`, `aspect_ratio`,
+    `description`, and a comprehensive `imagen_settings` dictionary with
+    style-specific configurations for art movement, lighting, composition,
+    color, detail, environment, quality, negative prompts, and potentially
+    camera settings or medium-specific details.
+
+    Args:
+        style_category (str): The normalized (lowercase) name of the specific
+                              portrait style category for which to generate a template.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template tailored
+                        for the specified portrait style.
     """
     style_category = style_category.lower() # Normalize for matching
 

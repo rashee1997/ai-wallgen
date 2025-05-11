@@ -1,12 +1,34 @@
-"""3D Style Templates Module for AI Preset Generator
+"""
+3D Style Templates Module for AI Preset Generator.
 
-This module provides template generation for 3D rendering styles.
+This module provides specific template functions for various 3D rendering styles.
+Each function generates a base dictionary structure tailored to the nuances of a
+particular 3D style, intended to be used by the AI for preset generation.
+
+Styles covered include:
+- General 3D Render
+- Voxel Art
+- Low Poly 3D
+- Cartoon 3D
+- Anime 3D
+- Abstract 3D
+- Wireframe 3D
+- Clay Render 3D
 """
 
 from typing import Dict, Any
 from ai_prest_gen.camera_settings import get_dynamic_camera_settings # Assuming this path is correct relative to project root
 
 def get_3d_render_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for a general '3D Render' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "3d_render").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "3D Render Preset",
         "moods": ["Realistic", "Digital"],
@@ -49,7 +71,15 @@ def get_3d_render_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_voxel_art_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Voxel Art style."""
+    """
+    Generates a base template for the 'Voxel Art' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "voxel_art").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Voxel Art Preset",
         "moods": ["Pixelated", "Retro", "Blocky", "Geometric"],
@@ -85,9 +115,154 @@ def get_voxel_art_template(style_category: str) -> Dict[str, Any]:
     imagen_settings["camera_settings"] = get_dynamic_camera_settings(style_category)
     return {**base_template, "imagen_settings": imagen_settings}
 
+def get_surreal_3d_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Surreal 3D' style.
+    Args:
+        style_category (str): The specific style category (e.g., "surreal_3d").
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Surreal 3D Dreamscape Preset",
+        "moods": ["Dreamlike", "Ethereal", "Symbolic", "Unconventional", "Mysterious"],
+        "aspect_ratio": "16:9",
+        "description": "A preset for Surreal 3D art, focusing on dreamlike, illogical scenes and symbolic imagery."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Digital Surrealism", "post_processing": ["dreamy glow", "chromatic aberration (subtle)", "film grain", "soft focus"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Symbolic & Dramatic", "light_quality": "Varied (soft ethereal, hard dramatic)", "light_direction": "Unconventional, to enhance mood", "time_of_day": "Twilight or Abstract Time"},
+        "composition_settings": {"technique": "Juxtaposition of unrelated elements, rule of thirds (loosely)", "focal_point": "Key symbolic object or anomaly", "camera_angle": "Unusual, disorienting", "perspective": "Distorted or exaggerated"},
+        "color_settings": {"color_scheme": "Symbolic (muted with accent, or vivid contrasting)", "palette_type": "Custom, mood-driven", "color_temperature": "Varied (often cool or mixed)", "color_contrast": "Medium to High", "dominant_colors": ["deep blues", "purples", "muted earth tones", "vibrant accents"]},
+        "detail_settings": {"detail_level": "Medium to High (realistic detail on surreal forms)", "texture_quality": "Varied (realistic, smooth, or bizarre)"},
+        "environment_settings": {"weather": "N/A or Symbolic (e.g., perpetual rain)", "season": "N/A", "location_type": "Dreamscape, Illogical Space, Impossible Architecture", "atmospheric_effects": ["mist", "volumetric light", "floating particles"]},
+        "quality_settings": {"resolution": "2560x1440", "rendering_quality": "High"},
+        "negative_prompt": "boring, mundane, realistic everyday scene, symmetrical (unless intentional), flat lighting, simple composition, purely abstract (no recognizable forms)",
+        "style_negative_prompt": "logical consistency, predictable elements, overly bright and cheerful (unless ironic), lack of depth or atmosphere"
+    }
+    imagen_settings["software_settings"] = {"suite": "Blender, Cinema 4D, Houdini", "renderer": "Cycles, Octane, Redshift", "version": "Latest"}
+    imagen_settings["render_settings"] = {"polycount": "Varied", "sampling": "High", "denoiser": "Enabled"}
+    imagen_settings["lighting_setup"] = {"system": "HDRI, spotlights, emissive materials for symbolic lighting", "intensity": "Varied", "color": "Thematic", "shadows": "Soft or hard, emphasizing mood"}
+    imagen_settings["material_settings"] = {"shader_type": "Principled BSDF, Glass, Emissive", "texture_maps": ["diffuse", "normal", "custom for surreal effects"]}
+    imagen_settings["camera_settings"] = get_dynamic_camera_settings(style_category)
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_painterly_3d_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Painterly 3D (NPR)' style.
+    Args:
+        style_category (str): The specific style category (e.g., "painterly_3d").
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Painterly 3D NPR Preset",
+        "moods": ["Artistic", "Impressionistic", "Stylized", "Textured", "Non-Photorealistic"],
+        "aspect_ratio": "4:3",
+        "description": "A preset for Painterly 3D (NPR), simulating traditional painting techniques with visible brushstrokes and textures."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Digital Impressionism / Painterly NPR", "post_processing": ["simulated brushstrokes filter", "canvas texture overlay", "palette knife effect simulation"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Soft Natural or Studio", "light_quality": "Diffused, painterly highlights", "light_direction": "Classic art lighting (e.g., side light)", "time_of_day": "Varied"},
+        "composition_settings": {"technique": "Artistic composition (rule of thirds, golden ratio)", "focal_point": "Main subject with painterly emphasis", "camera_angle": "Eye-level or slightly artistic", "perspective": "Naturalistic or slightly stylized"},
+        "color_settings": {"color_scheme": "Harmonious or Broken Color (Impressionistic)", "palette_type": "Rich, blended colors", "color_temperature": "Warm or Cool, thematic", "color_contrast": "Medium", "dominant_colors": ["varied, mimicking paint pigments"]},
+        "detail_settings": {"detail_level": "Medium (form over micro-detail)", "texture_quality": "Visible Brushstrokes, Canvas/Paper Weave, Impasto"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Stylized Scene or Portrait Setting", "atmospheric_effects": ["painterly depth, soft focus background"]},
+        "quality_settings": {"resolution": "2560x1920", "rendering_quality": "High"},
+        "negative_prompt": "photorealistic, 3d render look, smooth shading, crisp digital lines, CGI artifacts, perfect geometry, flat colors (unless stylized flat painting)",
+        "style_negative_prompt": "overly clean, digital precision, lack of texture, photographic realism, hard CGI shadows"
+    }
+    imagen_settings["software_settings"] = {"suite": "Blender (NPR shaders, Eevee/Cycles), Substance Painter (for textures), Krita/Photoshop (for texture painting)", "renderer": "Eevee (with custom shaders), Cycles (with NPR nodes), specialized NPR renderers", "version": "Latest"}
+    imagen_settings["render_settings"] = {"polycount": "Medium", "sampling": "Medium", "denoiser": "Enabled"}
+    imagen_settings["lighting_setup"] = {"system": "Softboxes, HDRI with artistic tones", "intensity": "Moderate", "color": "Natural or slightly tinted", "shadows": "Soft, painterly"}
+    imagen_settings["material_settings"] = {"shader_type": "Custom NPR shaders, Diffuse with painted textures", "texture_maps": ["hand-painted diffuse", "normal map from brushstrokes", "roughness simulating paint sheen"]}
+    imagen_settings["camera_settings"] = get_dynamic_camera_settings(style_category)
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_technical_illustration_3d_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Technical Illustration 3D' style.
+    Args:
+        style_category (str): The specific style category (e.g., "technical_illustration_3d").
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Technical Illustration 3D Preset",
+        "moods": ["Informative", "Clean", "Precise", "Schematic", "Blueprint-like"],
+        "aspect_ratio": "16:9",
+        "description": "A preset for Technical Illustration 3D, emphasizing clarity, precision, and often showcasing internal components or structure."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Technical Illustration / Infographics", "post_processing": ["crisp outlines", "ambient occlusion pass for clarity", "subtle cel shading (optional)"], "style_era": "Contemporary"},
+        "lighting_settings": {"lighting_type": "Even Studio or Ambient Occlusion focus", "light_quality": "Clear, Uniform", "light_direction": "Omnidirectional or specific to highlight features", "time_of_day": "N/A"},
+        "composition_settings": {"technique": "Exploded views, cutaways, orthographic projection", "focal_point": "Key components or overall structure", "camera_angle": "Isometric, top, front, side, or clear perspective", "perspective": "Orthographic or Perspective (low distortion)"},
+        "color_settings": {"color_scheme": "Limited, Functional (e.g., greyscale with accent colors)", "palette_type": "Clean, often desaturated with highlights", "color_temperature": "Neutral", "color_contrast": "High (for readability)", "dominant_colors": ["greys", "whites", "blues", "accent color (e.g., red, orange)"]},
+        "detail_settings": {"detail_level": "High (precision in geometry)", "texture_quality": "Clean, Simple Materials (matte plastic, metal, glass)"},
+        "environment_settings": {"weather": "N/A", "season": "N/A", "location_type": "Neutral Background (white, grey, gradient, blueprint grid)", "atmospheric_effects": ["none"]},
+        "quality_settings": {"resolution": "1920x1080 or higher for print", "rendering_quality": "High"},
+        "negative_prompt": "photorealistic scene, artistic stylization (unless clean NPR), complex textures, organic forms (unless the subject is organic), busy background, dramatic lighting",
+        "style_negative_prompt": "cluttered, unclear, overly artistic rendering, distracting elements, poor readability, complex PBR materials"
+    }
+    imagen_settings["software_settings"] = {"suite": "Blender, SolidWorks, AutoCAD, Keyshot, Fusion 360", "renderer": "Eevee, Cycles (with toon/AO), Keyshot, specialized technical renderers", "version": "Latest"}
+    imagen_settings["render_settings"] = {"polycount": "Precise to model", "sampling": "Medium", "denoiser": "Enabled"}
+    imagen_settings["lighting_setup"] = {"system": "Ambient occlusion, dome light, or clean studio setup", "intensity": "Even", "color": "White", "shadows": "Subtle contact shadows or none for pure orthographic"}
+    imagen_settings["material_settings"] = {"shader_type": "Diffuse, Principled BSDF (simplified), Toon BSDF (for outlines/cel look)", "texture_maps": ["minimal, flat colors, simple procedural for metals"]}
+    imagen_settings["camera_settings"] = get_dynamic_camera_settings(style_category)
+    imagen_settings["camera_settings"]["camera_type"] = "orthographic"
+    imagen_settings["camera_settings"]["focal_length"] = "N/A (orthographic)"
+    imagen_settings["camera_settings"]["depth_of_field"] = "disabled"
+    return {**base_template, "imagen_settings": imagen_settings}
+
+def get_minecraft_style_3d_template(style_category: str) -> Dict[str, Any]:
+    """
+    Generates a base template for the 'Minecraft Style 3D' art.
+    Args:
+        style_category (str): The specific style category (e.g., "minecraft_style_3d").
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
+    base_template = {
+        "preset_name": "Minecraft Blocky World Preset",
+        "moods": ["Adventurous", "Creative", "Blocky", "Pixelated"],
+        "aspect_ratio": "16:9",
+        "description": "A preset for generating 3D art in the iconic blocky, pixel-art style of Minecraft."
+    }
+    imagen_settings = {
+        "style_settings": {"art_movement": "Minecraft Voxel Style", "post_processing": ["sharp pixelated textures", "distinct block forms", "no anti-aliasing"], "style_era": "Contemporary Gaming"},
+        "lighting_settings": {"lighting_type": "Simple Directional (Sun)", "light_quality": "Hard, blocky shadows", "light_direction": "Overhead or Angled", "time_of_day": "Daytime (classic Minecraft)"},
+        "composition_settings": {"technique": "Perspective or Isometric View", "focal_point": "Player-built structure or Landscape Feature", "camera_angle": "First-person or Third-person view", "perspective": "Block-based Grid"},
+        "color_settings": {"color_scheme": "Minecraft Palette (earthy, vibrant greens, blues)", "palette_type": "Pixel Art Texture Palette", "color_temperature": "Neutral", "color_contrast": "Medium-High", "dominant_colors": ["green (grass)", "brown (dirt/wood)", "grey (stone)", "blue (sky/water)"]},
+        "detail_settings": {"detail_level": "Block Resolution", "texture_quality": "Pixelated Block Textures (16x16 style)"},
+        "environment_settings": {"weather": "Clear or Minecraft weather (rain, snow)", "season": "Varied (matching biome)", "location_type": "Minecraft Biome (Plains, Forest, Mountains, Caves)", "atmospheric_effects": ["simple skybox", "blocky clouds"]},
+        "quality_settings": {"resolution": "1920x1080", "rendering_quality": "Standard (emphasizing style over realism)"},
+        "negative_prompt": "photorealistic, smooth shading, high poly models, complex curves, detailed organic forms (non-blocky), soft shadows, anti-aliasing, realistic water",
+        "style_negative_prompt": "round objects, smooth terrain, realistic textures, detailed foliage (non-blocky), non-pixelated textures"
+    }
+    imagen_settings["software_settings"] = {"suite": "Blender (with custom block shaders), MagicaVoxel, Mineways", "renderer": "Eevee or Cycles (stylized), Minecraft Java/Bedrock (screenshots)", "version": "Latest"}
+    imagen_settings["render_settings"] = {"polycount": "N/A (Voxel/Block-based)", "sampling": "Low", "denoiser": "Disabled"}
+    imagen_settings["lighting_setup"] = {"system": "Directional sun lamp, simple ambient light", "intensity": "Bright", "color": "White/Yellowish", "shadows": "Hard, distinct block shadows"}
+    imagen_settings["material_settings"] = {"shader_type": "Diffuse with pixel art texture maps", "texture_maps": ["pixel art diffuse (e.g., 16x16 per block type)"], "bump_map": "no", "displacement": "no"}
+    imagen_settings["camera_settings"] = get_dynamic_camera_settings(style_category)
+    # Override some camera settings for Minecraft feel
+    imagen_settings["camera_settings"]["camera_type"] = "perspective"
+    imagen_settings["camera_settings"]["field_of_view"] = "70-90 degrees (typical for games)" # Minecraft default is around 70
+    imagen_settings["camera_settings"]["focal_length"] = "N/A (use FoV)"
+    imagen_settings["camera_settings"]["depth_of_field"] = "disabled"
+
+    return {**base_template, "imagen_settings": imagen_settings}
+
 
 def get_anime_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Anime 3D style."""
+    """
+    Generates a base template for the 'Anime 3D' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "anime_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Anime 3D Preset",
         "moods": ["Anime", "Cel Shaded", "Japanese Animation", "Stylized", "Vibrant"],
@@ -127,7 +302,15 @@ def get_anime_3d_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_abstract_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Abstract 3D style."""
+    """
+    Generates a base template for the 'Abstract 3D' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "abstract_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Abstract 3D Preset",
         "moods": ["Conceptual", "Geometric Abstract", "Organic Abstract", "Experimental", "Surreal", "Minimalist", "Complex"],
@@ -167,7 +350,15 @@ def get_abstract_3d_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_wireframe_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Wireframe 3D style."""
+    """
+    Generates a base template for the 'Wireframe 3D' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "wireframe_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Wireframe 3D Preset",
         "moods": ["Technical", "Blueprint", "Structural", "Minimalist", "Digital", "Schematic"],
@@ -213,7 +404,15 @@ def get_wireframe_3d_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_clay_render_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Clay Render 3D style."""
+    """
+    Generates a base template for the 'Clay Render 3D' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "clay_render_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Clay Render 3D Preset",
         "moods": ["Neutral", "Draft", "Sculptural", "Monochromatic", "Work-in-progress", "Clean", "Minimalist"],
@@ -260,7 +459,15 @@ def get_clay_render_3d_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_low_poly_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Low Poly 3D style."""
+    """
+    Generates a base template for the 'Low Poly 3D' style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "low_poly_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Low Poly 3D Preset",
         "moods": ["Stylized", "Geometric", "Minimalist", "Retro", "Clean"],
@@ -298,7 +505,15 @@ def get_low_poly_3d_template(style_category: str) -> Dict[str, Any]:
 
 
 def get_cartoon_3d_template(style_category: str) -> Dict[str, Any]:
-    """Generates a preset template for Cartoon 3D / Toon Shaded style."""
+    """
+    Generates a base template for the 'Cartoon 3D' (Toon Shaded) style.
+
+    Args:
+        style_category (str): The specific style category (e.g., "cartoon_3d").
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the preset template.
+    """
     base_template = {
         "preset_name": "Cartoon 3D Preset",
         "moods": ["Stylized", "Animated", "Playful", "Cel Shaded", "Fun"],
