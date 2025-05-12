@@ -1249,5 +1249,61 @@
         "infinite detail art",
         "algorithmic fractals",
         "self-similar patterns"
+    ],
+    "logo": [
+        "logo",
+        "brand mark",
+        "identity",
+        "logotype",
+        "monogram",
+        "emblem",
+        "mascot",
+        "brandmark"
+    ],
+    "logo_minimalist": [
+        "minimalist logo",
+        "simple logo",
+        "clean logo",
+        "modern logo"
+    ],
+    "logo_emblem": [
+        "emblem logo",
+        "badge logo",
+        "crest logo",
+        "seal logo",
+        "shield logo"
+    ],
+    "logo_wordmark": [
+        "wordmark logo",
+        "logotype",
+        "text logo",
+        "typography logo"
+    ],
+    "logo_lettermark": [
+        "lettermark logo",
+        "monogram logo",
+        "initials logo",
+        "alphabet logo"
+    ],
+    "logo_abstract": [
+        "abstract logo",
+        "geometric logo mark",
+        "abstract symbol"
+    ],
+    "logo_mascot": [
+        "mascot logo",
+        "character logo",
+        "illustrated character logo"
+    ],
+    "logo_illustrative": [
+        "illustrative logo",
+        "hand-drawn logo",
+        "drawn logo",
+        "sketch logo"
+    ],
+    "logo_3d": [
+        "3d logo",
+        "dimensional logo",
+        "rendered logo"
     ]
 }

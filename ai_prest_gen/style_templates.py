@@ -151,6 +151,17 @@ from .three_d_style_templates import ( # Imports for 3D styles
     get_technical_illustration_3d_template,
     get_minecraft_style_3d_template
 )
+from .logo_style_templates import ( # Imports for Logo styles
+    get_logo_minimalist_template,
+    get_logo_emblem_template,
+    get_logo_wordmark_template,
+    get_logo_lettermark_template,
+    get_logo_abstract_template,
+    get_logo_mascot_template,
+    get_logo_illustrative_template,
+    get_logo_3d_template,
+    get_logo_default_template
+)
 
 # --- Main Template Generation Logic ---
 
@@ -241,8 +252,28 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     if main_category in photographic_style_map:
         return photographic_style_map[main_category](main_category)
 
+    # --- Delegation for Logo Styles ---
+    elif main_category == "logo_minimalist":
+        return get_logo_minimalist_template(main_category)
+    elif main_category == "logo_emblem":
+        return get_logo_emblem_template(main_category)
+    elif main_category == "logo_wordmark":
+        return get_logo_wordmark_template(main_category)
+    elif main_category == "logo_lettermark":
+        return get_logo_lettermark_template(main_category)
+    elif main_category == "logo_abstract":
+        return get_logo_abstract_template(main_category)
+    elif main_category == "logo_mascot":
+        return get_logo_mascot_template(main_category)
+    elif main_category == "logo_illustrative":
+        return get_logo_illustrative_template(main_category)
+    elif main_category == "logo_3d":
+        return get_logo_3d_template(main_category)
+    elif main_category == "logo": # Generic logo maps to default
+        return get_logo_default_template(main_category)
+
     # --- Delegation for Illustration Styles ---
-    if main_category == "illustration_cubist":
+    elif main_category == "illustration_cubist":
         return get_illustration_cubist_template(main_category)
     elif main_category == "illustration_surreal":
         return get_illustration_surreal_template(main_category)
