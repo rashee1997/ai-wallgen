@@ -1223,5 +1223,31 @@
         "minecraft voxel art",
         "blocky game art",
         "crafting game style"
+    ],
+    "generative_art": [
+        "generative art",
+        "algorithmic art",
+        "code art",
+        "procedural art",
+        "rule-based art",
+        "computational art",
+        "creative coding",
+        "pattern generation",
+        "systematic art",
+        "emergent art"
+    ],
+    "fractal_art": [
+        "fractal art",
+        "fractal geometry",
+        "mandelbrot set",
+        "julia set",
+        "apophysis software",
+        "ultra fractal software",
+        "mandelbulb 3d software",
+        "mathematical patterns",
+        "recursive art",
+        "infinite detail art",
+        "algorithmic fractals",
+        "self-similar patterns"
     ]
 }

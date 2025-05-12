@@ -175,33 +175,59 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
                 # logger.debug(f"Full Gemini response: {response}")
                 continue # Try next attempt or fail
 
-            style_text = style_text.strip(' "\'\n\r')
+            style_text = style_text.strip(' "\'\n\r') # Clean the raw text
 
-            if style_type == "simple":
-                return {"name": style_text, "description": ""}
-            
-            # Attempt to parse as JSON first for detailed style
-            try:
-                # Ensure style_text is not empty and looks like a JSON object
-                if style_text and style_text.startswith("{") and style_text.endswith("}"):
-                    parsed_json = json.loads(style_text)
-                    if isinstance(parsed_json, dict) and "name" in parsed_json and "description" in parsed_json:
-                        logger.info("Successfully parsed detailed style as JSON from Gemini response.")
-                        return {"name": str(parsed_json["name"]).strip(), "description": str(parsed_json["description"]).strip()}
+            if style_type == "detailed":
+                parsed_style = None
+                # Try to extract and parse JSON
+                # Ensure re and json are imported at the top of the file
+                json_match = re.search(r'```json\s*(\{.*?\})\s*```|(\{.*?\})', style_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(1) or json_match.group(2)
+                    try:
+                        data = json.loads(json_str)
+                        if isinstance(data, dict) and "name" in data and "description" in data:
+                            name = str(data["name"]).strip()
+                            description = str(data["description"]).strip()
+                            if name: # Ensure name is not empty
+                                parsed_style = {"name": name, "description": description}
+                                logger.info(f"Successfully parsed detailed style: {name}")
+                            else:
+                                logger.warning(f"Parsed JSON but 'name' field was empty. JSON: {json_str}")
+                        else:
+                            logger.warning(f"Parsed JSON but required keys ('name', 'description') missing or invalid structure. JSON: {json_str}")
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to decode extracted JSON string: '{json_str}'. Original text: '{style_text}'")
+                else:
+                    logger.warning(f"No JSON block found in detailed style response: '{style_text}'")
+
+                if parsed_style:
+                    return parsed_style # Successfully parsed, exit function
+                else:
+                    # This attempt for detailed style failed to yield valid JSON.
+                    logger.warning(f"Attempt {attempt + 1} failed to get valid detailed JSON. Raw text: '{style_text}'")
+                    if attempt < MAX_RETRIES - 1:
+                        delay = RETRY_DELAY * (2 ** attempt) # Exponential backoff for parsing failure too
+                        logger.info(f"Retrying style generation due to parsing/validation issue in {delay} seconds...")
+                        time.sleep(delay)
+                        continue # Explicitly continue to next attempt in the for loop
+                    else: # Last attempt failed to parse
+                        logger.error(f"Failed to generate valid detailed style JSON after {MAX_RETRIES} attempts (parsing/validation failed on last attempt).")
+                        return None # Exit function with None
+
+            elif style_type == "simple":
+                if style_text: # Ensure simple style text is not empty
+                    return {"name": style_text, "description": ""}
+                else:
+                    logger.warning(f"Attempt {attempt + 1} for simple style returned empty text.")
+                    if attempt < MAX_RETRIES - 1:
+                        delay = RETRY_DELAY * (2 ** attempt)
+                        logger.info(f"Retrying simple style generation due to empty text in {delay} seconds...")
+                        time.sleep(delay)
+                        continue # Explicitly continue to next attempt
                     else:
-                        logger.warning(f"Parsed JSON but keys 'name'/'description' missing or invalid structure: {style_text}")
-                # Fallthrough to existing logic if not valid JSON or keys missing
-            except json.JSONDecodeError:
-                logger.warning(f"Failed to parse detailed style as JSON, falling back to newline splitting: '{style_text}'")
-                # Fallthrough to existing logic
-
-            # Existing fallback logic
-            if "\n" in style_text:
-                name, desc = style_text.split("\n", 1)
-                return {"name": name.strip(), "description": desc.strip()}
-            else: # Handle case where detailed is expected but only one line is returned
-                logger.warning(f"Expected detailed style (name+desc) but got single line (and not JSON): '{style_text}'. Using as name.")
-                return {"name": style_text, "description": "Description not provided by AI."}
+                        logger.error(f"Failed to generate simple style after {MAX_RETRIES} attempts (empty text).")
+                        return None
 
         except Exception as e:
             # gemini_state.retry_count removed

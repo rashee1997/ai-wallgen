@@ -106,7 +106,6 @@ from .traditional_style_templates import (
 from .digital_style_templates import (
     get_digital_art_template,
     get_digital_painting_template,
-    # get_3d_render_template, # Moved to 3d_style_templates
     get_vector_art_template,
     get_ascii_art_template,
     get_isometric_template,
@@ -120,6 +119,8 @@ from .digital_style_templates import (
     get_sci_fi_template,
     get_steampunk_template,
     get_papercraft_template,
+    get_generative_art_template,
+    get_fractal_art_template,
 )
 from .unique_style_templates import (
     get_psychedelic_template,
@@ -419,6 +420,10 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
         return get_steampunk_template(main_category)
     elif main_category == "papercraft":
         return get_papercraft_template(main_category)
+    elif main_category == "generative_art":
+        return get_generative_art_template(main_category)
+    elif main_category == "fractal_art":
+        return get_fractal_art_template(main_category)
     elif main_category == "ascii_art":
         return get_ascii_art_template(main_category)
     elif main_category == "voxel_art":
