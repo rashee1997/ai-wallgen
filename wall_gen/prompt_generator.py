@@ -69,9 +69,11 @@ except ImportError:
 
 # Import necessary third-party libraries for backward compatibility
 try:
-    import google.generativeai as genai
+    from google import genai # Use the new SDK import
+    from google.genai import types # Import types for consistency
 except ImportError:
     logging.warning("google.generativeai module not found. Some features will be disabled.")
+
 
 # Note: Most actual functionality is now in prompt_modules/*
 # This file primarily re-exports the API. Further refactoring might merge this into prompt_service.

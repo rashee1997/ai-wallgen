@@ -121,11 +121,13 @@ Your output MUST NOT repeat the tags or any technical details.
 """
             
             try:
-                import google.generativeai as genai
+                from google import genai # Use the new SDK import
+                from google.genai import types # Import types for consistency
             except ImportError:
                 logging.warning("google.generativeai module not found. Some features will be disabled.")
-                return enforce_prompt_format(prompt_fallback, resolution, aspect_ratio, negative_prompt)
-            
+                # Define a dummy function if import fails (Removed dummy classes as they are no longer needed with new SDK import)
+                pass # Keep the pass statement for valid syntax
+
             if not gemini_config.is_initialized():
                 if not gemini_config.initialize_gemini_globally():
                     logging.error(f"Gemini not initialized for random prompt enhancement: {gemini_config.get_last_error()}")
@@ -298,6 +300,7 @@ Example format: "A detailed description of the image... {resolution} resolution,
             style_context="" # Not strictly needed if PROMPT_INSTRUCTIONS is simple, but kept for compatibility
         )
 
+
         # Create a more evocative, artistic generation context for Gemini
         # This instruction tells Gemini to ONLY output the descriptive paragraph.
         
@@ -374,7 +377,7 @@ Now, generate the prompt for the tags: "{formatted_tags}", ensuring the user's s
 
             # API key and configuration are handled by gemini_config
             # Explicitly ensure 'genai' is in scope here, though it should be from top-level import.
-            import google.generativeai as genai
+            import google.genai as genai
             model = genai.GenerativeModel(selected_model_name)
             # Send only the specific instructions for Gemini
             response = model.generate_content(gemini_instructions) 
@@ -383,11 +386,11 @@ Now, generate the prompt for the tags: "{formatted_tags}", ensuring the user's s
                 raw_gemini_text = response.text.strip()
                 enhanced_descriptive_text = _cleanup_text_from_gemini(raw_gemini_text)
                 if not enhanced_descriptive_text: # Check for empty response after cleanup
-                    logging.warning("Gemini returned empty description after cleanup for random (user_prefs). Falling back to tags.")
-                    enhanced_descriptive_text = formatted_tags # Fallback is just tags
+                    logging.warning("Gemini returned empty description after cleanup for random (user_prefs). Falling back.")
+                    enhanced_descriptive_text = prompt_fallback
             else:
-                logging.warning("Gemini response issue for random (user_prefs). Falling back to tags.")
-                enhanced_descriptive_text = formatted_tags # Fallback is just tags
+                logging.warning("Gemini response issue for random (user_prefs). Falling back.")
+                enhanced_descriptive_text = prompt_fallback
         except Exception as e:
             logging.error(f"Error generating prompt with Gemini (user_prefs path): {e}")
             enhanced_descriptive_text = formatted_tags # Fallback is just tags
@@ -395,6 +398,7 @@ Now, generate the prompt for the tags: "{formatted_tags}", ensuring the user's s
         # The function should consistently return just the descriptive text.
         # The calling code will be responsible for the final formatting using enforce_prompt_format.
         return enhanced_descriptive_text
+
 
     except Exception as e:
         logging.error(f"Error in generate_prompt_random: {e}")

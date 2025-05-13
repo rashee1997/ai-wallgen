@@ -18,9 +18,9 @@ from rich.text import Text
 from rich.prompt import Prompt as RichPrompt # Added for "Press Enter"
 
 try:
-    # Use absolute package import for ui_utils and file_utils 
-    from wall_gen.ui_utils import print_warning, print_info
-    from wall_gen.file_utils import _cleanup_all_temp_files # Changed to absolute import
+    # Use absolute package import for ui_utils and file_utils
+    from .ui_utils import print_warning, print_info
+    from .file_utils import _cleanup_all_temp_files # Changed to relative import
 except ImportError:
     # This block is reached if 'wall_gen' is not in sys.path or not installed.
     # Further imports from 'wall_gen' will also likely fail.
@@ -72,22 +72,21 @@ def check_system_dependencies():
     }
 
     try:
-        import google.generativeai
+        from google import genai # Use the new SDK import
+        from google.genai import types # Import types for consistency
         import importlib.metadata
         try:
-            genai_version = importlib.metadata.version('google-generativeai')
+            genai_version = importlib.metadata.version('google-genai')
             logging.info(f"Google AI Python SDK version: {genai_version}")
             
-            if hasattr(google.generativeai, 'Client'):
-                logging.info("Using the unified Google AI SDK (google-genai)")
-            else:
-                logging.debug("Using older Google AI SDK. Consider upgrading to the latest version.")
-                outdated_deps.append("google-generativeai")
+            # The check for hasattr(google.generativeai, 'Client') is no longer needed
+            # as we are directly importing from google.genai
+            
         except Exception as e:
             logging.warning(f"Could not determine Google AI SDK version: {e}")
     except ImportError:
-        missing_deps.append("google-generativeai")
-        logging.debug("Google AI SDK (google-generativeai) not found.")
+        missing_deps.append("google-genai")
+        logging.debug("Google AI SDK (google-genai) not found.")
 
     for module_name, package_name in dependencies_to_check.items():
         try:

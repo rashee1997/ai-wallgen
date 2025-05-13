@@ -157,6 +157,7 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
     Returns:
         bool: True if settings were applied successfully, False otherwise
     """
+    import logging  # Add explicit import here to avoid UnboundLocalError
     user_prefs = get_preferences() # Get preferences object
     try:
         # Define comprehensive default structure for all settings
@@ -364,7 +365,7 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
                 pref_file = os.path.join(os.getcwd(), "user_preferences.json")
                 if os.path.exists(pref_file):
                     with open(pref_file, "r", encoding="utf-8") as f:
-                        prefs_data = json.load(f)
+                         prefs_data = json.load(f)
                 else:
                     prefs_data = {}
 
@@ -377,6 +378,47 @@ def _apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> bo
             except Exception as e:
                 import logging
                 logging.error(f"Failed to save description to user_preferences.json: {e}")
+
+        # Check if this is a logo preset by looking for logo template fields at the root level
+        logo_fields = [
+            "ai_prompt_focus",
+            "logo_style_description",
+            "key_elements_guidance",
+            "color_palette_guidance",
+            "typography_guidance",
+            "negative_prompt_suggestions",
+            "imagen3_prompt_structure"
+        ]
+        
+        # Check if at least some of the expected logo fields exist in the root of the preset
+        logo_field_count = sum(1 for field in logo_fields if field in settings)
+        is_logo_preset = logo_field_count >= 3  # Consider it a logo preset if at least 3 fields are present
+        
+        if is_logo_preset:
+            # Create logo_template_data structure from the fields found at the root level
+            logo_template_data = {}
+            for field in logo_fields:
+                if field in settings:
+                    logo_template_data[field] = settings[field]
+            
+            # Also check if "styles" contains "logo" to further confirm it's a logo preset
+            if "styles" in settings and "logo" in settings["styles"]:
+                logo_template_data["is_logo_preset"] = True
+            
+            # If we found logo fields, set the logo_template_data attribute
+            if logo_template_data:
+                user_prefs.logo_template_data = logo_template_data
+                logging.info(f"Created and applied logo_template_data from root-level logo fields. Found {logo_field_count} logo-specific fields.")
+
+        # Handle logo_template_data if present in the preset
+        elif "logo_template_data" in settings and isinstance(settings["logo_template_data"], dict):
+            user_prefs.logo_template_data = settings["logo_template_data"]
+            logging.info("Applied logo_template_data from preset to user_prefs.")
+        elif hasattr(user_prefs, "logo_template_data") and replace:
+             # If logo_template_data is not in the preset, but was previously in user_prefs, clear it (only in replace mode)
+             delattr(user_prefs, "logo_template_data")
+             logging.info("Cleared logo_template_data from user_prefs as it was not in the loaded preset.")
+
 
         # Save preferences after applying changes
         user_prefs.save_preferences()
@@ -472,6 +514,9 @@ def view_preset_details():
         _display_settings_section(settings, "negative_prompts", "Negative Prompts")
         if "aspect_ratio" in settings:
              _display_settings_section(settings, "aspect_ratio", "Aspect Ratio")
+        if "logo_template_data" in settings: # Display logo template data if present
+             _display_settings_section(settings, "logo_template_data", "Logo Template Data")
+
 
         input("\nPress Enter to continue...")
     except (json.JSONDecodeError, IOError, OSError) as e:

@@ -6,7 +6,8 @@ It may not run correctly as a standalone script without sys.path adjustments.
 """
 import os
 import logging
-import google.generativeai as genai
+from google import genai # Use the new SDK import
+from google.genai import types # Import types for consistency
 from typing import Optional
 
 # --- Global State for Gemini Configuration ---
@@ -70,8 +71,9 @@ def initialize_gemini_globally(api_key_override: Optional[str] = None) -> bool:
         _is_initialized = False
         return False
 
+    global _gemini_client # Add global declaration for the client instance
     try:
-        genai.configure(api_key=current_api_key)
+        _gemini_client = genai.Client(api_key=current_api_key) # Create a client instance
         _GEMINI_API_KEY = current_api_key # Store the key used for initialization
         _is_initialized = True
         _last_error = None
@@ -81,11 +83,22 @@ def initialize_gemini_globally(api_key_override: Optional[str] = None) -> bool:
         _last_error = f"Failed to initialize Google Generative AI client: {e}"
         logging.error(_last_error, exc_info=True)
         _is_initialized = False
+        _gemini_client = None # Ensure client is None on failure
         return False
+
+# Add a global variable to store the client instance
+_gemini_client = None
 
 def is_initialized() -> bool:
     """Checks if the Gemini client is initialized."""
-    return _is_initialized
+    return _is_initialized and _gemini_client is not None # Check if the client instance exists
+
+# Add a function to get the client instance
+def get_gemini_client() -> Optional[genai.Client]:
+    """Returns the initialized Gemini client instance."""
+    if is_initialized():
+        return _gemini_client
+    return None
 
 def get_last_error() -> Optional[str]:
     """Returns the last initialization error message."""

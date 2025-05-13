@@ -36,11 +36,14 @@ def manage_wallpaper_settings():
         print_option(
             "3", f"Preview GUI Backend: {settings.get('gui_preview_backend', 'qt')}"
         )
+        print_option(
+            "4", f"Disable Screen Clearing: {'Yes' if settings.get('disable_screen_clearing') else 'No'}"
+        )
         print_option("b", "Back to Previous Menu")
 
         choice = get_validated_input(
             prompt="Choose an option", 
-            options=["1", "2", "3", "b"],
+            options=["1", "2", "3", "4", "b"],
             help_context_id="WALLPAPER_SETTINGS_MENU"
         )
         if choice == "_HELP_SHOWN_":
@@ -71,6 +74,11 @@ def manage_wallpaper_settings():
             if selection != "b":
                 settings["gui_preview_backend"] = opt_map[selection]
                 print_success(f"Preview backend set to {opt_map[selection]}")
+        elif choice == "4":
+            curr = settings.get("disable_screen_clearing", False)
+            settings["disable_screen_clearing"] = not curr
+            print_info(f"Disable Screen Clearing set to {'Yes' if settings['disable_screen_clearing'] else 'No'}")
+            print_info("This setting will take effect immediately for help screens and menus.")
         elif choice == "b":
             user_prefs.save_preferences()
             return

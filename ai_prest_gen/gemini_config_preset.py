@@ -18,7 +18,8 @@ and correctly configured API client.
 """
 import os
 import logging
-import google.generativeai as genai
+from google import genai # Use the new SDK import
+from google.genai import types # Keep types import in case it's needed later, though configure doesn't use it
 from typing import Optional, List, Any
 
 # --- Global State for Preset Gemini Configuration ---
@@ -104,30 +105,42 @@ def initialize_preset_gemini(api_key_override: Optional[str] = None) -> bool:
         _preset_is_initialized = False
         return False
 
+    global _preset_gemini_client # Add global declaration for the preset client instance
     try:
-        # Configure the genai client. This might affect genai's global state.
-        genai.configure(api_key=current_api_key)
+        # Create the genai client instance for preset generation.
+        _preset_gemini_client = genai.Client(api_key=current_api_key)
         _PRESET_GEMINI_API_KEY = current_api_key  # Cache the key used for this module
-        logging.info(f"Google Generative AI client configured/reconfigured for preset generation with key ending: ...{current_api_key[-4:]}.")
+        logging.info(f"Google Generative AI client initialized for preset generation with key ending: ...{current_api_key[-4:]}.")
         
         _preset_is_initialized = True  # Mark success for this module's context
         _preset_last_error = None
         return True
     except Exception as e:
-        _preset_last_error = f"Failed to configure Gemini for preset generation: {e}"
+        _preset_last_error = f"Failed to initialize Gemini for preset generation: {e}"
         logging.error(_preset_last_error, exc_info=True)
         _preset_is_initialized = False
+        _preset_gemini_client = None # Ensure client is None on failure
         return False
+
+# Add a global variable to store the preset client instance
+_preset_gemini_client = None
 
 def is_preset_gemini_initialized() -> bool:
     """
-    Checks if the Gemini client has been successfully configured by this module
+    Checks if the Gemini client has been successfully initialized by this module
     for preset generation.
 
     Returns:
-        bool: True if initialized, False otherwise.
+        bool: True if initialized and client instance exists, False otherwise.
     """
-    return _preset_is_initialized
+    return _preset_is_initialized and _preset_gemini_client is not None # Check if the client instance exists
+
+# Add a function to get the preset client instance
+def get_preset_gemini_client() -> Optional[genai.Client]:
+    """Returns the initialized preset Gemini client instance."""
+    if is_preset_gemini_initialized():
+        return _preset_gemini_client
+    return None
 
 def get_preset_last_error() -> Optional[str]:
     """

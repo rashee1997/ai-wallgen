@@ -7,7 +7,8 @@ It may not run correctly as a standalone script without sys.path adjustments.
 import logging
 import random
 import os
-import google.generativeai as genai
+from google import genai # Use the new SDK import
+from google.genai import types # Import types for consistency
 import hashlib # Added for cache key hashing
 from . import gemini_config # Import the new centralized configuration
 # from wallpaper_settings import get_preferences # If UserPreferences needed directly
@@ -206,8 +207,18 @@ Avoid: blurry, low quality, text, watermarks, ugly.
 ---
 Now, generate the prompt for: "{formatted_tags}"
 """
-        model = genai.GenerativeModel(selected_model_name) # Use selected model
-        response = model.generate_content(instruction_context)
+        # Get the client instance from gemini_config
+        client = gemini_config.get_gemini_client()
+        if not client:
+            logging.error("Gemini client not available in _build_gemini_prompt_from_settings.")
+            # Fallback to basic formatting if client is not available
+            formatted_tags_str = ", ".join(tags)
+            return enforce_prompt_format(formatted_tags_str, resolution, aspect_ratio, user_negative_prompt)
+
+        response = client.models.generate_content( # Use client.models.generate_content
+            model=selected_model_name,
+            contents=[instruction_context] # Pass prompt as a list in contents
+        )
 
         if hasattr(response, 'text') and response.text:
             full_response = response.text.strip()

@@ -36,7 +36,8 @@ def infer_subject_negatives_gemini(positive_prompt: str, user_prefs: Optional[An
         List[str]: A list of negative prompt terms
     """
     try:
-        import google.generativeai as genai
+        from google import genai # Use the new SDK import
+        from google.genai import types # Import types for consistency
     except ImportError:
         logging.warning("google.generativeai module not found. Some features will be disabled.")
         return []

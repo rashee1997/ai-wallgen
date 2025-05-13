@@ -29,6 +29,15 @@ prompt_cache = {}
 # Flag to determine whether to use user preferences or not
 use_user_preferences = True
 
+# Import the Google GenAI SDK
+try:
+    from google import genai # Use the new SDK import
+    from google.genai import types # Import types for consistency
+except ImportError:
+    logging.warning("google.generativeai module not found. Some features will be disabled.")
+    # Define a dummy function if import fails (Removed dummy classes as they are no longer needed with new SDK import)
+    pass
+
 
 def set_prompt_preferences(use_preferences: bool) -> None:
     """Set whether to use user preferences for prompt generation.
@@ -417,7 +426,7 @@ Avoid: [negative prompt]
 
         # Generate prompt using Gemini
         try:
-            import google.generativeai as genai
+            import google.genai as genai
         except ImportError:
             logging.warning("google.generativeai module not found. Some features will be disabled.")
             # Return a formatted version of the simple tags

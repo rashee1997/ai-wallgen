@@ -6,13 +6,13 @@ from typing import List, Dict, Any, Optional, Union, Tuple
 
 # Robust import logic to ensure CLI and module execution both work
 try:
-    from wall_gen.settings_modules.utils import deep_update
-    from wall_gen import gemini_config # For DEFAULT_GEMINI_MODEL
+    from .utils import deep_update
+    from .. import gemini_config # For DEFAULT_GEMINI_MODEL
 except ImportError:
     # Fallback for CLI execution (direct python settings_modules/user_preferences.py)
     # This fallback might be more complex if gemini_config isn't easily reachable
     # For now, assume it's handled or adjust if issues arise in direct execution.
-    from settings_modules.utils import deep_update
+    from .utils import deep_update
     # Attempting a relative import that might work if script is in wall_gen parent
     try:
         import gemini_config
@@ -151,7 +151,8 @@ class UserPreferences:
         self.wallpaper_settings = {
             "auto_set": False,
             "skip_preview": False,
-            "gui_preview_backend": "qt"
+            "gui_preview_backend": "qt",
+            "disable_screen_clearing": False
         }
         self.aspect_ratio = "16:9"
         import os
@@ -276,6 +277,16 @@ class UserPreferences:
                     self.description = data["description"]
                     logging.debug(f"UserPreferences: Loaded description: {self.description}")
 
+                # Load logo_template_data if present
+                if "logo_template_data" in data and isinstance(data["logo_template_data"], dict):
+                    self.logo_template_data = data["logo_template_data"]
+                    logging.debug(f"UserPreferences: Loaded logo_template_data: {self.logo_template_data}")
+                elif hasattr(self, "logo_template_data"):
+                     # If logo_template_data is not in the file, but was previously in memory, clear it
+                     delattr(self, "logo_template_data")
+                     logging.debug("UserPreferences: logo_template_data not found in file, cleared from memory.")
+
+
                 logging.debug("UserPreferences: Preferences loaded successfully.")
             else:
                 logging.debug("UserPreferences: Preferences file not found. Using default settings.")
@@ -320,7 +331,8 @@ class UserPreferences:
                 "history_file": self.history_file,
                 "last_preset": self.last_preset,
                 "aspect_ratio": self.aspect_ratio,
-                "selected_gemini_model": self.selected_gemini_model # Added saving for new preference
+                "selected_gemini_model": self.selected_gemini_model, # Added saving for new preference
+                "logo_template_data": getattr(self, "logo_template_data", None) # Added saving for logo template data
             }
             logging.debug(f"UserPreferences: Data to be saved: {data}")
             

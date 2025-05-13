@@ -226,10 +226,25 @@ def get_confirmation(prompt: str, default: Optional[bool] = None) -> bool:
     # validation, and re-prompting for invalid input.
     return Confirm.ask(prompt, default=default)
 
-def clear_screen() -> None:
+def clear_screen(force: bool = False) -> None:
     """
-    Clear the terminal screen.
+    Clear the terminal screen if enabled in user preferences.
+    
+    Args:
+        force (bool): If True, clears the screen regardless of user preferences
     """
+    # Try to access user preferences to check if screen clearing is disabled
+    try:
+        from wall_gen.settings_modules import get_preferences
+        user_prefs = get_preferences()
+        if user_prefs and user_prefs.wallpaper_settings.get("disable_screen_clearing", False) and not force:
+            # Skip screen clearing if disabled in preferences and not forced
+            return
+    except (ImportError, AttributeError):
+        # If we can't access preferences, continue with default behavior
+        pass
+        
+    # Clear screen as before
     if os.name == 'nt':
         os.system('cls')
     else:

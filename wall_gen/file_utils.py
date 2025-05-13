@@ -13,9 +13,10 @@ import tempfile # For create_temp_file
 import atexit # For cleanup_all_temp_files registration (though registration itself is in app_utils)
 from datetime import datetime # For list_sorted_generated_images
 
-import google.generativeai as genai # Needed for extract_subject_from_prompt
+from google import genai # Use the new SDK import
+from google.genai import types # Import types for consistency
 from typing import Dict, Any, List, Set, Optional # Added Optional for type hinting user_prefs
-from wall_gen import gemini_config # Import the new centralized configuration
+from . import gemini_config # Import the new centralized configuration
 # wallpaper_settings is not directly used here for UserPreferences,
 # but UserPreferences instance will be passed to functions needing it.
 # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
@@ -119,8 +120,11 @@ def extract_subject_from_prompt_for_filename(prompt: str, user_prefs=None) -> Op
     else:
         selected_model_name = gemini_config.DEFAULT_GEMINI_MODEL
         logging.warning(f"UserPreferences not available or failed to load, using default model for filename extraction: {selected_model_name}")
-    
-    model = genai.GenerativeModel(selected_model_name)
+
+    client = gemini_config.get_gemini_client()
+    if client is None:
+        logging.error("Gemini client is not initialized, cannot extract subject for filename.")
+        return None
 
     try:
         analysis_prompt_text = f"""
@@ -130,7 +134,12 @@ def extract_subject_from_prompt_for_filename(prompt: str, user_prefs=None) -> Op
 
         Description: {prompt}
         """
-        response = model.generate_content(contents=analysis_prompt_text)
+
+        # Use the client to generate content using the current SDK method
+        response = client.models.generate_content(
+            model=selected_model_name,
+            contents=[analysis_prompt_text]
+        )
 
         if response and hasattr(response, 'text') and response.text:
             subject = response.text.strip().lower()
@@ -141,11 +150,13 @@ def extract_subject_from_prompt_for_filename(prompt: str, user_prefs=None) -> Op
             logging.debug(f"Extracted subject for filename: {subject} from prompt: '{prompt[:50]}...'")
             return subject if subject else None
         else:
-            logging.warning(f"Empty response from Gemini for subject extraction (filename). Prompt: '{prompt[:50]}...'")
+            logging.warning(f"Empty or invalid response from Gemini for subject extraction (filename). Prompt: '{prompt[:50]}...'")
             return None
+
     except Exception as e:
         logging.error(f"Error extracting subject with Gemini for filename: {e}", exc_info=True)
         return None
+
 
 
 def create_filename_from_prompt(prompt: str, max_length: int = 30) -> str:

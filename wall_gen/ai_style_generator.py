@@ -9,11 +9,12 @@ import sys
 import time
 from typing import Dict, Optional
 
-import google.generativeai as genai
+from google import genai # Use the new SDK import
+from google.genai import types # Import types for consistency
 
 # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
-from wall_gen import gemini_config # Import the new centralized configuration
-from wall_gen.ui_utils import (
+from . import gemini_config # Import the new centralized configuration
+from .ui_utils import (
     get_validated_input,
     print_info,
     print_section,
@@ -21,7 +22,7 @@ from wall_gen.ui_utils import (
     print_warning,
 )
 # UserPreferences is obtained via get_preferences, initialize_settings also used in main
-from wall_gen.wallpaper_settings import get_preferences, initialize_settings
+from .wallpaper_settings import get_preferences, initialize_settings
 
 # Configure logging for this module
 # logging.basicConfig( # BasicConfig should ideally be called once at app entry.

@@ -134,7 +134,7 @@ def parse_args():
     # Generation Modes
     gen_group = parser.add_argument_group("Generation Modes")
     gen_group.add_argument(
-        "--prompt", help="Generate wallpaper using a custom prompt text."
+        "--prompt", help="Generate wallpaper using a custom prompt text. Can be used with --preset for logo text."
     )
     gen_group.add_argument(
         "--random",
@@ -142,8 +142,8 @@ def parse_args():
         help="Generate a random wallpaper based on preferences or general tags.",
     )
     gen_group.add_argument(
-        "--preset", help="Generate wallpaper using a saved preset name."
-    )  # New/Improved
+        "--preset", help="Apply a saved preset by name. Can be used with --prompt for logo text, or alone for random generation based on preset."
+    )
 
     # Testing & Debugging
     test_group = parser.add_argument_group("Testing & Debugging")
@@ -224,20 +224,18 @@ def parse_args():
 
 
 # --- Helper functions for orchestration ---
-def _generate_prompt(prompt_type, user_prefs_obj, custom_prompt=None, preset_name=None):
+def _generate_prompt(prompt_type, user_prefs_obj, custom_prompt=None):
     """Generate the final prompt and base prompt for history."""
-    from wall_gen.ui_utils import print_info, print_error, print_warning
+    from wall_gen.ui_utils import print_info, print_error
 
-    if prompt_type == "preset":
-        print_warning(
-            f"Preset loading via CLI not fully implemented yet. Treating '{preset_name}' as custom prompt."
-        )
-        prompt_type = "custom"
-        custom_prompt = preset_name
+    # The preset loading logic is now handled in main(), so _generate_prompt
+    # doesn't need to know about preset names directly.
+    # It just needs to know the prompt_type ('custom', 'random', 'gemini')
+    # and the user_prefs_obj (which will contain preset data if loaded).
 
     try:
         if prompt_type == "custom":
-            if not custom_prompt:
+            if not custom_prompt: # custom_prompt is now passed directly from main if --prompt is used
                 print_error("Custom prompt text is required for 'custom' prompt type.")
                 return None, None
             print_info("Enhancing custom prompt...")
@@ -395,7 +393,7 @@ def orchestrate_wallpaper_generation(
     try:
         print_section("Generating Prompt")
         final_prompt, base_prompt_for_history = _generate_prompt(
-            prompt_type, user_prefs_obj, custom_prompt, preset_name
+            prompt_type, user_prefs_obj, custom_prompt
         )
         if not final_prompt:
             return False
