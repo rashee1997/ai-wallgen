@@ -26,6 +26,15 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)  # Add project root
 
+# --- Ensure virtual environment site-packages is in sys.path ---
+# This helps ensure packages installed in the venv are found,
+# mitigating potential issues with system PATH or multiple Python installs.
+VENV_SITE_PACKAGES = os.path.join(PROJECT_ROOT, '.venv', 'Lib', 'site-packages')
+if VENV_SITE_PACKAGES not in sys.path and os.path.exists(VENV_SITE_PACKAGES):
+    sys.path.insert(0, VENV_SITE_PACKAGES)
+    logging.debug(f"Added {VENV_SITE_PACKAGES} to sys.path")
+
+
 # --- Imports from wall_gen package ---
 try:
     from wall_gen.app_utils import (
@@ -524,36 +533,58 @@ def main():
             "AI image generation and AI prompt features will not be available."
         )
 
-    # Import AI preset generator functions
+    # Import AI preset generator components
     try:
-        from ai_prest_gen.ai_preset_generator import generate_ai_preset
+        from ai_prest_gen.preset_generator_engine import PresetGenerator
+        PRESET_GENERATOR_AVAILABLE = True
     except ImportError as e:
         logging.error(
-            f"Failed to import AI preset generator functions: {e}", exc_info=True
+            f"Failed to import AI preset generator components: {e}", exc_info=True
         )
-        generate_ai_preset = None
+        PresetGenerator = None
+        PRESET_GENERATOR_AVAILABLE = False
+
 
     # --- Dispatch based on CLI Arguments ---
     exit_code = 0
     try:
         if args.generate_preset:
-            if generate_ai_preset is None:
-                logging.error("AI preset generator function not available.")
+            if not PRESET_GENERATOR_AVAILABLE or PresetGenerator is None:
+                logging.error("AI preset generator components not available.")
                 from wall_gen.ui_utils import print_error
 
-                print_error("AI preset generator function not available.")
+                print_error("AI preset generator components not available.")
                 exit_code = 1
             else:
                 from wall_gen.ui_utils import print_info, print_success, print_error
+                from ai_prest_gen.style_categorizer import StyleCategorizer # Assuming these are needed for PresetGenerator init
+                from ai_prest_gen.prompt_builder import PresetPromptBuilder
+                from ai_prest_gen.preset_cache_manager import PresetCacheManager
+                from ai_prest_gen import config as ai_prest_gen_config # Import config with alias
+
+                # Initialize components needed for PresetGenerator
+                preset_cache_manager = PresetCacheManager(ai_prest_gen_config.PRESETS_CACHE_FILE_NAME)
+                style_categorizer = StyleCategorizer()
+                prompt_builder = PresetPromptBuilder()
+
+                # Create an instance of PresetGenerator
+                preset_generator_instance = PresetGenerator(
+                    style_categorizer=style_categorizer,
+                    prompt_builder=prompt_builder,
+                    preset_cache_manager=preset_cache_manager
+                )
 
                 print_info(f"Generating AI preset for style: {args.generate_preset}")
                 try:
-                    success = generate_ai_preset(
-                        base_style_override=args.generate_preset, user_prefs=user_prefs
+                    # Call the method on the instance
+                    result = preset_generator_instance.generate_ai_preset(
+                        user_prefs=user_prefs, base_style_override=args.generate_preset, auto_save_flag=True # Assuming auto_save is desired for CLI
                     )
-                    if success:
-                        print_success("AI preset generated successfully.")
-                    else:
+                    if isinstance(result, str): # generate_ai_preset returns filename on success
+                        print_success(f"AI preset generated and saved: {result}")
+                    elif result is None: # generate_ai_preset returns None on cancellation/no unique preset
+                         print_info("AI preset generation was cancelled or no unique preset could be made.")
+                    else: # Handle other potential non-string, non-None returns as failure
                         print_error("AI preset generation failed.")
                         exit_code = 1
                 except Exception as e:
