@@ -12,6 +12,8 @@ import atexit  # Import atexit
 import logging
 import os
 import sys
+import json
+import copy
 
 from typing import Optional
 from datetime import datetime  # Added for history timestamp
@@ -131,6 +133,19 @@ def parse_args():
         description="AI Wallpaper Generator (Refactored Entry Point)",
         formatter_class=argparse.RawTextHelpFormatter,  # Preserve formatting in help
     )
+
+    # General Output Options
+    parser.add_argument(
+        "--output-dir",
+        help="Override default output directory for generated images. User preferences output_dir is used if this is not set.",
+    )
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=1,
+        help="Number of images to generate. Default: 1",
+    )
+
     # Generation Modes
     gen_group = parser.add_argument_group("Generation Modes")
     gen_group.add_argument(
@@ -153,8 +168,14 @@ def parse_args():
         help="Generate a custom logo using various style templates.",
     )
     logo_group.add_argument(
-        "--logo-text",
-        help="The text/brand name to use for logo generation (required for logo generation).",
+        "--logo-text", "--company-name", "--text",
+        dest="logo_text",
+        help="The text/brand name for the logo (e.g., \"MyCompany\"). Required if --generate-logo is used.",
+    )
+    logo_group.add_argument(
+        "--tag-lines",
+        dest="tag_lines",
+        help="Optional taglines or secondary text for the logo (e.g., \"Inspiring Creativity\")."
     )
     logo_group.add_argument(
         "--logo-style",
@@ -167,6 +188,10 @@ def parse_args():
     logo_group.add_argument(
         "--logo-industry",
         help="Industry context to influence the design (e.g., 'technology', 'food', 'finance', 'healthcare').",
+    )
+    logo_group.add_argument(
+        "--logo-preset-file",
+        help="Path to a logo preset JSON file to provide detailed generation guidance."
     )
     logo_group.add_argument(
         "--save-template",
@@ -546,6 +571,16 @@ def main():
         user_prefs.wallpaper_settings["skip_preview"] = True
         logging.info("CLI override: Skipping preview.")
 
+    if args.output_dir:
+        if hasattr(user_prefs, 'output_dir'): # Check if user_prefs object has output_dir
+            user_prefs.output_dir = args.output_dir
+            logging.info(f"CLI override: Output directory for user_prefs set to {args.output_dir}")
+        else: # Fallback if user_prefs structure doesn't have a direct output_dir, log and use directly
+            logging.warning(f"user_prefs object does not have an 'output_dir' attribute. Will attempt to use CLI arg directly for path creation.")
+        
+        os.makedirs(args.output_dir, exist_ok=True) # Ensure CLI specified path exists if provided
+        logging.info(f"Output directory {args.output_dir} ensured.")
+
     # Check API Key (essential for generation)
     if not os.environ.get(GEMINI_API_KEY_ENV):
         from wall_gen.ui_utils import (
@@ -579,44 +614,118 @@ def main():
             from wall_gen.ui_utils import print_info, print_error, print_warning
             
             if not args.logo_text:
-                print_error("Logo text is required for logo generation. Use --logo-text to specify.")
+                print_error("Logo text is required for logo generation. Use --logo-text, --company-name, or --text to specify.")
                 exit_code = 1
             else:
                 print_info(f"Generating logo with text: {args.logo_text}")
-                try:
-                    # Default values
-                    logo_style = args.logo_style or "minimalist"
-                    logo_color = args.logo_color or None
-                    logo_industry = args.logo_industry or None
-                    save_template = args.save_template or False
-                    
-                    # Import logo generation module
+                if args.tag_lines:
+                    print_info(f"Including taglines: {args.tag_lines}")
+                
+                effective_prefs = user_prefs # Start with global or a copy
+
+                if args.logo_preset_file:
+                    print_info(f"Attempting to load logo preset file: {args.logo_preset_file}")
+                    if not os.path.exists(args.logo_preset_file):
+                        print_error(f"Logo preset file not found: {args.logo_preset_file}")
+                        exit_code = 1 # Mark for exit, but continue to see if other errors occur or if we should skip generation
+                    else:
+                        try:
+                            with open(args.logo_preset_file, 'r') as f:
+                                loaded_preset_data = json.load(f)
+                            effective_prefs = copy.deepcopy(user_prefs) # Create a deep copy to avoid modifying global prefs
+                            setattr(effective_prefs, 'logo_template_data', loaded_preset_data)
+                            print_success(f"Successfully loaded and applied logo preset file: {args.logo_preset_file}")
+                        except FileNotFoundError:
+                            # This case should ideally be caught by os.path.exists, but as a fallback:
+                            print_error(f"Logo preset file not found (FileNotFoundError): {args.logo_preset_file}")
+                            exit_code = 1
+                        except json.JSONDecodeError:
+                            print_error(f"Error decoding JSON from logo preset file: {args.logo_preset_file}. Please ensure it is valid JSON.")
+                            exit_code = 1
+                        except Exception as e:
+                            print_error(f"An unexpected error occurred while loading logo preset file {args.logo_preset_file}: {e}")
+                            exit_code = 1
+                
+                if exit_code == 1: # If preset file loading failed, don't proceed with generation
+                    print_warning("Skipping logo generation due to errors with preset file.")
+                else:
                     try:
-                        from wall_gen.prompt_modules.custom_generator import generate_logo
+                        # Default values
+                        logo_style = args.logo_style or "minimalist"
+                        logo_color = args.logo_color # Let generate_logo handle None or specific value
+                        logo_industry = args.logo_industry # Let generate_logo handle None or specific value
+                        save_template = args.save_template or False
                         
-                        # Generate logo
-                        result = generate_logo(
-                            logo_text=args.logo_text,
-                            logo_style=logo_style,
-                            logo_color=logo_color,
-                            logo_industry=logo_industry,
-                            save_template=save_template,
-                            user_prefs=user_prefs,
-                            generate_only=args.no_generate
-                        )
-                        
-                        if result:
-                            print_info("Logo generation completed successfully.")
-                        else:
-                            print_warning("Logo generation completed with warnings or was canceled.")
-                    except ImportError as e:
-                        logging.error(f"Failed to import logo generation module: {e}", exc_info=True)
-                        print_error(f"Logo generation module not available: {e}")
+                        # Import logo generation module
+                        try:
+                            from wall_gen.prompt_modules.custom_generator import generate_logo
+                            
+                            # Generate logo
+                            result = generate_logo(
+                                logo_text=args.logo_text,
+                                tag_lines=args.tag_lines, # Pass new tag_lines argument
+                                logo_style=logo_style,
+                                logo_color=logo_color,
+                                logo_industry=logo_industry,
+                                save_template=save_template,
+                                user_prefs=effective_prefs, # Pass potentially modified prefs
+                                generate_only=args.no_generate
+                            )
+                            
+                            if result and not args.no_generate:
+                                final_prompt_text = result 
+                                logging.info(f"Proceeding to generate {args.count} image(s) for the logo.")
+                                
+                            from wall_gen.image_service import generate_image_from_api
+                            # _cache_and_save_image is defined in run_wallgen.py
+                            # from wall_gen.ui_utils import print_info, print_success, print_error (already imported likely)
+                            
+                            generated_image_paths = []
+                            for i in range(args.count):
+                                print_info(f"Generating logo image {i+1}/{args.count}...")
+                                try:
+                                    temp_image_path = generate_image_from_api(final_prompt_text, effective_prefs) # effective_prefs has preset/logo data
+                                    if temp_image_path:
+                                        final_image_path = _cache_and_save_image(final_prompt_text, temp_image_path)
+                                        if final_image_path:
+                                            print_success(f"Logo image {i+1}/{args.count} saved to cache: {final_image_path}")
+                                            generated_image_paths.append(final_image_path)
+                                        else:
+                                            print_error(f"Failed to save logo image {i+1}/{args.count} to cache.")
+                                            exit_code = 1 
+                                            break 
+                                    else:
+                                        print_error(f"Failed to generate logo image {i+1}/{args.count} (temp image not created).")
+                                        exit_code = 1
+                                        break
+                                except Exception as e_gen:
+                                    logging.error(f"Error during logo image {i+1}/{args.count} generation/saving: {e_gen}", exc_info=True)
+                                    print_error(f"Error for logo image {i+1}/{args.count}: {e_gen}")
+                                    exit_code = 1
+                                    break
+                            
+                            if generated_image_paths:
+                                print_info(f"Successfully generated {len(generated_image_paths)} logo image(s):")
+                                for p in generated_image_paths:
+                                    print_info(f"- {p}")
+                            elif args.count > 0 : # Only print if generation was attempted
+                                print_warning("No logo images were successfully generated.")
+
+                            elif result and args.no_generate:
+                                print_info("Logo prompt generated (image generation skipped due to --no-generate):")
+                                print_info(result)
+                            elif not result: # Handles the case where generate_logo itself returned None/False
+                                print_warning("Logo prompt generation failed or was canceled.")
+                                # exit_code might already be set by generate_logo logic if there was a critical error
+
+                        except ImportError as e:
+                            logging.error(f"Failed to import logo generation module: {e}", exc_info=True)
+                            print_error(f"Logo generation module not available: {e}")
+                            exit_code = 1
+                    except Exception as e:
+                        logging.error(f"Error during logo generation: {e}", exc_info=True)
+                        print_error(f"Logo generation failed: {e}")
                         exit_code = 1
-                except Exception as e:
-                    logging.error(f"Error during logo generation: {e}", exc_info=True)
-                    print_error(f"Logo generation failed: {e}")
-                    exit_code = 1
         elif args.generate_preset:
             if not PRESET_GENERATOR_AVAILABLE or PresetGenerator is None:
                 logging.error("AI preset generator components not available.")

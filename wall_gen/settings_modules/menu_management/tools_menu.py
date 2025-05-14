@@ -74,6 +74,24 @@ def handle_select_gemini_model():
         logging.error(f"Error selecting Gemini model: {e}", exc_info=True)
 
 
+def handle_toggle_structured_logo_prompt():
+    """Handles toggling the structured logo prompt format preference."""
+    user_prefs = get_preferences()
+    current_status = user_prefs.use_structured_logo_prompt_format
+    new_status = not current_status
+    user_prefs.use_structured_logo_prompt_format = new_status
+    # Attempt to save immediately if possible, or rely on atexit/menu save
+    try:
+        user_prefs.save_preferences()
+        print_success(f"Structured Logo Prompt format set to: {'On' if new_status else 'Off'}. Preferences saved.")
+    except Exception as e:
+        print_warning(f"Structured Logo Prompt format set to: {'On' if new_status else 'Off'}. Error saving preferences immediately: {e}")
+        logging.warning(f"Error saving preferences in handle_toggle_structured_logo_prompt: {e}", exc_info=True)
+    
+    # Pause to show message before screen clears
+    get_validated_input("Press Enter to continue...", options=None, allow_empty=True, help_context_id="TOOLS_TOGGLE_LOGO_PROMPT_CONTINUE") 
+
+
 def run_tools_menu():
     """
     Run the Tools & Utilities menu.
@@ -88,19 +106,30 @@ def run_tools_menu():
         ("4", "Import Settings"),
         ("5", "Update History Filenames"),
         ("6", "Select Gemini Model (Non-Imagen)"), # New menu option
+        ("7", "Toggle Structured Logo Prompt"), # New menu option for logo prompt format
         ("b", "Return to Main Menu"),
     ]
 
     while True:
+        user_prefs = get_preferences() # Get latest prefs for display
         clear_screen()
         print_header("WallGen Tools & Utilities")
         # print_section("Tools & Utilities") # Replaced by print_header for consistency
         print_breadcrumb(["Main Menu", "Tools & Utilities"])
-        print_menu_options(menu_options)
+        
+        # Update menu option text dynamically
+        menu_options_display = []
+        for key, text in menu_options:
+            if key == "7":
+                status = 'On' if getattr(user_prefs, 'use_structured_logo_prompt_format', False) else 'Off'
+                menu_options_display.append((key, f"{text} (Currently: {status})"))
+            else:
+                menu_options_display.append((key, text))
+        print_menu_options(menu_options_display)
 
         choice = get_menu_choice(
             prompt="Select an option", # Generic prompt
-            valid_choices=["1", "2", "3", "4", "5", "6", "b"], 
+            valid_choices=["1", "2", "3", "4", "5", "6", "7", "b"], 
             help_context_id="TOOLS_MENU" 
         )
         if choice == "_HELP_SHOWN_":
@@ -152,3 +181,5 @@ def run_tools_menu():
                 print_error("Could not load settings utils module.")
         elif choice == "6": # New choice handler
             handle_select_gemini_model()
+        elif choice == "7": # Handler for the new logo prompt format toggle
+            handle_toggle_structured_logo_prompt()

@@ -161,6 +161,7 @@ class UserPreferences:
         self.last_preset = None
         self.description = None
         self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL # Added new preference
+        self.use_structured_logo_prompt_format: bool = False # Added new preference for logo prompt format
 
         # --- Internal dict for ALL arbitrary custom fields ---
         self._custom_fields: Dict[str, Any] = {}  # stores non-standard fields at root
@@ -262,15 +263,13 @@ class UserPreferences:
                     self.aspect_ratio = data["aspect_ratio"]
                     logging.debug(f"UserPreferences: Loaded aspect_ratio: {self.aspect_ratio}")
                 
-                if "selected_gemini_model" in data: # Added loading for new preference
-                    self.selected_gemini_model = data["selected_gemini_model"]
-                    logging.debug(f"UserPreferences: Loaded selected_gemini_model: {self.selected_gemini_model}")
-                else:
-                    # Ensure default is set if not in file, even if class default exists,
-                    # to handle cases where file exists but key is missing.
-                    self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL
-                    logging.debug(f"UserPreferences: selected_gemini_model not found in file, set to default: {self.selected_gemini_model}")
+                # Load selected_gemini_model or default if not present
+                self.selected_gemini_model = data.get("selected_gemini_model", gemini_config.DEFAULT_GEMINI_MODEL)
+                logging.debug(f"UserPreferences: Loaded selected_gemini_model: {self.selected_gemini_model}")
 
+                # Load use_structured_logo_prompt_format or default if not present
+                self.use_structured_logo_prompt_format = data.get("use_structured_logo_prompt_format", False)
+                logging.debug(f"UserPreferences: Loaded use_structured_logo_prompt_format: {self.use_structured_logo_prompt_format}")
 
                 # Load description if present
                 if "description" in data:
@@ -331,7 +330,8 @@ class UserPreferences:
                 "history_file": self.history_file,
                 "last_preset": self.last_preset,
                 "aspect_ratio": self.aspect_ratio,
-                "selected_gemini_model": self.selected_gemini_model, # Added saving for new preference
+                "selected_gemini_model": self.selected_gemini_model,  # Ensure this is saved
+                "use_structured_logo_prompt_format": self.use_structured_logo_prompt_format, # Ensure this is saved
                 "logo_template_data": getattr(self, "logo_template_data", None) # Added saving for logo template data
             }
             logging.debug(f"UserPreferences: Data to be saved: {data}")

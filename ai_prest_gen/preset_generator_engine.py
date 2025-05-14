@@ -259,13 +259,28 @@ class PresetGenerator:
             import copy # Keep import local if only used here
             merged_imagen_settings = copy.deepcopy(template_imagen)
 
+            traditional_categories = [
+                "oil_painting", "watercolor", "pastel", "acrylic_painting",
+                "charcoal", "pencil_sketch", "ink_drawing", "drawing"
+            ]
+            logo_categories = [
+                "logo_minimalist", "logo_emblem", "logo_wordmark", "logo_lettermark",
+                "logo_abstract", "logo_mascot", "logo_illustrative", "logo_3d", "logo_default"
+            ]
+
             if isinstance(ai_imagen, dict):
                 deep_update(merged_imagen_settings, ai_imagen)
             
-            if "camera_settings" in template_imagen or ("camera_settings" in ai_imagen if isinstance(ai_imagen, dict) else False):
-                merged_imagen_settings.setdefault("camera_settings", {})
-            
             final_preset["imagen_settings"] = merged_imagen_settings
+
+            # Ensure camera_settings is removed for traditional or logo styles, case-insensitively
+            if style_category in traditional_categories or style_category in logo_categories:
+                if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
+                    # Iterate over a copy of keys for safe deletion
+                    keys_to_check = list(final_preset["imagen_settings"].keys())
+                    for k in keys_to_check:
+                        if k.lower() == "camera_settings":
+                            del final_preset["imagen_settings"][k]
             
             neg_prompt = final_preset["imagen_settings"].get("negative_prompt", "")
             if not neg_prompt or len(neg_prompt) < 5:
@@ -279,13 +294,14 @@ class PresetGenerator:
                 if key not in final_preset and key != "styles":
                     final_preset[key] = generated_settings.get(key, t_value)
             
-            traditional_categories = [
-                "oil_painting", "watercolor", "pastel", "acrylic_painting",
-                "charcoal", "pencil_sketch", "ink_drawing", "drawing"
-            ]
-            if style_category in traditional_categories:
-                if "camera_settings" in final_preset.get("imagen_settings", {}):
-                    del final_preset["imagen_settings"]["camera_settings"]
+            # Ensure camera_settings is removed for traditional or logo styles, case-insensitively
+            if style_category in traditional_categories or style_category in logo_categories:
+                if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
+                    # Iterate over a copy of keys for safe deletion
+                    keys_to_check = list(final_preset["imagen_settings"].keys())
+                    for k in keys_to_check:
+                        if k.lower() == "camera_settings":
+                            del final_preset["imagen_settings"][k]
             
             return final_preset
         except json.JSONDecodeError as json_err:
@@ -328,12 +344,50 @@ class PresetGenerator:
 
         if confirm_decision:
             self.preset_cache_manager.save_preset_hash_to_cache(final_preset)
-            clean_preset_name = re.sub(r'[^\w\s-]', '', final_preset["preset_name"]).strip().replace(' ', '_')
-            preset_name_base = f"{clean_preset_name.lower()}_{int(time.time())}"
+            
+            # Determine if it's a logo preset
+            is_logo_preset = any(style.lower().startswith("logo_") for style in final_preset.get("styles", []))
+
+            if is_logo_preset:
+                # Build a more descriptive name for logo presets
+                name_parts = []
+                if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
+                    imagen_settings = final_preset["imagen_settings"]
+                    if "logo_text" in imagen_settings and imagen_settings["logo_text"]:
+                        name_parts.append(re.sub(r'[^\w\s-]', '', imagen_settings["logo_text"]).strip().replace(' ', '_'))
+                    if "logo_industry" in imagen_settings and imagen_settings["logo_industry"]:
+                        name_parts.append(re.sub(r'[^\w\s-]', '', imagen_settings["logo_industry"]).strip().replace(' ', '_'))
+                    # Including colors might make the name too long, so I'll omit them for now.
+
+                if name_parts:
+                    base_name = "_".join(name_parts).lower()
+                else:
+                    # Fallback: Try to extract keywords from preset_name and description
+                    keywords = []
+                    if "preset_name" in final_preset and isinstance(final_preset["preset_name"], str):
+                         keywords.extend(re.findall(r'\b\w+\b', final_preset["preset_name"]))
+                    if "description" in final_preset and isinstance(final_preset["description"], str):
+                         keywords.extend(re.findall(r'\b\w+\b', final_preset["description"]))
+
+                    # Filter out common words and keep a few unique keywords
+                    common_words = set(["a", "an", "the", "for", "with", "and", "in", "of", "to", "by", "design", "logo", "preset", "generated", "ai", "wallpaper"])
+                    meaningful_keywords = [word.lower() for word in keywords if word.lower() not in common_words][:3] # Keep up to 3
+
+                    if meaningful_keywords:
+                         base_name = "_".join(meaningful_keywords)
+                    else:
+                         # Final fallback if no meaningful keywords are found
+                         base_name = re.sub(r'[^\w\s-]', '', final_preset.get("preset_name", "generated_preset")).strip().replace(' ', '_').lower()
+            else:
+                # Use the original naming for non-logo presets
+                base_name = re.sub(r'[^\w\s-]', '', final_preset.get("preset_name", "generated_preset")).strip().replace(' ', '_').lower()
+
+            # Add a timestamp to ensure uniqueness of the filename
+            preset_name_base = f"{base_name}_{int(time.time())}"
             
             success = save_preset(final_preset, preset_name_base) # Uses imported or fallback save_preset
             if success:
-                print_success(f"Generated unique preset: '{final_preset['preset_name']}'")
+                print_success(f"Generated unique preset: '{final_preset.get('preset_name', 'Unnamed Preset')}'")
                 print_success(f"Saved preset '{preset_name_base}' to presets folder and database")
                 return preset_name_base
             else:
@@ -360,45 +414,44 @@ class PresetGenerator:
             return None
             
         if not is_preset_gemini_initialized():
-            if not initialize_preset_gemini(): # Assumes API key is in env or handled by this call
+            if not initialize_preset_gemini():
                 print_error(f"Failed to initialize Gemini for preset generation: {get_preset_last_error()}")
                 print_error("Ensure GEMINI_API_KEY environment variable is set.")
                 return False
             logging.info("Gemini API initialized for preset generation via gemini_config_preset.")
 
-        # CATALOG_AND_TEMPLATES_AVAILABLE check is implicitly handled by prompt_builder and _process_gemini_preset_response
-
+        # Original outer try block starts here in the actual file structure
         try:
-            if base_style_override and base_style_override == base_style:
-                normalized_category_key = base_style_override.lower().replace(' ', '_').replace('-', '_')
-                normalized_category_key = re.sub(r'_+', '_', normalized_category_key)
-                style_category = normalized_category_key
-                print_info(f"\nUsing CLI/override specified style '{base_style}', normalized to category key: '{style_category}' for preset generation.")
+            # Determine style_category. If base_style_override (from CLI) is used,
+            # base_style will be equal to base_style_override.
+            # Always use the categorizer for determining the style_category for consistency.
+            if base_style_override:
+                print_info(f"\nCategorizing CLI-provided style for preset generation: '{base_style_override}'...")
+                style_category = self.style_categorizer.categorize_style(base_style_override)
+                # base_style remains base_style_override (which is the value of `base_style` here) for descriptive use in prompts
+                print_info(f"(Detected category for preset generation: {style_category})")
             else:
+                # This path is for interactive mode where base_style was chosen without a direct CLI override for THIS function call.
                 print_info(f"\nGenerating settings for style: '{base_style}'...")
                 style_category = self.style_categorizer.categorize_style(base_style)
                 print_info(f"(Detected category: {style_category})")
 
             selected_model_name = get_selected_preset_model(user_prefs)
-            try:
-                models = get_preset_gemini_model(selected_model_name)
-                if models is None:
-                    logging.error("Gemini model is not initialized, cannot generate preset.")
-                    print_error("Gemini model initialization failed. Check API key.")
-                    return False
-                    
-                print_info(f"Using selected Gemini model for presets: {selected_model_name}...")
-            except Exception as err:
-                logging.error(f"Failed to initialize Gemini model for '{selected_model_name}': {err}")
-                print_error(f"Could not initialize AI model. Check configuration.")
+            # The try-except for model initialization should be nested inside the main try if it was like that
+            # or directly here if not. Assuming it was directly here:
+            models = get_preset_gemini_model(selected_model_name) # This line and below were part of the original try block
+            if models is None:
+                logging.error("Gemini model is not initialized, cannot generate preset.")
+                print_error("Gemini model initialization failed. Check API key.")
                 return False
+            print_info(f"Using selected Gemini model for presets: {selected_model_name}...")
             
             prompt = self.prompt_builder.build_preset_generation_prompt(base_style, style_category)
-            if "Error: PresetPromptBuilder dependencies" in prompt: # Check if prompt builder failed
+            if "Error: PresetPromptBuilder dependencies" in prompt: 
                 print_error(prompt)
                 return False
 
-            for attempt in range(config.MAX_GENERATION_ATTEMPTS): # Use config
+            for attempt in range(config.MAX_GENERATION_ATTEMPTS): 
                 print_info(f"Generating settings (Attempt {attempt + 1}/{config.MAX_GENERATION_ATTEMPTS})...")
                 try:
                     safety_settings = [
