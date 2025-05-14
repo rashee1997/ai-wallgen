@@ -160,8 +160,15 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
     for attempt in range(MAX_RETRIES):
         try:
             logger.info(f"Generating style (attempt {attempt + 1}/{MAX_RETRIES}) with model {selected_model_name}")
-            model = genai.GenerativeModel(selected_model_name)
-            response = model.generate_content(prompt)
+            client = gemini_config.get_gemini_client()
+            if client is None:
+                logger.error("Gemini client is not initialized, cannot generate style.")
+                raise RuntimeError("Gemini client initialization failed. Check API key.")
+                
+            response = client.generate_content(
+                model=selected_model_name,
+                contents=prompt
+            )
 
             style_text = None
             if hasattr(response, 'text') and response.text:

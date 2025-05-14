@@ -687,6 +687,49 @@ python ai_style_generator.py --detailed --save
 
 ---
 
+### Logo Generation CLI
+
+This functionality allows you to generate custom logos directly from the command line using various style templates.
+
+**Usage:**
+```bash
+python run_wallgen.py --generate-logo [OPTIONS]
+```
+
+**Available Options:**
+
+| Option | Description |
+|:-------|:------------|
+| `--logo-text TEXT` | The text/brand name to use for logo generation (required). |
+| `--logo-style TEXT` | The style template to use (e.g., `minimalist`, `emblem`, `wordmark`, `lettermark`, `abstract`, `mascot`, `illustrative`, `3d`). Default is `minimalist`. |
+| `--logo-color TEXT` | Primary color for the logo (e.g., `blue`, `red`, `green`, `#FF5500`). |
+| `--logo-industry TEXT` | Industry context to influence the design (e.g., `technology`, `food`, `finance`, `healthcare`). |
+| `--save-template` | Save the generated logo prompt as a template for future use. |
+| `--resolution TEXT` | Resolution for the generated logo. Default is `1024x1024`. |
+
+**Examples:**
+```bash
+# Generate a minimalist logo for a tech company
+python run_wallgen.py --generate-logo --logo-text "TechNova" --logo-style minimalist --logo-industry technology
+
+# Create an abstract logo with custom color
+python run_wallgen.py --generate-logo --logo-text "Quantum" --logo-style abstract --logo-color "purple"
+
+# Generate a 3D logo with high resolution
+python run_wallgen.py --generate-logo --logo-text "GameVerse" --logo-style 3d --resolution 2048x2048
+
+# Create a mascot-style logo and save as a template
+python run_wallgen.py --generate-logo --logo-text "BurgerByte" --logo-style mascot --logo-industry food --save-template
+```
+
+> **💡 Tips:**
+> - For best results, specify an industry to provide context for the design
+> - The `--logo-style` determines the overall look and feel of your logo
+> - Use `--save-template` when you want to create multiple variations of the same logo later
+> - Logos are saved in the `genimage/logos` directory with metadata for later reference
+
+---
+
 ## Common Command Combinations
 
 ### Image Preview and Management

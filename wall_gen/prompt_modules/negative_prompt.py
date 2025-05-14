@@ -74,7 +74,11 @@ def infer_subject_negatives_gemini(positive_prompt: str, user_prefs: Optional[An
 
     try:
         # genai.configure is handled by gemini_config.initialize_gemini_globally()
-        model = genai.GenerativeModel(selected_model_name)
+        client = gemini_config.get_gemini_client()
+        if client is None:
+            logging.error("Gemini client is not initialized, cannot infer subject negatives.")
+            return []
+            
         instruction = f"""
 Extract a comma-separated list of 3-8 subject-specific negative prompt terms that should be explicitly avoided for the following positive image generation prompt. 
 Focus on subtle, nuanced, and mutually exclusive visual confounders, class confusion, or obvious subject/scene artifacts the model may produce, but do not copy generic negatives (e.g., "blurry, watermark, bad anatomy").
@@ -86,7 +90,10 @@ Prompt: {positive_prompt}
 
 Negative terms:
 """
-        response = model.generate_content(instruction)
+        response = client.generate_content(
+            model=selected_model_name,
+            contents=instruction
+        )
         if response.text:
             text = response.text.strip()
             raw_terms = [term.strip().lower() for term in re.split(r',|\n', text) if term.strip()]

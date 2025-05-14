@@ -145,6 +145,35 @@ def parse_args():
         "--preset", help="Apply a saved preset by name. Can be used with --prompt for logo text, or alone for random generation based on preset."
     )
 
+    # Logo Generation
+    logo_group = parser.add_argument_group("Logo Generation")
+    logo_group.add_argument(
+        "--generate-logo",
+        action="store_true",
+        help="Generate a custom logo using various style templates.",
+    )
+    logo_group.add_argument(
+        "--logo-text",
+        help="The text/brand name to use for logo generation (required for logo generation).",
+    )
+    logo_group.add_argument(
+        "--logo-style",
+        help="The style template to use (e.g., 'minimalist', 'emblem', 'wordmark', 'lettermark', 'abstract', 'mascot', 'illustrative', '3d'). Default is 'minimalist'.",
+    )
+    logo_group.add_argument(
+        "--logo-color",
+        help="Primary color for the logo (e.g., 'blue', 'red', 'green', '#FF5500').",
+    )
+    logo_group.add_argument(
+        "--logo-industry",
+        help="Industry context to influence the design (e.g., 'technology', 'food', 'finance', 'healthcare').",
+    )
+    logo_group.add_argument(
+        "--save-template",
+        action="store_true",
+        help="Save the generated logo prompt as a template for future use.",
+    )
+
     # Testing & Debugging
     test_group = parser.add_argument_group("Testing & Debugging")
     test_group.add_argument(
@@ -546,7 +575,49 @@ def main():
     # --- Dispatch based on CLI Arguments ---
     exit_code = 0
     try:
-        if args.generate_preset:
+        if args.generate_logo:
+            from wall_gen.ui_utils import print_info, print_error, print_warning
+            
+            if not args.logo_text:
+                print_error("Logo text is required for logo generation. Use --logo-text to specify.")
+                exit_code = 1
+            else:
+                print_info(f"Generating logo with text: {args.logo_text}")
+                try:
+                    # Default values
+                    logo_style = args.logo_style or "minimalist"
+                    logo_color = args.logo_color or None
+                    logo_industry = args.logo_industry or None
+                    save_template = args.save_template or False
+                    
+                    # Import logo generation module
+                    try:
+                        from wall_gen.prompt_modules.custom_generator import generate_logo
+                        
+                        # Generate logo
+                        result = generate_logo(
+                            logo_text=args.logo_text,
+                            logo_style=logo_style,
+                            logo_color=logo_color,
+                            logo_industry=logo_industry,
+                            save_template=save_template,
+                            user_prefs=user_prefs,
+                            generate_only=args.no_generate
+                        )
+                        
+                        if result:
+                            print_info("Logo generation completed successfully.")
+                        else:
+                            print_warning("Logo generation completed with warnings or was canceled.")
+                    except ImportError as e:
+                        logging.error(f"Failed to import logo generation module: {e}", exc_info=True)
+                        print_error(f"Logo generation module not available: {e}")
+                        exit_code = 1
+                except Exception as e:
+                    logging.error(f"Error during logo generation: {e}", exc_info=True)
+                    print_error(f"Logo generation failed: {e}")
+                    exit_code = 1
+        elif args.generate_preset:
             if not PRESET_GENERATOR_AVAILABLE or PresetGenerator is None:
                 logging.error("AI preset generator components not available.")
                 from wall_gen.ui_utils import print_error

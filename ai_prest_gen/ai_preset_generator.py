@@ -41,21 +41,36 @@ from .preset_generator_engine import PresetGenerator # Added import
 
 # --- Gemini API Import ---
 try:
-    import google.generativeai as genai
-    import google.generativeai.types as genai_types
+    from google import genai
+    from google.genai import types as genai_types
     GEMINI_AVAILABLE = True
 except ImportError as e:
-    print(f"ERROR: Gemini API (google-generativeai) not installed. Please install it: pip install google-generativeai")
+    print(f"ERROR: Gemini API (google-genai) not installed. Please install it: pip install google-genai")
     print(f"Details: {e}")
     GEMINI_AVAILABLE = False
     # Define dummy genai and types for graceful failure
     class DummyGenAI:
-        def configure(self, *args, **kwargs): pass
-        def GenerativeModel(self, *args, **kwargs): return DummyGenerativeModel()
-    class DummyGenerativeModel:
-        def generate_content(self, *args, **kwargs):
-            print("WARNING: Gemini AI not available. Returning dummy response.")
-            return None
+        def __init__(self):
+            pass
+            
+        class Client:
+            def __init__(self, *args, **kwargs):
+                pass
+                
+        def Client(self, *args, **kwargs):
+            return self.Client()
+            
+        class GenerativeModel:
+            def __init__(self, *args, **kwargs):
+                pass
+                
+            def generate_content(self, *args, **kwargs):
+                print("WARNING: Gemini AI not available. Returning dummy response.")
+                return None
+                
+        def GenerativeModel(self, *args, **kwargs):
+            return self.GenerativeModel(*args, **kwargs)
+            
     class DummyGenAITypes:
         HarmCategory = type('HarmCategory', (object,), {
             'HARM_CATEGORY_HATE_SPEECH': 'HARM_CATEGORY_HATE_SPEECH',
@@ -282,6 +297,17 @@ def main():
     parser.add_argument("--style", type=str, help="Specify a base style to generate a preset for directly.")
     parser.add_argument("--apply-preset", type=str, help="Apply a preset by name or full path directly from the terminal.")
     parser.add_argument("--auto-save", action="store_true", help="Automatically save generated preset without confirmation.")
+    
+    # Logo-specific arguments
+    logo_group = parser.add_argument_group('Logo Generation Options')
+    logo_group.add_argument("--logo-style", type=str, choices=[
+        "minimalist", "emblem", "wordmark", "lettermark", 
+        "abstract", "mascot", "illustrative", "3d"
+    ], help="Specify a logo style type for generation")
+    logo_group.add_argument("--logo-text", type=str, help="Specify text or initials to include in the logo")
+    logo_group.add_argument("--logo-industry", type=str, help="Specify the industry or concept the logo represents")
+    logo_group.add_argument("--logo-colors", type=str, help="Specify color palette preferences (comma-separated)")
+    
     args = parser.parse_args()
 
     # Initialize core components
@@ -295,8 +321,8 @@ def main():
 
     if not preset_generator_instance.gemini_available:
         if not GEMINI_AVAILABLE: 
-             print_error("Gemini AI library is not available. This script requires 'google-generativeai'.")
-             print_error("Please install it using: pip install google-generativeai")
+             print_error("Gemini AI library is not available. This script requires 'google-genai'.")
+             print_error("Please install it using: pip install google-genai")
              sys.exit(1)
     
     # CATALOG_AND_TEMPLATES_AVAILABLE check is implicitly handled by the components.
@@ -339,7 +365,34 @@ def main():
             print_error(f"Error loading or applying preset from '{os.path.basename(preset_path)}': {e}")
             sys.exit(1)
 
-    if args.style:
+    # Check for logo-specific arguments
+    if args.logo_style:
+        base_style = f"logo_{args.logo_style}"
+        print_info(f"Generating logo preset with style: {args.logo_style}")
+        
+        # Prepare additional parameters for logo generation
+        logo_params = {}
+        if args.logo_text:
+            logo_params["logo_text"] = args.logo_text
+        if args.logo_industry:
+            logo_params["logo_industry"] = args.logo_industry
+        if args.logo_colors:
+            logo_params["logo_colors"] = args.logo_colors.split(",")
+        
+        result = preset_generator_instance.generate_ai_preset(
+            user_prefs, 
+            base_style_override=base_style, 
+            auto_save_flag=args.auto_save,
+            additional_params=logo_params
+        )
+        if isinstance(result, str):
+            print_success(f"Logo preset generated and saved: {result}")
+        elif result is None:
+            print_info("Logo preset generation was cancelled or no unique preset could be made.")
+        else:
+            print_error("Logo preset generation failed.")
+        sys.exit(0)
+    elif args.style:
         print_info(f"Generating preset directly for style: {args.style}")
         result = preset_generator_instance.generate_ai_preset(user_prefs, base_style_override=args.style, auto_save_flag=args.auto_save)
         if isinstance(result, str):
@@ -359,11 +412,12 @@ def main():
                     print("\n--- AI Preset Generator Menu ---")
 
             print_option("1", "Generate New AI Preset")
+            print_option("2", "Generate Logo Preset")
             print_option("q", "Quit")
             
             choice = get_validated_input( # Relies on global get_validated_input or its fallback
                 prompt="Select option:",
-                options=["1", "q"],
+                options=["1", "2", "q"],
                 help_context_id="AI_PRESET_GENERATOR_MENU"
             )
             if choice == "_HELP_SHOWN_": # If get_validated_input supports this
@@ -376,6 +430,56 @@ def main():
                     print_info("Preset generation was cancelled or no unique preset could be made.")
                 else: 
                      print_error("Preset generation failed.")
+                input("\nPress Enter to continue...")
+            elif choice == '2':
+                # New interactive logo preset generation
+                print_section("Logo Preset Generator")
+                
+                # Select logo style
+                print_info("Available logo styles:")
+                logo_styles = ["minimalist", "emblem", "wordmark", "lettermark", "abstract", "mascot", "illustrative", "3d"]
+                for idx, style in enumerate(logo_styles, 1):
+                    print_option(str(idx), style)
+                
+                style_choice = get_validated_input(
+                    prompt="Select logo style:",
+                    options=[str(i) for i in range(1, len(logo_styles) + 1)],
+                )
+                selected_style = logo_styles[int(style_choice) - 1]
+                
+                # Get logo text
+                logo_text = input("Enter logo text/initials (press Enter to skip): ").strip()
+                
+                # Get industry/concept
+                logo_industry = input("Enter industry or concept the logo represents: ").strip()
+                
+                # Optional color preferences
+                logo_colors = input("Enter color preferences (comma-separated, press Enter to skip): ").strip()
+                
+                # Prepare parameters
+                base_style = f"logo_{selected_style}"
+                logo_params = {}
+                if logo_text:
+                    logo_params["logo_text"] = logo_text
+                if logo_industry:
+                    logo_params["logo_industry"] = logo_industry
+                if logo_colors:
+                    logo_params["logo_colors"] = logo_colors.split(",")
+                
+                result = preset_generator_instance.generate_ai_preset(
+                    user_prefs,
+                    base_style_override=base_style,
+                    auto_save_flag=args.auto_save,
+                    additional_params=logo_params
+                )
+                
+                if isinstance(result, str):
+                    print_success(f"Logo preset generated and saved: {result}")
+                elif result is None:
+                    print_info("Logo preset generation was cancelled or no unique preset could be made.")
+                else:
+                    print_error("Logo preset generation failed.")
+                
                 input("\nPress Enter to continue...")
             elif choice == 'q':
                 print_info("Exiting AI Preset Generator.")

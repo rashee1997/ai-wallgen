@@ -89,6 +89,7 @@ Here are some examples of wallpapers generated using this tool:
 - **Advanced Settings & Customization:** Fine-tune generation with detailed Imagen settings (camera, lighting, composition, color), manage presets, and personalize user preferences. See [Dynamic Configuration](docs/feature_dynamic_configuration.md) for advanced customization.
 - **AI Preset Generation:** Automatically generate coherent setting presets using AI. Full details in the [AI Preset Generation Guide](docs/AI_PRESET_GENERATOR.md).
 - **AI Style Generation:** Generate unique artistic styles using AI. See the [AI Style Generation Guide](docs/feature_ai_style_generation.md).
+- **Logo Generation:** Create distinctive logos with various style templates including minimalist, emblem, wordmark, lettermark, abstract, mascot, illustrative, and 3D designs.
 - **Detailed Prompt Engineering:** Utilizes sophisticated prompt enhancement techniques for optimal results. Learn more in the [Prompt Engineering Guide](docs/feature_prompt_engineering.md).
 - **GUI Image Preview:** Preview generated images in a graphical window (Qt or Tkinter).
 - **Cross-Platform Wallpaper Setting:** Automatically sets wallpapers on Windows, macOS, and various Linux desktop environments. More details in [Other Key Features](docs/other_key_features.md).

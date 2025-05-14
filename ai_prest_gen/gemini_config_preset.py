@@ -142,6 +142,29 @@ def get_preset_gemini_client() -> Optional[genai.Client]:
         return _preset_gemini_client
     return None
 
+# Add a function to create a model from the client
+def get_preset_gemini_model(model_name: str) -> Optional[Any]:
+    """Creates and returns a generative model using the preset client.
+    
+    Args:
+        model_name: The name of the model to create
+        
+    Returns:
+        A generative model instance or None if the client is not initialized
+    """
+    client = get_preset_gemini_client()
+    if client is None:
+        logging.error("Gemini model is not initialized, cannot generate preset.")
+        return None
+    
+    try:
+        # In the updated Google GenAI SDK, we use the client's models module
+        # to generate content directly
+        return client.models
+    except Exception as e:
+        logging.error(f"Failed to create model {model_name}: {e}")
+        return None
+
 def get_preset_last_error() -> Optional[str]:
     """
     Returns the last error message recorded during preset-specific Gemini initialization.

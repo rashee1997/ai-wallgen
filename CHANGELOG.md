@@ -5,16 +5,18 @@ All notable changes to the Wallgen project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [wallgen2.0] - 2024-11-15
 
 ### Added
 - Added operational flow diagrams (Core Wallpaper Generation, AI Preset Generation) to `docs/PROJECT_OVERVIEW.md` for better architectural understanding.
-- AI Preset Generation functionality via `ai_preset_generator.py`.
-- AI Style Generation functionality via `ai_style_generator.py`.
-- GUI image preview (Qt/Tkinter).
+- AI Preset Generation functionality via `ai_preset_generator.py` for creating coherent setting presets using AI.
+- AI Style Generation functionality via `ai_style_generator.py` for generating unique artistic styles.
+- Logo Generation feature with multiple logo style templates (minimalist, emblem, wordmark, lettermark, abstract, mascot, illustrative, 3D).
+- Enhanced custom prompt handling for logo generation with specialized instructions.
+- GUI image preview (Qt/Tkinter) for better user experience.
 - CLI commands for preset and style generation.
-- Cross-platform wallpaper setting.
-- Improved prompt engineering.
+- Cross-platform wallpaper setting supporting Windows, macOS, and various Linux desktop environments.
+- Improved prompt engineering for better image generation results.
 
 ## [2.0.0] - 2025-05-01
 

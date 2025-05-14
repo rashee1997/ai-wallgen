@@ -437,8 +437,15 @@ Avoid: [negative prompt]
         
         try:
             # selected_model was already determined earlier
-            model = genai.GenerativeModel(selected_model)
-            response = model.generate_content(instruction_context + "\n\n" + technical_context)
+            client = gemini_config.get_gemini_client()
+            if client is None:
+                logging.error("Gemini client is not initialized, cannot generate prompt.")
+                return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt)
+                
+            response = client.generate_content(
+                model=selected_model,
+                contents=instruction_context + "\n\n" + technical_context
+            )
             
             if hasattr(response, 'text') and response.text:
                 full_response = response.text.strip()

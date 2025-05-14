@@ -138,11 +138,18 @@ Your output MUST NOT repeat the tags or any technical details.
             logging.info(f"Using Gemini model for random prompt enhancement (no_prefs path): {selected_model_name}")
                 
             try:
-                model = genai.GenerativeModel(selected_model_name)
-                response = model.generate_content(instructions)
+                client = gemini_config.get_gemini_client()
+                if client is None:
+                    logging.error("Gemini client is not initialized, cannot generate random prompt.")
+                    return enforce_prompt_format(prompt_fallback, resolution, aspect_ratio, negative_prompt)
+                    
+                response = client.generate_content(
+                    model=selected_model_name,
+                    contents=instructions
+                )
 
-                if hasattr(response, 'parts') and response.parts and hasattr(response.parts[0], 'text'):
-                    raw_gemini_text = response.parts[0].text.strip()
+                if hasattr(response, 'text') and response.text:
+                    raw_gemini_text = response.text.strip()
                     enhanced_descriptive_text = _cleanup_text_from_gemini(raw_gemini_text)
                     if not enhanced_descriptive_text:
                         logging.warning("Gemini returned empty description after cleanup for random (no_prefs). Falling back.")
@@ -377,20 +384,26 @@ Now, generate the prompt for the tags: "{formatted_tags}", ensuring the user's s
 
             # API key and configuration are handled by gemini_config
             # Explicitly ensure 'genai' is in scope here, though it should be from top-level import.
-            import google.genai as genai
-            model = genai.GenerativeModel(selected_model_name)
+            client = gemini_config.get_gemini_client()
+            if client is None:
+                logging.error("Gemini client is not initialized, cannot generate random prompt (user_prefs path).")
+                return enforce_prompt_format(formatted_tags, resolution, aspect_ratio, negative_prompt) # Fallback
+                
             # Send only the specific instructions for Gemini
-            response = model.generate_content(gemini_instructions) 
+            response = client.generate_content(
+                model=selected_model_name,
+                contents=gemini_instructions
+            )
 
             if hasattr(response, 'text') and response.text:
                 raw_gemini_text = response.text.strip()
                 enhanced_descriptive_text = _cleanup_text_from_gemini(raw_gemini_text)
                 if not enhanced_descriptive_text: # Check for empty response after cleanup
                     logging.warning("Gemini returned empty description after cleanup for random (user_prefs). Falling back.")
-                    enhanced_descriptive_text = prompt_fallback
+                    enhanced_descriptive_text = formatted_tags
             else:
                 logging.warning("Gemini response issue for random (user_prefs). Falling back.")
-                enhanced_descriptive_text = prompt_fallback
+                enhanced_descriptive_text = formatted_tags
         except Exception as e:
             logging.error(f"Error generating prompt with Gemini (user_prefs path): {e}")
             enhanced_descriptive_text = formatted_tags # Fallback is just tags

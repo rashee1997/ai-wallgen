@@ -17,19 +17,34 @@ from typing import Dict, Any, List, Optional, Union
 
 # Gemini API related imports
 try:
-    import google.generativeai as genai
-    import google.generativeai.types as genai_types
+    from google import genai
+    from google.genai import types as genai_types
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
     # Define dummy genai and types for graceful failure if not available
     class DummyGenAI:
-        def configure(self, *args, **kwargs): pass
-        def GenerativeModel(self, *args, **kwargs): return DummyGenerativeModel() # type: ignore
-    class DummyGenerativeModel:
-        def generate_content(self, *args, **kwargs):
-            print("WARNING: Gemini AI not available. Returning dummy response.")
-            return None
+        def __init__(self):
+            pass
+            
+        class Client:
+            def __init__(self, *args, **kwargs):
+                pass
+                
+        def Client(self, *args, **kwargs):
+            return self.Client()
+            
+        class GenerativeModel:
+            def __init__(self, *args, **kwargs):
+                pass
+                
+            def generate_content(self, *args, **kwargs):
+                print("WARNING: Gemini AI not available. Returning dummy response.")
+                return None
+                
+        def GenerativeModel(self, *args, **kwargs):
+            return self.GenerativeModel(*args, **kwargs)
+            
     class DummyGenAITypes:
         HarmCategory = type('HarmCategory', (object,), {
             'HARM_CATEGORY_HATE_SPEECH': 'HARM_CATEGORY_HATE_SPEECH',
@@ -43,7 +58,8 @@ except ImportError:
             'BLOCK_LOW_AND_ABOVE': 'BLOCK_LOW_AND_ABOVE',
             'BLOCK_NONE': 'BLOCK_NONE',
         })
-        StopCandidateException = type('StopCandidateException', (Exception,), {})
+        SafetySetting = type('SafetySetting', (object,), {})
+        GenerateContentConfig = type('GenerateContentConfig', (object,), {})
 
     genai = DummyGenAI() # type: ignore
     genai_types = DummyGenAITypes() # type: ignore
@@ -61,7 +77,9 @@ from .gemini_config_preset import (
     initialize_preset_gemini,
     get_selected_preset_model,
     is_preset_gemini_initialized,
-    get_preset_last_error
+    get_preset_last_error,
+    get_preset_gemini_client,
+    get_preset_gemini_model
 )
 
 # UI and File Utils - these are crucial.
@@ -325,14 +343,22 @@ class PresetGenerator:
             print_warning("Preset saving cancelled by user.")
             return None
 
-    def generate_ai_preset(self, user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False) -> Union[str, bool, None]:
+    def generate_ai_preset(self, user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False, additional_params: Optional[Dict[str, Any]] = None) -> Union[str, bool, None]:
         """
-        Orchestrates the generation of an AI-driven wallpaper preset.
+        Main function to generate an AI preset using Gemini.
+        Returns the saved preset name (str) if successful and saved,
+        False if generation failed, None if cancelled by user or no unique preset was found.
         """
-        if not self.gemini_available: # Check instance variable
-            print_error("Gemini AI library is not available. This script requires 'google-generativeai'.")
-            return False # Cannot proceed
+        if not self.gemini_available:
+            print_error("Gemini AI not available. This function requires the google-genai library.")
+            return False
 
+        # Get the base style (e.g., from user entry or random style generator)
+        base_style = self._get_base_style_for_preset(user_prefs, base_style_override)
+        if not base_style:
+            print_warning("No base style selected. Preset generation cancelled.")
+            return None
+            
         if not is_preset_gemini_initialized():
             if not initialize_preset_gemini(): # Assumes API key is in env or handled by this call
                 print_error(f"Failed to initialize Gemini for preset generation: {get_preset_last_error()}")
@@ -342,31 +368,32 @@ class PresetGenerator:
 
         # CATALOG_AND_TEMPLATES_AVAILABLE check is implicitly handled by prompt_builder and _process_gemini_preset_response
 
-        base_style_name = self._get_base_style_for_preset(user_prefs, base_style_override)
-        if not base_style_name:
-            return None if base_style_name is None else False
-
         try:
-            if base_style_override and base_style_override == base_style_name:
+            if base_style_override and base_style_override == base_style:
                 normalized_category_key = base_style_override.lower().replace(' ', '_').replace('-', '_')
                 normalized_category_key = re.sub(r'_+', '_', normalized_category_key)
                 style_category = normalized_category_key
-                print_info(f"\nUsing CLI/override specified style '{base_style_name}', normalized to category key: '{style_category}' for preset generation.")
+                print_info(f"\nUsing CLI/override specified style '{base_style}', normalized to category key: '{style_category}' for preset generation.")
             else:
-                print_info(f"\nGenerating settings for style: '{base_style_name}'...")
-                style_category = self.style_categorizer.categorize_style(base_style_name)
+                print_info(f"\nGenerating settings for style: '{base_style}'...")
+                style_category = self.style_categorizer.categorize_style(base_style)
                 print_info(f"(Detected category: {style_category})")
 
             selected_model_name = get_selected_preset_model(user_prefs)
             try:
-                model = genai.GenerativeModel(selected_model_name) # type: ignore
+                models = get_preset_gemini_model(selected_model_name)
+                if models is None:
+                    logging.error("Gemini model is not initialized, cannot generate preset.")
+                    print_error("Gemini model initialization failed. Check API key.")
+                    return False
+                    
                 print_info(f"Using selected Gemini model for presets: {selected_model_name}...")
             except Exception as err:
-                logging.error(f"Failed to initialize Gemini model '{selected_model_name}': {err}")
-                print_error(f"Could not initialize AI model '{selected_model_name}'. Check configuration.")
+                logging.error(f"Failed to initialize Gemini model for '{selected_model_name}': {err}")
+                print_error(f"Could not initialize AI model. Check configuration.")
                 return False
             
-            prompt = self.prompt_builder.build_preset_generation_prompt(base_style_name, style_category)
+            prompt = self.prompt_builder.build_preset_generation_prompt(base_style, style_category)
             if "Error: PresetPromptBuilder dependencies" in prompt: # Check if prompt builder failed
                 print_error(prompt)
                 return False
@@ -374,21 +401,42 @@ class PresetGenerator:
             for attempt in range(config.MAX_GENERATION_ATTEMPTS): # Use config
                 print_info(f"Generating settings (Attempt {attempt + 1}/{config.MAX_GENERATION_ATTEMPTS})...")
                 try:
-                    safety_settings = {
-                        genai_types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE, # type: ignore
-                        genai_types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE, # type: ignore
-                        genai_types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE, # type: ignore
-                        genai_types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE, # type: ignore
-                    }
-                    generation_config_obj = genai.types.GenerationConfig(temperature=0.75, top_p=0.95, top_k=40) # type: ignore
-                    response = model.generate_content(prompt, generation_config=generation_config_obj, safety_settings=safety_settings) # type: ignore
+                    safety_settings = [
+                        genai_types.SafetySetting(
+                            category=genai_types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                            threshold=genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                        ),
+                        genai_types.SafetySetting(
+                            category=genai_types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold=genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                        ),
+                        genai_types.SafetySetting(
+                            category=genai_types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                            threshold=genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                        ),
+                        genai_types.SafetySetting(
+                            category=genai_types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                            threshold=genai_types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                        )
+                    ]
+                    generation_config = genai_types.GenerateContentConfig(
+                        temperature=0.75,
+                        top_p=0.95,
+                        top_k=40,
+                        safety_settings=safety_settings
+                    )
+                    response = models.generate_content(
+                        model=selected_model_name,
+                        contents=prompt,
+                        config=generation_config
+                    )
 
-                    if response and response.candidates and response.candidates[0].content.parts:
-                        response_text = response.candidates[0].content.parts[0].text.strip()
+                    if response and hasattr(response, 'text'):
+                        response_text = response.text.strip()
                         json_match = re.search(r'```json\s*(\{.*?\})\s*```|(\{.*?\})', response_text, re.DOTALL)
                         if json_match:
                             json_str = json_match.group(1) or json_match.group(2)
-                            final_preset = self._process_gemini_preset_response(json_str, base_style_name, style_category)
+                            final_preset = self._process_gemini_preset_response(json_str, base_style, style_category)
                             
                             if final_preset:
                                 save_result = self._save_generated_preset(final_preset, auto_save_flag)
@@ -409,44 +457,23 @@ class PresetGenerator:
                         else:
                             logging.warning(f"Could not extract JSON from response (Attempt {attempt+1}). Response: {response_text}")
                             print_warning(f"AI response format was unexpected (Attempt {attempt + 1}).")
-                    elif response and response.prompt_feedback and response.prompt_feedback.block_reason:
-                         block_reason = response.prompt_feedback.block_reason
-                         logging.warning(f"Generation blocked by API. Reason: {block_reason} (Attempt {attempt + 1})")
-                         print_warning(f"Generation blocked (Reason: {block_reason}). Retrying...")
+                    elif response and hasattr(response, 'prompt_feedback') and response.prompt_feedback:
+                         logging.warning(f"Generation may have been blocked (Attempt {attempt + 1})")
+                         print_warning(f"Generation blocked by API safety filters. Retrying...")
                     else:
-                        logging.warning(f"Received no valid response or candidates (Attempt {attempt+1}). Full response: {response}")
+                        logging.warning(f"Received no valid response (Attempt {attempt+1}). Full response: {response}")
                         print_warning(f"AI returned an empty or invalid response (Attempt {attempt + 1}).")
 
                     if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
                         print_error(f"Failed to generate a valid preset after {config.MAX_GENERATION_ATTEMPTS} attempts due to API issues or response format.")
                         return False
-                    time.sleep(1 if not (response and response.prompt_feedback and response.prompt_feedback.block_reason) else (2 + attempt * 2) )
+                    # Simple backoff for retries
+                    time.sleep(1 + attempt)
                     continue
 
-                except genai_types.StopCandidateException as stop_err: # type: ignore
-                     logging.warning(f"Generation stopped by API (StopCandidateException): {stop_err} (Attempt {attempt + 1})")
-                     print_warning(f"Generation stopped by API: {stop_err}. Retrying...")
-                     if attempt == config.MAX_GENERATION_ATTEMPTS - 1: return False
-                     time.sleep(2 + attempt * 2)
-                     continue
                 except Exception as api_err:
-                    err_str = str(api_err).lower()
-                    if "api key not valid" in err_str or "authentication" in err_str:
-                         logging.error(f"Authentication error: {api_err}")
-                         print_error("Authentication error. Check your GEMINI_API_KEY.")
-                         return False 
-                    elif "rate limit" in err_str or "429" in err_str or "resource has been exhausted" in err_str:
-                        logging.warning(f"Rate limit or resource exhaustion: {api_err}. Waiting... (Attempt {attempt + 1})")
-                        print_warning("API rate limit reached or resource exhausted. Waiting before retry...")
-                        if attempt == config.MAX_GENERATION_ATTEMPTS - 1: return False
-                        time.sleep(10 + attempt * 10)
-                        continue
-                    else:
-                        logging.error(f"Generation failed with an unexpected API error: {api_err} (Attempt {attempt + 1})", exc_info=True)
-                        print_error(f"Failed to generate settings due to an API error: {api_err}")
-                        if attempt == config.MAX_GENERATION_ATTEMPTS - 1: return False
-                        time.sleep(2)
-                        continue
+                    logging.error(f"API Error: {str(api_err)}")
+                    raise RuntimeError(f"Failed to generate settings: {str(api_err)}")
             
             print_error(f"Failed to generate a unique and valid preset after all {config.MAX_GENERATION_ATTEMPTS} attempts.")
             return False

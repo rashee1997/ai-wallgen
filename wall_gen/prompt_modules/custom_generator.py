@@ -192,9 +192,9 @@ IMPORTANT: Your response should be just the creative prompt text itself, without
                     logging.error("Gemini client is not initialized, cannot generate logo prompt.")
                     return enforce_prompt_format(custom_prompt, "3840x2160", "16:9", combined_negative_prompt)
 
-                response = client.models.generate_content(
+                response = client.generate_content(
                     model=selected_model_name,
-                    contents=[logo_enhancement_instruction]
+                    contents=logo_enhancement_instruction
                 )
 
                 enhanced_prompt_text = None
@@ -527,8 +527,15 @@ Avoid: [negative elements]
         # Generate enhanced prompt using Gemini
         try:
             # API key and configuration are handled by gemini_config.initialize_gemini_globally()
-            model = genai.GenerativeModel(selected_model_name)
-            response = model.generate_content(enhancement_instructions)
+            client = gemini_config.get_gemini_client()
+            if client is None:
+                logging.error("Gemini client is not initialized, cannot enhance custom prompt.")
+                return enforce_prompt_format(custom_prompt, resolution, aspect_ratio, negative_prompt)
+            
+            response = client.generate_content(
+                model=selected_model_name,
+                contents=enhancement_instructions
+            )
 
             full_response_text = None
             if hasattr(response, 'text') and response.text is not None:
