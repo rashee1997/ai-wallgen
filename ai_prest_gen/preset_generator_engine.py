@@ -229,7 +229,21 @@ class PresetGenerator:
         """
         Parses the JSON string from Gemini, validates it, and refines the settings.
         """
+        def _remove_camera_settings_recursively(d: dict):
+            keys_to_delete = []
+            for key, value in d.items():
+                if key.lower() == "camera_settings":
+                    keys_to_delete.append(key)
+                elif isinstance(value, dict):
+                    _remove_camera_settings_recursively(value)
+            for key in keys_to_delete:
+                print_info(f"Removing camera_settings key: {key}")
+                del d[key]
+
         try:
+            # Normalize style_category for case-insensitive matching
+            normalized_style_category = style_category.strip().lower()
+
             template = get_template_for_category(style_category)
             if not template or not isinstance(template, dict):
                 logging.warning(f"Template for {style_category} missing or invalid in _process_gemini_preset_response. Using minimal fallback.")
@@ -251,7 +265,7 @@ class PresetGenerator:
             else:
                 final_preset["moods"] = [moods[0]]
 
-            final_preset["description"] = generated_settings.get("description", template.get("description", f"AI preset for {base_style}."))
+            final_preset["description"] = generated_settings.get("description", template.get("description", f"AI preset for {base_style}.")) 
             final_preset["aspect_ratio"] = "16:9"
 
             ai_imagen = generated_settings.get("imagen_settings")
@@ -273,14 +287,10 @@ class PresetGenerator:
             
             final_preset["imagen_settings"] = merged_imagen_settings
 
-            # Ensure camera_settings is removed for traditional or logo styles, case-insensitively
-            if style_category in traditional_categories or style_category in logo_categories:
+            # Remove camera_settings recursively for traditional or logo styles
+            if normalized_style_category in [cat.lower() for cat in traditional_categories] or normalized_style_category in [cat.lower() for cat in logo_categories]:
                 if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
-                    # Iterate over a copy of keys for safe deletion
-                    keys_to_check = list(final_preset["imagen_settings"].keys())
-                    for k in keys_to_check:
-                        if k.lower() == "camera_settings":
-                            del final_preset["imagen_settings"][k]
+                    _remove_camera_settings_recursively(final_preset["imagen_settings"])
             
             neg_prompt = final_preset["imagen_settings"].get("negative_prompt", "")
             if not neg_prompt or len(neg_prompt) < 5:
@@ -294,14 +304,10 @@ class PresetGenerator:
                 if key not in final_preset and key != "styles":
                     final_preset[key] = generated_settings.get(key, t_value)
             
-            # Ensure camera_settings is removed for traditional or logo styles, case-insensitively
-            if style_category in traditional_categories or style_category in logo_categories:
+            # Remove camera_settings recursively again after all merging to ensure removal
+            if normalized_style_category in [cat.lower() for cat in traditional_categories] or normalized_style_category in [cat.lower() for cat in logo_categories]:
                 if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
-                    # Iterate over a copy of keys for safe deletion
-                    keys_to_check = list(final_preset["imagen_settings"].keys())
-                    for k in keys_to_check:
-                        if k.lower() == "camera_settings":
-                            del final_preset["imagen_settings"][k]
+                    _remove_camera_settings_recursively(final_preset["imagen_settings"])
             
             return final_preset
         except json.JSONDecodeError as json_err:
