@@ -23,7 +23,14 @@ except ImportError:
     hybrid_styles: Dict[frozenset[str], str] = {}
     hybrid_categories_keywords: Dict[str, List[tuple[str, ...]]] = {} # type: ignore
     categories_keywords: Dict[str, List[str]] = {}
-    preferred_order: List[str] = ["default", "unknown"]
+preferred_order: List[str] = ["default", "unknown"]
+
+# Attempt to import the new AI Categorizer
+try:
+    from .ai_categorizer import AICategorizer, GEMINI_AVAILABLE as AI_CATEGORIZER_AVAILABLE
+except ImportError:
+    AICategorizer = None
+    AI_CATEGORIZER_AVAILABLE = False
 
 
 def normalize_style_name_for_catalog(style_name: str) -> str:
@@ -48,15 +55,24 @@ class StyleCategorizer:
         self.logger = logging.getLogger(__name__)
         if not CATALOG_DATA_AVAILABLE:
             self.logger.critical("StyleCategorizer initialized without catalog data. Functionality will be severely limited.")
+
+        self.ai_categorizer = None
+        if AI_CATEGORIZER_AVAILABLE:
+            try:
+                self.ai_categorizer = AICategorizer()
+                self.logger.info("AI Categorizer initialized.")
+            except Exception as e:
+                self.logger.error(f"Failed to initialize AI Categorizer: {e}", exc_info=True)
+                self.ai_categorizer = None
         # Data is loaded at module level, no need to pass explicitly if using module-level imports
         # self.hybrid_styles = hybrid_styles
         # self.hybrid_categories_keywords = hybrid_categories_keywords
         # self.categories_keywords = categories_keywords
         # self.preferred_order = preferred_order
         
-    def categorize_style(self, style_name_input: Union[str, Dict[str, Any]]) -> str:
+    def categorize_style(self, style_name_input: Union[str, Dict[str, Any]], user_prefs: Optional[Any] = None) -> str:
         """
-        Attempts to categorize a style name based on the loaded catalog logic.
+        Attempts to categorize a style name based on the loaded catalog logic or AI.
 
         Args:
             style_name_input: The style name string or a dictionary containing a 'name' key.
@@ -65,6 +81,20 @@ class StyleCategorizer:
             The determined style category string (e.g., "oil_painting", "cyberpunk_portrait").
             Returns "unknown" if no specific category can be determined.
         """
+        # Check if AI categorization is enabled and available
+        use_ai = getattr(user_prefs, 'use_ai_categorization', False) if user_prefs else False
+        
+        if use_ai and self.ai_categorizer:
+            self.logger.debug(f"Attempting AI categorization for input: '{style_name_input}'")
+            ai_category = self.ai_categorizer.categorize_style_with_gemini(style_name_input, user_prefs)
+            if ai_category is not None: # AI categorization was attempted and returned a result (could be "unknown")
+                self.logger.info(f"AI categorization result: '{ai_category}' for input: '{style_name_input}'. Using AI result.")
+                return ai_category
+            else:
+                self.logger.warning(f"AI categorization failed for input: '{style_name_input}'. Falling back to classic logic.")
+
+        # Fallback to classic Python logic if AI is not used, not available, or failed
+        self.logger.debug(f"Using classic Python categorization logic for input: '{style_name_input}'.")
         if not CATALOG_DATA_AVAILABLE:
             self.logger.warning("Style catalog data not available, categorization limited to 'unknown'.")
             return "unknown"

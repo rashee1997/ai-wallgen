@@ -430,7 +430,6 @@ def main():
                     print_info("Preset generation was cancelled or no unique preset could be made.")
                 else: 
                      print_error("Preset generation failed.")
-                input("\nPress Enter to continue...")
             elif choice == '2':
                 # New interactive logo preset generation
                 print_section("Logo Preset Generator")
@@ -479,8 +478,6 @@ def main():
                     print_info("Logo preset generation was cancelled or no unique preset could be made.")
                 else:
                     print_error("Logo preset generation failed.")
-                
-                input("\nPress Enter to continue...")
             elif choice == 'q':
                 print_info("Exiting AI Preset Generator.")
                 break

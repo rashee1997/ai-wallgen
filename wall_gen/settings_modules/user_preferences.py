@@ -162,6 +162,7 @@ class UserPreferences:
         self.description = None
         self.selected_gemini_model = gemini_config.DEFAULT_GEMINI_MODEL # Added new preference
         self.use_structured_logo_prompt_format: bool = False # Added new preference for logo prompt format
+        self.use_ai_categorization: bool = False # Added new preference for AI categorization
 
         # --- Internal dict for ALL arbitrary custom fields ---
         self._custom_fields: Dict[str, Any] = {}  # stores non-standard fields at root

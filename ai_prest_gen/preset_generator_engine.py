@@ -471,13 +471,13 @@ class PresetGenerator:
             # Always use the categorizer for determining the style_category for consistency.
             if base_style_override:
                 print_info(f"\nCategorizing CLI-provided style for preset generation: '{base_style_override}'...")
-                style_category = self.style_categorizer.categorize_style(base_style_override)
+                style_category = self.style_categorizer.categorize_style(base_style_override, user_prefs)
                 # base_style remains base_style_override (which is the value of `base_style` here) for descriptive use in prompts
                 print_info(f"(Detected category for preset generation: {style_category})")
             else:
                 # This path is for interactive mode where base_style was chosen without a direct CLI override for THIS function call.
                 print_info(f"\nGenerating settings for style: '{base_style}'...")
-                style_category = self.style_categorizer.categorize_style(base_style)
+                style_category = self.style_categorizer.categorize_style(base_style, user_prefs)
                 print_info(f"(Detected category: {style_category})")
 
             selected_model_name = get_selected_preset_model(user_prefs)
@@ -538,54 +538,70 @@ class PresetGenerator:
                             if final_preset:
                                 save_result = self._save_generated_preset(final_preset, auto_save_flag)
                                 if save_result is True or isinstance(save_result, str):
-                                    # Single prompt for all outcomes
-                                    input("Press Enter to return to AI Preset Options menu...")
+                                    # If saved successfully, the prompt is handled in _save_generated_preset
                                     return save_result
                                 elif save_result is False:
                                     if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
                                         print_error(f"Failed to generate a unique preset after {config.MAX_GENERATION_ATTEMPTS} attempts.")
-                                        input("Press Enter to return to AI Preset Options menu...")
-                                        return False
+                                        # No prompt here, will be handled after the loop
+                                        return False # Indicate failure
                                     time.sleep(1)
-                                    continue 
-                                else: 
-                                    input("Press Enter to return to AI Preset Options menu...")
-                                    return None 
+                                    continue # Retry generation
+                                else:
+                                    # Save was cancelled, prompt handled in _save_generated_preset
+                                    return None # Indicate cancelled
                             else:
                                 if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
-                                    input("Press Enter to return to AI Preset Options menu...")
-                                    return False
+                                    # Generation failed after processing, no more attempts
+                                    # No prompt here, will be handled after the loop
+                                    return False # Indicate failure
                                 time.sleep(1)
-                                continue
+                                continue # Retry generation
                         else:
                             logging.warning(f"Could not extract JSON from response (Attempt {attempt+1}). Response: {response_text}")
                             print_warning(f"AI response format was unexpected (Attempt {attempt + 1}).")
+                            if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
+                                # No more attempts
+                                # No prompt here, will be handled after the loop
+                                return False # Indicate failure
+                            time.sleep(1)
+                            continue # Retry generation
                     elif response and hasattr(response, 'prompt_feedback') and response.prompt_feedback:
                          logging.warning(f"Generation may have been blocked (Attempt {attempt + 1})")
                          print_warning(f"Generation blocked by API safety filters. Retrying...")
+                         if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
+                             # No more attempts
+                             # No prompt here, will be handled after the loop
+                             return False # Indicate failure
+                         time.sleep(1 + attempt)
+                         continue # Retry generation
                     else:
                         logging.warning(f"Received no valid response (Attempt {attempt+1}). Full response: {response}")
                         print_warning(f"AI returned an empty or invalid response (Attempt {attempt + 1}).")
-
-                    if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
-                        print_error(f"Failed to generate a valid preset after {config.MAX_GENERATION_ATTEMPTS} attempts due to API issues or response format.")
-                        input("Press Enter to return to AI Preset Options menu...")
-                        return False
-                    # Simple backoff for retries
-                    time.sleep(1 + attempt)
-                    continue
+                        if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
+                            # No more attempts
+                            # No prompt here, will be handled after the loop
+                            return False # Indicate failure
+                        time.sleep(1 + attempt)
+                        continue # Retry generation
 
                 except Exception as api_err:
                     logging.error(f"API Error: {str(api_err)}")
-                    input("Press Enter to return to AI Preset Options menu...")
-                    raise RuntimeError(f"Failed to generate settings: {str(api_err)}")
-            
+                    print_error(f"API Error during generation (Attempt {attempt + 1}): {str(api_err)}")
+                    if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
+                        # No more attempts
+                        # No prompt here, will be handled after the loop
+                        return False # Indicate failure
+                    time.sleep(1 + attempt)
+                    continue # Retry generation
+
+            # If the loop finishes without returning a successful save, it means generation failed after all attempts.
             print_error(f"Failed to generate a unique and valid preset after all {config.MAX_GENERATION_ATTEMPTS} attempts.")
-            input("Press Enter to return to AI Preset Options menu...")
-            return False
+            # No prompt here, the calling code will handle returning to the menu.
+            return False # Indicate failure
 
         except Exception as e:
             logging.exception("An unexpected error occurred during AI preset generation:")
             print_error(f"An unexpected error occurred: {e}")
-            input("Press Enter to return to AI Preset Options menu...")
-            return False
+            # No prompt here, the calling code will handle returning to the menu.
+            return False # Indicate failure

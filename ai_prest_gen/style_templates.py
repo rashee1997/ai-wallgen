@@ -413,7 +413,7 @@ def get_template_for_category(style_category: Union[str, List[str]]) -> Dict[str
     use_ai_selector = False
     # Removed reading use_ai_template_selector from user preferences as it no longer exists
 
-    categorizer = StyleCategorizer(use_ai_selector=use_ai_selector)
+    categorizer = StyleCategorizer()
 
     # If input is list, pick first or join for detection
     if isinstance(style_category, list):

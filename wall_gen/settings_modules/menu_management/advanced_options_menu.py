@@ -80,11 +80,15 @@ def configure_advanced_options():
         print_option("14", "Generate AI Preset")
         print_option("15", "Reset to Default")
         print_option("16", "Software Settings & Renderer")
+        # Show current state of AI Categorization in option label
+        user_prefs = get_preferences()
+        ai_cat_state = "ON" if getattr(user_prefs, 'use_ai_categorization', False) else "OFF"
+        print_option("17", f"Toggle AI Categorization ({ai_cat_state})")
         print_option("b", "Back")
 
-        valid_options = [str(i) for i in range(1, 17)] + ["b"]
+        valid_options = [str(i) for i in range(1, 18)] + ["b"]
         choice = get_validated_input(
-            prompt="Choose an option", 
+            prompt="Choose an option",
             options=valid_options,
             help_context_id="ADVANCED_OPTIONS_MENU"
         )
@@ -107,6 +111,7 @@ def configure_advanced_options():
             "14": generate_ai_preset,
             "15": reset_to_default,
             "16": manage_software_settings,
+            "17": toggle_ai_categorization,
         }
         if choice in menu_map:
             menu_map[choice]()
@@ -200,3 +205,34 @@ def change_aspect_ratio():
         user_prefs.aspect_ratio = value
         user_prefs.save_preferences()
         print_success(f"Aspect ratio set to {value}.")
+
+
+def toggle_ai_categorization():
+    """
+    Prompt user to explicitly turn AI categorization ON or OFF.
+    """
+    user_prefs = get_preferences()
+    current_state = getattr(user_prefs, 'use_ai_categorization', False)
+    clear_screen()
+    print_header("AI Categorization Settings")
+    status_str = "ON" if current_state else "OFF"
+    print_info(f"Current AI Categorization is {status_str}.")
+    print_option("1", "Turn ON")
+    print_option("2", "Turn OFF")
+    print_option("b", "Back")
+    valid_options = ["1", "2", "b"]
+    choice = get_validated_input(
+        prompt="Choose an option",
+        options=valid_options,
+        help_context_id="AI_CATEGORIZATION_TOGGLE"
+    )
+    if choice == "_HELP_SHOWN_":
+        return
+    if choice == "b":
+        return
+    new_state = True if choice == "1" else False
+    user_prefs.use_ai_categorization = new_state
+    user_prefs.save_preferences()
+    status = "ON" if new_state else "OFF"
+    print_success(f"AI Categorization set to {status}.")
+    input("\nPress Enter to continue...")
