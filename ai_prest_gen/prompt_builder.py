@@ -41,7 +41,7 @@ class PresetPromptBuilder:
         Args:
             base_style_name: The name of the base style.
             style_category: The detected category for the base style.
-            
+
         Returns:
             str: The fully constructed prompt string for the Gemini API,
                  or an error message string if dependencies are missing.
@@ -51,28 +51,39 @@ class PresetPromptBuilder:
 
         category_instructions_text = instructions_for_category(style_category, base_style_name)
         template = get_template_for_category(style_category)
-        
+
         self.logger.info(f"Building prompt for style: '{base_style_name}', category: '{style_category}'")
         self.logger.debug(f"Using template: {template}")
         self.logger.debug(f"Using category instructions: {category_instructions_text}")
 
         if not template or not isinstance(template, dict):
             self.logger.error(f"No valid template found for category: {style_category}. Using minimal default for prompt.")
-            # This minimal template is for the prompt structure itself, not a full preset template
-            template = { 
-                 "preset_name": f"{base_style_name.replace('_',' ').title()} Default Prompt",
-                 "styles": [base_style_name], "moods": ["Neutral"],
-                 "description": f"Default prompt structure for {base_style_name}.", "aspect_ratio": "16:9",
-                 "imagen_settings": {"negative_prompt": "low quality", "style_negative_prompt": "clashing styles"}
+            template = {
+                "preset_name": f"{base_style_name.replace('_', ' ').title()} Default Prompt",
+                "styles": [base_style_name],
+                "moods": ["Neutral"],
+                "description": f"Default prompt structure for {base_style_name}.",
+                "aspect_ratio": "16:9",
+                "imagen_settings": {
+                    "negative_prompt": "low quality",
+                    "style_negative_prompt": "clashing styles",
+                    "camera_settings": {
+                        "aperture": "f/2.8",
+                        "shutter_speed": "1/125",
+                        "iso": 100,
+                        "focal_length": "50mm",
+                        "lens_type": "Standard",
+                        "camera_model": "Generic DSLR"
+                    }
+                }
             }
-            # It might be better to return an error string or raise an exception if a template is crucial and missing.
 
         instruction_header = f"Select settings that work well with \"{base_style_name}\" (category: {style_category}):"
-        
+
         template_for_prompt = template.copy()
-        template_for_prompt["styles"] = [base_style_name] # Ensure base_style_name is in styles list
+        template_for_prompt["styles"] = [base_style_name]
         template_for_prompt.setdefault("description", f"AI preset for {base_style_name}.")
-        template_for_prompt.setdefault("aspect_ratio", "16:9") # Enforce default aspect ratio
+        template_for_prompt.setdefault("aspect_ratio", "16:9")
 
         prompt = f"""
 Generate settings for a wallpaper with style: "{base_style_name}"

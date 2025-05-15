@@ -346,8 +346,8 @@ class PresetGenerator:
         Handles the saving process for a generated preset.
         """
         if not self.preset_cache_manager.is_preset_unique(final_preset):
-           print_warning("Generated preset is too similar to a previous one.")
-           return False
+            print_warning("Generated preset is too similar to a previous one.")
+            return False
 
         preview_text = json.dumps(final_preset, indent=4)
         print_section("Preview of Generated Preset")
@@ -367,7 +367,7 @@ class PresetGenerator:
                 print_info("Help shown for save confirmation. Treating as 'no' to save for this attempt.")
                 confirm_decision = False
             else:
-                confirm_decision = confirm_input.startswith('y')
+                confirm_decision = confirm_input.lower().startswith('y')
 
         if confirm_decision:
             self.preset_cache_manager.save_preset_hash_to_cache(final_preset)
@@ -427,8 +427,8 @@ class PresetGenerator:
 
             base_name = _make_base_name(final_preset)
             preset_name_base = f"{base_name}_{int(time.time())}"
-            
-            success = save_preset(final_preset, preset_name_base) # Uses imported or fallback save_preset
+
+            success = save_preset(final_preset, preset_name_base)  # Uses imported or fallback save_preset
             if success:
                 print_success(f"Generated unique preset: '{final_preset.get('preset_name', 'Unnamed Preset')}'")
                 print_success(f"Saved preset '{preset_name_base}' to presets folder and database")
@@ -439,6 +439,7 @@ class PresetGenerator:
         else:
             print_warning("Preset saving cancelled by user.")
             return None
+
 
     def generate_ai_preset(self, user_prefs: Any, base_style_override: Optional[str] = None, auto_save_flag: bool = False, additional_params: Optional[Dict[str, Any]] = None) -> Union[str, bool, None]:
         """
