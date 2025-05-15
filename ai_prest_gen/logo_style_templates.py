@@ -9,16 +9,50 @@ text prompt suitable for Google's Imagen 3 model.
 from typing import Dict, Any
 
 def get_logo_minimalist_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved minimalist logo template logic:
+    - Clear field descriptions for maintainability.
+    - Actionable negative prompts.
+    - Explicit placeholder routines for extensibility.
+    """
     return {
         "preset_name": "Minimalist Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a minimalist logo.",
-        "logo_style_description": "A minimalist logo featuring clean lines, simple geometric shapes, and a limited color palette (e.g., monochrome with one accent, or two complementary muted tones). Focus on clarity, strong visual identity, and negative space utilization. The design should be timeless, scalable, and instantly recognizable even at small sizes.",
-        "key_elements_guidance": "Suggest 1-2 core visual elements (e.g., a stylized letter, an abstract geometric form, a simple icon representing [USER_PROVIDED_CONCEPT_OR_INDUSTRY]). Consider the use of negative space to create dual imagery or hidden meanings. The element should work effectively in both color and monochrome versions.",
-        "color_palette_guidance": "Suggest a specific color palette of 2-3 colors suitable for a minimalist logo (e.g., '#000000, #FFFFFF, #FFD700' for black, white, gold). Provide hex codes. Consider color psychology - blues for trust/professionalism, greens for growth/environment, reds for energy/passion. Ensure sufficient contrast for accessibility and small-size legibility.",
-        "typography_guidance": "If text like '[LOGO_TEXT_PLACEHOLDER]' is to be included, suggest a clean, modern sans-serif font style (e.g., 'Helvetica Neue', 'Montserrat', 'Open Sans'). Specify if text should be primary, secondary, or integrated with an icon. For minimalist logos, consider custom letter spacing, consistent stroke weight, and the removal of unnecessary serifs or decorative elements. Leverage Imagen 3's superior text rendering capabilities for crisp, precise letterforms.",
-        "composition_guidance": "Emphasize balance and proportion. Consider symmetry or intentional asymmetry. Ensure the logo is balanced visually, with proper weight distribution and a clear focal point. The design should feel complete and stable. Provide guidance on appropriate spacing between elements (e.g., icon-to-text relationship).",
-        "industry_applications": "For tech/digital: emphasize sleek, innovative shapes. For finance/legal: suggest more structured, stable forms. For healthcare: incorporate gentle curves and approachable elements. For creative industries: consider more playful geometric abstractions that still maintain minimalism.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'complex details, gradients, shadows, realistic textures, photographic elements, busy backgrounds, decorative flourishes, drop shadows, bevels, embossing, multiple competing focal points, inconsistent line weights, overly detailed illustrations'.",
+        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a minimalist, highly scalable, accessible logo. Prioritize simple geometry, strong identity, superb contrast, and negative space.",
+        "logo_style_description": (
+            "A minimalist logo using clean lines, geometric forms, and a strictly limited color palette "
+            "(e.g., black, white, plus one accent). Prioritize recognizability at all sizes. "
+            "Design should embody timelessness, modularity, and clear visual hierarchy. Negative space should be used creatively."
+        ),
+        "key_elements_guidance": (
+            "Propose 1–2 essential shapes—e.g., a single stylized letter, simple icon, or clever abstraction of [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. "
+            "If achievable, use negative space to suggest dual imagery or hidden meaning. "
+            "Ensure the design works in pure monochrome (black/white) plus accent version."
+        ),
+        "color_palette_guidance": (
+            "Constrain palette to 2–3 high-contrast modern or neutral colors. Provide each as a hex code string, with rationale. "
+            "E.g., '#1A1A1A, #FFFFFF' (black/white) + accent like '#00CFFF'. For additional inclusivity, explain color accessibility."
+        ),
+        "typography_guidance": (
+            "Recommend a geometric, contemporary, sans-serif typeface (e.g., 'Montserrat', 'Open Sans'). "
+            "If text is present ([LOGO_TEXT_PLACEHOLDER]), clarify if text is featured, secondary, or omitted; define clear kerning and line weight suggestions. "
+            "Specify crisp, consistent stroke widths and explicit letter spacing, no decorative flourishes."
+        ),
+        "composition_guidance": (
+            "Explain how icon and text relate spatially (e.g., icon left-of, above, or integrated with text). "
+            "Require centered symmetry unless an intentional offset is justified. Outline margin/padding recommendations. "
+            "Indicate preferred negative space arrangements and overall area balance."
+        ),
+        "industry_applications": (
+            "Adapt icon forms to reflect: "
+            "— Tech: sleek, angular. "
+            "— Finance: stable rectangles, subtle notching. "
+            "— Healthcare: soft, rounded corners, approachable shapes. "
+            "— Creative: abstract, playful geometry, still using restraint."
+        ),
+        "negative_prompt_suggestions": (
+            "Exclude: fine detail, gradients, photo/bitmap/raster effects, textured or multi-directional shadows, unnecessary outlines, "
+            "busy backgrounds, any photorealism, 3D, symbol/library clip art, inconsistent weights, or fonts with serifs/handwriting."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for a minimalist logo.
 **Logo Text/Initials:** [LOGO_TEXT_PLACEHOLDER]
@@ -28,25 +62,57 @@ Generate an Imagen 3 prompt for a minimalist logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style:** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Flat vector illustration, isolated on a white background. Ensure clean edges and precise geometric forms.
+**Desired Output Format:** Flat vector illustration, isolated on a white background. Ensure clean, sharp edges and pixel-perfect geometry.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3. For example:
-'Create a minimalist logo for "[LOGO_TEXT_PLACEHOLDER]" representing [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Featuring [key_elements_output], using colors [color_palette_output]. Typography: [typography_output]. Design should balance [composition_guidance]. Flat vector illustration, isolated on a white background with clean edges and precise forms. Negative prompt: [negative_prompt_suggestions].'
+Combine these into a single, detailed prompt for Imagen 3 as:
+'Create a minimalist logo for "[LOGO_TEXT_PLACEHOLDER]" representing [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Use [key_elements_output] and a palette of [color_palette_output]. Typography: [typography_output]. Placement: [composition_guidance]. Output clean, flat vector, white background, no effects. Negative prompt: [negative_prompt_suggestions].'
 """
     }
 
 def get_logo_emblem_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved emblem logo template logic:
+    - Focused on hierarchy, legibility, integration logic.
+    - Improved prompts for text and icon integration.
+    - Field clarity and model-best-practice execution.
+    """
     return {
         "preset_name": "Emblem Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create an emblem logo.",
-        "logo_style_description": "An emblem logo where text is integrated within a symbol or icon, often with a traditional or classic feel. Think badges, crests, seals, or medallions with a contained, cohesive structure. Emblems convey heritage, authenticity, and authority while creating a self-contained, easily recognizable brand mark.",
-        "key_elements_guidance": "Suggest a central containing shape (e.g., shield, circle, hexagon, laurel wreath) and how the text '[LOGO_TEXT_PLACEHOLDER]' can be integrated within or around it. Mention any relevant iconography for [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Consider hierarchical organization of elements (e.g., central icon, primary text, secondary text, founding date) and ensure all elements work in harmony within the contained shape.",
-        "color_palette_guidance": "Suggest a color palette of 2-4 colors suitable for an emblem (e.g., deep blues, golds, silvers, reds, greens). Provide hex codes. Consider traditional color combinations that convey heritage and authority. For a modern emblem, suggest more contemporary color schemes while maintaining the classic structure. Ensure colors retain their impact when converted to monochrome.",
-        "typography_guidance": "Suggest a classic serif (e.g., 'Garamond', 'Baskerville') or a strong sans-serif font (e.g., 'Trajan', 'Gotham Bold') that complements an emblem style for the text '[LOGO_TEXT_PLACEHOLDER]'. Consider letter spacing for curved text that follows the emblem's shape. For multi-line text, provide hierarchy guidance (e.g., larger company name, smaller tagline or founding date). Leveraging Imagen 3's precise text rendering, suggest potential decorative serifs or letterform enhancements that maintain legibility.",
-        "composition_guidance": "Emphasize symmetry and balance. Provide guidance on centering elements, appropriate spacing between concentric circles or shapes, and text placement that follows the curvature of the containing shape. Consider the need for visual weight to ground the emblem, and ensure readability of text at various sizes.",
-        "industry_applications": "For universities/education: academic shields with books or torches. For food/beverage: circular emblems with wheat/ingredients. For automotive: shields with dynamic symbols. For legal/government: official seal-like designs. For hospitality: crests incorporating relevant service elements.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'minimalist style (unless intended), overly abstract elements, photographic elements, irregular or asymmetric containing shapes, cluttered or illegible text, misaligned elements, inconsistent line weights, overly distressed textures (unless vintage style is specified)'.",
+        "ai_prompt_focus": (
+            "Generate a detailed text prompt for Imagen 3 to create an emblem-style logo. "
+            "Emphasize classic structure, clear text-symbol integration, and timeless authority cues."
+        ),
+        "logo_style_description": (
+            "A contained emblem where text is woven into a cohesive visual mark. Style cues include shields, badges, seals, and crests, "
+            "with defined borders/shapes holding together layered elements (icons, text, embellishments). The mark should feel both historic and memorable."
+        ),
+        "key_elements_guidance": (
+            "Define a bold primary shape (e.g., shield, circle, or hexagon), with [LOGO_TEXT_PLACEHOLDER] distinctly integrated within or around it. "
+            "Suggest an industry-relevant symbol and a logic for layering/hierarchy (e.g., central icon, then primary text, secondary motto/tagline or date). "
+            "Describe the text curvature if any; recommend symmetry or justified composition for visual authority."
+        ),
+        "color_palette_guidance": (
+            "Recommend a strong, traditional palette: e.g., blue/gold/silver/red/green, with color rationales. "
+            "Provide hex codes and suggest how color signals heritage or adapts to modern/trendy variants. "
+            "Ensure color contrast remains strong when the mark is rendered in monochrome."
+        ),
+        "typography_guidance": (
+            "Recommend formal serif (e.g., 'Garamond', 'Baskerville') or serious sans-serif (e.g., 'Trajan', 'Gotham Bold'). "
+            "Define size/weight hierarchy: main line bold, secondary line lighter/smaller. If text is wrapped or curved, specify precise arc/placement logic."
+        ),
+        "composition_guidance": (
+            "Prioritize perfect symmetry. Specify how to center the central icon/symbol and how text curves, frames, or sits within shape. "
+            "Provide minimum spacing/margins. All elements should have visual grounding (e.g., bottom anchor line or weighted border)."
+        ),
+        "industry_applications": (
+            "Education: book/lamp/shield motifs. Food/Bev: circular wheat bundles or cutlery. Automotive: crests, gears, or wings. Gov/Legal: strong seals (eagle, scales, columns). "
+            "Hospitality: framed crests/shields with iconography that signals welcome or service."
+        ),
+        "negative_prompt_suggestions": (
+            "Avoid: flattened/minimalist-only style, photographic textures, raster/bitmap art, asymmetric or irregular layouts, illegible fonts, excessive or distressed grunge, "
+            "crowding, symbol-icon disconnect, multiple conflicting focal points."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for an emblem logo.
 **Logo Text/Brand Name:** [LOGO_TEXT_PLACEHOLDER]
@@ -56,24 +122,54 @@ Generate an Imagen 3 prompt for an emblem logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style:** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Vector illustration, suitable for an emblem, isolated on a white background. Ensure crisp edges and clear text rendering.
+**Desired Output Format:** Vector illustration, suitable for an emblem, isolated on white. Ensure crisp edges and legible, well-integrated text.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing the integration of text within the emblem structure and the classic, authoritative feel of the design.
+Combine as:
+'Create an emblem logo for "[LOGO_TEXT_PLACEHOLDER]" in [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Icon: [key_elements_output]; palette: [color_palette_output]. Typography: [typography_output]. Layout: [composition_guidance]. Output a sharp, vector emblem on white, perfect symmetry. Negative prompt: [negative_prompt_suggestions].'
 """
     }
 
 def get_logo_wordmark_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved wordmark logo template logic:
+    - Explicitly defines typographic focus, kerning, and distinctions.
+    - Stronger instructions for distinctive, readable, and scalable type.
+    - Separates advanced and legacy pitfalls in negative prompts.
+    """
     return {
         "preset_name": "Wordmark Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a wordmark logo.",
-        "logo_style_description": "A wordmark logo (logotype) that focuses solely on the text '[LOGO_TEXT_PLACEHOLDER]', using unique typography and potentially subtle graphic elements integrated into the text. The brand name itself becomes the visual identifier, relying on distinctive letterforms, custom spacing, and typographic treatments to create a memorable impression. Wordmarks work exceptionally well for brands with distinctive or short names.",
-        "key_elements_guidance": "Focus on typographic treatment. Suggest a unique font style (e.g., custom script, bold display font, elegant serif) and any subtle graphic modifications to the text itself (e.g., ligatures, stylized letters, custom letterform adjustments, underlines, crossbars). Consider how specific letters might be modified to create brand distinction. Suggest potential connecting elements between letters or unique treatments of ascenders/descenders. Leveraging Imagen 3's superior text rendering capabilities, recommend precise letter spacing (kerning) and any letter modifications that remain highly legible.",
-        "color_palette_guidance": "Suggest a color palette of 1-3 colors that enhances the typography. Provide hex codes. Consider how color can create emphasis on parts of the name or create visual interest in an otherwise text-only design. Consider gradients only if they enhance readability rather than detract from it. Ensure the wordmark remains effective in monochrome for versatile applications.",
-        "typography_guidance": "The typography IS the logo. Describe the desired font style and any specific treatments in detail. Consider weight variations within the wordmark (e.g., mixing bold and light), case treatments (all caps vs. mixed case), and specific letter modifications. Recommend the most appropriate font category (serif, sans-serif, slab serif, script, display) based on brand personality. Suggest precise kerning (letter spacing) and leading (line spacing) if multiple lines are used. Leveraging Imagen 3's text rendering capabilities, ensure letterforms are distinct and balanced.",
-        "composition_guidance": "Provide guidance on horizontal or vertical orientation, text alignment (centered, left-aligned), and any stacking of words or elements. Consider baseline alignment and any intentional breaking of traditional typographic rules to create visual interest. Recommend white space considerations to ensure the wordmark has room to 'breathe'.",
-        "industry_applications": "For luxury brands: elegant serif or script fonts. For tech companies: modern, clean sans-serif. For creative industries: custom, playful letterforms. For legal/financial: structured, authoritative typefaces. For food/hospitality: warm, approachable letterforms that evoke appropriate emotions.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'icon, symbol, complex abstract shape, cluttered background, photographic elements, inconsistent letter spacing, illegible fonts, overly decorative typefaces that sacrifice readability, unnecessary graphic elements, drop shadows or 3D effects (unless specifically desired)'.",
+        "ai_prompt_focus": (
+            "Generate a detailed text prompt for Imagen 3 to create a typographically-driven wordmark logo. "
+            "All identity comes from unique text design and careful kerning—no icons."
+        ),
+        "logo_style_description": (
+            "A wordmark is a pure typographic logo—brand name as the sole visual element. Success relies on custom letterforms, "
+            "distinctive spacing, and intentional graphical modifications (but nothing that compromises legibility)."
+        ),
+        "key_elements_guidance": (
+            "Describe a one-of-a-kind font or hand-lettering approach. Suggest subtle customizations: e.g., ligatures, monoline alternates, smart use of negative space between/inside letters, "
+            "minor graphical extensions (e.g., stylized crossbar, underlines). For short names, suggest iconic initials/letter combos; for long names, focus on horizontal balance and abbreviation strategies."
+        ),
+        "color_palette_guidance": (
+            "Recommend a maximum of three colors used as solid fills (never gradients by default). Explain color choice for accenting specific glyphs/sections. "
+            "Include hex codes. Remind the model to check contrast and outline adaptability when rendered in black/white."
+        ),
+        "typography_guidance": (
+            "Typography is the entire identity. Define primary font—category (serif, sans, slab, script, display), weight variance, use of upper/lower/mixed case. "
+            "Fine-tune letter spacing (kerning), line spacing if multi-line, and suggest which (if any) letters could be stylized for unique effect. Boldly reject decorative fonts that reduce clarity."
+        ),
+        "composition_guidance": (
+            "Specify desired orientation (horizontal is default; vertical stacking for long/2-word brands only if superior). Recommend flush left or perfect centered alignment. "
+            "Describe baseline, optical alignment, and 'breathing room' (ample white space around letters)."
+        ),
+        "industry_applications": (
+            "Luxury: elegant serif or custom script, refined color accent. Tech: geometric sans, blue/gray palette, even spacing. Creative: playful letter interactions. Legal/finance: bold, stable sans or square-serif."
+        ),
+        "negative_prompt_suggestions": (
+            "Do NOT include: standalone icons, graphic marks, decorative swooshes detached from letters. Avoid excessive ligatures, thin/illegible fonts, drop shadows, gradients, busy backgrounds. "
+            "Never use handdrawn cursive unless specified by brand context."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for a wordmark logo.
 **Logo Text:** [LOGO_TEXT_PLACEHOLDER]
@@ -83,24 +179,49 @@ Generate an Imagen 3 prompt for a wordmark logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style:** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Flat vector illustration, isolated on a white background. Ensure crisp, precise letterforms and consistent spacing.
+**Desired Output Format:** Flat vector illustration, isolated on a white background. Typographically crisp, optically well-spaced.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing the distinctive typography that will make this wordmark instantly recognizable.
+Prompt format example:
+'Design a wordmark for "[LOGO_TEXT_PLACEHOLDER]" representing [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Use [key_elements_output] and colors [color_palette_output]. Typography: [typography_output]. Composition: [composition_guidance]. Output a flat logo with background whitespace, perfect typographic focus. Negative prompt: [negative_prompt_suggestions].'
 """
     }
 
 def get_logo_lettermark_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved lettermark logo template logic:
+    - Explicit monogram construction strategy (interlocking, stacking, geometry).
+    - Professionally focused spacing and icon/letterform fusion details.
+    - Modernized negative prompts (AI-specific pitfalls).
+    """
     return {
         "preset_name": "Lettermark Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a lettermark logo.",
-        "logo_style_description": "A lettermark logo (monogram) using the initials '[LOGO_TEXT_PLACEHOLDER]' (expected to be 1-3 letters). Focus on stylized typography and the interplay of the letters to create a distinctive, concise visual identifier. Lettermarks are excellent for brands with long names that need a compact, memorable symbol, especially for small-scale applications like app icons or favicons.",
-        "key_elements_guidance": "Suggest creative ways to combine or stylize the letters '[LOGO_TEXT_PLACEHOLDER]' into a unique symbol. Consider overlapping, interlocking, or abstracting the letterforms while maintaining legibility. Explore how negative space between letters might create additional shapes or meanings. Consider the geometry and balance of the letterforms, potentially placing them in a containing shape (circle, square, shield) if it enhances recognition. Leveraging Imagen 3's precise rendering, recommend subtle details that remain visible at various scales.",
-        "color_palette_guidance": "Suggest a color palette of 1-3 colors that works well with the stylized letters. Provide hex codes. Consider using color to create depth, highlight specific parts of letters, or differentiate overlapping elements. Recommend color combinations that remain effective in digital and print applications. Ensure the design remains strong in monochrome for versatile application.",
-        "typography_guidance": "The typography IS the logo. Recommend a specific font category (serif, sans-serif, slab, script, display) and treatment that best represents [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Consider custom modifications to standard letters that create uniqueness while maintaining brand recognition. Using Imagen 3's superior text rendering, suggest precise details on letter weight, serifs, terminals, and connections between letters that can be accurately generated.",
-        "composition_guidance": "Provide guidance on the arrangement of letters (e.g., horizontal, stacked, overlapping, radial). Consider the visual weight and balance between different letters, especially if they have varying widths (e.g., 'I' vs. 'W'). Recommend appropriate spacing or connections between letters and whether a containing shape would enhance the design.",
-        "industry_applications": "For tech/digital: modern, geometric letterforms. For legal/financial: structured, authoritative monograms. For fashion/luxury: elegant, distinctive letter treatments. For sports: dynamic, energetic letterforms. For education: academic, traditional monogram styles.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'full brand name, complex background elements, photographic textures, drop shadows, gradients, overly complex decorative elements, illegible letter stylizations, inconsistent letter treatments, imbalanced letter scaling'.",
+        "ai_prompt_focus": (
+            "Generate a prompt for Imagen 3 to create a professional, high-clarity lettermark (monogram) logo. Focus on distinct, memorable initial interactions."
+        ),
+        "logo_style_description": (
+            "A lettermark logo consists solely of 1–3 stylized initials. Encourage geometric fusion—overlap, interlock, or radial arrangement (as balanced, not crowded). "
+            "Every detail highlights interplay between letters and clear, compact silhouette. Should scale well and remain recognizable even at favicon/app-icon size."
+        ),
+        "key_elements_guidance": (
+            "Explain which letterforms should connect, share strokes, or use negative space for internal shapes. Suggest whether to enclose the mark (circle, square) or let it remain open "
+            "based on the initial set. “Initial stacking” for tall monograms, or symmetry for short/wide ones."
+        ),
+        "color_palette_guidance": (
+            "Suggest up to three harmonious colors for visual separation of letters (outline/fill/accents). List hex codes. State how design translates to black-and-white. Contrast and distinction are critical."
+        ),
+        "typography_guidance": (
+            "Recommend a display sans or hybrid serif for clarity and modernity. For legal/corporate: square, bold sans. For creative brands: moderate flair, but always clarity first. Clearly state relative sizing/weight if not all initials are equal."
+        ),
+        "composition_guidance": (
+            "Arrange initials for maximum recognition: either stacked, horizontal, or overlapped (brief rationale). Set precise spacing allowances. Clarify if surrounded by a border/shape or ‘break out’ effect. Show how the mark sits optically centered."
+        ),
+        "industry_applications": (
+            "Tech: strong geometric monograms, angular. Finance/law: upright, enclosed shapes, no ambiguity. Fashion: elegant curve or contrasting weights. Sports: bold, dynamic diagonals or motion cues."
+        ),
+        "negative_prompt_suggestions": (
+            "Do NOT include entire brand name, clipart, non-letter icons, photographic textures, unnecessary gradients, drop-shadows, or outline clutter. Avoid illegibility, excessive embellishment, or letter ambiguity."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for a lettermark logo.
 **Logo Initials:** [LOGO_TEXT_PLACEHOLDER]
@@ -110,24 +231,53 @@ Generate an Imagen 3 prompt for a lettermark logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style:** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Flat vector illustration, isolated on a white background. Ensure crisp, precise letterforms with clean edges.
+**Desired Output Format:** Flat vector, no effects, extremely clean outline, optically balanced.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing how the initials should interact to create a distinctive and memorable lettermark that represents the brand effectively.
+Prompt format example:
+'Design a lettermark logo for the initials "[LOGO_TEXT_PLACEHOLDER]" ([USER_PROVIDED_CONCEPT_OR_INDUSTRY]). Shape: [key_elements_output], palette: [color_palette_output], typography: [typography_output], structure: [composition_guidance]. Output as a flat, scalable, vector file on white. Negative prompt: [negative_prompt_suggestions].'
 """
     }
 
 def get_logo_abstract_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved abstract logo template logic:
+    - Highlights visual metaphor, geometric vs organic, emotional target.
+    - Field-level advice for best use of AI's form+psycho-color abilities.
+    - Strict prompt structure for legacy and multi-model compatibility.
+    """
     return {
         "preset_name": "Abstract Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create an abstract logo.",
-        "logo_style_description": "An abstract logo mark using geometric or organic shapes to represent the brand concept ([USER_PROVIDED_CONCEPT_OR_INDUSTRY]) without literal imagery. Focus on form, color, and composition to evoke specific emotions and create a distinctive visual signature. Abstract logos are timeless, versatile across applications, and can transcend language barriers while conveying brand personality through visual elements alone.",
-        "key_elements_guidance": "Suggest abstract shapes or forms that visually represent [USER_PROVIDED_CONCEPT_OR_INDUSTRY] through metaphor rather than literal depiction (e.g., interconnected nodes for network, fluid shapes for creativity, sharp angles for technology, ascending forms for growth, circular patterns for unity). Consider how these forms interact to create a cohesive symbol while remaining simple enough to be recognizable. Recommend 2-3 core shapes that work together to convey the desired brand attributes. Leveraging Imagen 3's detailed rendering capabilities, suggest subtle textures or depth that enhance the design without overcomplicating it.",
-        "color_palette_guidance": "Suggest a color palette of 2-4 colors that enhances the abstract form and concept. Provide hex codes. Consider color psychology and how specific hues can reinforce the brand attributes (e.g., blues for trust/reliability, reds for energy/passion, greens for growth/health). Recommend primary and accent colors, potentially suggesting gradients if they enhance the concept (e.g., smooth transitions for fluid concepts). Ensure the logo remains effective in monochrome applications.",
-        "typography_guidance": "If text like '[LOGO_TEXT_PLACEHOLDER]' is included, suggest a clean, modern font that complements the abstract mark, specifying if it should be placed below, beside, or integrated with the symbol. Recommend a font category (serif, sans-serif, slab, display) that balances with the abstract elements. Consider weight, spacing, and how typography should harmonize with the abstract forms without competing for attention. Leveraging Imagen 3's text rendering, ensure letterforms are precisely balanced with the abstract elements.",
-        "composition_guidance": "Provide guidance on the arrangement of abstract elements, considering visual flow, balance, and negative space. Recommend whether the composition should be symmetrical or asymmetrical, enclosed or open, dense or airy. Consider the visual center of gravity and how the eye should move through the design. Suggest sizing relationships between abstract elements and typography (if included).",
-        "industry_applications": "For tech/digital: precise geometric forms with clear meaning. For creative industries: fluid, expressive abstract shapes. For finance/legal: structured forms suggesting stability/security. For health/wellness: organic, harmonious shapes. For energy/movement: dynamic abstract forms suggesting motion.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'literal imagery, realistic objects, overly complex shapes, cluttered composition, photographic elements, busy backgrounds, inconsistent style between elements, excessive detail that doesn't scale well, drop shadows or 3D effects (unless specifically desired)'.",
+        "ai_prompt_focus": (
+            "Generate a detailed prompt for Imagen 3 to create an abstract logo (no literal objects, pure shape/metaphor)."
+            "Prioritize strong formal symbolism and clean, recognizable shapes."
+        ),
+        "logo_style_description": (
+            "Abstract logos use geometric or flowing forms to represent a concept, value, or emotion—not a pictorial object. "
+            "These marks excel in universality and timelessness, must be memorable without direct imagery. Modern, dynamic, and adaptable."
+        ),
+        "key_elements_guidance": (
+            "Describe 2–3 abstract forms or movements (e.g., rising arc = growth; interlocking rings = partnership). "
+            "Clarify which brand attribute each shape hints at. Indicate whether forms should touch, overlap, or float in relation."
+        ),
+        "color_palette_guidance": (
+            "Pick up to four colors that carry meaning (blue = dependability, green = sustainability, red = passion), give hex codes/rationale. "
+            "Define primary/accent roles, and ensure design is high-contrast and equivalent in monochrome."
+        ),
+        "typography_guidance": (
+            "If text present, use a minimal clean sans or geometric font below/beside mark—keep it discrete. "
+            "Specify size ratio, spacing, and whether text can be omitted for icon-only usage."
+        ),
+        "composition_guidance": (
+            "Forms may be perfectly symmetrical (for order/stability) or asymmetrical (for energy/innovation). "
+            "Define negative space: how does eye move through, what is the central visual impact, and how does mark adapt to squares/circles or open space."
+        ),
+        "industry_applications": (
+            "Tech: connected dots or digital motifs. Creative: expressive curves, motion lines. Finance: sturdy geometric foundation (rect/tri/circle mix). Energy: dynamic waves/arcs."
+        ),
+        "negative_prompt_suggestions": (
+            "Do NOT: include understandable icons, pictograms, photographs, visual clutter, gradients (unless strongly justified), busy backgrounds, or conflicting geometric themes. Avoid over-detailing and soft focus."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for an abstract logo.
 **Logo Text (if any):** [LOGO_TEXT_PLACEHOLDER]
@@ -137,24 +287,47 @@ Generate an Imagen 3 prompt for an abstract logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style (if text included):** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Flat vector illustration, isolated on a white background. Ensure clean edges and precise forms.
+**Desired Output Format:** Flat vector, sharp clean lines, high contrast, isolated on white.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing how the abstract elements should convey the essence of the brand concept through form, color, and composition rather than literal representation.
+Prompt structure:
+"Create an abstract logo for [USER_PROVIDED_CONCEPT_OR_INDUSTRY], not using any direct symbols. Shapes: [key_elements_output], palette: [color_palette_output], typography: [typography_output], layout: [composition_guidance]. Output as pure vector, white background, sharp shapes, no extraneous detail. Negative prompt: [negative_prompt_suggestions]."
 """
     }
 
 def get_logo_mascot_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved mascot logo template logic:
+    - Focuses on character-as-brand, clear interaction with text/scene.
+    - Makes explicit key posture, emotion, and scaling robust to small sizes.
+    - Actionable negative prompts address AI mascot rendering pathologies.
+    """
     return {
         "preset_name": "Mascot Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a mascot logo.",
-        "logo_style_description": "A mascot logo featuring an illustrated character representing the brand ([USER_PROVIDED_CONCEPT_OR_INDUSTRY]). The character should be friendly, memorable, and visually distinct with a personality that embodies the brand's values and creates an emotional connection with the audience. Mascot logos excel at creating brand ambassadors that can be animated, used in different poses, and adapted across marketing materials.",
-        "key_elements_guidance": "Suggest a character concept (e.g., an animal, a person, a mythical creature, an anthropomorphized object) and describe its appearance, pose, expression, and distinguishing features in detail. Mention how it relates to [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Consider the character's proportions (e.g., stylized with larger head/eyes for approachability vs. realistic proportions for authority). Recommend specific personality traits the mascot should embody through its expression and pose. Leveraging Imagen 3's detailed rendering capabilities, suggest the level of detail for the character's features, clothing, or accessories that define its identity.",
-        "color_palette_guidance": "Suggest a vibrant and appealing color palette of 3-5 colors for the mascot. Provide hex codes. Consider primary colors for the character itself and accent colors for clothing or accessories. Recommend colors that align with the brand personality (e.g., energetic, trustworthy, playful, authoritative) and ensure the mascot remains recognizable even when simplified for different applications. Consider how colors can define the character's most identifiable features.",
-        "typography_guidance": "If text like '[LOGO_TEXT_PLACEHOLDER]' is included, suggest a playful or bold font that complements the mascot style, specifying its placement relative to the character (e.g., above, below, integrated within the design). Consider how the typography can echo the personality of the mascot through similar visual attributes. Using Imagen 3's improved text rendering, recommend custom letterforms that might incorporate elements from the mascot (e.g., a tail forming part of a letter).",
-        "composition_guidance": "Provide guidance on the mascot's pose and orientation (e.g., facing forward for approachability, in profile for action). Consider the balance between the character and any text elements, and whether the mascot should be full-body or a head/bust only. Recommend containment treatment (e.g., circular boundary, integrated background) or if the mascot should stand alone. Suggest whether the character should interact with the text elements.",
-        "industry_applications": "For food/beverage: appetizing food characters or friendly animals. For sports teams: powerful, dynamic creatures or personas. For children's products: cute, approachable characters. For technology: robot or futuristic beings. For education: wise animals (owls) or friendly scholarly figures.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'realistic human features (unless intended), scary or intimidating expressions, overly complex or detailed backgrounds, photographic style, too many accessories or details that won't scale down well, inappropriately gendered mascots, cultural stereotypes'.",
+        "ai_prompt_focus": (
+            "Generate a rich text prompt for Imagen 3 to create a mascot-based logo—a character with brand-appropriate personality, in a pose that instantly signals approachability or energy."
+        ),
+        "logo_style_description": (
+            "A mascot logo uses a unique, illustrated character or anthropomorphized element, usually created specifically for the brand. The character needs a clear personality—expressed by posture, face, eyes, and clothing or symbolic accessories (if included). Should look inviting, not generic."
+        ),
+        "key_elements_guidance": (
+            "Define animal/type/species or object/abstract. Specify distinguishing features: e.g., eye size, primary color, clothing, tool/prop. Indicate pose or motion (sitting, jumping, waving, etc.), emotion (smile, focus), and whether mascot interacts with logo text or is separate."
+        ),
+        "color_palette_guidance": (
+            "Suggest 3-5 colors per part: body, accent, clothing/accessory, always supply hex codes. Use high-contrast or strong, vibrant colors for legibility and impact. Note: must read clearly at tiny scale."
+        ),
+        "typography_guidance": (
+            "If text is included, recommend a playful, bold, or stylized font matching the mascot’s personality—childlike if kid-focused, heroic if for sports, etc. State whether text is beneath, beside, or incorporated into mascot's outline. Recommend spacing to avoid crowding or obscured features."
+        ),
+        "composition_guidance": (
+            "Specify if full-body or head-only works best. Position mascot so primary face looks at viewer. Specify whether the logo should be circularly contained, or loose on a white background with drop shadow forbidden. State minimum spacing/padding around subject/text for sticker/app usage."
+        ),
+        "industry_applications": (
+            "Food/Bev: happy chef/ingredient/animal. Sports: dynamic creature/persona. Tech: cute bot/robot, not menacing. Education: wise owl, playful bookman, friendly animal."
+        ),
+        "negative_prompt_suggestions": (
+            "Avoid: uncanny or photo-realistic human faces; scary or angry expressions; cluttered or detailed backgrounds; photobashing, collage, or fractal-like effects; cultural/gender stereotypes; thin lines that fail at icon size; more than four colors if possible."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for a mascot logo.
 **Logo Text (if any):** [LOGO_TEXT_PLACEHOLDER]
@@ -164,24 +337,47 @@ Generate an Imagen 3 prompt for a mascot logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style (if text included):** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Illustration with clean vector style, isolated on a white background.
+**Desired Output Format:** Illustration of mascot, vector, isolated on white background, with strong outline.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing how the mascot should embody the brand's personality through its expression, pose, and distinguishing visual characteristics.
+Prompt format example:
+"Design a mascot logo: [key_elements_output]; brand: [USER_PROVIDED_CONCEPT_OR_INDUSTRY]; palette: [color_palette_output]; typography: [typography_output]; composition: [composition_guidance]. Output vector illustration on white, suitable for icon/sticker. Negative prompt: [negative_prompt_suggestions]."
 """
     }
 
 def get_logo_illustrative_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved illustrative logo template logic:
+    - Emphasis on focal storytelling and image-prompt synthesis.
+    - Explicit field guidance for scalability and AI-unique strengths.
+    - Negative prompt tailored to avoid common illustrative AI mishaps.
+    """
     return {
         "preset_name": "Illustrative Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create an illustrative logo.",
-        "logo_style_description": "An illustrative logo featuring a detailed drawing or illustration that serves as the logo mark. This style ranges from hand-drawn to detailed digital illustration, creating a rich visual narrative that tells a story about the brand. Illustrative logos work well for brands that want to convey craftsmanship, tradition, or a distinct visual world, though they must be designed carefully to remain effective at smaller sizes.",
-        "key_elements_guidance": "Suggest a detailed illustration concept that represents [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Describe the style of illustration (e.g., hand-drawn, engraving, linework, watercolor-inspired, detailed digital painting, woodcut) and the specific imagery it should contain. Consider the level of detail appropriate for a logo (rich enough to convey narrative, but simple enough to work at smaller sizes). Recommend focal points and how the illustration tells a story about the brand. Leveraging Imagen 3's detailed rendering capabilities, suggest specific textures, line qualities, or shading techniques that define the illustrative style.",
-        "color_palette_guidance": "Suggest a color palette of 3-5 colors that fits the illustration style. Provide hex codes. Consider whether the palette should be vintage/muted or vibrant/contemporary based on the brand personality. Recommend primary colors for key elements and secondary colors for details or backgrounds. Consider how the illustration might work in monochrome for versatile applications. Suggest color layering techniques (if appropriate) for creating visual depth.",
-        "typography_guidance": "If text like '[LOGO_TEXT_PLACEHOLDER]' is included, suggest a font style (hand-drawn, script, serif, or complementary display font) and its placement relative to the illustration. Consider whether the typography should mirror elements of the illustration style (e.g., same line quality, similar textures) or provide contrast. Using Imagen 3's text rendering capabilities, recommend lettering that complements the illustration style while maintaining legibility. Consider whether text should be integrated within the illustration or separate.",
-        "composition_guidance": "Provide guidance on the arrangement of illustrated elements, considering visual hierarchy, flow, and balance. Recommend whether the illustration should be contained within a shape or frame or stand alone. Consider the relationship between illustrated elements and typography, and which should have visual priority. Suggest how to ensure the design remains clear and impactful even when scaled down.",
-        "industry_applications": "For food/beverage: detailed ingredients or preparation scenes. For outdoor/adventure brands: landscapes or activities. For crafts/artisanal products: tools or making process. For historical/traditional brands: vintage-style illustrations. For destination/locale-specific businesses: local landmarks or scenes.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'minimalist, abstract, photographic, excessively simple, too many small details that won't scale down, inconsistent illustration style, cluttered composition, overly complex scenes with no clear focal point'.",
+        "ai_prompt_focus": (
+            "Generate a detailed text prompt for Imagen 3 to create a genuinely illustrative, story-driven logo. Must work at both large and icon/fav size."
+        ),
+        "logo_style_description": (
+            "An illustrative logo uses hand-drawn or digital illustration techniques, combining focal imagery and/or scene with clear brand concept. Must be readable at small scale—story conveyed efficiently."
+        ),
+        "key_elements_guidance": (
+            "Define the main illustrated subject and setting: e.g., '[USER_PROVIDED_CONCEPT_OR_INDUSTRY]' as a character, landscape, or symbolic object. Indicate level of detail (where main shapes are simple and secondary elements can be more textured). Suggest visual focal point and possible background/text combinations."
+        ),
+        "color_palette_guidance": (
+            "Recommend a palette of 3–5 colors, matching the story and style (e.g., muted for vintage, saturated for playful, warm for tradition). Provide hex codes, primary/accent/contour assignments. State how the design will work in grayscale if necessary."
+        ),
+        "typography_guidance": (
+            "Propose a font that matches the illustration’s visual style: e.g., hand-lettered, script, casual sans, or elegant serif. Clarify if text should be incorporated into the illustration (e.g., banner, scroll) or placed below/separate."
+        ),
+        "composition_guidance": (
+            "Define main subject placement (center, left, within a frame, or over a background). Specify minimum/maximum negative space, and recommend simplified/zoomed variants for small-scale (favicon, sticker) usage."
+        ),
+        "industry_applications": (
+            "Food: logo as drawn ingredient/scene. Adventure/outdoors: landmark, mapped scene, or adventurous pose. Crafts: tool or process illustrative narrative. Tourism: local landmark with ambient details."
+        ),
+        "negative_prompt_suggestions": (
+            "Exclude: overly photographic look, background clutter, excessive minor details that are unreadable at small sizes, inconsistent line quality, muddled focal points, piecemeal collage, copy-paste feel, scale confusion."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for an illustrative logo.
 **Logo Text (if any):** [LOGO_TEXT_PLACEHOLDER]
@@ -191,24 +387,49 @@ Generate an Imagen 3 prompt for an illustrative logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style (if text included):** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** Illustration with the specified style, isolated on a white background.
+**Desired Output Format:** Vector or raster illustration, clear focal subject, isolated on white. Must be scalable and readable as favicon.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing how the illustrative elements should tell a story about the brand while maintaining the clarity and impact necessary for a logo.
+Prompt structure example:
+'Design an illustrative logo for [USER_PROVIDED_CONCEPT_OR_INDUSTRY]: [key_elements_output]. Palette: [color_palette_output]. Typography: [typography_output]. Layout: [composition_guidance]. Output: story-driven vector on white, recognizable at any size. Negative prompt: [negative_prompt_suggestions].'
 """
     }
 
 def get_logo_3d_template(style_category: str) -> Dict[str, Any]:
+    """
+    Improved 3D logo template logic:
+    - Explicit geometric/material/lighting cues, translation for 2D icon use.
+    - Strict negative prompts: no soft/busy render or visual pollution.
+    - Prompt structure for multi-view/model compatibility.
+    """
     return {
         "preset_name": "3D Logo Concept",
-        "ai_prompt_focus": "Generate a detailed text prompt for Imagen 3 to create a 3D logo.",
-        "logo_style_description": "A 3D logo with depth, volume, and realistic or stylized rendering. This can be a 3D wordmark, symbol, or combination mark with a dimensional quality that makes it stand out. 3D logos create impact through lighting, texture, and perspective, giving the brand a modern, substantial presence. While primarily used for digital applications, they can be designed to translate effectively to 2D formats when needed.",
-        "key_elements_guidance": "Suggest the 3D form (e.g., extruded text, a volumetric symbol, a rendered object) and how it represents [USER_PROVIDED_CONCEPT_OR_INDUSTRY]. Describe the desired material properties (e.g., polished metal, glass, matte plastic, marble, wood) in detail, including texture, reflectivity, and finish. Consider how light interacts with the surfaces to create highlights and shadows that enhance the form. Recommend a specific perspective or viewing angle that best showcases the 3D elements. Leveraging Imagen 3's enhanced rendering capabilities, suggest subtle material details, texture granularity, or lighting effects that create realistic dimensionality.",
-        "color_palette_guidance": "Suggest a color palette of 2-4 colors, considering how light interacts with the 3D form and materials. Provide hex codes. Recommend base colors for the primary materials and accent colors for highlights or secondary elements. Consider how colors might shift across surfaces due to lighting and reflection. Ensure the color strategy works when the logo needs to be displayed in 2D formats. Consider whether metallic or iridescent effects would enhance the design.",
-        "typography_guidance": "If text like '[LOGO_TEXT_PLACEHOLDER]' is included, suggest a font style that works well in 3D (e.g., bold sans-serif, block letters, geometric fonts) and how it should be integrated into the dimensional design. Consider whether text should be extruded, beveled, embossed, or given other 3D treatments. Using Imagen 3's detailed rendering capabilities, recommend specific depth, beveling, or extrusion parameters that create clear, legible letterforms even with 3D treatment. Consider how typography interacts with lighting and material properties.",
-        "composition_guidance": "Provide guidance on the arrangement of 3D elements, considering perspective, depth, and visual weight. Recommend camera angle, focal length, and lighting direction to best showcase the dimensionality. Consider the balance between showing off 3D qualities and maintaining a clean, recognizable silhouette. Suggest how to ensure the design translates effectively to 2D applications when needed.",
-        "industry_applications": "For technology/gaming: sleek, modern materials with dynamic lighting. For construction/architecture: solid, substantial forms with textured materials. For luxury brands: premium materials like gold, glass, or marble. For entertainment: vibrant, dynamic 3D forms with dramatic lighting. For manufacturing: realistic material representations relevant to the industry.",
-        "negative_prompt_suggestions": "common negative prompts for logos: 'flat 2D style (unless specifically showing 2D version), vector illustration style, blurry surfaces or edges, unrealistic lighting or shadows, low-quality textures, excessively complex forms that lose recognition at smaller sizes, inappropriate material choices for the brand'.",
+        "ai_prompt_focus": (
+            "Generate a detailed Imagen 3 prompt to create a visually impactful 3D logo—depth, reflection, clarity—always keeping its core shape recognizable in 2D exports."
+        ),
+        "logo_style_description": (
+            "A 3D logo uses extrusion, realistic/inventive materials, and depth cues (lighting, shadows) to create a modern, memorable brand image. Must look strong both rendered and flattened as vector."
+        ),
+        "key_elements_guidance": (
+            "State the core logo structure: e.g., extruded monogram, layered geometrics, or symbolic object. Define how surfaces curve, intersect, or layer. "
+            "Describe perspective—front or slight isometric. Emphasize minimal, clear silhouette for adaptation to flat icon."
+        ),
+        "color_palette_guidance": (
+            "Choose 2–4 main material colors—metallics (gold, silver, chrome), glass (blue, clear, frosted), plastic, or organic. Specify hex codes. "
+            "If including gradients/reflection, keep them sharp and purposeful. Output should translate crisply to black and white."
+        ),
+        "typography_guidance": (
+            "If text included, suggest a font style with high weight/thickness, simple geometry, and minimal serifs. Specify if text is extruded, embossed, or inset. Recommend no fine details or overlapping occlusion."
+        ),
+        "composition_guidance": (
+            "Position mark at 15–30° tilt (top and side visible if extruded object), or completely flat-on if symbol. Set strong front lighting, optional rim light. Shadow on white or transparent. Zone of interest must remain clear if resized to 48x48px."
+        ),
+        "industry_applications": (
+            "Tech: glossy blue/gray/black metal or glass with etched/engraved logotype. Construction: heavy stone/metallic chamfered edges. Luxe: gold accents, glass, reflective shadow. Entertainment: dynamic, colorful plastic."
+        ),
+        "negative_prompt_suggestions": (
+            "Do NOT include photoreal background, soft blurry effects, noise, clutter, illegible reflections, too-high polygon count, visible rendering artifacts, or more than four color zones. No excessive depth or occlusion."
+        ),
         "imagen3_prompt_structure": """
 Generate an Imagen 3 prompt for a 3D logo.
 **Logo Text (if any):** [LOGO_TEXT_PLACEHOLDER]
@@ -218,10 +439,11 @@ Generate an Imagen 3 prompt for a 3D logo.
 **Color Palette (Hex Codes):** {color_palette_output}
 **Typography Style (if text included):** {typography_output}
 **Composition Guidance:** {composition_guidance}
-**Desired Output Format:** 3D render with realistic materials and lighting, isolated on a white or transparent background.
+**Desired Output Format:** 3D render, strong materials, crisp lighting, isolated on white or transparent BG. Must reduce well to flat icon.
 **Negative Prompt:** {negative_prompt_suggestions}
 
-Assemble these into a single, coherent, and detailed text prompt for Imagen 3, emphasizing how the 3D elements should create depth, dimension, and material presence while maintaining the clarity and recognition necessary for a logo.
+Prompt structure example:
+"Design a 3D logo for [USER_PROVIDED_CONCEPT_OR_INDUSTRY]: [key_elements_output]. Materials/palette: [color_palette_output]; typography: [typography_output]; composition: [composition_guidance]. Output: high-quality 3D render and vector export. Negative prompt: [negative_prompt_suggestions]."
 """
     }
 

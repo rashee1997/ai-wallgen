@@ -288,6 +288,7 @@ class PresetGenerator:
             final_preset["imagen_settings"] = merged_imagen_settings
 
             # Remove camera_settings recursively for traditional or logo styles
+            # (First pass: after merging settings)
             if normalized_style_category in [cat.lower() for cat in traditional_categories] or normalized_style_category in [cat.lower() for cat in logo_categories]:
                 if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
                     _remove_camera_settings_recursively(final_preset["imagen_settings"])
@@ -303,12 +304,32 @@ class PresetGenerator:
             for key, t_value in template.items():
                 if key not in final_preset and key != "styles":
                     final_preset[key] = generated_settings.get(key, t_value)
-            
-            # Remove camera_settings recursively again after all merging to ensure removal
+
+            # FINAL removal: After all merging, deep removal and check for "camera_settings"
+            def _find_camera_settings_keys(d, path_stack=None, found=None):
+                if path_stack is None:
+                    path_stack = []
+                if found is None:
+                    found = []
+                for k, v in d.items():
+                    if k.lower() == "camera_settings":
+                        found.append(path_stack + [k])
+                    if isinstance(v, dict):
+                        _find_camera_settings_keys(v, path_stack + [k], found)
+                return found
+
             if normalized_style_category in [cat.lower() for cat in traditional_categories] or normalized_style_category in [cat.lower() for cat in logo_categories]:
-                if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
-                    _remove_camera_settings_recursively(final_preset["imagen_settings"])
-            
+                imagen_settings = final_preset.get("imagen_settings", {})
+                if isinstance(imagen_settings, dict):
+                    # Ensure full recursive removal again
+                    _remove_camera_settings_recursively(imagen_settings)
+                    remaining = _find_camera_settings_keys(imagen_settings)
+                    if remaining:
+                        print_warning(
+                            f"DEBUG: After camera_settings removal, found keys at: {remaining}"
+                        )
+                        assert not remaining, f"camera_settings keys remain after removal: {remaining}"
+
             return final_preset
         except json.JSONDecodeError as json_err:
             logging.error(f"Failed to parse JSON response: {json_err}\nResponse text was:\n{json_str}")
@@ -350,45 +371,61 @@ class PresetGenerator:
 
         if confirm_decision:
             self.preset_cache_manager.save_preset_hash_to_cache(final_preset)
-            
-            # Determine if it's a logo preset
-            is_logo_preset = any(style.lower().startswith("logo_") for style in final_preset.get("styles", []))
 
-            if is_logo_preset:
-                # Build a more descriptive name for logo presets
-                name_parts = []
-                if "imagen_settings" in final_preset and isinstance(final_preset["imagen_settings"], dict):
-                    imagen_settings = final_preset["imagen_settings"]
-                    if "logo_text" in imagen_settings and imagen_settings["logo_text"]:
-                        name_parts.append(re.sub(r'[^\w\s-]', '', imagen_settings["logo_text"]).strip().replace(' ', '_'))
-                    if "logo_industry" in imagen_settings and imagen_settings["logo_industry"]:
-                        name_parts.append(re.sub(r'[^\w\s-]', '', imagen_settings["logo_industry"]).strip().replace(' ', '_'))
-                    # Including colors might make the name too long, so I'll omit them for now.
+            # Improved unique/descriptive base name logic (common for all presets)
+            def _make_base_name(fpreset):
+                import hashlib
+                safe = lambda s: re.sub(r'[^\w\s-]', '', str(s)).strip().replace(' ', '_').lower() if s else ''
+                parts = []
 
-                if name_parts:
-                    base_name = "_".join(name_parts).lower()
-                else:
-                    # Fallback: Try to extract keywords from preset_name and description
-                    keywords = []
-                    if "preset_name" in final_preset and isinstance(final_preset["preset_name"], str):
-                         keywords.extend(re.findall(r'\b\w+\b', final_preset["preset_name"]))
-                    if "description" in final_preset and isinstance(final_preset["description"], str):
-                         keywords.extend(re.findall(r'\b\w+\b', final_preset["description"]))
+                styles = fpreset.get("styles", [])
+                if styles and isinstance(styles[0], str):
+                    parts.append(safe(styles[0]))
 
-                    # Filter out common words and keep a few unique keywords
-                    common_words = set(["a", "an", "the", "for", "with", "and", "in", "of", "to", "by", "design", "logo", "preset", "generated", "ai", "wallpaper"])
-                    meaningful_keywords = [word.lower() for word in keywords if word.lower() not in common_words][:3] # Keep up to 3
+                mood = fpreset.get("moods", [])
+                if mood and isinstance(mood[0], str):
+                    parts.append(safe(mood[0]))
 
-                    if meaningful_keywords:
-                         base_name = "_".join(meaningful_keywords)
-                    else:
-                         # Final fallback if no meaningful keywords are found
-                         base_name = re.sub(r'[^\w\s-]', '', final_preset.get("preset_name", "generated_preset")).strip().replace(' ', '_').lower()
-            else:
-                # Use the original naming for non-logo presets
-                base_name = re.sub(r'[^\w\s-]', '', final_preset.get("preset_name", "generated_preset")).strip().replace(' ', '_').lower()
+                if "imagen_settings" in fpreset and isinstance(fpreset["imagen_settings"], dict):
+                    ims = fpreset["imagen_settings"]
+                    # Try logo_text and logo_industry for logo
+                    if "logo_text" in ims and ims["logo_text"]:
+                        parts.append(safe(ims["logo_text"]))
+                    if "logo_industry" in ims and ims["logo_industry"]:
+                        parts.append(safe(ims["logo_industry"]))
+                    # Add main_color or color if available
+                    if "main_color" in ims and ims["main_color"]:
+                        parts.append(safe(ims["main_color"]))
+                    elif "color" in ims and ims["color"]:
+                        parts.append(safe(ims["color"]))
 
-            # Add a timestamp to ensure uniqueness of the filename
+                # Use up to 2 meaningful words from preset_name and description fields
+                descr = fpreset.get("description", "")
+                pname = fpreset.get("preset_name", "")
+                def words_from(text):
+                    return [w for w in re.findall(r'\b\w+\b', text.lower()) if w not in ("a","the","for","and","with","to","in","of","logo","preset","wallpaper","generated","design")]
+                base_words = words_from(pname)[:2] + words_from(descr)[:2]
+                if base_words:
+                    parts += [safe(w) for w in base_words if w]
+
+                # Use only unique, non-empty parts and truncate each to 16 chars for brevity
+                seen = set()
+                unique_parts = []
+                for p in parts:
+                    if p and p not in seen:
+                        unique_parts.append(p[:16])
+                        seen.add(p)
+                base = "_".join(unique_parts)
+
+                # If not distinctive, hash the full preset for uniqueness
+                if not base or len(base) < 6:
+                    preset_blob = json.dumps(fpreset, sort_keys=True, separators=(',', ':')).encode('utf-8')
+                    short_hash = hashlib.sha1(preset_blob).hexdigest()[:8]
+                    base = f"preset_{short_hash}"
+
+                return base
+
+            base_name = _make_base_name(final_preset)
             preset_name_base = f"{base_name}_{int(time.time())}"
             
             success = save_preset(final_preset, preset_name_base) # Uses imported or fallback save_preset
@@ -500,17 +537,23 @@ class PresetGenerator:
                             if final_preset:
                                 save_result = self._save_generated_preset(final_preset, auto_save_flag)
                                 if save_result is True or isinstance(save_result, str):
+                                    # Single prompt for all outcomes
+                                    input("Press Enter to return to AI Preset Options menu...")
                                     return save_result
                                 elif save_result is False:
                                     if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
                                         print_error(f"Failed to generate a unique preset after {config.MAX_GENERATION_ATTEMPTS} attempts.")
+                                        input("Press Enter to return to AI Preset Options menu...")
                                         return False
                                     time.sleep(1)
                                     continue 
                                 else: 
+                                    input("Press Enter to return to AI Preset Options menu...")
                                     return None 
                             else:
-                                if attempt == config.MAX_GENERATION_ATTEMPTS - 1: return False
+                                if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
+                                    input("Press Enter to return to AI Preset Options menu...")
+                                    return False
                                 time.sleep(1)
                                 continue
                         else:
@@ -525,6 +568,7 @@ class PresetGenerator:
 
                     if attempt == config.MAX_GENERATION_ATTEMPTS - 1:
                         print_error(f"Failed to generate a valid preset after {config.MAX_GENERATION_ATTEMPTS} attempts due to API issues or response format.")
+                        input("Press Enter to return to AI Preset Options menu...")
                         return False
                     # Simple backoff for retries
                     time.sleep(1 + attempt)
@@ -532,12 +576,15 @@ class PresetGenerator:
 
                 except Exception as api_err:
                     logging.error(f"API Error: {str(api_err)}")
+                    input("Press Enter to return to AI Preset Options menu...")
                     raise RuntimeError(f"Failed to generate settings: {str(api_err)}")
             
             print_error(f"Failed to generate a unique and valid preset after all {config.MAX_GENERATION_ATTEMPTS} attempts.")
+            input("Press Enter to return to AI Preset Options menu...")
             return False
 
         except Exception as e:
             logging.exception("An unexpected error occurred during AI preset generation:")
             print_error(f"An unexpected error occurred: {e}")
+            input("Press Enter to return to AI Preset Options menu...")
             return False
