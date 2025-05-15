@@ -11,6 +11,5 @@ PyQt5>=5.15.0
 tinydb>=4.7.0
 rapidfuzz>=2.13.7
 rich
-
-# Note: 'PyQt5' added based on project imports in qt_preview.py.
-# clrprint was previously listed but removed after migration to Rich library for UI.
+pillow-lut
+opencv-contrib-python
