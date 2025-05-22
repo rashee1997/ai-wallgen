@@ -220,7 +220,7 @@ def generate_random_style(category: Optional[str] = None, style_type: str = STYL
             # Use get_model() to get the model object, then call generate_content()
             model_instance = client.get_model(selected_model_name)
             response = model_instance.generate_content(
-                prompt=prompt
+                prompt
             )
 
             style_text = _extract_style_text_from_response(response)
