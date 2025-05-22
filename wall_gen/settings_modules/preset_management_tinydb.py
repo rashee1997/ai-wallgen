@@ -488,10 +488,12 @@ def apply_preset_settings(settings: Dict[str, Any], replace: bool = True) -> boo
         return False
 
 
+from .ai_preset_generation import generate_ai_preset
+
 def manage_presets_tinydb():
     """
     Manage presets menu for TinyDB presets.
-    Provides options to load, search/load, delete, view details, and return.
+    Provides options to load, search/load, delete, view details, generate AI preset, and return.
     """
     while True:
         print_section("Manage Presets (TinyDB)")
@@ -500,10 +502,11 @@ def manage_presets_tinydb():
             ("2", "Search and Load Preset"),
             ("3", "Delete Preset"),
             ("4", "View Preset Details"),
+            ("5", "Generate AI Preset"),
             ("b", "Back"),
         ]
         print_menu_options(menu_options)
-        choice = get_validated_input("Select option (1-4, b)", ["1", "2", "3", "4", "b"])
+        choice = get_validated_input("Select option (1-5, b)", ["1", "2", "3", "4", "5", "b"])
         if choice == "b":
             break
         elif choice == "1":
@@ -521,3 +524,5 @@ def manage_presets_tinydb():
             handle_delete_preset_tinydb()
         elif choice == "4":
             view_preset_details_tinydb()
+        elif choice == "5":
+            generate_ai_preset()

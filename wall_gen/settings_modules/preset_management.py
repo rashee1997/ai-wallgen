@@ -20,6 +20,8 @@ def manage_presets():
     """
     Display and manage preset settings through an interactive menu.
     """
+    from .ai_preset_generation import generate_ai_preset
+
     user_prefs = get_preferences() # Get preferences object
     while True:
         print_section("Manage Presets")
@@ -35,11 +37,12 @@ def manage_presets():
             ("2", "Load Preset"),
             ("3", "Delete Preset"),
             ("4", "View Current Preset Details"),
+            ("5", "Generate AI Preset"),
             ("b", "Back")
         ]
         print_menu_options(menu_options)
 
-        choice = get_validated_input(f"Select option (1-4, b)", [key for key, _ in menu_options])
+        choice = get_validated_input(f"Select option (1-5, b)", [key for key, _ in menu_options])
 
         if choice == "b":
             return
@@ -48,7 +51,8 @@ def manage_presets():
             "1": save_current_preset,
             "2": handle_load_preset,
             "3": handle_delete_preset,
-            "4": view_preset_details
+            "4": view_preset_details,
+            "5": generate_ai_preset,
         }
 
         if choice in handlers:

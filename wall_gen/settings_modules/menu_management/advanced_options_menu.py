@@ -77,7 +77,6 @@ def configure_advanced_options():
         print_option("11", "Composition & Environment")
         print_option("12", "Color & Detail Settings")
         print_option("13", "View Current Settings")
-        print_option("14", "Generate AI Preset")
         print_option("15", "Reset to Default")
         print_option("16", "Software Settings & Renderer")
         # Show current state of AI Categorization in option label
@@ -108,7 +107,6 @@ def configure_advanced_options():
             "11": manage_composition_settings,
             "12": manage_color_settings,
             "13": view_current_settings,
-            "14": generate_ai_preset,
             "15": reset_to_default,
             "16": manage_software_settings,
             "17": toggle_ai_categorization,

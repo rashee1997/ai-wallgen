@@ -7,7 +7,7 @@ import random
 import re
 import sys
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from google import genai # Use the new SDK import
 from google.genai import types # Import types for consistency
@@ -32,6 +32,8 @@ from .wallpaper_settings import get_preferences, initialize_settings
 logger = logging.getLogger(__name__) # Get logger instance
 
 # --- Constants ---
+STYLE_TYPE_SIMPLE = "simple"
+STYLE_TYPE_DETAILED = "detailed"
 # DEFAULT_MODEL is now in gemini_config
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -77,8 +79,16 @@ CATEGORY_MAPPINGS = {
 
 def initialize_gemini(api_key: str) -> bool:
     """
-    Initialize the Gemini model globally using the centralized configuration.
-    Returns True if initialization was successful, False otherwise.
+    Initializes the Gemini model globally using a provided API key override.
+
+    This function acts as a wrapper for `gemini_config.initialize_gemini_globally`,
+    primarily used when an API key is passed directly via CLI arguments.
+
+    Args:
+        api_key (str): The Gemini API key to use for initialization.
+
+    Returns:
+        bool: True if initialization was successful, False otherwise.
     """
     logger.info(f"Attempting to initialize Gemini globally with provided API key.")
     success = gemini_config.initialize_gemini_globally(api_key_override=api_key)
@@ -88,7 +98,30 @@ def initialize_gemini(api_key: str) -> bool:
         logger.error(f"Failed to initialize Gemini globally: {gemini_config.get_last_error()}")
     return success
 
-def generate_style_prompt(category: Optional[str] = None, style_type: str = "simple") -> str:
+def _extract_style_text_from_response(response: types.GenerateContentResponse) -> Optional[str]:
+    """
+    Extracts the style text from a Gemini API response object.
+
+    Handles different response structures (e.g., direct 'text' attribute or nested 'candidates').
+
+    Args:
+        response: The Gemini API response object.
+
+    Returns:
+        Optional[str]: The extracted style text, or None if not found.
+    """
+    if hasattr(response, 'text') and response.text:
+        return response.text.strip()
+    elif hasattr(response, 'candidates') and response.candidates and \
+         hasattr(response.candidates[0], 'content') and hasattr(response.candidates[0].content, 'parts') and \
+         response.candidates[0].content.parts and hasattr(response.candidates[0].content.parts[0], 'text'):
+        return response.candidates[0].content.parts[0].text.strip()
+    else:
+        logger.warning("No valid response text or candidates structure from Gemini.")
+        # logger.debug(f"Full Gemini response: {response}") # Uncomment for detailed debugging
+        return None
+
+def generate_style_prompt(category: Optional[str] = None, style_type: str = STYLE_TYPE_SIMPLE) -> str:
     """
     Construct a prompt string for the Gemini model to generate an art style or descriptor.
 
@@ -114,7 +147,7 @@ def generate_style_prompt(category: Optional[str] = None, style_type: str = "sim
             "Focus on the distinctive characteristics, techniques, or traditions of this category."
         )
 
-    if style_type == "simple":
+    if style_type == STYLE_TYPE_SIMPLE:
         core = (
             "Generate one clear, focused artistic style description representing a single visual concept. "
             "No multiple descriptive elements or comma-separated themes. "
@@ -122,27 +155,46 @@ def generate_style_prompt(category: Optional[str] = None, style_type: str = "sim
             "Bad: 'dark gothic, medieval architecture, with misty atmosphere'. "
             "Focus on one main style. Output only the style phrase."
         )
-    else:
+    elif style_type == STYLE_TYPE_DETAILED:
         core = (
             "Suggest a style name (2-4 words) suitable for an AI art preset, and a 1-2 sentence description of its visual or technical hallmarks. "
             "Format the output as a JSON object with two keys: \"name\" and \"description\". "
             "Example: {\"name\": \"Vibrant Dreamscape\", \"description\": \"Characterized by vivid, surreal colors and flowing, organic shapes. Often evokes a sense of wonder and ethereal beauty.\"}"
             "Output only the JSON object."
         )
+    else:
+        logger.warning(f"Unknown style_type '{style_type}' provided to generate_style_prompt. Defaulting to simple.")
+        core = (
+            "Generate one clear, focused artistic style description representing a single visual concept. "
+            "No multiple descriptive elements or comma-separated themes. "
+            "Good: 'vibrant cyberpunk neon'. "
+            "Bad: 'dark gothic, medieval architecture, with misty atmosphere'. "
+            "Focus on one main style. Output only the style phrase."
+        )
     return base + core
 
-def generate_random_style(category: Optional[str] = None, style_type: str = "simple") -> Optional[Dict[str, str]]:
+def generate_random_style(category: Optional[str] = None, style_type: str = STYLE_TYPE_SIMPLE) -> Optional[Dict[str, str]]:
     """
-    Use Gemini to generate a random style, optionally for a specific canonical category.
-    Implements retry logic with exponential backoff and improved error handling.
-    
+    Generates a random AI art style using the Gemini model.
+
+    This function constructs a prompt based on the desired category and style type,
+    then calls the Gemini API to generate a style. It includes retry logic with
+    exponential backoff for robustness and handles different Gemini response formats.
+
     Args:
-        category: Optional category to constrain the style generation
-        style_type: Type of style to generate ('simple' or 'detailed')
-    
+        category (Optional[str]): An optional canonical art style category to constrain
+                                  the generation (e.g., "oil_painting", "minimalist").
+        style_type (str): The type of style to generate.
+                          Use `STYLE_TYPE_SIMPLE` for a single style phrase,
+                          or `STYLE_TYPE_DETAILED` for a name and description.
+
     Returns:
-        Optional[Dict[str, str]]: The generated style as a dictionary with 'name' and 'description' keys,
-        or None if generation fails
+        Optional[Dict[str, str]]: A dictionary containing the generated style.
+                                  For `STYLE_TYPE_SIMPLE`, it will have a "name" key
+                                  and an empty "description" key.
+                                  For `STYLE_TYPE_DETAILED`, it will have "name" and
+                                  "description" keys.
+                                  Returns `None` if style generation fails after retries.
     """
     user_prefs = get_preferences() # Get user_prefs to pass to model selection
     if not gemini_config.is_initialized():
@@ -164,28 +216,20 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
             if client is None:
                 logger.error("Gemini client is not initialized, cannot generate style.")
                 raise RuntimeError("Gemini client initialization failed. Check API key.")
-                
-            response = client.generate_content(
-                model=selected_model_name,
-                contents=prompt
+            
+            # Use get_model() to get the model object, then call generate_content()
+            model_instance = client.get_model(selected_model_name)
+            response = model_instance.generate_content(
+                prompt=prompt
             )
 
-            style_text = None
-            if hasattr(response, 'text') and response.text:
-                style_text = response.text.strip()
-            elif hasattr(response, 'candidates') and response.candidates and \
-                 hasattr(response.candidates[0], 'content') and hasattr(response.candidates[0].content, 'parts') and \
-                 response.candidates[0].content.parts and hasattr(response.candidates[0].content.parts[0], 'text'):
-                style_text = response.candidates[0].content.parts[0].text.strip()
-            else:
-                logger.warning("No valid response text or candidates structure from Gemini.")
-                # Log the full response if possible and not too large, for debugging
-                # logger.debug(f"Full Gemini response: {response}")
+            style_text = _extract_style_text_from_response(response)
+            if style_text is None:
                 continue # Try next attempt or fail
 
             style_text = style_text.strip(' "\'\n\r') # Clean the raw text
 
-            if style_type == "detailed":
+            if style_type == STYLE_TYPE_DETAILED:
                 parsed_style = None
                 # Try to extract and parse JSON
                 # Ensure re and json are imported at the top of the file
@@ -223,7 +267,7 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
                         logger.error(f"Failed to generate valid detailed style JSON after {MAX_RETRIES} attempts (parsing/validation failed on last attempt).")
                         return None # Exit function with None
 
-            elif style_type == "simple":
+            elif style_type == STYLE_TYPE_SIMPLE:
                 if style_text: # Ensure simple style text is not empty
                     return {"name": style_text, "description": ""}
                 else:
@@ -237,35 +281,62 @@ def generate_random_style(category: Optional[str] = None, style_type: str = "sim
                         logger.error(f"Failed to generate simple style after {MAX_RETRIES} attempts (empty text).")
                         return None
 
+        except (genai.types.BlockedPromptException, genai.types.BlockedGenerationException) as e:
+            logger.error(f"Gemini API blocked content (attempt {attempt + 1}): {e}", exc_info=True)
+            # For blocked content, retrying might not help unless prompt changes.
+            # Consider if a different error handling strategy is needed here (e.g., prompt modification).
+            # For now, we'll log and fail after retries.
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAY * (2 ** attempt)
+                logger.info(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts due to blocked content.")
+                return None # Explicitly return None for blocked content
+
         except Exception as e:
-            # gemini_state.retry_count removed
-            logger.error(f"Error generating style (attempt {attempt + 1}): {e}", exc_info=True)
+            logger.error(f"Unexpected error generating style (attempt {attempt + 1}): {e}", exc_info=True)
             if attempt < MAX_RETRIES - 1:
                 delay = RETRY_DELAY * (2 ** attempt)  # Exponential backoff
                 logger.info(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
-                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts.")
+                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts due to unexpected error.")
 
     return None
 
 def generate_random_style_by_category(category: str) -> Optional[Dict[str, str]]:
     """
-    Generate a random style strictly within a given canonical category (for use in templates/UI).
-    Returns the style string.
+    Generates a simple random style strictly within a given canonical category.
+
+    This function is a wrapper around `generate_random_style` specifically for
+    generating simple style phrases for use in templates or UI elements.
+
+    Args:
+        category (str): The canonical category to constrain the style generation.
+
+    Returns:
+        Optional[Dict[str, str]]: A dictionary containing the generated style with
+                                  a "name" key and an empty "description" key,
+                                  or `None` if generation fails.
     """
-    return generate_random_style(category=category, style_type="simple")
+    return generate_random_style(category=category, style_type=STYLE_TYPE_SIMPLE)
+
 def canonicalize_style_name(style_name: str) -> str:
     """
-    Map a generated/entered style string to a canonical category name.
+    Maps a generated or entered style string to a canonical category name.
 
-    This matches incoming style to one of the system-recognized art categories, based on
-    fuzzy or partial matching of words/phrases.
+    This function uses fuzzy matching (difflib) and exact word matching to associate
+    an arbitrary style string with one of the predefined art categories in
+    `CATEGORY_MAPPINGS`.
 
-    :param style_name: Human/computer-generated style string
-    :return: Canonical category, or "unknown"
+    Args:
+        style_name (str): The human or AI-generated style string to canonicalize.
+
+    Returns:
+        str: The canonical category name (e.g., "oil_painting", "minimalist"),
+             or "unknown" if no suitable match is found.
     """
-    # import difflib # Moved to top
 
     style_name_lower = style_name.lower()
     words = set(style_name_lower.split())
@@ -289,37 +360,44 @@ def canonicalize_style_name(style_name: str) -> str:
 
     return "unknown"
 
-def handle_style_generation(user_prefs):
+def handle_style_generation(user_prefs: Any) -> None:
     """
-    Interactive handler to generate AI styles and ask user to save them.
-    Now always generates detailed (name + description) output for consistency with CLI.
-    Each style is generated in a random (non-repeating) canonical category for greater diversity.
+    Provides an interactive command-line interface for generating and saving AI art styles.
+
+    This function guides the user through generating detailed AI styles (name + description)
+    from random canonical categories, allowing them to save preferred styles to their
+    user preferences. It ensures Gemini is initialized before proceeding.
+
+    Args:
+        user_prefs (Any): An object representing user preferences, expected to have
+                          an `add_style` method.
     """
-    # import random # Moved to top
     if not gemini_config.is_initialized():
-        # Attempt to initialize if not already
         if not gemini_config.initialize_gemini_globally():
             error_msg = gemini_config.get_last_error() or "Unknown initialization error."
             print_warning(f"Gemini model is not initialized: {error_msg}. Please ensure GEMINI_API_KEY is set or provide key.")
             return
-    # user_prefs is already passed to this function
+
     all_categories = list(CATEGORY_MAPPINGS.keys())
-    prev_category = None
+    prev_category: Optional[str] = None
+
     while True:
         print_section("AI Style Generation")
-        # Choose a random category, not the previous one
         possible_cats = [cat for cat in all_categories if cat != prev_category] or all_categories
         chosen_category = random.choice(possible_cats)
         prev_category = chosen_category
+
         print_info(f"Using category: {chosen_category}")
         print_info("Generating AI style...")
-        style = generate_random_style(category=chosen_category, style_type="detailed")
+
+        style = generate_random_style(category=chosen_category, style_type=STYLE_TYPE_DETAILED)
+
         if not style or not isinstance(style, dict):
             print_warning("Failed to generate style. Please try again later.")
             return
-        # import re # Moved to top
-        name = style['name']
-        desc = style['description']
+
+        name: str = style.get('name', '')
+        desc: str = style.get('description', '')
 
         # Extract style name: from the output, prefer first line, strip markdown and whitespace
         # Handles case where output is "**Style Name**\nDescription" or just "Style Name"
@@ -343,17 +421,18 @@ def handle_style_generation(user_prefs):
 
 def export_style_to_file(style: Dict[str, str], filename: str) -> None:
     """
-    Export the generated style to a file in JSON or text format based on filename extension.
+    Exports a generated AI style (name and description) to a specified file.
+
+    The export format (JSON or plain text) is determined by the file extension.
 
     Args:
-        style: Dictionary with 'name' and 'description' keys.
-        filename: Path to the output file.
+        style (Dict[str, str]): A dictionary containing the style's "name" and "description".
+        filename (str): The path to the output file. Supported extensions are '.json' for JSON
+                        output, and any other extension for plain text.
 
     Raises:
-        IOError: If file cannot be written.
+        IOError: If the file cannot be written to (e.g., due to permissions or invalid path).
     """
-    # import json # Moved to top
-    # import os # Moved to top
 
     try:
         ext = os.path.splitext(filename)[1].lower()
@@ -370,21 +449,27 @@ def export_style_to_file(style: Dict[str, str], filename: str) -> None:
     except IOError as e:
         print(f"Failed to export style to {filename}: {e}")
 
-def main():
+def main() -> None:
     """
-    Main entry point for CLI usage of the AI style generator.
-    Usage:
-      --category CATEGORY     Generate a style in a specific canonical category.
-      --detailed              Generate detailed style output (name + description).
-      --save                  Automatically save the generated style to preferences.
-      --export FILENAME       Export the generated style to a file (JSON or text).
-    """
-    # import argparse # Moved to top
-    # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
-    # from wall_gen.wallpaper_settings import initialize_settings, get_preferences # Moved to top
+    Main entry point for the AI style generator CLI.
 
+    This function parses command-line arguments, initializes Gemini, generates
+    an AI style based on user input, and optionally saves or exports the style.
+
+    Command-line arguments:
+        --key KEY: Gemini API key (optional if set via environment variable).
+        --category CATEGORY: Canonical category for targeted style generation
+                             (e.g., 'oil_painting', 'geometric').
+        --detailed: Produce detailed name/description output instead of a simple phrase.
+        --save: Automatically save the generated style to user preferences.
+        --export FILENAME: Export the generated style to a file (JSON or text format
+                           based on file extension).
+    """
     user_prefs = initialize_settings()
-    parser = argparse.ArgumentParser(description='Generate an AI art style description')
+    parser = argparse.ArgumentParser(
+        description='Generate an AI art style description',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument('--key', help='Gemini API key (optional if set via environment variable)')
     parser.add_argument('--category', help='Canonical category for targeted style generation (e.g., oil_painting, geometric)')
     parser.add_argument('--detailed', action='store_true', help='Produce detailed name/description output')
@@ -393,68 +478,60 @@ def main():
     args = parser.parse_args()
 
     if args.key:
-        initialize_gemini(args.key)
+        if not initialize_gemini(args.key):
+            print("Failed to initialize Gemini with provided API key.", file=sys.stderr)
+            sys.exit(2)
     user_prefs = get_preferences()
 
     try:
-        style_type = "detailed" if args.detailed else "simple"
+        style_type = STYLE_TYPE_DETAILED if args.detailed else STYLE_TYPE_SIMPLE
         style = generate_random_style(category=args.category, style_type=style_type)
 
-        if style and isinstance(style, dict) and "name" in style:
-            generated_name = style['name']
-            generated_desc = style.get('description', "")
-
-            name_to_process = generated_name
-            desc_to_print = generated_desc
-            style_name_to_save = generated_name # Default to generated_name
-
-            if args.detailed:
-                # Optional: If style['name'] is very generic and style['description'] contains a bolded name (old fallback)
-                # This part can be simplified or removed if JSON parsing is reliable
-                if not name_to_process or name_to_process.lower() == "style name": # Example of a poor name
-                    m_desc_name = re.search(r"\*\*(.+?)\*\*", generated_desc)
-                    if m_desc_name:
-                        name_from_desc = m_desc_name.group(1).strip()
-                        if name_from_desc: # If a valid name is found in description
-                            name_to_process = name_from_desc
-                            # Try to get description following this bolded name
-                            desc_match = re.search(r"\*\*" + re.escape(name_from_desc) + r"\*\*\s*\n([^\*].*)", generated_desc, re.DOTALL)
-                            if desc_match:
-                                desc_to_print = desc_match.group(1).strip()
-                            # else desc_to_print remains generated_desc
-                
-                print(f"Generated style name: {name_to_process}\nDescription: {desc_to_print}")
-                canonical = canonicalize_style_name(name_to_process)
-                print(f"Canonical category (system): {canonical}")
-                style_name_to_save = name_to_process
-            else: # Simple style
-                # For simple style, name_to_process is already generated_name, desc_to_print is ""
-                print(f"Generated style: {name_to_process}")
-                canonical = canonicalize_style_name(name_to_process)
-                print(f"Canonical category (system): {canonical}")
-                # style_name_to_save is already name_to_process (generated_name)
-                desc_to_print = "" # Ensure description is empty for simple style export
-
-            if args.save:
-                user_prefs.add_style(style_name_to_save) # Always pass the string name
-                print(f"Style saved to preferences: {style_name_to_save}")
-            
-            if args.export:
-                # export_style_to_file expects a dict. Reconstruct it.
-                export_dict = {"name": style_name_to_save, "description": desc_to_print}
-                export_style_to_file(export_dict, args.export)
-        
-        elif style: # Handle cases where style might not be the expected dict (e.g. if generate_random_style changes unexpectedly)
-             logger.error(f"Generated style has unexpected structure: {style}")
-             print(f"Failed to process generated style due to unexpected structure.", file=sys.stderr)
-             sys.exit(1)
-        else:
-            # This case is hit if generate_random_style returns None
-            print("Failed to generate style.", file=sys.stderr)
+        if not (style and isinstance(style, dict) and "name" in style):
+            logger.error(f"Failed to generate style or style has unexpected structure: {style}")
+            print("Failed to generate style or style has unexpected structure.", file=sys.stderr)
             sys.exit(1)
+
+        generated_name: str = style['name']
+        generated_desc: str = style.get('description', "")
+        name_to_process: str = generated_name
+        desc_to_print: str = generated_desc
+        style_name_to_save: str = generated_name
+
+        if args.detailed:
+            # If style['name'] is generic, try to extract a better name from description
+            if not name_to_process or name_to_process.lower() == "style name":
+                m_desc_name = re.search(r"\*\*(.+?)\*\*", generated_desc)
+                if m_desc_name:
+                    name_from_desc = m_desc_name.group(1).strip()
+                    if name_from_desc:
+                        name_to_process = name_from_desc
+                        desc_match = re.search(r"\*\*" + re.escape(name_from_desc) + r"\*\*\s*\n([^\*].*)", generated_desc, re.DOTALL)
+                        if desc_match:
+                            desc_to_print = desc_match.group(1).strip()
+            print(f"Generated style name: {name_to_process}\nDescription: {desc_to_print}")
+        else:
+            print(f"Generated style: {name_to_process}")
+            desc_to_print = ""
+
+        canonical = canonicalize_style_name(name_to_process)
+        print(f"Canonical category (system): {canonical}")
+        style_name_to_save = name_to_process
+
+        if args.save:
+            user_prefs.add_style(style_name_to_save)
+            print(f"Style saved to preferences: {style_name_to_save}")
+
+        if args.export:
+            export_dict = {"name": style_name_to_save, "description": desc_to_print}
+            export_style_to_file(export_dict, args.export)
+
+        sys.exit(0)
+
     except Exception as e:
+        logger.error(f"Error in main(): {e}", exc_info=True)
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(3)
 
 if __name__ == '__main__':
     main()

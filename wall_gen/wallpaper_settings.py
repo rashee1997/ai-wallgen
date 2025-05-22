@@ -10,8 +10,6 @@ and use functions directly from the wall_gen.settings_modules package.
 # Import the main entry points from the new modules for potential backward compatibility
 # These imports might be removed if wallpaper_generator.py is fully updated.
 from wall_gen.settings_modules.settings_manager import initialize_settings, get_preferences
-from wall_gen.settings_modules.menu_management.main_menu import manage_preferences
-
 # Re-export key functions for potential backward compatibility during transition
 # This helps if other parts of the code still import directly from wallpaper_settings
 # These re-exports can be removed after all code is updated to import from wall_gen.settings_modules
