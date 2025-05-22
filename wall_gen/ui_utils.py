@@ -182,7 +182,13 @@ def get_validated_input(
             choices=None, # We handle choice validation manually after help check to allow 'h','?'
             default=effective_default if not options else None, # Default handling by Rich is tricky with choices
             show_default=should_show_default_in_prompt if not options else False
-        ).strip()
+        )
+        if raw_user_input is None:
+            # Treat None as empty string to avoid AttributeError on .strip()
+            raw_user_input = ""
+        else:
+            raw_user_input = raw_user_input.strip()
+
 
         if help_context_id and raw_user_input.lower() in ['h', '?']:
             # Use the enhanced display_help_content function instead

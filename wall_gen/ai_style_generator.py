@@ -11,6 +11,7 @@ from typing import Dict, Optional, Any
 
 from google import genai # Use the new SDK import
 from google.genai import types # Import types for consistency
+from google.genai import errors
 
 # NOTE: This module assumes wallpaper_settings.py is part of the wall_gen package.
 from . import gemini_config # Import the new centralized configuration
@@ -217,10 +218,10 @@ def generate_random_style(category: Optional[str] = None, style_type: str = STYL
                 logger.error("Gemini client is not initialized, cannot generate style.")
                 raise RuntimeError("Gemini client initialization failed. Check API key.")
             
-            # Use get_model() to get the model object, then call generate_content()
-            model_instance = client.get_model(selected_model_name)
-            response = model_instance.generate_content(
-                prompt
+            # Correct usage: call generate_content directly on client.models with model and contents
+            response = client.models.generate_content(
+                model=selected_model_name,
+                contents=prompt
             )
 
             style_text = _extract_style_text_from_response(response)
@@ -281,9 +282,9 @@ def generate_random_style(category: Optional[str] = None, style_type: str = STYL
                         logger.error(f"Failed to generate simple style after {MAX_RETRIES} attempts (empty text).")
                         return None
 
-        except (genai.types.BlockedPromptException, genai.types.BlockedGenerationException) as e:
-            logger.error(f"Gemini API blocked content (attempt {attempt + 1}): {e}", exc_info=True)
-            # For blocked content, retrying might not help unless prompt changes.
+        except errors.APIError as e:
+            logger.error(f"Gemini API blocked content or API error (attempt {attempt + 1}): {e}", exc_info=True)
+            # For blocked content or API errors, retrying might not help unless prompt changes.
             # Consider if a different error handling strategy is needed here (e.g., prompt modification).
             # For now, we'll log and fail after retries.
             if attempt < MAX_RETRIES - 1:
@@ -291,7 +292,7 @@ def generate_random_style(category: Optional[str] = None, style_type: str = STYL
                 logger.info(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
-                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts due to blocked content.")
+                logger.error(f"Failed to generate style after {MAX_RETRIES} attempts due to blocked content or API error.")
                 return None # Explicitly return None for blocked content
 
         except Exception as e:
