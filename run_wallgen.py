@@ -68,6 +68,16 @@ try:
     )
     from wall_gen.history.history_manager import add_to_history
     from wall_gen import graceful_exit  # Import graceful_exit to set the excepthook
+    from wall_gen.ui_utils import ( # Added for top-level UI utility imports
+        print_info,
+        print_error,
+        print_success,
+        print_warning,
+        print_section,
+        show_spinner,
+        print_styled_prompt,
+        get_validated_input,
+    )
 except ImportError as e:
     print(
         f"FATAL ERROR: Could not import necessary modules from 'wall_gen' package: {e}"
@@ -102,25 +112,18 @@ except ImportError as e:
 # --- Preference Saving on Exit ---
 def save_prefs_on_exit(prefs_to_save: Optional[UserPreferences]):
     """Function to be called by atexit to save preferences."""
-    try:
-        from wall_gen.ui_utils import print_info, print_success, print_error
-
-        ui_available = True
-    except ImportError:
-        ui_available = False
+    # UI utilities are now imported at the top level, so no need to re-import here.
+    # ui_available flag is no longer needed as print functions are always available.
 
     if prefs_to_save and isinstance(prefs_to_save, UserPreferences):
         try:
-            if ui_available:
-                print_info("\nAttempting to save preferences on exit...")
+            print_info("\nAttempting to save preferences on exit...")
             logging.info("Attempting to save preferences via atexit handler...")
             prefs_to_save.save_preferences()
-            if ui_available:
-                print_success("Preferences saved successfully.")
+            print_success("Preferences saved successfully.")
             logging.info("Preferences saved successfully via atexit.")
         except Exception as e:
-            if ui_available:
-                print_error(f"Error saving preferences on exit: {e}")
+            print_error(f"Error saving preferences on exit: {e}")
             logging.error(f"Error saving preferences via atexit: {e}", exc_info=True)
     else:
         logging.warning("No valid UserPreferences object available to save on exit.")
@@ -280,8 +283,6 @@ def parse_args():
 # --- Helper functions for orchestration ---
 def _generate_prompt(prompt_type, user_prefs_obj, custom_prompt=None):
     """Generate the final prompt and base prompt for history."""
-    from wall_gen.ui_utils import print_info, print_error
-
     # The preset loading logic is now handled in main(), so _generate_prompt
     # doesn't need to know about preset names directly.
     # It just needs to know the prompt_type ('custom', 'random', 'gemini')
@@ -308,8 +309,6 @@ def _generate_prompt(prompt_type, user_prefs_obj, custom_prompt=None):
 
 def _generate_image(final_prompt, user_prefs_obj):
     """Generate image from API and return temp image path."""
-    from wall_gen.ui_utils import print_error, print_success, show_spinner
-
     if not os.environ.get(GEMINI_API_KEY_ENV):
         print_error(
             f"Cannot generate image: {GEMINI_API_KEY_ENV} environment variable not set."
@@ -335,8 +334,6 @@ def _generate_image(final_prompt, user_prefs_obj):
 
 def _cache_and_save_image(final_prompt, temp_image_path):
     """Cache and save the generated image, return final image path."""
-    from wall_gen.ui_utils import print_info, print_success, print_error
-
     try:
         final_image_path = get_image_cache_path(final_prompt, PROJECT_ROOT)
         print_info(
@@ -399,15 +396,11 @@ def _add_history_entry(
         )
     except Exception as e:
         logging.error(f"Failed to add entry to history: {e}", exc_info=True)
-        from wall_gen.ui_utils import print_warning
-
         print_warning("Failed to save generation details to history.")
 
 
 def _preview_and_set_wallpaper(final_image_path, user_prefs_obj):
     """Show preview and confirm setting wallpaper."""
-    from wall_gen.ui_utils import print_info, print_success, print_error
-
     try:
         wallpaper_set_successfully = show_preview_and_confirm_set(
             final_image_path, user_prefs_obj
@@ -442,8 +435,6 @@ def orchestrate_wallpaper_generation(
     )
     temp_image_path = None  # Define here for cleanup in finally block
 
-    from wall_gen.ui_utils import print_section
-
     try:
         print_section("Generating Prompt")
         final_prompt, base_prompt_for_history = _generate_prompt(
@@ -453,8 +444,6 @@ def orchestrate_wallpaper_generation(
             return False
 
         print_section("Confirm Prompt")
-        from wall_gen.ui_utils import print_info, print_styled_prompt # Added print_styled_prompt
-
         # Using the new function to print the label and then the styled prompt
         print_styled_prompt("Generated Prompt:", final_prompt)
 
@@ -465,12 +454,8 @@ def orchestrate_wallpaper_generation(
         )
 
         if generate_only:
-            from wall_gen.ui_utils import print_success
-
             print_success("Prompt generation complete (image generation skipped).")
             return True
-
-        from wall_gen.ui_utils import get_validated_input
 
         confirm = get_validated_input(
             prompt="Proceed with this prompt? (yes/no)", 
@@ -482,12 +467,9 @@ def orchestrate_wallpaper_generation(
             # This function will return, and the calling menu (e.g., generate_menu) will loop and redraw.
             # No specific action needed here other than not proceeding.
             # We can consider this a cancellation for this attempt.
-            from wall_gen.ui_utils import print_info
             print_info("Help shown for prompt confirmation. Returning to previous menu.")
             return False # Indicate cancellation or non-completion
         if confirm.lower() not in ["yes", "y"]:
-            from wall_gen.ui_utils import print_info
-
             print_info("Generation cancelled by user.")
             return False
 
